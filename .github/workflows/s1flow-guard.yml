@@ -1,0 +1,23 @@
+# Guards the check Action and the code it runs: a PR that changes them runs this repository's copy of the Action
+# on gh-ruff-area from the answers main's s1flow check cached, with no keys and no calls. Pending (a warning)
+# means the change asks for answers the cache does not hold.
+name: s1flow guard
+on:
+  pull_request:
+    paths: ["src/**", "action.yml", "pyproject.toml", "uv.lock", "apps/bench/pyproject.toml", ".github/workflows/s1flow-guard.yml"]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./
+        with:
+          working-directory: apps/bench
+          tasks: gh-ruff-area
+          sample: "40"
+          cached-only: "true"
+          comment: "false"  # the comment is the showcase's; this result is in the job summary
