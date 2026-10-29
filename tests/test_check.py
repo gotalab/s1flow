@@ -225,6 +225,8 @@ def test_without_keys_only_the_cache_answers(task):
 
 
 def test_init_makes_a_project(tmp_path):
+    from importlib import metadata
+
     from s1flow.project import scaffold
 
     (tmp_path / ".git").mkdir()
@@ -235,6 +237,7 @@ def test_init_makes_a_project(tmp_path):
     wf = (tmp_path / ".github" / "workflows" / "s1flow-check.yml").read_text()
     assert '"app/tasks/**"' in wf and 'working-directory: "app"' in wf and "${{ secrets.OPENROUTER_API_KEY }}" in wf
     assert "push:" not in wf and "80 calls" in wf  # pull requests only, and what one costs
+    assert f"gotalab/s1flow@v{metadata.version('s1flow')}" in wf  # the Action at the installed release, not main
     src = (proj / "tasks" / "ticket-bug" / "task.py").read_text()
     compile(src, "task.py", "exec")
     assert "id='ticket-bug'" in src and """instructions='Is it a "bug"?'""" in src and len(done) == 4

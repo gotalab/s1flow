@@ -2,7 +2,7 @@
 
 ## GitHub Actions
 
-The `gotalab/s1flow/decide@main` Action answers one case with a v2 policy. Its required inputs are
+The `gotalab/s1flow/decide@v0.1.0a1` Action answers one case with a v2 policy. Its required inputs are
 `policy`, `state` and `connections`. The connections file is a trusted application allow-list: every
 connection listed there is granted to this invocation. Optional inputs are `case-id` (log context),
 `log`, `keep-state`, `path`, `working-directory` and `package`.
@@ -47,7 +47,7 @@ jobs:
             echo 'S1FLOW_EOF'
           } >> "$GITHUB_OUTPUT"
       - id: s1
-        uses: gotalab/s1flow/decide@main
+        uses: gotalab/s1flow/decide@v0.1.0a1
         continue-on-error: true
         with:
           working-directory: s1flow
