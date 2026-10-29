@@ -38,7 +38,7 @@
     "failed_cases": null,
     "refused_cases": null
    },
-   "split": "層化 k-fold（65 件のため test は取らず CV の数字のみ）",
+   "split": "stratified k-fold (65 cases, so no test set; cross-validation figures only)",
    "split_method": "stratified-kfold",
    "accuracy": {
     "value": 0.9692307692307692,
@@ -176,7 +176,7 @@
      "direction": "max",
      "sets": "min_probability",
      "unit": "share",
-     "label": "正解率 95% でのカバレッジ",
+     "label": "coverage at 95% accuracy",
      "code_sha256": null
     },
     "value": 0.9846153846153847,
@@ -201,7 +201,7 @@
       "direction": "min",
       "sets": "threshold",
       "unit": "number",
-      "label": "1件あたりの誤りの費用（見逃し 10・誤報 1）",
+      "label": "error cost per case (miss 10, false alarm 1)",
       "code_sha256": null
      },
      "value": 0.03076923076923077,

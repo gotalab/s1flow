@@ -38,7 +38,7 @@
     "failed_cases": null,
     "refused_cases": null
    },
-   "split": "層化 k-fold（test 90 件を最後まで取り置き）",
+   "split": "stratified k-fold (90 test cases held out to the end)",
    "split_method": "stratified-kfold",
    "accuracy": {
     "value": 0.5633333333333334,
@@ -92,7 +92,7 @@
      "direction": "max",
      "sets": "min_probability",
      "unit": "share",
-     "label": "正解率 95% でのカバレッジ",
+     "label": "coverage at 95% accuracy",
      "code_sha256": null
     },
     "value": 0.20476190476190476,
