@@ -35,7 +35,7 @@ runs:
       uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: ${{ inputs.working-directory }}/.cache
-        key: s1flow-cache-1-${{ github.run_id }}  # -1-: the answer shape of 2026-10-22 (design review C)
+        key: s1flow-cache-1-${{ github.run_id }}  # -1-: the answer shape of 2026-10-22
         restore-keys: s1flow-cache-1-
     - name: Check
       shell: bash

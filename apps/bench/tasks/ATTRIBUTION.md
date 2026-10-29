@@ -1,6 +1,6 @@
 # Data attribution
 
-`tasks/*/data.jsonl` are seeded, stratified samples of the sources below; the script that drew them is in the Git history.
+`tasks/*/data.jsonl` are seeded, stratified samples of the sources below.
 
 | Task | Source | License | Sample |
 |---|---|---|---|

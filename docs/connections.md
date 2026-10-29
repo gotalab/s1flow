@@ -29,7 +29,7 @@ client or policy is created. The SDK never loads dotenv files. `policies.load` n
 
 `cache_dir` is optional and only applies to `Client` and `AsyncClient`. Providers use it for supporting data
 such as price lists. s1flow never uses it to reuse model answers at runtime; evaluation has its own answer
-cache. `Lineup.read(path)` only reads configuration: pass cache settings to the client, and use
+cache. `s1flow.client.lineup.Lineup.read(path)` only reads configuration: pass cache settings to the client, and use
 `client.connections.build()` or `.check()` to build or check providers.
 
 ## The CLI
