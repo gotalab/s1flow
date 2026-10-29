@@ -6,6 +6,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "skills/s1flow/scripts/github.py"
 spec = importlib.util.spec_from_file_location("skill_github", SCRIPT)
@@ -82,6 +84,9 @@ def test_the_project_is_found_as_the_cli_finds_it(tmp_path, monkeypatch):
     assert github.find_project(tmp_path / "repo") == tmp_path / "repo" / "s1flow"  # DIR's s1flow/ child
     monkeypatch.chdir(tmp_path / "repo" / "s1flow" / "data")
     assert github.find_project(None) == tmp_path / "repo" / "s1flow"  # searched up from here
+    (tmp_path / "repo" / ".git").rmdir()
+    with pytest.raises(github.Stop):  # outside Git only the starting directory counts, as in the CLI
+        github.find_project(None)
     got = invoke("audit", "o/r", "--project", str(tmp_path / "elsewhere"))
     assert got.returncode == 2 and "no s1flow project" in got.stderr and "Traceback" not in got.stderr
 

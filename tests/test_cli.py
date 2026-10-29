@@ -136,3 +136,8 @@ def test_tasks_is_the_overview_of_what_runs(tmp_path):
 def test_a_removed_command_is_named_after_the_options_that_come_first(tmp_path, args, said):
     done = s1flow(*args, cwd=tmp_path)
     assert done.returncode == 2 and said in done.stderr and "Traceback" not in done.stderr
+
+
+def test_a_task_named_prompt_is_optimized_not_taken_for_the_removed_form(tmp_path):
+    done = s1flow("optimize", "prompt", "--json", cwd=tmp_path)
+    assert "it is now" not in done.stderr and "Traceback" not in done.stderr

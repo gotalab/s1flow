@@ -327,7 +327,8 @@ CONFIG, DIR = "s1flow.toml", "s1flow"
 
 
 def find_project(given: Path | None) -> Path:
-    """DIR or DIR/s1flow with s1flow.toml; without DIR, the nearest from the current directory up to the git root."""
+    """DIR or DIR/s1flow with s1flow.toml; without DIR, the nearest from the current directory up to the git root
+    (outside Git, only the current directory), as the CLI searches."""
     def at(d: Path) -> Path | None:
         return next((c for c in (d, d / DIR) if (c / CONFIG).is_file()), None)
 
@@ -337,11 +338,11 @@ def find_project(given: Path | None) -> Path:
             raise Stop(f"no s1flow project in {given}: neither it nor {given / DIR} holds {CONFIG}")
         return found
     here = Path.cwd().resolve()
-    for d in (here, *here.parents):
+    dirs = [here, *here.parents]
+    inside = next((i for i, d in enumerate(dirs) if (d / ".git").exists()), None)
+    for d in dirs[:inside + 1] if inside is not None else [here]:
         if (found := at(d)) is not None:
             return found
-        if (d / ".git").exists():
-            break
     raise Stop(f"no s1flow project found from {here}: give --project DIR, or run s1flow init")
 
 

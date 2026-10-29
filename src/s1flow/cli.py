@@ -186,10 +186,11 @@ def positive(text: str) -> int:
 
 
 def _command_words(args: list[str]) -> list[str]:
-    """The command and its subcommand as typed, past the options that may come before them (--project, --connections)."""
+    """The command, its subcommand and the next word as typed, past the options that may come before them
+    (--project, --connections)."""
     words: list[str] = []
     i = 0
-    while i < len(args) and len(words) < 2:
+    while i < len(args) and len(words) < 3:
         x = args[i]
         if x in ("--project", "--connections"):
             i += 2
@@ -214,7 +215,9 @@ def main(argv: list[str] | None = None) -> None:
     words = _command_words(args)
     if words and words[0] not in {name for name, _ in TABLE}:
         unknown_command(words[0])
-    if (gone := REMOVED_ACTIONS.get(tuple(words[:2]))) is not None:  # type: ignore[arg-type]
+    # `optimize prompt` alone optimizes a task named prompt; only `optimize prompt TASK` is the removed form
+    removed = len(words) == 3 if words[:2] == ["optimize", "prompt"] else True
+    if removed and (gone := REMOVED_ACTIONS.get(tuple(words[:2]))) is not None:  # type: ignore[arg-type]
         usage_error(f"no command {' '.join(words[:2])}: it is now {gone}", f"s1flow {words[0]}")
     notices()
     a = parser().parse_args(args)
