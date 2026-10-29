@@ -1,9 +1,17 @@
-# Checks every PR that changes a question, a model or a policy of apps/bench, s1flow's own evaluation project.
-# A PR checks a sample of the test cases; nothing runs on pushes.
+# The showcase of the s1flow check Action on s1flow's own evaluation project (apps/bench): a PR that changes
+# gh-ruff-area's question, policies or the model line-up checks 40 of its test cases and keeps one comment on
+# the PR; after the merge, main checks every test case. gh-ruff-area is the one task with a current policy.
+# The weekly and manual runs keep main's answer cache warm, which PRs and s1flow-guard.yml read.
 name: s1flow check
 on:
   pull_request:
-    paths: ["apps/bench/tasks/**", "apps/bench/policies/**", "apps/bench/s1flow.toml"]
+    paths: ["apps/bench/tasks/gh-ruff-area/**", "apps/bench/policies/gh-ruff-area/**", "apps/bench/s1flow.toml", ".github/workflows/s1flow-check.yml"]
+  push:
+    branches: [main]
+    paths: ["apps/bench/tasks/gh-ruff-area/**", "apps/bench/policies/gh-ruff-area/**", "apps/bench/s1flow.toml", ".github/workflows/s1flow-check.yml"]
+  schedule:
+    - cron: "17 3 * * 1"
+  workflow_dispatch:
 permissions:
   contents: read
   pull-requests: write
@@ -17,9 +25,7 @@ jobs:
       - uses: ./
         with:
           working-directory: apps/bench
+          tasks: gh-ruff-area
           sample: "40"
         env:
-          AI_GATEWAY_API_KEY: ${{ secrets.AI_GATEWAY_API_KEY }}
-          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-          TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          AI_GATEWAY_API_KEY: ${{ secrets.AI_GATEWAY_API_KEY }}  # gh-ruff-area's current and next run on d1@vercel
