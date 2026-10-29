@@ -1,0 +1,503 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "https://github.com/gotalab/s1flow/blob/main/schema/run-2.json",
+ "$defs": {
+  "BooleanAnswer": {
+   "additionalProperties": false,
+   "properties": {
+    "type": {
+     "const": "boolean",
+     "default": "boolean",
+     "title": "Type",
+     "type": "string"
+    },
+    "probability": {
+     "title": "Probability",
+     "type": "number"
+    }
+   },
+   "required": [
+    "probability"
+   ],
+   "title": "BooleanAnswer",
+   "type": "object"
+  },
+  "BoxAnswer": {
+   "additionalProperties": false,
+   "properties": {
+    "type": {
+     "const": "box",
+     "default": "box",
+     "title": "Type",
+     "type": "string"
+    },
+    "box": {
+     "$ref": "#/$defs/BoxEdges"
+    },
+    "confidence": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Confidence"
+    },
+    "agreement": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Agreement"
+    }
+   },
+   "required": [
+    "box"
+   ],
+   "title": "BoxAnswer",
+   "type": "object"
+  },
+  "BoxEdges": {
+   "description": "Edges as fractions of the image's height (top, bottom) and width (left, right), from the top-left.",
+   "properties": {
+    "top": {
+     "maximum": 1,
+     "minimum": 0,
+     "title": "Top",
+     "type": "number"
+    },
+    "bottom": {
+     "maximum": 1,
+     "minimum": 0,
+     "title": "Bottom",
+     "type": "number"
+    },
+    "left": {
+     "maximum": 1,
+     "minimum": 0,
+     "title": "Left",
+     "type": "number"
+    },
+    "right": {
+     "maximum": 1,
+     "minimum": 0,
+     "title": "Right",
+     "type": "number"
+    }
+   },
+   "required": [
+    "top",
+    "bottom",
+    "left",
+    "right"
+   ],
+   "title": "BoxEdges",
+   "type": "object"
+  },
+  "ChoiceAnswer": {
+   "additionalProperties": false,
+   "properties": {
+    "type": {
+     "const": "choice",
+     "default": "choice",
+     "title": "Type",
+     "type": "string"
+    },
+    "choice": {
+     "title": "Choice",
+     "type": "string"
+    },
+    "probabilities": {
+     "anyOf": [
+      {
+       "additionalProperties": {
+        "type": "number"
+       },
+       "type": "object"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Probabilities"
+    },
+    "confidence": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Confidence"
+    }
+   },
+   "required": [
+    "choice"
+   ],
+   "title": "ChoiceAnswer",
+   "type": "object"
+  },
+  "Refusal": {
+   "additionalProperties": false,
+   "description": "The model declined to answer this question (its limit, not a failed call).",
+   "properties": {
+    "type": {
+     "const": "refusal",
+     "default": "refusal",
+     "title": "Type",
+     "type": "string"
+    },
+    "reason": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Reason"
+    }
+   },
+   "title": "Refusal",
+   "type": "object"
+  },
+  "ScoreAnswer": {
+   "additionalProperties": false,
+   "properties": {
+    "type": {
+     "const": "score",
+     "default": "score",
+     "title": "Type",
+     "type": "string"
+    },
+    "score": {
+     "title": "Score",
+     "type": "number"
+    },
+    "probabilities": {
+     "anyOf": [
+      {
+       "additionalProperties": {
+        "type": "number"
+       },
+       "type": "object"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Probabilities"
+    },
+    "confidence": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Confidence"
+    }
+   },
+   "required": [
+    "score"
+   ],
+   "title": "ScoreAnswer",
+   "type": "object"
+  },
+  "Usage": {
+   "additionalProperties": false,
+   "properties": {
+    "input_tokens": {
+     "default": 0,
+     "title": "Input Tokens",
+     "type": "integer"
+    },
+    "output_tokens": {
+     "default": 0,
+     "title": "Output Tokens",
+     "type": "integer"
+    },
+    "cost_usd": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Cost Usd"
+    },
+    "cost_source": {
+     "anyOf": [
+      {
+       "enum": [
+        "billed",
+        "list"
+       ],
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Cost Source"
+    },
+    "raw": {
+     "anyOf": [
+      {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Raw"
+    }
+   },
+   "title": "Usage",
+   "type": "object"
+  }
+ },
+ "additionalProperties": false,
+ "properties": {
+  "schema": {
+   "default": "s1flow/run@2",
+   "enum": [
+    "s1flow/run@1",
+    "s1flow/run@2"
+   ],
+   "title": "Schema",
+   "type": "string"
+  },
+  "request_digest": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Request Digest"
+  },
+  "id": {
+   "title": "Id",
+   "type": "string"
+  },
+  "label": {
+   "default": null,
+   "title": "Label"
+  },
+  "model": {
+   "title": "Model",
+   "type": "string"
+  },
+  "variant": {
+   "default": "base",
+   "title": "Variant",
+   "type": "string"
+  },
+  "prompt": {
+   "title": "Prompt",
+   "type": "string"
+  },
+  "distribution": {
+   "anyOf": [
+    {
+     "enum": [
+      "native",
+      "sampled",
+      "none"
+     ],
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Distribution"
+  },
+  "at": {
+   "default": "",
+   "title": "At",
+   "type": "string"
+  },
+  "outcome": {
+   "enum": [
+    "answered",
+    "unsupported",
+    "rejected",
+    "failed",
+    "data_error"
+   ],
+   "title": "Outcome",
+   "type": "string"
+  },
+  "answer": {
+   "anyOf": [
+    {
+     "discriminator": {
+      "mapping": {
+       "boolean": "#/$defs/BooleanAnswer",
+       "box": "#/$defs/BoxAnswer",
+       "choice": "#/$defs/ChoiceAnswer",
+       "refusal": "#/$defs/Refusal",
+       "score": "#/$defs/ScoreAnswer"
+      },
+      "propertyName": "type"
+     },
+     "oneOf": [
+      {
+       "$ref": "#/$defs/BooleanAnswer"
+      },
+      {
+       "$ref": "#/$defs/ChoiceAnswer"
+      },
+      {
+       "$ref": "#/$defs/ScoreAnswer"
+      },
+      {
+       "$ref": "#/$defs/BoxAnswer"
+      },
+      {
+       "$ref": "#/$defs/Refusal"
+      }
+     ]
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Answer"
+  },
+  "answered_by": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Answered By"
+  },
+  "usage": {
+   "anyOf": [
+    {
+     "$ref": "#/$defs/Usage"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null
+  },
+  "latency_ms": {
+   "anyOf": [
+    {
+     "type": "number"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Latency Ms"
+  },
+  "retries": {
+   "anyOf": [
+    {
+     "type": "integer"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Retries"
+  },
+  "concurrency": {
+   "anyOf": [
+    {
+     "type": "integer"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Concurrency"
+  },
+  "cached": {
+   "anyOf": [
+    {
+     "type": "boolean"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Cached"
+  },
+  "reason": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Reason"
+  },
+  "status": {
+   "anyOf": [
+    {
+     "type": "integer"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Status"
+  }
+ },
+ "required": [
+  "id",
+  "model",
+  "prompt",
+  "outcome"
+ ],
+ "title": "PredictionRecord",
+ "type": "object"
+}

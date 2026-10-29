@@ -1,0 +1,39 @@
+# The line-up: the models s1flow can compare. `s1flow run <task>` runs `default`; `--models a,b` picks by name.
+# These three need one key, OPENROUTER_API_KEY (https://openrouter.ai/keys): `s1flow doctor` checks it.
+#
+# A name is `model@api` (here OpenRouter). `versions` lists what a model serves under short names, each
+# with the id sent: `s1flow run <task> --models jev@openrouter:1.13` runs that version. A policy names
+# the version it was measured on.
+#
+# OpenRouter returns what each call cost, so these models take no `price`. Measured on issue-sized states
+# (about 400-800 input tokens, October 2026): about $0.02 per 1,000 calls for each of them.
+#
+# To add a model: `s1flow guide compare`. Other APIs (TypeSafe's own, Vercel AI Gateway, OpenAI,
+# Workers AI, an LLM through LiteLLM) need their own key; `s1flow doctor` names it.
+
+default = ["jev@openrouter", "decider@openrouter", "d1-ultra@openrouter"]
+
+[models."jev@openrouter"]
+provider = "openrouter"
+id = "typesafe/jev-1.14"  # version 1.14 below
+capabilities.image = true
+capabilities.question_types = ["boolean", "choice", "score", "box"]
+
+[models."jev@openrouter".versions."1.14"]
+id = "typesafe/jev-1.14"
+
+[models."jev@openrouter".versions."1.13"]
+id = "typesafe/jev-1.13"
+capabilities.question_types = ["boolean", "choice", "score"]  # no box: 1.13 answers 400
+
+[models."decider@openrouter"]
+provider = "openrouter"
+id = "perplexity/pplx-decider-v1.2"  # 27B (2026-10-16): the best coverage per dollar of these on issue triage
+capabilities.context_tokens = 262144
+capabilities.image = true
+
+[models."d1-ultra@openrouter"]
+provider = "openrouter"
+id = "liquid/d1-ultra"
+capabilities.context_tokens = 32768
+capabilities.image = true

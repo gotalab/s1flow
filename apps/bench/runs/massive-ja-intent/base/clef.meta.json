@@ -1,0 +1,1 @@
+{"schema": "s1flow/run-meta@1", "last": {"calls": 288, "cached": 0, "unsupported": 0, "errors": 0, "seconds": 22}, "measured": {"seconds": 22, "calls": 288, "concurrency": 8}}

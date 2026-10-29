@@ -1,0 +1,204 @@
+"""Evaluation records compose with, and reference, separately stored runtime specs."""
+from __future__ import annotations
+
+import json
+from pathlib import Path
+from typing import Literal
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
+from ..client.models import ModelSpec
+from ..core import clock
+from ..core.errors import ConfigError, NotFound, S1flowError
+from ..project import Project
+from ..policies.file import CURRENT, NEXT, Policies, PolicySpec, Ref, atomic_write, channel_name
+from .candidate import Candidate
+from .evaluation import Evaluation
+
+Pin = Literal['yes', 'no', 'alias']
+TestVerdict = Literal['kept', 'below', 'inconclusive']
+
+
+def pin(spec: ModelSpec, model: str) -> Pin:
+    if ':' in model or spec.version is not None:
+        return 'yes'
+    return 'alias' if spec.alias else 'no'
+
+
+class Evidence(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    data_sha256: str
+    execution_digest: str | None
+    input_adapter_digest: str = ''
+    evaluation_contract_digest: str | None = None  # unknown for historical evidence; never inferred
+    git_sha: str | None = None
+    evaluation: Evaluation
+    test: TestVerdict | None
+    test_uses: int = Field(ge=0)
+    compared: list[str]
+
+
+class Selection(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    by: str
+    reason: str
+    recommended: str
+    tied: list[str]
+
+
+class EvaluatedPolicy(BaseModel):
+    """Explicit runtime specification and the evaluation that selected it."""
+    model_config = ConfigDict(extra='forbid')
+    spec: PolicySpec
+    candidate: Candidate
+    selection: Selection
+    evidence: Evidence
+    answered_by: str
+
+    @model_validator(mode='after')
+    def _same_candidate(self) -> EvaluatedPolicy:
+        if self.candidate != self.evidence.evaluation.candidate:
+            raise ValueError('evaluation candidate does not match the selected candidate')
+        if self.candidate.model != self.spec.connection:
+            raise ValueError('candidate model does not match the execution connection')
+        return self
+
+
+class EvaluationRecord(BaseModel):
+    """vN.evaluation.json; never embeds or redefines the runtime specification."""
+    model_config = ConfigDict(extra='forbid', populate_by_name=True, serialize_by_alias=True)
+    schema_: Literal['s1flow/policy-evaluation@2'] = Field(default='s1flow/policy-evaluation@2', alias='schema')
+    policy_digest: str
+    candidate: Candidate
+    selection: Selection
+    evidence: Evidence
+    answered_by: str
+
+    @classmethod
+    def from_policy(cls, policy: EvaluatedPolicy) -> EvaluationRecord:
+        return cls(policy_digest=policy.spec.digest, candidate=policy.candidate, selection=policy.selection,
+                   evidence=policy.evidence, answered_by=policy.answered_by)
+
+    def attach(self, spec: PolicySpec) -> EvaluatedPolicy:
+        if self.policy_digest != spec.digest:
+            raise ConfigError(f'{spec.ref}: evaluation record does not match the stored policy digest')
+        return EvaluatedPolicy(spec=spec, candidate=self.candidate, selection=self.selection,
+                               evidence=self.evidence, answered_by=self.answered_by)
+
+    def dump(self) -> str:
+        return self.model_dump_json(by_alias=True, indent=1) + '\n'
+
+
+class Store:
+    """Evaluated policy store. Runtime storage owns locks, publication and channels."""
+
+    def __init__(self, root: Path):
+        self.runtime = Policies(root)
+        self.root = self.runtime.root
+
+    def dir(self, task: str) -> Path:
+        return self.runtime.dir(task)
+
+    def versions(self, task: str) -> list[int]:
+        return self.runtime.versions(task)
+
+    def next_version(self, task: str) -> int:
+        return self.runtime.next_version(task)
+
+    def channels(self, task: str) -> dict[str, int]:
+        return self.runtime.channels(task)
+
+    def tasks(self) -> list[str]:
+        return self.runtime.tasks()
+
+    def get(self, ref: Ref) -> EvaluatedPolicy:
+        return self.read(ref.task, version=ref.version, channel=ref.channel or CURRENT)
+
+    def _record_path(self, spec: PolicySpec) -> Path:
+        return self.runtime._file(spec.task, f'v{spec.version}.evaluation.json')
+
+    def read(self, task: str, version: int | None = None, channel: str = CURRENT) -> EvaluatedPolicy:
+        spec = self.runtime.read(task, version=version, channel=channel)
+        path = self._record_path(spec)
+        if not path.is_file():
+            raise NotFound(f'{spec.ref} has no evaluation record; the runtime specification is usable explicitly')
+        try:
+            record = EvaluationRecord.model_validate_json(path.read_text())
+            return record.attach(spec)
+        except (ValidationError, OSError) as e:
+            raise ConfigError(f'{path}: invalid evaluation record: {e}') from None
+
+    def write_new(self, policy: EvaluatedPolicy) -> None:
+        # Validate before any write, including values copied with model_copy(update=...).
+        policy = EvaluatedPolicy.model_validate_json(policy.model_dump_json())
+        record = EvaluationRecord.from_policy(policy)
+        with self.runtime.locked(policy.spec.task):
+            self.runtime._write_new(policy.spec)
+            atomic_write(self._record_path(policy.spec), record.dump(), immutable=True)
+
+    def set_channel(self, task: str, version: int, channel: str = CURRENT, force: bool = False) -> dict[str, int]:
+        channel_name(channel)
+        with self.runtime.locked(task):
+            spec = self.runtime.read(task, version=version)
+            record_path = self._record_path(spec)
+            evaluated = self.read(task, version=version) if record_path.exists() else None
+            below = evaluated is not None and evaluated.evidence.test == 'below'
+            if channel == CURRENT and below and not force:
+                raise S1flowError(f'{spec.ref} is below on the held-out test share; promote with --force if intended')
+            if below and force:
+                # Record the explicit override before changing a channel. Failure keeps the channel unchanged.
+                path = self.runtime._file(task, 'promotion-overrides.jsonl')
+                text = path.read_text() if path.exists() else ''
+                text += json.dumps({'at': clock.now(ms=True), 'policy': spec.ref, 'policy_digest': spec.digest,
+                                    'channel': channel, 'force': True}, sort_keys=True) + '\n'
+                atomic_write(path, text)
+            return self.runtime._set_channel(task, version, channel)
+
+
+def store(project: Project) -> Store:
+    return Store(project.policies_dir)
+
+
+class Shipped(BaseModel):
+    policy: str
+    version: int
+    channels: list[str]
+    candidate: str | None
+    model: str
+    model_version: str | None
+    answered_by: str | None
+    pin: Pin | None
+    at: str
+    digest: str
+    evaluated: bool
+
+
+class TaskPolicies(BaseModel):
+    task: str
+    channels: dict[str, int]
+    policies: list[Shipped]
+
+
+def overview(project: Project, tasks: list[str] | None = None) -> list[TaskPolicies]:
+    saved = store(project)
+    known = sorted({*project.task_ids(), *saved.tasks()})
+    if unknown := [t for t in tasks or [] if t not in known]:
+        raise NotFound(f'no task {unknown[0]!r}; tasks: {", ".join(known) or "none"}')
+    lineup = project.lineup()
+    out = []
+    for task in tasks or known:
+        channels = saved.channels(task)
+        order = sorted(channels, key=lambda name: (name != CURRENT, name != NEXT, name))
+        shipped = []
+        for version in reversed(saved.versions(task)):
+            spec = saved.runtime.read(task, version=version)
+            record = saved.read(task, version=version) if saved._record_path(spec).exists() else None
+            model, _, requested = spec.connection.partition(':')
+            configured = lineup.models.get(model)
+            declared = next((name for name, item in (configured.versions or {}).items() if item.id == spec.model_id), None) if configured else None
+            model_version = requested or declared
+            shipped.append(Shipped(policy=spec.ref, version=version, channels=[name for name in order if channels[name] == version],
+                                   candidate=record.candidate.name if record else None, model=model, model_version=model_version,
+                                   answered_by=record.answered_by if record else None,
+                                   pin='yes' if model_version else None if configured is None else 'alias' if configured.versions else 'no',
+                                   at=spec.at, digest=spec.digest, evaluated=record is not None))
+        out.append(TaskPolicies(task=task, channels={name: channels[name] for name in order}, policies=shipped))
+    return out

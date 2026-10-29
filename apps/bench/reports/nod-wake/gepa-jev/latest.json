@@ -1,0 +1,967 @@
+{
+ "schema": "s1flow/report@1",
+ "task": "nod-wake",
+ "variant": "gepa-jev",
+ "at": "2026-10-21T21:56:24Z",
+ "evaluations": [
+  {
+   "candidate": {
+    "model": "clef",
+    "variant": "gepa-jev"
+   },
+   "answered_by": "clef",
+   "answered_by_all": [
+    "clef"
+   ],
+   "n": 65,
+   "probabilities": true,
+   "failures": {
+    "calls": 80,
+    "failed": 0,
+    "unsupported": 0,
+    "data_errors": 0,
+    "unlabeled": 15,
+    "never_asked": 0,
+    "failed_cases": 0,
+    "refused_cases": 0
+   },
+   "split": "leave-one-out (23 test cases of the fixed evaluation set held out)",
+   "split_method": "loo",
+   "accuracy": {
+    "value": 0.9384615384615385,
+    "interval": [
+     0.8769230769230769,
+     0.9846153846153847
+    ]
+   },
+   "measures": {
+    "f1": {
+     "value": 0.9487179487179487,
+     "interval": null
+    }
+   },
+   "auroc": {
+    "value": 0.988,
+    "interval": [
+     0.964047755016079,
+     1.0
+    ]
+   },
+   "brier": 0.048001511692307694,
+   "ece": 0.08104615384615377,
+   "selective": [
+    {
+     "target_accuracy": 0.95,
+     "coverage": {
+      "value": 0.9523809523809523,
+      "interval": [
+       0.8809523809523809,
+       1.0
+      ]
+     },
+     "accuracy": 0.95,
+     "n": 40,
+     "errors": 2,
+     "lower": 0.850848038726787,
+     "labels_needed": null,
+     "min_probability": 0.5642
+    }
+   ],
+   "error_loss_threshold": {
+    "accuracy": 0.7380952380952381,
+    "misses": 1,
+    "false_alarms": 10,
+    "median": 0.1,
+    "chosen": 0.1
+   },
+   "floors": [],
+   "sweep": [
+    {
+     "threshold": 0.1,
+     "misses": 0,
+     "positives": 40,
+     "false_alarms": 13,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.2,
+     "misses": 0,
+     "positives": 40,
+     "false_alarms": 5,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.3,
+     "misses": 2,
+     "positives": 40,
+     "false_alarms": 3,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.4,
+     "misses": 2,
+     "positives": 40,
+     "false_alarms": 1,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.5,
+     "misses": 3,
+     "positives": 40,
+     "false_alarms": 1,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.6,
+     "misses": 4,
+     "positives": 40,
+     "false_alarms": 1,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.7,
+     "misses": 6,
+     "positives": 40,
+     "false_alarms": 0,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.8,
+     "misses": 7,
+     "positives": 40,
+     "false_alarms": 0,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.9,
+     "misses": 14,
+     "positives": 40,
+     "false_alarms": 0,
+     "negatives": 25
+    }
+   ],
+   "objective": {
+    "objective": {
+     "name": "coverage",
+     "params": {
+      "target_accuracy": 0.95
+     },
+     "direction": "max",
+     "sets": "min_probability",
+     "unit": "share",
+     "label": "coverage at 95% accuracy",
+     "code_sha256": null
+    },
+    "value": 0.9523809523809523,
+    "interval": [
+     0.8809523809523809,
+     1.0
+    ],
+    "rule": {
+     "threshold": null,
+     "min_probability": 0.5642
+    },
+    "constraint": 0.95
+   },
+   "tiebreak": [
+    {
+     "objective": {
+      "name": "expected_loss",
+      "params": {
+       "fn": 10.0,
+       "fp": 1.0
+      },
+      "direction": "min",
+      "sets": "threshold",
+      "unit": "number",
+      "label": "loss per case (miss 10, false alarm 1)",
+      "code_sha256": null
+     },
+     "value": 0.5,
+     "interval": [
+      0.0,
+      1.2142857142857142
+     ],
+     "rule": null,
+     "constraint": null
+    }
+   ],
+   "test": {
+    "n": 23,
+    "accuracy": 0.9565217391304348,
+    "coverage": 1.0,
+    "sure_accuracy": 0.9565217391304348,
+    "tuned_accuracy": 0.8695652173913043,
+    "primary": {
+     "value": 1.0,
+     "interval": [
+      1.0,
+      1.0
+     ]
+    },
+    "constraint": [
+     22,
+     23
+    ]
+   },
+   "high_confidence_errors": [],
+   "calls": {
+    "latency": {
+     "n": 80,
+     "p50_ms": 388.75,
+     "p90_ms": 648.6800000000002,
+     "p95_ms": 762.38,
+     "p99_ms": 938.5149999999998,
+     "max_ms": 979.2,
+     "spread": 2.4141864951768484,
+     "retried": 0,
+     "unrecorded": 80,
+     "concurrency": [],
+     "concurrency_unknown": 80
+    },
+    "case_latency_p90_ms": {
+     "value": 638.3999999999999,
+     "interval": [
+      469.57,
+      757.28
+     ]
+    },
+    "throughput": {
+     "per_min": 1107.6923076923076,
+     "seconds": 13.0,
+     "calls": 240,
+     "concurrency": 8,
+     "measured": true
+    },
+    "cost_per_10k_usd": 0.8312999999999998,
+    "cost_total_usd": 0.006650399999999999,
+    "cost_source": "list",
+    "cost_unknown": 0,
+    "price": {
+     "input_per_mtok": 0.24,
+     "output_per_mtok": 0.0,
+     "per_request": 0.0,
+     "per_image": 0.0,
+     "as_of": "2026-10-04",
+     "source": "https://developers.cloudflare.com/workers-ai/platform/pricing/"
+    }
+   }
+  },
+  {
+   "candidate": {
+    "model": "clef-flash",
+    "variant": "gepa-jev"
+   },
+   "answered_by": "clef-flash",
+   "answered_by_all": [
+    "clef-flash"
+   ],
+   "n": 65,
+   "probabilities": true,
+   "failures": {
+    "calls": 80,
+    "failed": 0,
+    "unsupported": 0,
+    "data_errors": 0,
+    "unlabeled": 15,
+    "never_asked": 0,
+    "failed_cases": 0,
+    "refused_cases": 0
+   },
+   "split": "leave-one-out (23 test cases of the fixed evaluation set held out)",
+   "split_method": "loo",
+   "accuracy": {
+    "value": 0.8923076923076924,
+    "interval": [
+     0.8153846153846154,
+     0.9538461538461539
+    ]
+   },
+   "measures": {
+    "f1": {
+     "value": 0.9066666666666666,
+     "interval": null
+    }
+   },
+   "auroc": {
+    "value": 0.988,
+    "interval": [
+     0.9634139364849026,
+     1.0
+    ]
+   },
+   "brier": 0.07971187384615384,
+   "ece": 0.10925846153846153,
+   "selective": [
+    {
+     "target_accuracy": 0.95,
+     "coverage": {
+      "value": 0.9285714285714286,
+      "interval": [
+       0.8333333333333334,
+       1.0
+      ]
+     },
+     "accuracy": 0.9230769230769231,
+     "n": 39,
+     "errors": 3,
+     "lower": 0.8130204948995411,
+     "labels_needed": null,
+     "min_probability": 0.5885
+    }
+   ],
+   "error_loss_threshold": {
+    "accuracy": 0.8333333333333334,
+    "misses": 1,
+    "false_alarms": 6,
+    "median": 0.1,
+    "chosen": 0.1
+   },
+   "floors": [],
+   "sweep": [
+    {
+     "threshold": 0.1,
+     "misses": 0,
+     "positives": 40,
+     "false_alarms": 7,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.2,
+     "misses": 0,
+     "positives": 40,
+     "false_alarms": 3,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.3,
+     "misses": 4,
+     "positives": 40,
+     "false_alarms": 2,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.4,
+     "misses": 4,
+     "positives": 40,
+     "false_alarms": 2,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.5,
+     "misses": 6,
+     "positives": 40,
+     "false_alarms": 1,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.6,
+     "misses": 8,
+     "positives": 40,
+     "false_alarms": 0,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.7,
+     "misses": 14,
+     "positives": 40,
+     "false_alarms": 0,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.8,
+     "misses": 20,
+     "positives": 40,
+     "false_alarms": 0,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.9,
+     "misses": 29,
+     "positives": 40,
+     "false_alarms": 0,
+     "negatives": 25
+    }
+   ],
+   "objective": {
+    "objective": {
+     "name": "coverage",
+     "params": {
+      "target_accuracy": 0.95
+     },
+     "direction": "max",
+     "sets": "min_probability",
+     "unit": "share",
+     "label": "coverage at 95% accuracy",
+     "code_sha256": null
+    },
+    "value": 0.9285714285714286,
+    "interval": [
+     0.8333333333333334,
+     1.0
+    ],
+    "rule": {
+     "threshold": null,
+     "min_probability": 0.5885
+    },
+    "constraint": 0.9230769230769231
+   },
+   "tiebreak": [
+    {
+     "objective": {
+      "name": "expected_loss",
+      "params": {
+       "fn": 10.0,
+       "fp": 1.0
+      },
+      "direction": "min",
+      "sets": "threshold",
+      "unit": "number",
+      "label": "loss per case (miss 10, false alarm 1)",
+      "code_sha256": null
+     },
+     "value": 0.7380952380952381,
+     "interval": [
+      0.023809523809523808,
+      1.6672619047619044
+     ],
+     "rule": null,
+     "constraint": null
+    }
+   ],
+   "test": {
+    "n": 23,
+    "accuracy": 0.8695652173913043,
+    "coverage": 0.9565217391304348,
+    "sure_accuracy": 0.8636363636363636,
+    "tuned_accuracy": 0.9565217391304348,
+    "primary": {
+     "value": 0.9565217391304348,
+     "interval": [
+      0.8695652173913043,
+      1.0
+     ]
+    },
+    "constraint": [
+     19,
+     22
+    ]
+   },
+   "high_confidence_errors": [],
+   "calls": {
+    "latency": {
+     "n": 80,
+     "p50_ms": 170.35,
+     "p90_ms": 385.06,
+     "p95_ms": 494.35499999999996,
+     "p99_ms": 584.0059999999986,
+     "max_ms": 756.7,
+     "spread": 3.4282712063398804,
+     "retried": 0,
+     "unrecorded": 80,
+     "concurrency": [],
+     "concurrency_unknown": 80
+    },
+    "case_latency_p90_ms": {
+     "value": 385.34000000000003,
+     "interval": [
+      281.04,
+      537.22
+     ]
+    },
+    "throughput": {
+     "per_min": 2057.142857142857,
+     "seconds": 7.0,
+     "calls": 240,
+     "concurrency": 8,
+     "measured": true
+    },
+    "cost_per_10k_usd": 0.3117375,
+    "cost_total_usd": 0.0024939,
+    "cost_source": "list",
+    "cost_unknown": 0,
+    "price": {
+     "input_per_mtok": 0.09,
+     "output_per_mtok": 0.0,
+     "per_request": 0.0,
+     "per_image": 0.0,
+     "as_of": "2026-10-04",
+     "source": "https://developers.cloudflare.com/workers-ai/platform/pricing/"
+    }
+   }
+  },
+  {
+   "candidate": {
+    "model": "jev@vercel",
+    "variant": "gepa-jev"
+   },
+   "answered_by": "typesafe-ai/jev",
+   "answered_by_all": [
+    "typesafe-ai/jev"
+   ],
+   "n": 65,
+   "probabilities": true,
+   "failures": {
+    "calls": 80,
+    "failed": 0,
+    "unsupported": 0,
+    "data_errors": 0,
+    "unlabeled": 15,
+    "never_asked": 0,
+    "failed_cases": 0,
+    "refused_cases": 0
+   },
+   "split": "leave-one-out (23 test cases of the fixed evaluation set held out)",
+   "split_method": "loo",
+   "accuracy": {
+    "value": 0.9384615384615385,
+    "interval": [
+     0.8769230769230769,
+     0.9846153846153847
+    ]
+   },
+   "measures": {
+    "f1": {
+     "value": 0.95,
+     "interval": null
+    }
+   },
+   "auroc": {
+    "value": 0.991,
+    "interval": [
+     0.9696365772115297,
+     1.0
+    ]
+   },
+   "brier": 0.03978890976587947,
+   "ece": 0.037488733488733564,
+   "selective": [
+    {
+     "target_accuracy": 0.95,
+     "coverage": {
+      "value": 0.9761904761904762,
+      "interval": [
+       0.9285714285714286,
+       1.0
+      ]
+     },
+     "accuracy": 0.9512195121951219,
+     "n": 41,
+     "errors": 2,
+     "lower": 0.85429449660857,
+     "labels_needed": 88749,
+     "min_probability": 0.6599999999999999
+    }
+   ],
+   "error_loss_threshold": {
+    "accuracy": 0.9523809523809523,
+    "misses": 0,
+    "false_alarms": 2,
+    "median": 0.3,
+    "chosen": 0.3
+   },
+   "floors": [],
+   "sweep": [
+    {
+     "threshold": 0.1,
+     "misses": 0,
+     "positives": 40,
+     "false_alarms": 5,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.2,
+     "misses": 0,
+     "positives": 40,
+     "false_alarms": 3,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.3,
+     "misses": 0,
+     "positives": 40,
+     "false_alarms": 3,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.4,
+     "misses": 1,
+     "positives": 40,
+     "false_alarms": 2,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.5,
+     "misses": 2,
+     "positives": 40,
+     "false_alarms": 2,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.6,
+     "misses": 3,
+     "positives": 40,
+     "false_alarms": 2,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.7,
+     "misses": 5,
+     "positives": 40,
+     "false_alarms": 1,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.8,
+     "misses": 9,
+     "positives": 40,
+     "false_alarms": 0,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.9,
+     "misses": 10,
+     "positives": 40,
+     "false_alarms": 0,
+     "negatives": 25
+    }
+   ],
+   "objective": {
+    "objective": {
+     "name": "coverage",
+     "params": {
+      "target_accuracy": 0.95
+     },
+     "direction": "max",
+     "sets": "min_probability",
+     "unit": "share",
+     "label": "coverage at 95% accuracy",
+     "code_sha256": null
+    },
+    "value": 0.9761904761904762,
+    "interval": [
+     0.9285714285714286,
+     1.0
+    ],
+    "rule": {
+     "threshold": null,
+     "min_probability": 0.6599999999999999
+    },
+    "constraint": 0.9512195121951219
+   },
+   "tiebreak": [
+    {
+     "objective": {
+      "name": "expected_loss",
+      "params": {
+       "fn": 10.0,
+       "fp": 1.0
+      },
+      "direction": "min",
+      "sets": "threshold",
+      "unit": "number",
+      "label": "loss per case (miss 10, false alarm 1)",
+      "code_sha256": null
+     },
+     "value": 0.5,
+     "interval": [
+      0.0,
+      1.2380952380952381
+     ],
+     "rule": null,
+     "constraint": null
+    }
+   ],
+   "test": {
+    "n": 23,
+    "accuracy": 0.9565217391304348,
+    "coverage": 0.9130434782608695,
+    "sure_accuracy": 1.0,
+    "tuned_accuracy": 0.9565217391304348,
+    "primary": {
+     "value": 0.9130434782608695,
+     "interval": [
+      0.782608695652174,
+      1.0
+     ]
+    },
+    "constraint": [
+     21,
+     21
+    ]
+   },
+   "high_confidence_errors": [],
+   "calls": {
+    "latency": {
+     "n": 80,
+     "p50_ms": 355.2,
+     "p90_ms": 516.34,
+     "p95_ms": 562.4949999999998,
+     "p99_ms": 829.0779999999995,
+     "max_ms": 893.7,
+     "spread": 2.33411599099099,
+     "retried": 0,
+     "unrecorded": 80,
+     "concurrency": [],
+     "concurrency_unknown": 80
+    },
+    "case_latency_p90_ms": {
+     "value": 542.27,
+     "interval": [
+      512.2,
+      765.0699999999998
+     ]
+    },
+    "throughput": null,
+    "cost_per_10k_usd": 0.28752675,
+    "cost_total_usd": 0.002300214,
+    "cost_source": "billed",
+    "cost_unknown": 0,
+    "price": null
+   }
+  },
+  {
+   "candidate": {
+    "model": "luna@decisions",
+    "variant": "gepa-jev"
+   },
+   "answered_by": "gpt-6-luna",
+   "answered_by_all": [
+    "gpt-6-luna"
+   ],
+   "n": 64,
+   "probabilities": true,
+   "failures": {
+    "calls": 80,
+    "failed": 1,
+    "unsupported": 0,
+    "data_errors": 0,
+    "unlabeled": 15,
+    "never_asked": 0,
+    "failed_cases": 1,
+    "refused_cases": 0
+   },
+   "split": "leave-one-out (23 test cases of the fixed evaluation set held out)",
+   "split_method": "loo",
+   "accuracy": {
+    "value": 0.984375,
+    "interval": [
+     0.953125,
+     1.0
+    ]
+   },
+   "measures": {
+    "f1": {
+     "value": 0.9873417721518988,
+     "interval": null
+    }
+   },
+   "auroc": {
+    "value": 0.9989743589743589,
+    "interval": [
+     0.9939271255060729,
+     1.0
+    ]
+   },
+   "brier": 0.04504062500000001,
+   "ece": 0.13875,
+   "selective": [
+    {
+     "target_accuracy": 0.95,
+     "coverage": {
+      "value": 0.975609756097561,
+      "interval": [
+       0.926829268292683,
+       1.0
+      ]
+     },
+     "accuracy": 0.975,
+     "n": 40,
+     "errors": 1,
+     "lower": 0.8868116390552625,
+     "labels_needed": 199,
+     "min_probability": 0.5
+    }
+   ],
+   "error_loss_threshold": {
+    "accuracy": 0.975609756097561,
+    "misses": 0,
+    "false_alarms": 1,
+    "median": 0.5,
+    "chosen": 0.5
+   },
+   "floors": [],
+   "sweep": [
+    {
+     "threshold": 0.1,
+     "misses": 0,
+     "positives": 39,
+     "false_alarms": 17,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.2,
+     "misses": 0,
+     "positives": 39,
+     "false_alarms": 10,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.3,
+     "misses": 0,
+     "positives": 39,
+     "false_alarms": 8,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.4,
+     "misses": 0,
+     "positives": 39,
+     "false_alarms": 3,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.5,
+     "misses": 0,
+     "positives": 39,
+     "false_alarms": 1,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.6,
+     "misses": 2,
+     "positives": 39,
+     "false_alarms": 0,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.7,
+     "misses": 8,
+     "positives": 39,
+     "false_alarms": 0,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.8,
+     "misses": 9,
+     "positives": 39,
+     "false_alarms": 0,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.9,
+     "misses": 13,
+     "positives": 39,
+     "false_alarms": 0,
+     "negatives": 25
+    }
+   ],
+   "objective": {
+    "objective": {
+     "name": "coverage",
+     "params": {
+      "target_accuracy": 0.95
+     },
+     "direction": "max",
+     "sets": "min_probability",
+     "unit": "share",
+     "label": "coverage at 95% accuracy",
+     "code_sha256": null
+    },
+    "value": 0.975609756097561,
+    "interval": [
+     0.926829268292683,
+     1.0
+    ],
+    "rule": {
+     "threshold": null,
+     "min_probability": 0.5
+    },
+    "constraint": 0.975
+   },
+   "tiebreak": [
+    {
+     "objective": {
+      "name": "expected_loss",
+      "params": {
+       "fn": 10.0,
+       "fp": 1.0
+      },
+      "direction": "min",
+      "sets": "threshold",
+      "unit": "number",
+      "label": "loss per case (miss 10, false alarm 1)",
+      "code_sha256": null
+     },
+     "value": 0.024390243902439025,
+     "interval": [
+      0.0,
+      0.07317073170731707
+     ],
+     "rule": null,
+     "constraint": null
+    }
+   ],
+   "test": {
+    "n": 23,
+    "accuracy": 1.0,
+    "coverage": 1.0,
+    "sure_accuracy": 1.0,
+    "tuned_accuracy": 1.0,
+    "primary": {
+     "value": 1.0,
+     "interval": [
+      1.0,
+      1.0
+     ]
+    },
+    "constraint": [
+     23,
+     23
+    ]
+   },
+   "high_confidence_errors": [],
+   "calls": {
+    "latency": {
+     "n": 79,
+     "p50_ms": 269.9,
+     "p90_ms": 554.52,
+     "p95_ms": 569.0999999999999,
+     "p99_ms": 589.9639999999999,
+     "max_ms": 598.7,
+     "spread": 2.1858614301593184,
+     "retried": 0,
+     "unrecorded": 79,
+     "concurrency": [],
+     "concurrency_unknown": 79
+    },
+    "case_latency_p90_ms": {
+     "value": 534.2,
+     "interval": [
+      313.6,
+      581.2
+     ]
+    },
+    "throughput": {
+     "per_min": 1440.0,
+     "seconds": 10.0,
+     "calls": 240,
+     "concurrency": 8,
+     "measured": true
+    },
+    "cost_per_10k_usd": 0.4029620253164557,
+    "cost_total_usd": 0.0031834000000000003,
+    "cost_source": "list",
+    "cost_unknown": 0,
+    "price": {
+     "input_per_mtok": 0.1,
+     "output_per_mtok": 0.0,
+     "per_request": 0.0,
+     "per_image": 0.0,
+     "as_of": "2026-10-09",
+     "source": "https://openai.com/api/pricing/ (Decisions API, no output charge)"
+    }
+   }
+  }
+ ]
+}

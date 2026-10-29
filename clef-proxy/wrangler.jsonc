@@ -1,0 +1,8 @@
+{
+  // Local only: `wrangler dev` relays s1flow's requests to Workers AI (Clef) with the
+  // wrangler login, so no API token is needed. Not meant to be deployed.
+  "name": "s1flow-clef-proxy",
+  "main": "index.ts",
+  "compatibility_date": "2026-09-01",
+  "ai": { "binding": "AI", "remote": true }
+}

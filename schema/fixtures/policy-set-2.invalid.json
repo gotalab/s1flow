@@ -1,0 +1,54 @@
+{
+ "schema": "s1flow/policy-set@2",
+ "channel": "current",
+ "policies": {
+  "gh-ruff-area": {
+   "version": 1,
+   "digest": "9e03d3586e9a5f69923f4ebb27a56acb77a8e7eeb7abd40eb420746bdf462d4e",
+   "policy": {
+    "schema": "s1flow/policy@2",
+    "task": "gh-ruff-area",
+    "version": 1,
+    "connection": "d1@vercel",
+    "model_id": "liquid/d1",
+    "questions": {
+     "area": {
+      "question": {
+       "type": "choice",
+       "instructions": "Which part of Ruff (a Python linter and formatter) does this issue concern?",
+       "criteria": {
+        "linter": "Lint rules, their fixes, suppression comments (noqa), import sorting, docstring checks, diagnostics or preview rules.",
+        "formatter": "The code formatter: how formatted code looks.",
+        "server": "The language server (LSP) and editor integration.",
+        "configuration": "Settings, the command-line interface, or selecting which rules are enabled."
+       }
+      },
+      "kind": {},
+      "rule": {
+       "threshold": null,
+       "min_probability": 0.8717000534493162
+      }
+     }
+    },
+    "at": "2026-10-15T21:46:14Z",
+    "s1flow_version": "0.1.0",
+    "state_schema": {
+     "type": "object",
+     "properties": {
+      "body": {
+       "type": "string"
+      },
+      "title": {
+       "type": "string"
+      }
+     },
+     "required": [
+      "body",
+      "title"
+     ]
+    }
+   }
+  }
+ },
+ "unexpected": true
+}

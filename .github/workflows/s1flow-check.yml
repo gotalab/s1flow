@@ -1,0 +1,25 @@
+# Checks every PR that changes a question, a model or a policy of apps/bench, s1flow's own evaluation project.
+# A PR checks a sample of the test cases; nothing runs on pushes.
+name: s1flow check
+on:
+  pull_request:
+    paths: ["apps/bench/tasks/**", "apps/bench/policies/**", "apps/bench/s1flow.toml"]
+permissions:
+  contents: read
+  pull-requests: write
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./
+        with:
+          working-directory: apps/bench
+          sample: "40"
+        env:
+          AI_GATEWAY_API_KEY: ${{ secrets.AI_GATEWAY_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}

@@ -1,0 +1,12 @@
+{
+  "name": "s1flow",
+  "interface": { "displayName": "s1flow" },
+  "plugins": [
+    {
+      "name": "s1flow",
+      "source": { "source": "local", "path": "./plugin" },
+      "policy": { "installation": "AVAILABLE", "authentication": "ON_INSTALL" },
+      "category": "Productivity"
+    }
+  ]
+}

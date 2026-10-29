@@ -1,0 +1,82 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "https://github.com/gotalab/s1flow/blob/main/schema/split-1.json",
+ "$defs": {
+  "Use": {
+   "properties": {
+    "at": {
+     "title": "At",
+     "type": "string"
+    },
+    "by": {
+     "title": "By",
+     "type": "string"
+    },
+    "what": {
+     "title": "What",
+     "type": "string"
+    }
+   },
+   "required": [
+    "at",
+    "by",
+    "what"
+   ],
+   "title": "Use",
+   "type": "object"
+  }
+ },
+ "additionalProperties": false,
+ "properties": {
+  "schema": {
+   "const": "s1flow/split@1",
+   "default": "s1flow/split@1",
+   "title": "Schema",
+   "type": "string"
+  },
+  "seed": {
+   "title": "Seed",
+   "type": "integer"
+  },
+  "test_share": {
+   "title": "Test Share",
+   "type": "number"
+  },
+  "at": {
+   "title": "At",
+   "type": "string"
+  },
+  "source": {
+   "title": "Source",
+   "type": "string"
+  },
+  "assign": {
+   "additionalProperties": {
+    "enum": [
+     "train",
+     "val",
+     "test"
+    ],
+    "type": "string"
+   },
+   "title": "Assign",
+   "type": "object"
+  },
+  "uses": {
+   "items": {
+    "$ref": "#/$defs/Use"
+   },
+   "title": "Uses",
+   "type": "array"
+  }
+ },
+ "required": [
+  "seed",
+  "test_share",
+  "at",
+  "source",
+  "assign"
+ ],
+ "title": "SplitFile",
+ "type": "object"
+}

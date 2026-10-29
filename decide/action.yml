@@ -1,0 +1,82 @@
+name: s1flow decide
+description: >
+  Answer one case with a policy (a task's `current` channel by default) and return the answer with its
+  probability, decision id and lower-bound status as outputs, for the workflow to act on. The caller
+  supplies the trusted model connections explicitly.
+  A failed call fails the step; use `continue-on-error` to carry on without an answer.
+inputs:
+  policy:
+    description: "The policy: TASK (its current channel), TASK@channel or TASK@vN, as a log names it (gh-ruff-area@v3)."
+    required: true
+  state:
+    description: The state as JSON, the same shape the task was evaluated on.
+    required: true
+  connections:
+    description: A trusted s1flow.toml containing only the connections this workflow grants to the policy.
+    required: true
+  case-id:
+    description: An application id for log context (an issue or PR number); it may repeat and is not a feedback key.
+    default: ""
+  path:
+    description: A policy file, or a policy set from `s1flow policy export` (policies.json), instead of the project's policies/.
+    default: ""
+  log:
+    description: Append the answer to this JSONL file (keep it, e.g. as an artifact, for `s1flow feedback`).
+    default: ""
+  keep-state:
+    description: "`true` keeps the state in the log, so `s1flow feedback measure` can add the case as a labelled one once its right answer is known. Needs `log`."
+    default: "false"
+  working-directory:
+    description: The project directory, with s1flow.toml and policies/ (`s1flow init` makes s1flow/).
+    default: s1flow
+  package:
+    description: The package requirement to install in this workflow when pyproject.toml does not list s1flow; a project that lists it runs its locked copy. Empty runs this Action's own copy (the base install, which decides) with the dependency versions in its uv.lock; set e.g. `s1flow[images] @ git+https://...` only when the policy needs an extra.
+    default: ""
+outputs:
+  answer:
+    description: The class key, or true / false.
+    value: ${{ steps.decide.outputs.answer }}
+  probability:
+    description: The probability of the answer (0-1).
+    value: ${{ steps.decide.outputs.probability }}
+  below_min_probability:
+    description: "`null` when no lower bound is configured, otherwise `true` below it or `false` at or above it."
+    value: ${{ steps.decide.outputs.below_min_probability }}
+  decision_id:
+    description: The unique id of this successful judgement; pass it to feedback record when its label is known.
+    value: ${{ steps.decide.outputs.decision_id }}
+  policy:
+    description: The version that answered, its id (task@vN).
+    value: ${{ steps.decide.outputs.policy }}
+runs:
+  using: composite
+  steps:
+    - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+    - id: decide
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        POLICY: ${{ inputs.policy }}
+        STATE: ${{ inputs.state }}   # through the environment, never into the script: it may hold text anyone wrote
+        CONNECTIONS_FILE: ${{ inputs.connections }}
+        CASE_ID: ${{ inputs.case-id }}
+        POLICY_PATH: ${{ inputs.path }}
+        LOG: ${{ inputs.log }}
+        KEEP_STATE: ${{ inputs.keep-state }}
+        PACKAGE: ${{ inputs.package }}
+        ACTION_PATH: ${{ github.action_path }}
+      run: |
+        set -euo pipefail
+        # a project whose pyproject.toml lists s1flow (s1flow's apps/bench, or an app's own) runs the s1flow it locked
+        if grep -Eq '"s1flow([][<>=~!; ]|")' pyproject.toml 2>/dev/null; then s1=(uv run --frozen s1flow)
+        # otherwise PACKAGE as given, or this Action's copy with the dependency versions its uv.lock pins, in the
+        # Action's own environment (a caller's UV_PROJECT_ENVIRONMENT would point the sync at their venv)
+        elif [ -n "$PACKAGE" ]; then s1=(uvx --from "$PACKAGE" s1flow)
+        else s1=(env -u UV_PROJECT_ENVIRONMENT -u UV_NO_SYNC uv run --project "$(dirname "$ACTION_PATH")" --frozen --no-dev s1flow); fi
+        args=(--policy "$POLICY" --connections "$CONNECTIONS_FILE" --github-output)
+        [ -n "$POLICY_PATH" ] && args+=(--path "$POLICY_PATH")
+        [ -n "$CASE_ID" ] && args+=(--case-id "$CASE_ID")
+        [ -n "$LOG" ] && args+=(--log "$LOG")
+        [ "$KEEP_STATE" = true ] && args+=(--keep-state)
+        printf '%s' "$STATE" > "$RUNNER_TEMP/s1flow-state.json"
+        "${s1[@]}" decide --state "@$RUNNER_TEMP/s1flow-state.json" "${args[@]}"

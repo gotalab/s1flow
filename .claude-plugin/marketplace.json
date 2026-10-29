@@ -1,0 +1,14 @@
+{
+  "name": "s1flow",
+  "description": "Evaluate decision models (Jev, Clef, d1, OpenAI Decisions) on your own data, then run the one you trust",
+  "owner": {
+    "name": "gotalab"
+  },
+  "plugins": [
+    {
+      "name": "s1flow",
+      "source": "./plugin",
+      "description": "The s1flow Agent Skill: collect and review labeled cases, compare decision models and prompts, and adopt a policy your app runs with the s1flow SDK."
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+# Copy to .github/workflows/ to check every PR that changes a question, a model or a policy.
+# A PR checks a sample of the test cases; a push to main checks them all (and fills the cache).
+name: s1flow check
+on:
+  pull_request:
+    paths: ["s1flow/tasks/**", "s1flow/policies/**", "s1flow/s1flow.toml"]
+  push:
+    branches: [main]
+    paths: ["s1flow/tasks/**", "s1flow/policies/**", "s1flow/s1flow.toml"]
+permissions:
+  contents: read
+  pull-requests: write
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: gotalab/s1flow@main
+        with:
+          working-directory: s1flow
+          sample: "40"
+        env:
+          AI_GATEWAY_API_KEY: ${{ secrets.AI_GATEWAY_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}

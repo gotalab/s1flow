@@ -1,0 +1,26 @@
+# s1flow check: on a pull request that changes a task, a policy or s1flow.toml, ask the current policy and the
+# changed one about 40 test cases and keep one comment on the PR. Nothing runs on other PRs or on pushes.
+#
+# What it spends per PR: at most 40 cases x 2 versions = 80 calls (answers cached by an earlier run cost
+# nothing). At about $0.02 per 1,000 calls (the OpenRouter models of `s1flow init`'s s1flow.toml) that is under
+# $0.01; for other models, 80 x their price per call. `sample` sets the number of cases.
+#
+# Secrets: OPENROUTER_API_KEY. A policy on another model needs its key too: `s1flow doctor --policy <task>`.
+name: s1flow check
+on:
+  pull_request:
+    paths: ["{prefix}tasks/**", "{prefix}policies/**", "{prefix}s1flow.toml"]
+permissions:
+  contents: read
+  pull-requests: write
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: {action}
+        with:
+          working-directory: "{workdir}"
+          sample: "40"
+        env:
+          OPENROUTER_API_KEY: ${{{{ secrets.OPENROUTER_API_KEY }}}}

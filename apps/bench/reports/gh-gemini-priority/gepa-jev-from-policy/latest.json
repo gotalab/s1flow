@@ -1,0 +1,990 @@
+{
+ "schema": "s1flow/report@1",
+ "task": "gh-gemini-priority",
+ "variant": "gepa-jev-from-policy",
+ "at": "2026-10-22T00:00:00Z",
+ "evaluations": [
+  {
+   "candidate": {
+    "model": "clef",
+    "variant": "gepa-jev-from-policy"
+   },
+   "answered_by": "clef",
+   "answered_by_all": [
+    "clef"
+   ],
+   "n": 300,
+   "probabilities": true,
+   "failures": {
+    "calls": 300,
+    "failed": 0,
+    "unsupported": 0,
+    "data_errors": 0,
+    "unlabeled": 0,
+    "never_asked": 0,
+    "failed_cases": 0,
+    "refused_cases": 0
+   },
+   "split": "stratified k-fold (90 test cases of the fixed evaluation set held out)",
+   "split_method": "stratified-kfold",
+   "accuracy": {
+    "value": 0.63,
+    "interval": [
+     0.5733333333333334,
+     0.68
+    ]
+   },
+   "measures": {
+    "macro_f1": {
+     "value": 0.6336960842774797,
+     "interval": null
+    }
+   },
+   "auroc": {
+    "value": 0.8238167487267406,
+    "interval": [
+     0.7821008476122429,
+     0.859607428186171
+    ]
+   },
+   "brier": 0.4765925172666667,
+   "ece": 0.04999700000000002,
+   "selective": [
+    {
+     "target_accuracy": 0.95,
+     "coverage": {
+      "value": 0.014285714285714285,
+      "interval": [
+       0.0,
+       0.03333333333333333
+      ]
+     },
+     "accuracy": 0.6666666666666666,
+     "n": 3,
+     "errors": 1,
+     "lower": 0.13535036217158386,
+     "labels_needed": null,
+     "min_probability": 0.9467
+    }
+   ],
+   "error_loss_threshold": null,
+   "floors": [],
+   "sweep": null,
+   "objective": {
+    "objective": {
+     "name": "accuracy",
+     "params": {},
+     "direction": "max",
+     "sets": null,
+     "unit": "share",
+     "label": "accuracy (all)",
+     "code_sha256": null
+    },
+    "value": 0.6047619047619047,
+    "interval": [
+     0.5428571428571428,
+     0.6761904761904762
+    ],
+    "rule": null,
+    "constraint": null
+   },
+   "tiebreak": [],
+   "test": {
+    "n": 90,
+    "accuracy": 0.6888888888888889,
+    "coverage": 0.0,
+    "sure_accuracy": null,
+    "tuned_accuracy": null,
+    "primary": {
+     "value": 0.6888888888888889,
+     "interval": [
+      0.6,
+      0.7666666666666667
+     ]
+    },
+    "constraint": null
+   },
+   "high_confidence_errors": [
+    {
+     "id": "#29012",
+     "label": "priority/p1",
+     "predicted": "priority/p3",
+     "probability": 0.9284
+    },
+    {
+     "id": "#28259",
+     "label": "priority/p2",
+     "predicted": "priority/p3",
+     "probability": 0.9159
+    },
+    {
+     "id": "#28841",
+     "label": "priority/p2",
+     "predicted": "priority/p3",
+     "probability": 0.906
+    }
+   ],
+   "calls": {
+    "latency": {
+     "n": 300,
+     "p50_ms": 406.79999999999995,
+     "p90_ms": 631.05,
+     "p95_ms": 720.4100000000001,
+     "p99_ms": 1036.466999999999,
+     "max_ms": 1359.5,
+     "spread": 2.547853982300883,
+     "retried": 0,
+     "unrecorded": 300,
+     "concurrency": [],
+     "concurrency_unknown": 300
+    },
+    "case_latency_p90_ms": {
+     "value": 631.05,
+     "interval": [
+      566.7,
+      682.3
+     ]
+    },
+    "throughput": {
+     "per_min": 1058.8235294117649,
+     "seconds": 17.0,
+     "calls": 300,
+     "concurrency": 8,
+     "measured": true
+    },
+    "cost_per_10k_usd": 1.727992,
+    "cost_total_usd": 0.05183976,
+    "cost_source": "list",
+    "cost_unknown": 0,
+    "price": {
+     "input_per_mtok": 0.24,
+     "output_per_mtok": 0.0,
+     "per_request": 0.0,
+     "per_image": 0.0,
+     "as_of": "2026-10-04",
+     "source": "https://developers.cloudflare.com/workers-ai/platform/pricing/"
+    }
+   }
+  },
+  {
+   "candidate": {
+    "model": "clef-flash",
+    "variant": "gepa-jev-from-policy"
+   },
+   "answered_by": "clef-flash",
+   "answered_by_all": [
+    "clef-flash"
+   ],
+   "n": 300,
+   "probabilities": true,
+   "failures": {
+    "calls": 300,
+    "failed": 0,
+    "unsupported": 0,
+    "data_errors": 0,
+    "unlabeled": 0,
+    "never_asked": 0,
+    "failed_cases": 0,
+    "refused_cases": 0
+   },
+   "split": "stratified k-fold (90 test cases of the fixed evaluation set held out)",
+   "split_method": "stratified-kfold",
+   "accuracy": {
+    "value": 0.6133333333333333,
+    "interval": [
+     0.5566666666666666,
+     0.6634166666666665
+    ]
+   },
+   "measures": {
+    "macro_f1": {
+     "value": 0.6315196726155631,
+     "interval": null
+    }
+   },
+   "auroc": {
+    "value": 0.8168604379547927,
+    "interval": [
+     0.7748243054661325,
+     0.8541568086684156
+    ]
+   },
+   "brier": 0.5052817222000001,
+   "ece": 0.05108599999999997,
+   "selective": [
+    {
+     "target_accuracy": 0.95,
+     "coverage": {
+      "value": 0.01904761904761905,
+      "interval": [
+       0.00464285714285715,
+       0.0380952380952381
+      ]
+     },
+     "accuracy": 1.0,
+     "n": 4,
+     "errors": 0,
+     "lower": 0.472870804501588,
+     "labels_needed": 2888,
+     "min_probability": 0.9004
+    }
+   ],
+   "error_loss_threshold": null,
+   "floors": [],
+   "sweep": null,
+   "objective": {
+    "objective": {
+     "name": "accuracy",
+     "params": {},
+     "direction": "max",
+     "sets": null,
+     "unit": "share",
+     "label": "accuracy (all)",
+     "code_sha256": null
+    },
+    "value": 0.5952380952380952,
+    "interval": [
+     0.5285714285714286,
+     0.6571428571428571
+    ],
+    "rule": null,
+    "constraint": null
+   },
+   "tiebreak": [],
+   "test": {
+    "n": 90,
+    "accuracy": 0.6555555555555556,
+    "coverage": 0.044444444444444446,
+    "sure_accuracy": 1.0,
+    "tuned_accuracy": null,
+    "primary": {
+     "value": 0.6555555555555556,
+     "interval": [
+      0.5555555555555556,
+      0.7555555555555555
+     ]
+    },
+    "constraint": null
+   },
+   "high_confidence_errors": [],
+   "calls": {
+    "latency": {
+     "n": 300,
+     "p50_ms": 199.7,
+     "p90_ms": 506.94000000000005,
+     "p95_ms": 529.4000000000001,
+     "p99_ms": 576.9089999999998,
+     "max_ms": 674.7,
+     "spread": 2.8888783174762134,
+     "retried": 0,
+     "unrecorded": 300,
+     "concurrency": [],
+     "concurrency_unknown": 300
+    },
+    "case_latency_p90_ms": {
+     "value": 494.68,
+     "interval": [
+      441.16424999999987,
+      522.69
+     ]
+    },
+    "throughput": {
+     "per_min": 1800.0,
+     "seconds": 10.0,
+     "calls": 300,
+     "concurrency": 8,
+     "measured": true
+    },
+    "cost_per_10k_usd": 0.6479969999999999,
+    "cost_total_usd": 0.019439909999999998,
+    "cost_source": "list",
+    "cost_unknown": 0,
+    "price": {
+     "input_per_mtok": 0.09,
+     "output_per_mtok": 0.0,
+     "per_request": 0.0,
+     "per_image": 0.0,
+     "as_of": "2026-10-04",
+     "source": "https://developers.cloudflare.com/workers-ai/platform/pricing/"
+    }
+   }
+  },
+  {
+   "candidate": {
+    "model": "jev@vercel",
+    "variant": "gepa-jev-from-policy"
+   },
+   "answered_by": "typesafe-ai/jev",
+   "answered_by_all": [
+    "typesafe-ai/jev"
+   ],
+   "n": 300,
+   "probabilities": true,
+   "failures": {
+    "calls": 300,
+    "failed": 0,
+    "unsupported": 0,
+    "data_errors": 0,
+    "unlabeled": 0,
+    "never_asked": 0,
+    "failed_cases": 0,
+    "refused_cases": 0
+   },
+   "split": "stratified k-fold (90 test cases of the fixed evaluation set held out)",
+   "split_method": "stratified-kfold",
+   "accuracy": {
+    "value": 0.66,
+    "interval": [
+     0.6066666666666667,
+     0.71
+    ]
+   },
+   "measures": {
+    "macro_f1": {
+     "value": 0.6702954744293327,
+     "interval": null
+    }
+   },
+   "auroc": {
+    "value": 0.8263836697327642,
+    "interval": [
+     0.790326713430667,
+     0.8626211529281129
+    ]
+   },
+   "brier": 0.487112,
+   "ece": 0.15483333333333343,
+   "selective": [
+    {
+     "target_accuracy": 0.95,
+     "coverage": {
+      "value": 0.0380952380952381,
+      "interval": [
+       0.014285714285714285,
+       0.06666666666666667
+      ]
+     },
+     "accuracy": 1.0,
+     "n": 8,
+     "errors": 0,
+     "lower": 0.6876560219336322,
+     "labels_needed": 1339,
+     "min_probability": 1.0
+    }
+   ],
+   "error_loss_threshold": null,
+   "floors": [],
+   "sweep": null,
+   "objective": {
+    "objective": {
+     "name": "accuracy",
+     "params": {},
+     "direction": "max",
+     "sets": null,
+     "unit": "share",
+     "label": "accuracy (all)",
+     "code_sha256": null
+    },
+    "value": 0.638095238095238,
+    "interval": [
+     0.5666666666666667,
+     0.7
+    ],
+    "rule": null,
+    "constraint": null
+   },
+   "tiebreak": [],
+   "test": {
+    "n": 90,
+    "accuracy": 0.7111111111111111,
+    "coverage": 0.044444444444444446,
+    "sure_accuracy": 1.0,
+    "tuned_accuracy": null,
+    "primary": {
+     "value": 0.7111111111111111,
+     "interval": [
+      0.6111111111111112,
+      0.8
+     ]
+    },
+    "constraint": null
+   },
+   "high_confidence_errors": [
+    {
+     "id": "#29405",
+     "label": "priority/p2",
+     "predicted": "priority/p1",
+     "probability": 0.99
+    },
+    {
+     "id": "#28550",
+     "label": "priority/p2",
+     "predicted": "priority/p1",
+     "probability": 0.99
+    },
+    {
+     "id": "#28259",
+     "label": "priority/p2",
+     "predicted": "priority/p3",
+     "probability": 0.99
+    },
+    {
+     "id": "#28841",
+     "label": "priority/p2",
+     "predicted": "priority/p3",
+     "probability": 0.99
+    },
+    {
+     "id": "#29306",
+     "label": "priority/p2",
+     "predicted": "priority/p1",
+     "probability": 0.98
+    },
+    {
+     "id": "#28445",
+     "label": "priority/p2",
+     "predicted": "priority/p3",
+     "probability": 0.98
+    },
+    {
+     "id": "#28263",
+     "label": "priority/p2",
+     "predicted": "priority/p1",
+     "probability": 0.98
+    },
+    {
+     "id": "#28260",
+     "label": "priority/p2",
+     "predicted": "priority/p3",
+     "probability": 0.96
+    },
+    {
+     "id": "#29012",
+     "label": "priority/p1",
+     "predicted": "priority/p3",
+     "probability": 0.95
+    },
+    {
+     "id": "#28273",
+     "label": "priority/p2",
+     "predicted": "priority/p1",
+     "probability": 0.95
+    },
+    {
+     "id": "#28340",
+     "label": "priority/p1",
+     "predicted": "priority/p2",
+     "probability": 0.9400000000000001
+    },
+    {
+     "id": "#28448",
+     "label": "priority/p1",
+     "predicted": "priority/p3",
+     "probability": 0.94
+    },
+    {
+     "id": "#29109",
+     "label": "priority/p3",
+     "predicted": "priority/p2",
+     "probability": 0.94
+    },
+    {
+     "id": "#28800",
+     "label": "priority/p1",
+     "predicted": "priority/p2",
+     "probability": 0.94
+    },
+    {
+     "id": "#29001",
+     "label": "priority/p2",
+     "predicted": "priority/p1",
+     "probability": 0.94
+    },
+    {
+     "id": "#29424",
+     "label": "priority/p2",
+     "predicted": "priority/p1",
+     "probability": 0.94
+    },
+    {
+     "id": "#28826",
+     "label": "priority/p1",
+     "predicted": "priority/p2",
+     "probability": 0.94
+    },
+    {
+     "id": "#28944",
+     "label": "priority/p3",
+     "predicted": "priority/p2",
+     "probability": 0.93
+    },
+    {
+     "id": "#28351",
+     "label": "priority/p1",
+     "predicted": "priority/p2",
+     "probability": 0.93
+    },
+    {
+     "id": "#28553",
+     "label": "priority/p2",
+     "predicted": "priority/p3",
+     "probability": 0.93
+    },
+    {
+     "id": "#29077",
+     "label": "priority/p1",
+     "predicted": "priority/p2",
+     "probability": 0.92
+    },
+    {
+     "id": "#29164",
+     "label": "priority/p1",
+     "predicted": "priority/p2",
+     "probability": 0.92
+    },
+    {
+     "id": "#29146",
+     "label": "priority/p2",
+     "predicted": "priority/p3",
+     "probability": 0.92
+    },
+    {
+     "id": "#29296",
+     "label": "priority/p3",
+     "predicted": "priority/p2",
+     "probability": 0.91
+    },
+    {
+     "id": "#28246",
+     "label": "priority/p2",
+     "predicted": "priority/p1",
+     "probability": 0.91
+    },
+    {
+     "id": "#29309",
+     "label": "priority/p2",
+     "predicted": "priority/p1",
+     "probability": 0.9
+    },
+    {
+     "id": "#29202",
+     "label": "priority/p2",
+     "predicted": "priority/p1",
+     "probability": 0.9
+    },
+    {
+     "id": "#29389",
+     "label": "priority/p1",
+     "predicted": "priority/p2",
+     "probability": 0.9
+    },
+    {
+     "id": "#28274",
+     "label": "priority/p2",
+     "predicted": "priority/p1",
+     "probability": 0.9
+    }
+   ],
+   "calls": {
+    "latency": {
+     "n": 300,
+     "p50_ms": 404.15,
+     "p90_ms": 546.54,
+     "p95_ms": 609.8950000000001,
+     "p99_ms": 732.1959999999998,
+     "max_ms": 1237.6,
+     "spread": 1.8116936780898178,
+     "retried": 0,
+     "unrecorded": 300,
+     "concurrency": [],
+     "concurrency_unknown": 300
+    },
+    "case_latency_p90_ms": {
+     "value": 534.5699999999999,
+     "interval": [
+      523.0699999999999,
+      565.6799999999998
+     ]
+    },
+    "throughput": null,
+    "cost_per_10k_usd": 0.3839122,
+    "cost_total_usd": 0.011517366000000001,
+    "cost_source": "billed",
+    "cost_unknown": 0,
+    "price": null
+   }
+  },
+  {
+   "candidate": {
+    "model": "luna@decisions",
+    "variant": "gepa-jev-from-policy"
+   },
+   "answered_by": "gpt-6-luna",
+   "answered_by_all": [
+    "gpt-6-luna"
+   ],
+   "n": 300,
+   "probabilities": true,
+   "failures": {
+    "calls": 300,
+    "failed": 0,
+    "unsupported": 0,
+    "data_errors": 0,
+    "unlabeled": 0,
+    "never_asked": 0,
+    "failed_cases": 0,
+    "refused_cases": 0
+   },
+   "split": "stratified k-fold (90 test cases of the fixed evaluation set held out)",
+   "split_method": "stratified-kfold",
+   "accuracy": {
+    "value": 0.6666666666666666,
+    "interval": [
+     0.61,
+     0.72
+    ]
+   },
+   "measures": {
+    "macro_f1": {
+     "value": 0.6467608247301466,
+     "interval": null
+    }
+   },
+   "auroc": {
+    "value": 0.8071341212013662,
+    "interval": [
+     0.7610191029469611,
+     0.8409921994002452
+    ]
+   },
+   "brier": 0.5328146666666667,
+   "ece": 0.20696666666666663,
+   "selective": [
+    {
+     "target_accuracy": 0.95,
+     "coverage": {
+      "value": 0.0,
+      "interval": [
+       0.0,
+       0.0
+      ]
+     },
+     "accuracy": null,
+     "n": 0,
+     "errors": 0,
+     "lower": 0.0,
+     "labels_needed": null,
+     "min_probability": null
+    }
+   ],
+   "error_loss_threshold": null,
+   "floors": [],
+   "sweep": null,
+   "objective": {
+    "objective": {
+     "name": "accuracy",
+     "params": {},
+     "direction": "max",
+     "sets": null,
+     "unit": "share",
+     "label": "accuracy (all)",
+     "code_sha256": null
+    },
+    "value": 0.6571428571428571,
+    "interval": [
+     0.5952380952380952,
+     0.7142857142857143
+    ],
+    "rule": null,
+    "constraint": null
+   },
+   "tiebreak": [],
+   "test": {
+    "n": 90,
+    "accuracy": 0.6888888888888889,
+    "coverage": 0.0,
+    "sure_accuracy": null,
+    "tuned_accuracy": null,
+    "primary": {
+     "value": 0.6888888888888889,
+     "interval": [
+      0.5888888888888889,
+      0.794722222222222
+     ]
+    },
+    "constraint": null
+   },
+   "high_confidence_errors": [
+    {
+     "id": "#28445",
+     "label": "priority/p2",
+     "predicted": "priority/p3",
+     "probability": 1.0
+    },
+    {
+     "id": "#28231",
+     "label": "priority/p2",
+     "predicted": "priority/p3",
+     "probability": 1.0
+    },
+    {
+     "id": "#28259",
+     "label": "priority/p2",
+     "predicted": "priority/p3",
+     "probability": 1.0
+    },
+    {
+     "id": "#29012",
+     "label": "priority/p1",
+     "predicted": "priority/p3",
+     "probability": 1.0
+    },
+    {
+     "id": "#29405",
+     "label": "priority/p2",
+     "predicted": "priority/p1",
+     "probability": 0.99
+    },
+    {
+     "id": "#28859",
+     "label": "priority/p1",
+     "predicted": "priority/p2",
+     "probability": 0.99
+    },
+    {
+     "id": "#29465",
+     "label": "priority/p1",
+     "predicted": "priority/p2",
+     "probability": 0.99
+    },
+    {
+     "id": "#28944",
+     "label": "priority/p3",
+     "predicted": "priority/p2",
+     "probability": 0.99
+    },
+    {
+     "id": "#28800",
+     "label": "priority/p1",
+     "predicted": "priority/p2",
+     "probability": 0.97
+    },
+    {
+     "id": "#28841",
+     "label": "priority/p2",
+     "predicted": "priority/p3",
+     "probability": 0.97
+    },
+    {
+     "id": "#28340",
+     "label": "priority/p1",
+     "predicted": "priority/p2",
+     "probability": 0.97
+    },
+    {
+     "id": "#29031",
+     "label": "priority/p1",
+     "predicted": "priority/p2",
+     "probability": 0.96
+    },
+    {
+     "id": "#29317",
+     "label": "priority/p1",
+     "predicted": "priority/p2",
+     "probability": 0.96
+    },
+    {
+     "id": "#28351",
+     "label": "priority/p1",
+     "predicted": "priority/p2",
+     "probability": 0.96
+    },
+    {
+     "id": "#29146",
+     "label": "priority/p2",
+     "predicted": "priority/p3",
+     "probability": 0.96
+    },
+    {
+     "id": "#29198",
+     "label": "priority/p1",
+     "predicted": "priority/p2",
+     "probability": 0.95
+    },
+    {
+     "id": "#28317",
+     "label": "priority/p1",
+     "predicted": "priority/p3",
+     "probability": 0.95
+    },
+    {
+     "id": "#28826",
+     "label": "priority/p1",
+     "predicted": "priority/p2",
+     "probability": 0.95
+    },
+    {
+     "id": "#29045",
+     "label": "priority/p1",
+     "predicted": "priority/p2",
+     "probability": 0.95
+    },
+    {
+     "id": "#29077",
+     "label": "priority/p1",
+     "predicted": "priority/p2",
+     "probability": 0.95
+    },
+    {
+     "id": "#28928",
+     "label": "priority/p1",
+     "predicted": "priority/p2",
+     "probability": 0.95
+    },
+    {
+     "id": "#29307",
+     "label": "priority/p1",
+     "predicted": "priority/p2",
+     "probability": 0.95
+    },
+    {
+     "id": "#28229",
+     "label": "priority/p1",
+     "predicted": "priority/p2",
+     "probability": 0.94
+    },
+    {
+     "id": "#28261",
+     "label": "priority/p1",
+     "predicted": "priority/p2",
+     "probability": 0.94
+    },
+    {
+     "id": "#28512",
+     "label": "priority/p1",
+     "predicted": "priority/p2",
+     "probability": 0.94
+    },
+    {
+     "id": "#28448",
+     "label": "priority/p1",
+     "predicted": "priority/p3",
+     "probability": 0.94
+    },
+    {
+     "id": "#28598",
+     "label": "priority/p1",
+     "predicted": "priority/p2",
+     "probability": 0.94
+    },
+    {
+     "id": "#28765",
+     "label": "priority/p2",
+     "predicted": "priority/p3",
+     "probability": 0.94
+    },
+    {
+     "id": "#29109",
+     "label": "priority/p3",
+     "predicted": "priority/p2",
+     "probability": 0.94
+    },
+    {
+     "id": "#29610",
+     "label": "priority/p2",
+     "predicted": "priority/p3",
+     "probability": 0.94
+    },
+    {
+     "id": "#29279",
+     "label": "priority/p1",
+     "predicted": "priority/p2",
+     "probability": 0.94
+    },
+    {
+     "id": "#29477",
+     "label": "priority/p1",
+     "predicted": "priority/p2",
+     "probability": 0.94
+    },
+    {
+     "id": "#29069",
+     "label": "priority/p1",
+     "predicted": "priority/p2",
+     "probability": 0.93
+    },
+    {
+     "id": "#29361",
+     "label": "priority/p1",
+     "predicted": "priority/p2",
+     "probability": 0.93
+    },
+    {
+     "id": "#28260",
+     "label": "priority/p2",
+     "predicted": "priority/p3",
+     "probability": 0.92
+    },
+    {
+     "id": "#28311",
+     "label": "priority/p2",
+     "predicted": "priority/p3",
+     "probability": 0.92
+    },
+    {
+     "id": "#29296",
+     "label": "priority/p3",
+     "predicted": "priority/p2",
+     "probability": 0.91
+    },
+    {
+     "id": "#28786",
+     "label": "priority/p1",
+     "predicted": "priority/p2",
+     "probability": 0.91
+    }
+   ],
+   "calls": {
+    "latency": {
+     "n": 300,
+     "p50_ms": 262.6,
+     "p90_ms": 351.56,
+     "p95_ms": 511.455,
+     "p99_ms": 617.8169999999999,
+     "max_ms": 684.3,
+     "spread": 2.352692307692307,
+     "retried": 0,
+     "unrecorded": 300,
+     "concurrency": [],
+     "concurrency_unknown": 300
+    },
+    "case_latency_p90_ms": {
+     "value": 355.03999999999985,
+     "interval": [
+      318.52,
+      504.1
+     ]
+    },
+    "throughput": {
+     "per_min": 1636.3636363636365,
+     "seconds": 11.0,
+     "calls": 300,
+     "concurrency": 8,
+     "measured": true
+    },
+    "cost_per_10k_usd": 0.6829833333333334,
+    "cost_total_usd": 0.0204895,
+    "cost_source": "list",
+    "cost_unknown": 0,
+    "price": {
+     "input_per_mtok": 0.1,
+     "output_per_mtok": 0.0,
+     "per_request": 0.0,
+     "per_image": 0.0,
+     "as_of": "2026-10-09",
+     "source": "https://openai.com/api/pricing/ (Decisions API, no output charge)"
+    }
+   }
+  }
+ ]
+}

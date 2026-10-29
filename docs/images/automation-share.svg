@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 352" width="880" height="352" role="img" aria-labelledby="t d">
+  <title id="t">Similar accuracy, very different share you can automate</title>
+  <desc id="d">For each model, a thin bar shows accuracy over all cases and a thick bar the share of cases it can handle automatically at a 95% accuracy target. JNLI (Japanese, 3 classes, 300 cases): d1 (Liquid) 97% automatable at 93.0% accuracy, Jev (TypeSafe) 61% at 84.0%, Clef (Cloudflare) 60% at 87.3%, Claude Haiku 4.5 0% at 89.3%. MASSIVE (Japanese, 60 classes, 288 cases): d1 61% at 83.7%, jev 78% at 85.1%, Clef 90% at 89.2%, Haiku 0% at 85.1%. Haiku, asked once, gives every answer the same confidence. Source: apps/bench reports, 2026-10-22.</desc>
+  <style>
+    text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; fill: #1f2328; }
+    .bg { fill: #ffffff; }
+    .h { font-size: 20px; font-weight: 700; }
+    .p { font-size: 15px; font-weight: 700; }
+    .ps { font-size: 13px; fill: #6e7781; }
+    .n { font-size: 14px; font-weight: 600; }
+    .v { font-size: 18px; font-weight: 700; }
+    .a { font-size: 12px; fill: #6e7781; }
+    .lg { font-size: 13px; fill: #57606a; }
+    .f { font-size: 12px; fill: #6e7781; }
+    .track { fill: #eff2f5; }
+    .acc { fill: #8c959f; }
+    .top, .bar { fill: #0969da; }
+    .rule { stroke: #d8dee4; }
+  </style>
+  <rect class="bg" width="880" height="352" rx="16"/>
+  <text class="h" x="28" y="44">Similar accuracy. Very different automation.</text>
+  <rect class="acc" x="560" y="31" width="22" height="5" rx="2.5"/>
+  <text class="lg" x="590" y="38">accuracy</text>
+  <rect class="top" x="668" y="27" width="22" height="12" rx="4"/>
+  <text class="lg" x="698" y="38">automatable at 95%</text>
+  <text class="p" x="28" y="88">JNLI</text>
+  <text class="ps" x="86" y="88">3 classes · 300 cases</text>
+  <text class="n" x="28" y="137">d1</text>
+  <rect class="acc" x="120" y="112" width="232.5" height="5" rx="2.5"/>
+  <text class="a" x="380" y="118">93%</text>
+  <rect class="track" x="120" y="123" width="250" height="18" rx="5"/>
+  <rect class="top" x="120" y="123" width="242.5" height="18" rx="5"/>
+  <text class="v" x="380" y="139">97%</text>
+  <text class="n" x="28" y="189">Jev</text>
+  <rect class="acc" x="120" y="164" width="210.0" height="5" rx="2.5"/>
+  <text class="a" x="380" y="170">84%</text>
+  <rect class="track" x="120" y="175" width="250" height="18" rx="5"/>
+  <rect class="bar" x="120" y="175" width="152.5" height="18" rx="5"/>
+  <text class="v" x="380" y="191">61%</text>
+  <text class="n" x="28" y="241">Clef</text>
+  <rect class="acc" x="120" y="216" width="218.2" height="5" rx="2.5"/>
+  <text class="a" x="380" y="222">87%</text>
+  <rect class="track" x="120" y="227" width="250" height="18" rx="5"/>
+  <rect class="bar" x="120" y="227" width="150.0" height="18" rx="5"/>
+  <text class="v" x="380" y="243">60%</text>
+  <text class="n" x="28" y="293">Haiku 4.5</text>
+  <rect class="acc" x="120" y="268" width="223.2" height="5" rx="2.5"/>
+  <text class="a" x="380" y="274">89%</text>
+  <rect class="track" x="120" y="279" width="250" height="18" rx="5"/>
+  <text class="v" x="380" y="295">0%</text>
+  <text class="p" x="468" y="88">MASSIVE</text>
+  <text class="ps" x="559" y="88">60 classes · 288 cases</text>
+  <text class="n" x="468" y="137">d1</text>
+  <rect class="acc" x="560" y="112" width="209.2" height="5" rx="2.5"/>
+  <text class="a" x="820" y="118">84%</text>
+  <rect class="track" x="560" y="123" width="250" height="18" rx="5"/>
+  <rect class="bar" x="560" y="123" width="152.5" height="18" rx="5"/>
+  <text class="v" x="820" y="139">61%</text>
+  <text class="n" x="468" y="189">Jev</text>
+  <rect class="acc" x="560" y="164" width="212.8" height="5" rx="2.5"/>
+  <text class="a" x="820" y="170">85%</text>
+  <rect class="track" x="560" y="175" width="250" height="18" rx="5"/>
+  <rect class="bar" x="560" y="175" width="195.0" height="18" rx="5"/>
+  <text class="v" x="820" y="191">78%</text>
+  <text class="n" x="468" y="241">Clef</text>
+  <rect class="acc" x="560" y="216" width="223.0" height="5" rx="2.5"/>
+  <text class="a" x="820" y="222">89%</text>
+  <rect class="track" x="560" y="227" width="250" height="18" rx="5"/>
+  <rect class="top" x="560" y="227" width="225.0" height="18" rx="5"/>
+  <text class="v" x="820" y="243">90%</text>
+  <text class="n" x="468" y="293">Haiku 4.5</text>
+  <rect class="acc" x="560" y="268" width="212.8" height="5" rx="2.5"/>
+  <text class="a" x="820" y="274">85%</text>
+  <rect class="track" x="560" y="279" width="250" height="18" rx="5"/>
+  <text class="v" x="820" y="295">0%</text>
+  <line class="rule" x1="440" x2="440" y1="72" y2="306"/>
+  <text class="f" x="28" y="332">Japanese tasks · apps/bench reports, 2026-10-22 · a dated snapshot, not a ranking of providers</text>
+</svg>

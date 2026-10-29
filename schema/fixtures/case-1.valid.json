@@ -1,0 +1,7 @@
+{
+ "id": "#29400",
+ "title": "Formatter drops a comment",
+ "body": "...",
+ "label": "formatter",
+ "rationale": "about ruff format"
+}

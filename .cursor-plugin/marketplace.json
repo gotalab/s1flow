@@ -1,0 +1,13 @@
+{
+  "name": "s1flow",
+  "owner": {
+    "name": "gotalab"
+  },
+  "plugins": [
+    {
+      "name": "s1flow",
+      "source": "plugin",
+      "description": "The s1flow Agent Skill: collect and review labeled cases, compare decision models and prompts, and adopt a policy your app runs with the s1flow SDK."
+    }
+  ]
+}

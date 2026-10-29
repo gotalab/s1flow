@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 300" width="880" height="300" role="img" aria-labelledby="t d">
+  <title id="t">How s1flow works</title>
+  <desc id="d">Your coding agent, with the s1flow Skill, collects labelled cases and compares models and prompts on them. You choose one. Your app decides with that same policy: sure answers act, unsure ones go to a person. The answers people give become new cases.</desc>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10z" class="ah"/>
+    </marker>
+    <style>
+      text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+      .bg { fill: #ffffff; }
+      .tag { font-size: 12px; font-weight: 700; letter-spacing: .12em; }
+      .lbl { font-size: 17px; font-weight: 650; fill: #1f2328; text-anchor: middle; }
+      .pill { font-size: 14px; font-weight: 650; fill: #ffffff; }
+      .loop { font-size: 13px; font-weight: 600; fill: #57606a; text-anchor: middle; }
+      .ic { fill: none; stroke: #ffffff; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+      .icf { fill: #ffffff; }
+      .ln { fill: none; stroke: #8c959f; stroke-width: 2.5; stroke-linecap: round; marker-end: url(#a); }
+      .ah { fill: #8c959f; }
+      .lp { fill: none; stroke: #8c959f; stroke-width: 2.5; stroke-dasharray: 2 7; stroke-linecap: round; marker-end: url(#a); }
+      .za { fill: #fbefff; } .ca { fill: #8250df; } .ta { fill: #8250df; }
+      .zb { fill: #fff8c5; } .cb { fill: #bf8700; } .tb { fill: #9a6700; }
+      .zc { fill: #ddf4ff; } .cc { fill: #0969da; } .tc { fill: #0969da; }
+      .ok { fill: #1a7f37; } .ask { fill: #6e7781; }
+    </style>
+  </defs>
+  <rect class="bg" width="880" height="300" rx="16"/>
+
+  <!-- zones -->
+  <rect class="za" x="16" y="16" width="372" height="212" rx="18"/>
+  <rect class="zb" x="404" y="16" width="124" height="212" rx="18"/>
+  <rect class="zc" x="544" y="16" width="320" height="212" rx="18"/>
+  <text class="tag ta" x="36" y="44">YOUR AGENT</text>
+  <text class="tag tb" x="424" y="44">YOU</text>
+  <text class="tag tc" x="564" y="44">YOUR APP</text>
+
+  <!-- collect: stacked cards -->
+  <circle class="ca" cx="112" cy="122" r="40"/>
+  <rect class="ic" x="98" y="112" width="26" height="28" rx="4"/>
+  <path class="ic" d="M104 106H128V132"/>
+  <path class="ic" d="M110 100H134V126"/>
+  <text class="lbl" x="112" y="196">Collect</text>
+
+  <!-- compare: bars -->
+  <circle class="ca" cx="290" cy="122" r="40"/>
+  <path class="ic" d="M274 140V122M286 140V106M298 140V116M310 140V128"/>
+  <text class="lbl" x="290" y="196">Compare</text>
+
+  <!-- choose: check -->
+  <circle class="cb" cx="466" cy="122" r="40"/>
+  <path class="ic" d="M450 123L461 134L483 110" style="stroke-width:4"/>
+  <text class="lbl" x="466" y="196">Choose</text>
+
+  <!-- decide: policy file -->
+  <circle class="cc" cx="622" cy="122" r="40"/>
+  <path class="ic" d="M610 104H628L638 114V140H610Z"/>
+  <path class="ic" d="M617 122H631M617 131H627"/>
+  <text class="lbl" x="622" y="196">Decide</text>
+
+  <!-- outcomes -->
+  <rect class="ok" x="694" y="72" width="164" height="40" rx="20"/>
+  <path class="ic" d="M714 92L720 98L730 86" style="stroke-width:2.5"/>
+  <text class="pill" x="738" y="97">sure: act</text>
+  <rect class="ask" x="694" y="132" width="164" height="40" rx="20"/>
+  <circle class="icf" cx="721" cy="146" r="5"/>
+  <path class="icf" d="M712 162a9 8 0 0 1 18 0z"/>
+  <text class="pill" x="738" y="157">unsure: a person</text>
+
+  <!-- flow -->
+  <path class="ln" d="M156 122H242"/>
+  <path class="ln" d="M334 122H418"/>
+  <path class="ln" d="M510 122H574"/>
+  <path class="ln" d="M664 112L688 98"/>
+  <path class="ln" d="M664 132L688 146"/>
+
+  <!-- feedback loop -->
+  <path class="lp" d="M776 178V258Q776 276 758 276H50Q32 276 32 258V140Q32 122 50 122H66"/>
+  <text class="loop" x="404" y="266">the person’s answer becomes a new case</text>
+</svg>

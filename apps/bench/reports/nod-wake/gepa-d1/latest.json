@@ -1,0 +1,974 @@
+{
+ "schema": "s1flow/report@1",
+ "task": "nod-wake",
+ "variant": "gepa-d1",
+ "at": "2026-10-21T21:56:22Z",
+ "evaluations": [
+  {
+   "candidate": {
+    "model": "clef",
+    "variant": "gepa-d1"
+   },
+   "answered_by": "clef",
+   "answered_by_all": [
+    "clef"
+   ],
+   "n": 65,
+   "probabilities": true,
+   "failures": {
+    "calls": 80,
+    "failed": 0,
+    "unsupported": 0,
+    "data_errors": 0,
+    "unlabeled": 15,
+    "never_asked": 0,
+    "failed_cases": 0,
+    "refused_cases": 0
+   },
+   "split": "leave-one-out (23 test cases of the fixed evaluation set held out)",
+   "split_method": "loo",
+   "accuracy": {
+    "value": 0.9076923076923077,
+    "interval": [
+     0.8307692307692308,
+     0.9692307692307692
+    ]
+   },
+   "measures": {
+    "f1": {
+     "value": 0.918918918918919,
+     "interval": null
+    }
+   },
+   "auroc": {
+    "value": 0.996,
+    "interval": [
+     0.9847567567567568,
+     1.0
+    ]
+   },
+   "brier": 0.06261773538461538,
+   "ece": 0.06781230769230769,
+   "selective": [
+    {
+     "target_accuracy": 0.95,
+     "coverage": {
+      "value": 0.9285714285714286,
+      "interval": [
+       0.8333333333333334,
+       1.0
+      ]
+     },
+     "accuracy": 0.9230769230769231,
+     "n": 39,
+     "errors": 3,
+     "lower": 0.8130204948995411,
+     "labels_needed": null,
+     "min_probability": 0.6969000000000001
+    }
+   ],
+   "error_loss_threshold": {
+    "accuracy": 0.8809523809523809,
+    "misses": 1,
+    "false_alarms": 4,
+    "median": 0.1,
+    "chosen": 0.1
+   },
+   "floors": [],
+   "sweep": [
+    {
+     "threshold": 0.1,
+     "misses": 0,
+     "positives": 40,
+     "false_alarms": 5,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.2,
+     "misses": 0,
+     "positives": 40,
+     "false_alarms": 3,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.3,
+     "misses": 2,
+     "positives": 40,
+     "false_alarms": 1,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.4,
+     "misses": 5,
+     "positives": 40,
+     "false_alarms": 0,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.5,
+     "misses": 6,
+     "positives": 40,
+     "false_alarms": 0,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.6,
+     "misses": 8,
+     "positives": 40,
+     "false_alarms": 0,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.7,
+     "misses": 10,
+     "positives": 40,
+     "false_alarms": 0,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.8,
+     "misses": 14,
+     "positives": 40,
+     "false_alarms": 0,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.9,
+     "misses": 20,
+     "positives": 40,
+     "false_alarms": 0,
+     "negatives": 25
+    }
+   ],
+   "objective": {
+    "objective": {
+     "name": "coverage",
+     "params": {
+      "target_accuracy": 0.95
+     },
+     "direction": "max",
+     "sets": "min_probability",
+     "unit": "share",
+     "label": "coverage at 95% accuracy",
+     "code_sha256": null
+    },
+    "value": 0.9285714285714286,
+    "interval": [
+     0.8333333333333334,
+     1.0
+    ],
+    "rule": {
+     "threshold": null,
+     "min_probability": 0.6969000000000001
+    },
+    "constraint": 0.9230769230769231
+   },
+   "tiebreak": [
+    {
+     "objective": {
+      "name": "expected_loss",
+      "params": {
+       "fn": 10.0,
+       "fp": 1.0
+      },
+      "direction": "min",
+      "sets": "threshold",
+      "unit": "number",
+      "label": "loss per case (miss 10, false alarm 1)",
+      "code_sha256": null
+     },
+     "value": 0.7142857142857143,
+     "interval": [
+      0.0,
+      1.6666666666666667
+     ],
+     "rule": null,
+     "constraint": null
+    }
+   ],
+   "test": {
+    "n": 23,
+    "accuracy": 0.8695652173913043,
+    "coverage": 0.8260869565217391,
+    "sure_accuracy": 0.9473684210526315,
+    "tuned_accuracy": 0.9565217391304348,
+    "primary": {
+     "value": 0.8260869565217391,
+     "interval": [
+      0.6521739130434783,
+      0.9565217391304348
+     ]
+    },
+    "constraint": [
+     18,
+     19
+    ]
+   },
+   "high_confidence_errors": [],
+   "calls": {
+    "latency": {
+     "n": 80,
+     "p50_ms": 411.75,
+     "p90_ms": 646.0000000000002,
+     "p95_ms": 834.8799999999999,
+     "p99_ms": 1297.0359999999991,
+     "max_ms": 1401.0,
+     "spread": 3.1500570734669076,
+     "retried": 0,
+     "unrecorded": 80,
+     "concurrency": [],
+     "concurrency_unknown": 80
+    },
+    "case_latency_p90_ms": {
+     "value": 663.4399999999999,
+     "interval": [
+      530.4,
+      853.2399999999999
+     ]
+    },
+    "throughput": {
+     "per_min": 960.0,
+     "seconds": 15.0,
+     "calls": 240,
+     "concurrency": 8,
+     "measured": true
+    },
+    "cost_per_10k_usd": 0.7832999999999999,
+    "cost_total_usd": 0.006266399999999999,
+    "cost_source": "list",
+    "cost_unknown": 0,
+    "price": {
+     "input_per_mtok": 0.24,
+     "output_per_mtok": 0.0,
+     "per_request": 0.0,
+     "per_image": 0.0,
+     "as_of": "2026-10-04",
+     "source": "https://developers.cloudflare.com/workers-ai/platform/pricing/"
+    }
+   }
+  },
+  {
+   "candidate": {
+    "model": "clef-flash",
+    "variant": "gepa-d1"
+   },
+   "answered_by": "clef-flash",
+   "answered_by_all": [
+    "clef-flash"
+   ],
+   "n": 65,
+   "probabilities": true,
+   "failures": {
+    "calls": 80,
+    "failed": 0,
+    "unsupported": 0,
+    "data_errors": 0,
+    "unlabeled": 15,
+    "never_asked": 0,
+    "failed_cases": 0,
+    "refused_cases": 0
+   },
+   "split": "leave-one-out (23 test cases of the fixed evaluation set held out)",
+   "split_method": "loo",
+   "accuracy": {
+    "value": 0.8923076923076924,
+    "interval": [
+     0.8153846153846154,
+     0.9538461538461539
+    ]
+   },
+   "measures": {
+    "f1": {
+     "value": 0.9113924050632911,
+     "interval": null
+    }
+   },
+   "auroc": {
+    "value": 0.967,
+    "interval": [
+     0.9237708617381205,
+     0.9940845704003598
+    ]
+   },
+   "brier": 0.09240232538461539,
+   "ece": 0.10490000000000003,
+   "selective": [
+    {
+     "target_accuracy": 0.95,
+     "coverage": {
+      "value": 0.8333333333333334,
+      "interval": [
+       0.7142857142857143,
+       0.9285714285714286
+      ]
+     },
+     "accuracy": 0.9428571428571428,
+     "n": 35,
+     "errors": 2,
+     "lower": 0.8308483705282464,
+     "labels_needed": null,
+     "min_probability": 0.6435
+    }
+   ],
+   "error_loss_threshold": {
+    "accuracy": 0.9285714285714286,
+    "misses": 0,
+    "false_alarms": 3,
+    "median": 0.3,
+    "chosen": 0.3
+   },
+   "floors": [],
+   "sweep": [
+    {
+     "threshold": 0.1,
+     "misses": 0,
+     "positives": 40,
+     "false_alarms": 14,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.2,
+     "misses": 1,
+     "positives": 40,
+     "false_alarms": 7,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.3,
+     "misses": 2,
+     "positives": 40,
+     "false_alarms": 4,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.4,
+     "misses": 3,
+     "positives": 40,
+     "false_alarms": 3,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.5,
+     "misses": 4,
+     "positives": 40,
+     "false_alarms": 3,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.6,
+     "misses": 8,
+     "positives": 40,
+     "false_alarms": 1,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.7,
+     "misses": 15,
+     "positives": 40,
+     "false_alarms": 0,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.8,
+     "misses": 24,
+     "positives": 40,
+     "false_alarms": 0,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.9,
+     "misses": 35,
+     "positives": 40,
+     "false_alarms": 0,
+     "negatives": 25
+    }
+   ],
+   "objective": {
+    "objective": {
+     "name": "coverage",
+     "params": {
+      "target_accuracy": 0.95
+     },
+     "direction": "max",
+     "sets": "min_probability",
+     "unit": "share",
+     "label": "coverage at 95% accuracy",
+     "code_sha256": null
+    },
+    "value": 0.8333333333333334,
+    "interval": [
+     0.7142857142857143,
+     0.9285714285714286
+    ],
+    "rule": {
+     "threshold": null,
+     "min_probability": 0.6435
+    },
+    "constraint": 0.9428571428571428
+   },
+   "tiebreak": [
+    {
+     "objective": {
+      "name": "expected_loss",
+      "params": {
+       "fn": 10.0,
+       "fp": 1.0
+      },
+      "direction": "min",
+      "sets": "threshold",
+      "unit": "number",
+      "label": "loss per case (miss 10, false alarm 1)",
+      "code_sha256": null
+     },
+     "value": 0.5238095238095238,
+     "interval": [
+      0.023809523809523808,
+      1.2380952380952381
+     ],
+     "rule": null,
+     "constraint": null
+    }
+   ],
+   "test": {
+    "n": 23,
+    "accuracy": 0.8695652173913043,
+    "coverage": 0.8695652173913043,
+    "sure_accuracy": 0.9,
+    "tuned_accuracy": 0.8695652173913043,
+    "primary": {
+     "value": 0.8695652173913043,
+     "interval": [
+      0.7391304347826086,
+      1.0
+     ]
+    },
+    "constraint": [
+     18,
+     20
+    ]
+   },
+   "high_confidence_errors": [],
+   "calls": {
+    "latency": {
+     "n": 80,
+     "p50_ms": 188.7,
+     "p90_ms": 583.4500000000006,
+     "p95_ms": 1206.395,
+     "p99_ms": 1364.183999999999,
+     "max_ms": 1483.0,
+     "spread": 7.229379968203493,
+     "retried": 0,
+     "unrecorded": 80,
+     "concurrency": [],
+     "concurrency_unknown": 80
+    },
+    "case_latency_p90_ms": {
+     "value": 517.02,
+     "interval": [
+      325.68,
+      1238.6100000000001
+     ]
+    },
+    "throughput": {
+     "per_min": 1600.0,
+     "seconds": 9.0,
+     "calls": 240,
+     "concurrency": 8,
+     "measured": true
+    },
+    "cost_per_10k_usd": 0.2937375,
+    "cost_total_usd": 0.0023499,
+    "cost_source": "list",
+    "cost_unknown": 0,
+    "price": {
+     "input_per_mtok": 0.09,
+     "output_per_mtok": 0.0,
+     "per_request": 0.0,
+     "per_image": 0.0,
+     "as_of": "2026-10-04",
+     "source": "https://developers.cloudflare.com/workers-ai/platform/pricing/"
+    }
+   }
+  },
+  {
+   "candidate": {
+    "model": "d1@vercel",
+    "variant": "gepa-d1"
+   },
+   "answered_by": "liquid/d1",
+   "answered_by_all": [
+    "liquid/d1"
+   ],
+   "n": 65,
+   "probabilities": true,
+   "failures": {
+    "calls": 80,
+    "failed": 0,
+    "unsupported": 0,
+    "data_errors": 0,
+    "unlabeled": 15,
+    "never_asked": 0,
+    "failed_cases": 0,
+    "refused_cases": 0
+   },
+   "split": "leave-one-out (23 test cases of the fixed evaluation set held out)",
+   "split_method": "loo",
+   "accuracy": {
+    "value": 0.9384615384615385,
+    "interval": [
+     0.8769230769230769,
+     0.9846153846153847
+    ]
+   },
+   "measures": {
+    "f1": {
+     "value": 0.9487179487179487,
+     "interval": null
+    }
+   },
+   "auroc": {
+    "value": 0.989,
+    "interval": [
+     0.9659928571428571,
+     1.0
+    ]
+   },
+   "brier": 0.03789028410893408,
+   "ece": 0.054873614058365834,
+   "selective": [
+    {
+     "target_accuracy": 0.95,
+     "coverage": {
+      "value": 0.9761904761904762,
+      "interval": [
+       0.9285714285714286,
+       1.0
+      ]
+     },
+     "accuracy": 0.975609756097561,
+     "n": 41,
+     "errors": 1,
+     "lower": 0.8894468710201566,
+     "labels_needed": 172,
+     "min_probability": 0.5010196095862687
+    }
+   ],
+   "error_loss_threshold": {
+    "accuracy": 1.0,
+    "misses": 0,
+    "false_alarms": 0,
+    "median": 0.3,
+    "chosen": 0.3
+   },
+   "floors": [],
+   "sweep": [
+    {
+     "threshold": 0.1,
+     "misses": 1,
+     "positives": 40,
+     "false_alarms": 7,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.2,
+     "misses": 1,
+     "positives": 40,
+     "false_alarms": 2,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.3,
+     "misses": 1,
+     "positives": 40,
+     "false_alarms": 2,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.4,
+     "misses": 1,
+     "positives": 40,
+     "false_alarms": 2,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.5,
+     "misses": 3,
+     "positives": 40,
+     "false_alarms": 1,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.6,
+     "misses": 3,
+     "positives": 40,
+     "false_alarms": 0,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.7,
+     "misses": 6,
+     "positives": 40,
+     "false_alarms": 0,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.8,
+     "misses": 8,
+     "positives": 40,
+     "false_alarms": 0,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.9,
+     "misses": 11,
+     "positives": 40,
+     "false_alarms": 0,
+     "negatives": 25
+    }
+   ],
+   "objective": {
+    "objective": {
+     "name": "coverage",
+     "params": {
+      "target_accuracy": 0.95
+     },
+     "direction": "max",
+     "sets": "min_probability",
+     "unit": "share",
+     "label": "coverage at 95% accuracy",
+     "code_sha256": null
+    },
+    "value": 0.9761904761904762,
+    "interval": [
+     0.9285714285714286,
+     1.0
+    ],
+    "rule": {
+     "threshold": null,
+     "min_probability": 0.5010196095862687
+    },
+    "constraint": 0.975609756097561
+   },
+   "tiebreak": [
+    {
+     "objective": {
+      "name": "expected_loss",
+      "params": {
+       "fn": 10.0,
+       "fp": 1.0
+      },
+      "direction": "min",
+      "sets": "threshold",
+      "unit": "number",
+      "label": "loss per case (miss 10, false alarm 1)",
+      "code_sha256": null
+     },
+     "value": 0.47619047619047616,
+     "interval": [
+      0.0,
+      1.1904761904761905
+     ],
+     "rule": null,
+     "constraint": null
+    }
+   ],
+   "test": {
+    "n": 23,
+    "accuracy": 0.9130434782608695,
+    "coverage": 1.0,
+    "sure_accuracy": 0.9130434782608695,
+    "tuned_accuracy": 0.8695652173913043,
+    "primary": {
+     "value": 1.0,
+     "interval": [
+      1.0,
+      1.0
+     ]
+    },
+    "constraint": [
+     21,
+     23
+    ]
+   },
+   "high_confidence_errors": [
+    {
+     "id": "mouiiyo-angry-while-working",
+     "label": true,
+     "predicted": false,
+     "probability": 0.9099523138603006
+    }
+   ],
+   "calls": {
+    "latency": {
+     "n": 80,
+     "p50_ms": 451.55,
+     "p90_ms": 662.2900000000001,
+     "p95_ms": 6160.415,
+     "p99_ms": 6461.602,
+     "max_ms": 6482.3,
+     "spread": 14.309826154357213,
+     "retried": 0,
+     "unrecorded": 80,
+     "concurrency": [],
+     "concurrency_unknown": 80
+    },
+    "case_latency_p90_ms": {
+     "value": 5614.859999999992,
+     "interval": [
+      623.26,
+      6453.320000000001
+     ]
+    },
+    "throughput": null,
+    "cost_per_10k_usd": 0.10520000000000002,
+    "cost_total_usd": 0.0008416000000000001,
+    "cost_source": "billed",
+    "cost_unknown": 0,
+    "price": null
+   }
+  },
+  {
+   "candidate": {
+    "model": "luna@decisions",
+    "variant": "gepa-d1"
+   },
+   "answered_by": "gpt-6-luna",
+   "answered_by_all": [
+    "gpt-6-luna"
+   ],
+   "n": 64,
+   "probabilities": true,
+   "failures": {
+    "calls": 80,
+    "failed": 1,
+    "unsupported": 0,
+    "data_errors": 0,
+    "unlabeled": 15,
+    "never_asked": 0,
+    "failed_cases": 1,
+    "refused_cases": 0
+   },
+   "split": "leave-one-out (23 test cases of the fixed evaluation set held out)",
+   "split_method": "loo",
+   "accuracy": {
+    "value": 0.953125,
+    "interval": [
+     0.890625,
+     1.0
+    ]
+   },
+   "measures": {
+    "f1": {
+     "value": 0.9620253164556962,
+     "interval": null
+    }
+   },
+   "auroc": {
+    "value": 0.9841025641025641,
+    "interval": [
+     0.9545759262497329,
+     1.0
+    ]
+   },
+   "brier": 0.0470359375,
+   "ece": 0.05421875000000009,
+   "selective": [
+    {
+     "target_accuracy": 0.95,
+     "coverage": {
+      "value": 0.975609756097561,
+      "interval": [
+       0.926829268292683,
+       1.0
+      ]
+     },
+     "accuracy": 0.95,
+     "n": 40,
+     "errors": 2,
+     "lower": 0.850848038726787,
+     "labels_needed": null,
+     "min_probability": 0.5700000000000001
+    }
+   ],
+   "error_loss_threshold": {
+    "accuracy": 0.8780487804878049,
+    "misses": 1,
+    "false_alarms": 4,
+    "median": 0.3,
+    "chosen": 0.3
+   },
+   "floors": [],
+   "sweep": [
+    {
+     "threshold": 0.1,
+     "misses": 0,
+     "positives": 39,
+     "false_alarms": 13,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.2,
+     "misses": 0,
+     "positives": 39,
+     "false_alarms": 8,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.3,
+     "misses": 0,
+     "positives": 39,
+     "false_alarms": 5,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.4,
+     "misses": 0,
+     "positives": 39,
+     "false_alarms": 5,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.5,
+     "misses": 1,
+     "positives": 39,
+     "false_alarms": 2,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.6,
+     "misses": 1,
+     "positives": 39,
+     "false_alarms": 2,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.7,
+     "misses": 5,
+     "positives": 39,
+     "false_alarms": 1,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.8,
+     "misses": 8,
+     "positives": 39,
+     "false_alarms": 1,
+     "negatives": 25
+    },
+    {
+     "threshold": 0.9,
+     "misses": 9,
+     "positives": 39,
+     "false_alarms": 0,
+     "negatives": 25
+    }
+   ],
+   "objective": {
+    "objective": {
+     "name": "coverage",
+     "params": {
+      "target_accuracy": 0.95
+     },
+     "direction": "max",
+     "sets": "min_probability",
+     "unit": "share",
+     "label": "coverage at 95% accuracy",
+     "code_sha256": null
+    },
+    "value": 0.975609756097561,
+    "interval": [
+     0.926829268292683,
+     1.0
+    ],
+    "rule": {
+     "threshold": null,
+     "min_probability": 0.5700000000000001
+    },
+    "constraint": 0.95
+   },
+   "tiebreak": [
+    {
+     "objective": {
+      "name": "expected_loss",
+      "params": {
+       "fn": 10.0,
+       "fp": 1.0
+      },
+      "direction": "min",
+      "sets": "threshold",
+      "unit": "number",
+      "label": "loss per case (miss 10, false alarm 1)",
+      "code_sha256": null
+     },
+     "value": 0.2682926829268293,
+     "interval": [
+      0.0,
+      0.7804878048780488
+     ],
+     "rule": null,
+     "constraint": null
+    }
+   ],
+   "test": {
+    "n": 23,
+    "accuracy": 0.9565217391304348,
+    "coverage": 1.0,
+    "sure_accuracy": 0.9565217391304348,
+    "tuned_accuracy": 0.9565217391304348,
+    "primary": {
+     "value": 1.0,
+     "interval": [
+      1.0,
+      1.0
+     ]
+    },
+    "constraint": [
+     22,
+     23
+    ]
+   },
+   "high_confidence_errors": [],
+   "calls": {
+    "latency": {
+     "n": 79,
+     "p50_ms": 265.2,
+     "p90_ms": 533.96,
+     "p95_ms": 586.9099999999999,
+     "p99_ms": 631.846,
+     "max_ms": 635.2,
+     "spread": 2.3825263951734543,
+     "retried": 0,
+     "unrecorded": 79,
+     "concurrency": [],
+     "concurrency_unknown": 79
+    },
+    "case_latency_p90_ms": {
+     "value": 409.4,
+     "interval": [
+      288.9,
+      522.7
+     ]
+    },
+    "throughput": {
+     "per_min": 1440.0,
+     "seconds": 10.0,
+     "calls": 240,
+     "concurrency": 8,
+     "measured": true
+    },
+    "cost_per_10k_usd": 0.3779620253164556,
+    "cost_total_usd": 0.0029858999999999997,
+    "cost_source": "list",
+    "cost_unknown": 0,
+    "price": {
+     "input_per_mtok": 0.1,
+     "output_per_mtok": 0.0,
+     "per_request": 0.0,
+     "per_image": 0.0,
+     "as_of": "2026-10-09",
+     "source": "https://openai.com/api/pricing/ (Decisions API, no output charge)"
+    }
+   }
+  }
+ ]
+}

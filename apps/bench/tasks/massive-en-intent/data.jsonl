@@ -1,0 +1,288 @@
+{"id": "m944", "utt": "what is the time difference between here and japan", "intent": "datetime_convert"}
+{"id": "m16781", "utt": "add this email address to my contacts and send an email to", "intent": "email_addcontact"}
+{"id": "m3029", "utt": "i hate this song", "intent": "music_dislikeness"}
+{"id": "m11349", "utt": "olly start the podcast over that i started last night", "intent": "play_podcasts"}
+{"id": "m46", "utt": "what's up olly", "intent": "general_greet"}
+{"id": "m13908", "utt": "can you tell me what flabbergasted means", "intent": "qa_definition"}
+{"id": "m16693", "utt": "add lowes hardware to my contact emails located in cleveland ohio", "intent": "email_addcontact"}
+{"id": "m12689", "utt": "book a train ticket from here to charleston west virginia at eight am today", "intent": "transport_ticket"}
+{"id": "m2255", "utt": "can i order take out from licari's", "intent": "takeaway_order"}
+{"id": "m15166", "utt": "post my business on twitter", "intent": "social_post"}
+{"id": "m9700", "utt": "play biography of jackie kennedy", "intent": "play_audiobook"}
+{"id": "m6959", "utt": "remind me about my meeting an hour before it begins", "intent": "calendar_set"}
+{"id": "m4013", "utt": "let's suck out the dust", "intent": "iot_cleaning"}
+{"id": "m426", "utt": "power up the plug socket one", "intent": "iot_wemo_on"}
+{"id": "m5318", "utt": "please play only are rehman's songs", "intent": "play_music"}
+{"id": "m17123", "utt": "email form for regional v. p.", "intent": "email_sendemail"}
+{"id": "m16353", "utt": "check for emails from steve", "intent": "email_query"}
+{"id": "m4887", "utt": "save my opinion on adele's song", "intent": "music_likeness"}
+{"id": "m6014", "utt": "what artist is this", "intent": "music_query"}
+{"id": "m11266", "utt": "play a podcast from my library", "intent": "play_podcasts"}
+{"id": "m13372", "utt": "what time are the hockey games tonight", "intent": "general_quirky"}
+{"id": "m1076", "utt": "do not play rock metal", "intent": "music_dislikeness"}
+{"id": "m2016", "utt": "lower lights in kitchen", "intent": "iot_hue_lightdim"}
+{"id": "m12233", "utt": "google train tickets to washington d. c.", "intent": "transport_ticket"}
+{"id": "m3543", "utt": "i want the light to be a little more red ish", "intent": "iot_hue_lightchange"}
+{"id": "m10760", "utt": "tell me that list i wrote two days ago", "intent": "lists_query"}
+{"id": "m14889", "utt": "please describe that object for me", "intent": "qa_definition"}
+{"id": "m9194", "utt": "please remove this event from my calendar", "intent": "calendar_remove"}
+{"id": "m10357", "utt": "play game", "intent": "play_game"}
+{"id": "m10494", "utt": "remove pencil from stationary", "intent": "lists_remove"}
+{"id": "m13684", "utt": "what is the dollar price in inr", "intent": "qa_currency"}
+{"id": "m6973", "utt": "add a reminder of a conference for tomorrow in new york", "intent": "calendar_set"}
+{"id": "m4132", "utt": "tell me the percentage of the chance of rain in seattle washington for today", "intent": "weather_query"}
+{"id": "m9237", "utt": "turn on the radio and play channel one hundred and six point nine", "intent": "play_radio"}
+{"id": "m10093", "utt": "how is lasagne made", "intent": "cooking_recipe"}
+{"id": "m11353", "utt": "show me podcasts", "intent": "play_podcasts"}
+{"id": "m486", "utt": "what time is it in new york city", "intent": "datetime_query"}
+{"id": "m15511", "utt": "show me my latest social media activity", "intent": "social_query"}
+{"id": "m16872", "utt": "find naty from my contacts and send her an email", "intent": "email_sendemail"}
+{"id": "m11871", "utt": "recommend a movie playing in my area", "intent": "recommendation_movies"}
+{"id": "m13766", "utt": "two by two is", "intent": "qa_maths"}
+{"id": "m5911", "utt": "replay the musics", "intent": "music_settings"}
+{"id": "m12789", "utt": "can you tell me about the traffic", "intent": "transport_traffic"}
+{"id": "m9216", "utt": "play my station", "intent": "play_radio"}
+{"id": "m14526", "utt": "what is price of dollar", "intent": "qa_currency"}
+{"id": "m11812", "utt": "what movies are playing tonight", "intent": "recommendation_movies"}
+{"id": "m7892", "utt": "delete the next event today", "intent": "calendar_remove"}
+{"id": "m11474", "utt": "resume series podcast", "intent": "play_podcasts"}
+{"id": "m5912", "utt": "cut the songs in this musics", "intent": "music_settings"}
+{"id": "m5082", "utt": "new alarm for six am", "intent": "alarm_set"}
+{"id": "m11770", "utt": "any events this weekend in pondichery", "intent": "recommendation_events"}
+{"id": "m10757", "utt": "what items are on my shopping list", "intent": "lists_query"}
+{"id": "m2975", "utt": "please change the light colors to red", "intent": "iot_hue_lightchange"}
+{"id": "m10171", "utt": "what's the recipe for fish soup", "intent": "cooking_recipe"}
+{"id": "m13192", "utt": "what is the root of six hundred and twenty five", "intent": "qa_maths"}
+{"id": "m3671", "utt": "can i carry out with this restaurant", "intent": "takeaway_query"}
+{"id": "m12844", "utt": "book a cab to office for me", "intent": "transport_taxi"}
+{"id": "m3486", "utt": "speak softer please", "intent": "audio_volume_down"}
+{"id": "m4271", "utt": "prepare coffee now", "intent": "iot_coffee"}
+{"id": "m12724", "utt": "find me a train ticket to boston", "intent": "transport_ticket"}
+{"id": "m389", "utt": "turn the smart plug on", "intent": "iot_wemo_on"}
+{"id": "m6055", "utt": "did i leave the light on in the garage", "intent": "iot_hue_lightoff"}
+{"id": "m80", "utt": "set lights brightness higher", "intent": "iot_hue_lightup"}
+{"id": "m15333", "utt": "anything new on insta", "intent": "social_query"}
+{"id": "m2174", "utt": "who is the singer of hotel california", "intent": "music_query"}
+{"id": "m4702", "utt": "please turn my speakers on google", "intent": "audio_volume_up"}
+{"id": "m2578", "utt": "turn off the porch light", "intent": "iot_hue_lightoff"}
+{"id": "m13172", "utt": "calculate two multiplied by two", "intent": "qa_maths"}
+{"id": "m2566", "utt": "turn off my wemo socket", "intent": "iot_wemo_off"}
+{"id": "m5497", "utt": "what is the time difference between california and new york", "intent": "datetime_convert"}
+{"id": "m7046", "utt": "add tal meeting on twenty first at seven", "intent": "calendar_set"}
+{"id": "m13754", "utt": "tell me the current price of exxon mobil stock", "intent": "qa_stock"}
+{"id": "m2903", "utt": "please start the vacuum cleaner", "intent": "iot_cleaning"}
+{"id": "m11582", "utt": "is there anything happening on jazz scene around edinburgh", "intent": "recommendation_events"}
+{"id": "m10927", "utt": "let me hear my list", "intent": "lists_query"}
+{"id": "m3474", "utt": "please lower music volume", "intent": "audio_volume_down"}
+{"id": "m10571", "utt": "android", "intent": "lists_query"}
+{"id": "m4241", "utt": "please stop talking", "intent": "audio_volume_mute"}
+{"id": "m5324", "utt": "hey do you have home delivery", "intent": "takeaway_query"}
+{"id": "m7693", "utt": "do i have anything planned for the twenty first", "intent": "calendar_query"}
+{"id": "m15199", "utt": "what going on", "intent": "social_query"}
+{"id": "m16627", "utt": "check most current emails", "intent": "email_query"}
+{"id": "m3205", "utt": "play poker face by lady gaga", "intent": "play_music"}
+{"id": "m4171", "utt": "turn off the lights in the kitchen", "intent": "iot_hue_lightoff"}
+{"id": "m2551", "utt": "change the lights in my home to green", "intent": "iot_hue_lightchange"}
+{"id": "m5050", "utt": "off all type of active devices", "intent": "iot_wemo_off"}
+{"id": "m9718", "utt": "resume animal farm", "intent": "play_audiobook"}
+{"id": "m3581", "utt": "turn off sound", "intent": "audio_volume_mute"}
+{"id": "m1042", "utt": "open the folder app please", "intent": "takeaway_order"}
+{"id": "m399", "utt": "remove the first alarm", "intent": "alarm_remove"}
+{"id": "m4913", "utt": "are you aware this joke", "intent": "general_joke"}
+{"id": "m5691", "utt": "opinion petabit", "intent": "music_likeness"}
+{"id": "m7289", "utt": "get rid of all events with jeff", "intent": "calendar_remove"}
+{"id": "m12383", "utt": "find a taxi to book", "intent": "transport_taxi"}
+{"id": "m5966", "utt": "can you please order some food for me", "intent": "takeaway_order"}
+{"id": "m4985", "utt": "yes i like to save opinion on song playing and which player support that song", "intent": "music_likeness"}
+{"id": "m5292", "utt": "fix alarm", "intent": "alarm_set"}
+{"id": "m5523", "utt": "convert eight thirty from gtm four to g. m. t. five thirty", "intent": "datetime_convert"}
+{"id": "m15203", "utt": "new updates", "intent": "social_query"}
+{"id": "m158", "utt": "lower the lights", "intent": "iot_hue_lightdim"}
+{"id": "m122", "utt": "send a giggle my way", "intent": "general_joke"}
+{"id": "m14917", "utt": "when's mark lanegan's next album out", "intent": "qa_factoid"}
+{"id": "m10349", "utt": "let's play you'll be the keeper and never change position", "intent": "play_game"}
+{"id": "m14473", "utt": "open stock price for name", "intent": "qa_stock"}
+{"id": "m8431", "utt": "get rid of all my scheduled events", "intent": "calendar_remove"}
+{"id": "m3330", "utt": "i want to hear a joke", "intent": "general_joke"}
+{"id": "m2134", "utt": "wake me up", "intent": "alarm_set"}
+{"id": "m4268", "utt": "move to the next song in the list", "intent": "music_settings"}
+{"id": "m10216", "utt": "search in the web for buying bakeware for muffins", "intent": "cooking_recipe"}
+{"id": "m16317", "utt": "did i get new emails from sarah", "intent": "email_query"}
+{"id": "m1658", "utt": "i want to see all set alarms", "intent": "alarm_query"}
+{"id": "m12182", "utt": "what are the traffic conditions on the one hundred and one", "intent": "transport_traffic"}
+{"id": "m6118", "utt": "hey what time is it in dallas texas", "intent": "datetime_query"}
+{"id": "m12672", "utt": "how is traffic in city", "intent": "transport_traffic"}
+{"id": "m15565", "utt": "can you let delta know i'm never using them again", "intent": "social_post"}
+{"id": "m4119", "utt": "i want to know everything that breaks about the dam breaking in california", "intent": "news_query"}
+{"id": "m3771", "utt": "tell me about alarms", "intent": "alarm_query"}
+{"id": "m7232", "utt": "what are the events next week", "intent": "calendar_query"}
+{"id": "m50", "utt": "olly tell me the time in g. m. t. plus five", "intent": "datetime_convert"}
+{"id": "m10381", "utt": "start a competitive crossword for us", "intent": "play_game"}
+{"id": "m1452", "utt": "remove the alarm for tomorrow", "intent": "alarm_remove"}
+{"id": "m3196", "utt": "hey olly can you please make me a creamy coffee", "intent": "iot_coffee"}
+{"id": "m10982", "utt": "put hamburger on my grocery list", "intent": "lists_createoradd"}
+{"id": "m1630", "utt": "raise the volume of the current music", "intent": "audio_volume_up"}
+{"id": "m2959", "utt": "initialize the robot vacuum", "intent": "iot_cleaning"}
+{"id": "m4155", "utt": "change volume to thirty five percent", "intent": "audio_volume_other"}
+{"id": "m9554", "utt": "play romantic music in nash f. m. ninety two point seven", "intent": "play_radio"}
+{"id": "m12606", "utt": "i need to get a ticket via train to orlando from hwood", "intent": "transport_ticket"}
+{"id": "m12264", "utt": "new york", "intent": "transport_query"}
+{"id": "m8322", "utt": "i want to know more about the fair this weekend", "intent": "general_quirky"}
+{"id": "m16402", "utt": "email donna plans for today", "intent": "email_sendemail"}
+{"id": "m6366", "utt": "tell me some best tourist places to visit in america", "intent": "recommendation_locations"}
+{"id": "m468", "utt": "change the lights to dim", "intent": "iot_hue_lightdim"}
+{"id": "m5103", "utt": "olly cancel all soccer practice alarms", "intent": "alarm_remove"}
+{"id": "m15216", "utt": "tweet something for me", "intent": "social_post"}
+{"id": "m11140", "utt": "set list", "intent": "lists_createoradd"}
+{"id": "m14792", "utt": "where is a walking trail near me", "intent": "recommendation_locations"}
+{"id": "m14044", "utt": "what is the exchange rates in this region", "intent": "qa_currency"}
+{"id": "m7219", "utt": "did you place the reminder about the meeting for tomorrow", "intent": "calendar_query"}
+{"id": "m16907", "utt": "jay's phone number", "intent": "email_querycontact"}
+{"id": "m4618", "utt": "enable smart socket", "intent": "iot_wemo_on"}
+{"id": "m15946", "utt": "find john smith in contacts", "intent": "email_querycontact"}
+{"id": "m12436", "utt": "how long will it take to get to the airport", "intent": "transport_query"}
+{"id": "m14481", "utt": "can we go to sun", "intent": "general_quirky"}
+{"id": "m14440", "utt": "what is the capital of mexico", "intent": "qa_factoid"}
+{"id": "m3008", "utt": "can you raise the lights for me please", "intent": "iot_hue_lightup"}
+{"id": "m8795", "utt": "show pending reminders", "intent": "calendar_query"}
+{"id": "m5823", "utt": "decrease twenty percent", "intent": "audio_volume_down"}
+{"id": "m3835", "utt": "i want to order chinese take-out", "intent": "takeaway_order"}
+{"id": "m6376", "utt": "what is a good iranian film from two thousand and sixteen", "intent": "recommendation_movies"}
+{"id": "m5919", "utt": "what is the latest update on the new york bridge proposal", "intent": "news_query"}
+{"id": "m11273", "utt": "play next episode of harry potter by j. k. rowling", "intent": "play_audiobook"}
+{"id": "m5813", "utt": "play silent song", "intent": "play_music"}
+{"id": "m11904", "utt": "what's going on around here this weekend", "intent": "recommendation_events"}
+{"id": "m2165", "utt": "is dinner ready yet", "intent": "takeaway_query"}
+{"id": "m448", "utt": "run coffee maker", "intent": "iot_coffee"}
+{"id": "m2733", "utt": "start a pot of coffee please", "intent": "iot_coffee"}
+{"id": "m4966", "utt": "hello i want to turn off my wemo plug", "intent": "iot_wemo_off"}
+{"id": "m11845", "utt": "olly hit me up with some exciting events in the bay area", "intent": "recommendation_events"}
+{"id": "m8366", "utt": "make march eighteen a repeating appointment for pearl's birthday", "intent": "calendar_set"}
+{"id": "m9562", "utt": "could you please play this program for me", "intent": "play_radio"}
+{"id": "m10755", "utt": "throw away my to do list please", "intent": "lists_remove"}
+{"id": "m16983", "utt": "do we have morgan's office's number", "intent": "email_querycontact"}
+{"id": "m730", "utt": "turn the lights off", "intent": "iot_hue_lightoff"}
+{"id": "m12800", "utt": "where is the public library", "intent": "transport_query"}
+{"id": "m10772", "utt": "remove my dentist's appointment from today's schedule", "intent": "calendar_remove"}
+{"id": "m11442", "utt": "please play the latest bill simmons podcast", "intent": "play_podcasts"}
+{"id": "m2724", "utt": "give me news from c. n. n.", "intent": "news_query"}
+{"id": "m884", "utt": "set alarm for eight am", "intent": "alarm_set"}
+{"id": "m322", "utt": "enable my plug", "intent": "iot_wemo_on"}
+{"id": "m3834", "utt": "turn down lights", "intent": "iot_hue_lightdim"}
+{"id": "m5037", "utt": "how cold is today", "intent": "weather_query"}
+{"id": "m16297", "utt": "send an email to jake to tell him thank you", "intent": "email_sendemail"}
+{"id": "m16225", "utt": "open contacts", "intent": "email_addcontact"}
+{"id": "m5332", "utt": "time between us and canada", "intent": "datetime_convert"}
+{"id": "m14605", "utt": "did angelina jolie leave brad pitt", "intent": "qa_factoid"}
+{"id": "m13199", "utt": "do you know math", "intent": "qa_maths"}
+{"id": "m3030", "utt": "i love this song", "intent": "music_likeness"}
+{"id": "m16178", "utt": "any mail from amazon today", "intent": "email_query"}
+{"id": "m2985", "utt": "cancel alarm", "intent": "alarm_remove"}
+{"id": "m10433", "utt": "remove my task list", "intent": "lists_remove"}
+{"id": "m5152", "utt": "please skip two songs", "intent": "music_settings"}
+{"id": "m5758", "utt": "how's the weather in the capital city", "intent": "weather_query"}
+{"id": "m3204", "utt": "please note i like jazz and hate disco", "intent": "music_likeness"}
+{"id": "m14544", "utt": "please find out the share price of microsoft in nasdaq", "intent": "qa_stock"}
+{"id": "m2480", "utt": "call for take-out", "intent": "takeaway_order"}
+{"id": "m10815", "utt": "add toothpaste to my shopping list", "intent": "lists_createoradd"}
+{"id": "m2351", "utt": "olly put dark colors instead of light ones in the house", "intent": "iot_hue_lightchange"}
+{"id": "m10931", "utt": "what is on my playlist", "intent": "lists_query"}
+{"id": "m5219", "utt": "please reduce the speaker volume", "intent": "audio_volume_down"}
+{"id": "m12982", "utt": "what does turbulence mean", "intent": "qa_definition"}
+{"id": "m5574", "utt": "brighten of lights in living room", "intent": "iot_hue_lightup"}
+{"id": "m16975", "utt": "please find a contact number of jayesh and tell me", "intent": "email_querycontact"}
+{"id": "m11744", "utt": "olly what are new drama movies opening this weekend", "intent": "recommendation_movies"}
+{"id": "m12797", "utt": "train times from near me to location", "intent": "transport_query"}
+{"id": "m11920", "utt": "what movies are out this week", "intent": "recommendation_movies"}
+{"id": "m5652", "utt": "switch wemo plug socket off", "intent": "iot_wemo_off"}
+{"id": "m508", "utt": "what alarms are set", "intent": "alarm_query"}
+{"id": "m12453", "utt": "book train best deal", "intent": "transport_ticket"}
+{"id": "m14429", "utt": "what is a caftan", "intent": "qa_definition"}
+{"id": "m2030", "utt": "current song playing what is it", "intent": "music_query"}
+{"id": "m2201", "utt": "c. n. n. headlines", "intent": "news_query"}
+{"id": "m1065", "utt": "where is volume setting", "intent": "audio_volume_other"}
+{"id": "m10053", "utt": "how do i make pizza", "intent": "cooking_recipe"}
+{"id": "m12693", "utt": "what does the traffic look like on my usual route to work", "intent": "transport_traffic"}
+{"id": "m494", "utt": "what's a good joke", "intent": "general_joke"}
+{"id": "m12413", "utt": "what is the current traffic situation", "intent": "transport_traffic"}
+{"id": "m4166", "utt": "change volume level to maximum", "intent": "audio_volume_other"}
+{"id": "m13242", "utt": "what is the best chocolate chip cookies recipe", "intent": "general_quirky"}
+{"id": "m1247", "utt": "i need to know if mr. pizza delivers", "intent": "takeaway_query"}
+{"id": "m2056", "utt": "i never want to hear that song again", "intent": "music_dislikeness"}
+{"id": "m10808", "utt": "delete last item listed", "intent": "lists_remove"}
+{"id": "m14648", "utt": "recipe please", "intent": "cooking_recipe"}
+{"id": "m15454", "utt": "tweet at united airlines i'm angry you lost my bags", "intent": "social_post"}
+{"id": "m5579", "utt": "can you change the volume at", "intent": "audio_volume_other"}
+{"id": "m1030", "utt": "dim the lights in the living room", "intent": "iot_hue_lightdim"}
+{"id": "m16045", "utt": "send mail to ismail for office opening time table", "intent": "email_sendemail"}
+{"id": "m10263", "utt": "open chess app and begin game", "intent": "play_game"}
+{"id": "m14317", "utt": "what is the size of the united states", "intent": "qa_factoid"}
+{"id": "m5321", "utt": "show weather", "intent": "weather_query"}
+{"id": "m31", "utt": "hoover the hallway", "intent": "iot_cleaning"}
+{"id": "m2690", "utt": "turn off the socket", "intent": "iot_wemo_off"}
+{"id": "m4813", "utt": "what is the time in another city", "intent": "datetime_query"}
+{"id": "m5149", "utt": "set the coffee maker to on", "intent": "iot_coffee"}
+{"id": "m12020", "utt": "tell me what clothing stores are within five miles of me", "intent": "recommendation_locations"}
+{"id": "m11706", "utt": "what shops are round here", "intent": "recommendation_locations"}
+{"id": "m2387", "utt": "who wrote this song", "intent": "music_query"}
+{"id": "m5697", "utt": "begin vacuuming", "intent": "iot_cleaning"}
+{"id": "m9720", "utt": "resume harry potter book four", "intent": "play_audiobook"}
+{"id": "m1710", "utt": "change the music mode to rock", "intent": "music_settings"}
+{"id": "m13853", "utt": "where on earth has the most volcanoes", "intent": "qa_factoid"}
+{"id": "m1551", "utt": "turn on wemo", "intent": "iot_wemo_on"}
+{"id": "m608", "utt": "unmute after", "intent": "audio_volume_up"}
+{"id": "m12446", "utt": "can you tell me the times the train leaves for chicago", "intent": "transport_query"}
+{"id": "m2403", "utt": "give me more light", "intent": "iot_hue_lightup"}
+{"id": "m3103", "utt": "don't play this song again", "intent": "music_dislikeness"}
+{"id": "m11026", "utt": "add new item to list", "intent": "lists_createoradd"}
+{"id": "m15472", "utt": "tweet a complaint for the online bookstore", "intent": "social_post"}
+{"id": "m6166", "utt": "please mute for five minutes", "intent": "audio_volume_mute"}
+{"id": "m1960", "utt": "change the light to pink color", "intent": "iot_hue_lightchange"}
+{"id": "m10462", "utt": "get rid of a list", "intent": "lists_remove"}
+{"id": "m15109", "utt": "siri please check exchange rates", "intent": "qa_currency"}
+{"id": "m4547", "utt": "start the dogwalking playlist", "intent": "play_music"}
+{"id": "m5611", "utt": "reduce volume", "intent": "audio_volume_down"}
+{"id": "m6093", "utt": "should i open the sun roof", "intent": "weather_query"}
+{"id": "m15181", "utt": "do i have any new friend requests", "intent": "social_query"}
+{"id": "m1176", "utt": "who sings the song about a long black train", "intent": "music_query"}
+{"id": "m12710", "utt": "call taxi", "intent": "transport_taxi"}
+{"id": "m201", "utt": "delete the alarm i just set", "intent": "alarm_remove"}
+{"id": "m16002", "utt": "check for new email", "intent": "email_query"}
+{"id": "m7817", "utt": "is this true about this date", "intent": "calendar_query"}
+{"id": "m1640", "utt": "turn it up olly", "intent": "audio_volume_up"}
+{"id": "m475", "utt": "what mistakes do you usually make", "intent": "general_quirky"}
+{"id": "m5974", "utt": "did i set an alarm to have tablets in the noon", "intent": "alarm_query"}
+{"id": "m13740", "utt": "what's the currency exchange rate for china", "intent": "qa_currency"}
+{"id": "m17111", "utt": "contact detail of paul", "intent": "email_querycontact"}
+{"id": "m13819", "utt": "what happened to the dow jones today", "intent": "qa_stock"}
+{"id": "m1252", "utt": "tell me the current time", "intent": "datetime_query"}
+{"id": "m1072", "utt": "please turn up the screen brightness all the way", "intent": "iot_hue_lightup"}
+{"id": "m974", "utt": "what time is it in new york now", "intent": "datetime_query"}
+{"id": "m9827", "utt": "resume the song from the audiobook by the beatles", "intent": "play_audiobook"}
+{"id": "m4090", "utt": "turn up the volume on my speakers", "intent": "audio_volume_up"}
+{"id": "m10285", "utt": "please play clash of clans", "intent": "play_game"}
+{"id": "m15987", "utt": "add this new email with contact", "intent": "email_addcontact"}
+{"id": "m11644", "utt": "show me events in sacramento", "intent": "recommendation_events"}
+{"id": "m168", "utt": "can they provide takeaway", "intent": "takeaway_query"}
+{"id": "m6064", "utt": "don't speak for an hour", "intent": "audio_volume_mute"}
+{"id": "m1084", "utt": "user friendly", "intent": "news_query"}
+{"id": "m12779", "utt": "reserve the closest uber", "intent": "transport_taxi"}
+{"id": "m5593", "utt": "play giants by banks and steelz", "intent": "play_music"}
+{"id": "m1377", "utt": "please turn off the light of my son's room", "intent": "iot_hue_lightoff"}
+{"id": "m16470", "utt": "please add this email to my contacts", "intent": "email_addcontact"}
+{"id": "m13984", "utt": "consequences to actions", "intent": "qa_definition"}
+{"id": "m10600", "utt": "please update my grocery list with one gallon of two percent milk", "intent": "lists_createoradd"}
+{"id": "m13552", "utt": "what is six divided by two", "intent": "qa_maths"}
+{"id": "m4854", "utt": "shut down the sound", "intent": "audio_volume_mute"}
+{"id": "m4130", "utt": "is my reminder alarm set for dance class", "intent": "alarm_query"}
+{"id": "m12121", "utt": "book me a taxi to leith in half an hour", "intent": "transport_taxi"}
+{"id": "m3364", "utt": "knock knock", "intent": "general_joke"}
+{"id": "m5812", "utt": "set the default audio setting", "intent": "audio_volume_other"}
+{"id": "m8978", "utt": "just let me know the important meetings with my boss over the week", "intent": "calendar_set"}
+{"id": "m14342", "utt": "what is the stock price of hdfc", "intent": "qa_stock"}
+{"id": "m11778", "utt": "where is a good wine bar near me", "intent": "recommendation_locations"}
+{"id": "m9327", "utt": "please scan the am dial on the radio right now", "intent": "play_radio"}
+{"id": "m14", "utt": "and the darkness has fallen", "intent": "iot_hue_lighton"}
+{"id": "m5051", "utt": "make a new alarm", "intent": "alarm_set"}
+{"id": "m3522", "utt": "please turn on my balcony lights", "intent": "iot_hue_lighton"}
+{"id": "m286", "utt": "light up the lights in the kitchen", "intent": "iot_hue_lighton"}

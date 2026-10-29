@@ -1,0 +1,18 @@
+# Publishes to PyPI by trusted publishing: PyPI trusts this workflow, so no token is stored.
+# Run it by hand (Actions → publish → Run workflow) once pyproject.toml has the version to release.
+name: publish
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  pypi:
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv build
+      - uses: pypa/gh-action-pypi-publish@release/v1

@@ -1,0 +1,178 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "https://github.com/gotalab/s1flow/blob/main/schema/case-1.json",
+ "title": "Case",
+ "description": "A row of a task's data (data.jsonl, or a .json array): the task's own fields. s1flow itself reads only\n`id` (the row's index when absent) and `rationale`; task.py reads the rest. feedback.jsonl and\ncorrections.jsonl lines, which s1flow writes, are in $defs.",
+ "type": "object",
+ "properties": {
+  "id": {
+   "type": [
+    "string",
+    "integer"
+   ],
+   "description": "the case's id, unique in the task"
+  },
+  "rationale": {
+   "type": "string",
+   "description": "why it got its label (shown to GEPA's reflection LM, never to the model)"
+  }
+ },
+ "$defs": {
+  "BoxEdges": {
+   "description": "Edges as fractions of the image's height (top, bottom) and width (left, right), from the top-left.",
+   "properties": {
+    "top": {
+     "maximum": 1,
+     "minimum": 0,
+     "title": "Top",
+     "type": "number"
+    },
+    "bottom": {
+     "maximum": 1,
+     "minimum": 0,
+     "title": "Bottom",
+     "type": "number"
+    },
+    "left": {
+     "maximum": 1,
+     "minimum": 0,
+     "title": "Left",
+     "type": "number"
+    },
+    "right": {
+     "maximum": 1,
+     "minimum": 0,
+     "title": "Right",
+     "type": "number"
+    }
+   },
+   "required": [
+    "top",
+    "bottom",
+    "left",
+    "right"
+   ],
+   "title": "BoxEdges",
+   "type": "object"
+  },
+  "feedback": {
+   "additionalProperties": false,
+   "description": "One line of feedback.jsonl: a state the app sent and the answer that turned out right.",
+   "properties": {
+    "schema": {
+     "const": "s1flow/feedback-case@1",
+     "default": "s1flow/feedback-case@1",
+     "title": "Schema",
+     "type": "string"
+    },
+    "id": {
+     "title": "Id",
+     "type": "string"
+    },
+    "state": {
+     "title": "State"
+    },
+    "label": {
+     "anyOf": [
+      {
+       "type": "boolean"
+      },
+      {
+       "type": "integer"
+      },
+      {
+       "type": "string"
+      },
+      {
+       "$ref": "#/$defs/BoxEdges"
+      }
+     ],
+     "title": "Label"
+    },
+    "source": {
+     "const": "feedback",
+     "default": "feedback",
+     "title": "Source",
+     "type": "string"
+    },
+    "at": {
+     "title": "At",
+     "type": "string"
+    },
+    "policy": {
+     "title": "Policy",
+     "type": "string"
+    }
+   },
+   "required": [
+    "id",
+    "state",
+    "label",
+    "at",
+    "policy"
+   ],
+   "title": "FeedbackCase",
+   "type": "object"
+  },
+  "correction": {
+   "additionalProperties": false,
+   "description": "One line of corrections.jsonl: a decision about one case's label, by someone who read it. Appended; the\nlatest line per id wins. `unclear` and `missing` leave the case out and are evidence about the task itself.",
+   "properties": {
+    "schema": {
+     "const": "s1flow/correction@1",
+     "default": "s1flow/correction@1",
+     "title": "Schema",
+     "type": "string"
+    },
+    "id": {
+     "title": "Id",
+     "type": "string"
+    },
+    "verdict": {
+     "enum": [
+      "relabel",
+      "keep",
+      "unclear",
+      "missing"
+     ],
+     "title": "Verdict",
+     "type": "string"
+    },
+    "label": {
+     "default": null,
+     "title": "Label"
+    },
+    "was": {
+     "title": "Was"
+    },
+    "reason": {
+     "title": "Reason",
+     "type": "string"
+    },
+    "by": {
+     "title": "By",
+     "type": "string"
+    },
+    "at": {
+     "title": "At",
+     "type": "string"
+    },
+    "sampled": {
+     "default": false,
+     "title": "Sampled",
+     "type": "boolean"
+    }
+   },
+   "required": [
+    "id",
+    "verdict",
+    "was",
+    "reason",
+    "by",
+    "at"
+   ],
+   "title": "Correction",
+   "type": "object"
+  }
+ }
+}

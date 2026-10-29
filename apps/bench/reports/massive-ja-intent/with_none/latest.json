@@ -1,0 +1,1587 @@
+{
+ "schema": "s1flow/report@1",
+ "task": "massive-ja-intent",
+ "variant": "with_none",
+ "at": "2026-10-22T00:00:00Z",
+ "evaluations": [
+  {
+   "candidate": {
+    "model": "d1@vercel",
+    "variant": "with_none"
+   },
+   "answered_by": "liquid/d1",
+   "answered_by_all": [
+    "liquid/d1"
+   ],
+   "n": 288,
+   "probabilities": true,
+   "failures": {
+    "calls": 288,
+    "failed": 0,
+    "unsupported": 0,
+    "data_errors": 0,
+    "unlabeled": 0,
+    "never_asked": 0,
+    "failed_cases": 0,
+    "refused_cases": 0
+   },
+   "split": "stratified k-fold (87 test cases of the fixed evaluation set held out)",
+   "split_method": "stratified-kfold",
+   "accuracy": {
+    "value": 0.8402777777777778,
+    "interval": [
+     0.7986111111111112,
+     0.8854166666666666
+    ]
+   },
+   "measures": {
+    "macro_f1": {
+     "value": 0.8143855218855217,
+     "interval": null
+    }
+   },
+   "auroc": {
+    "value": 0.9921621829149974,
+    "interval": [
+     0.9878523207805796,
+     0.9967444500251588
+    ]
+   },
+   "brier": 0.24138171286556342,
+   "ece": 0.061361085188965034,
+   "selective": [
+    {
+     "target_accuracy": 0.95,
+     "coverage": {
+      "value": 0.5920398009950248,
+      "interval": [
+       0.5223880597014925,
+       0.6666666666666666
+      ]
+     },
+     "accuracy": 0.9243697478991597,
+     "n": 119,
+     "errors": 9,
+     "lower": 0.8717362479086784,
+     "labels_needed": null,
+     "min_probability": 0.9606274681657662
+    }
+   ],
+   "error_loss_threshold": null,
+   "floors": [],
+   "sweep": null,
+   "objective": {
+    "objective": {
+     "name": "accuracy",
+     "params": {},
+     "direction": "max",
+     "sets": null,
+     "unit": "share",
+     "label": "accuracy (all)",
+     "code_sha256": null
+    },
+    "value": 0.8507462686567164,
+    "interval": [
+     0.7960199004975125,
+     0.900497512437811
+    ],
+    "rule": null,
+    "constraint": null
+   },
+   "tiebreak": [],
+   "test": {
+    "n": 87,
+    "accuracy": 0.8160919540229885,
+    "coverage": 0.4942528735632184,
+    "sure_accuracy": 1.0,
+    "tuned_accuracy": null,
+    "primary": {
+     "value": 0.8160919540229885,
+     "interval": [
+      0.7241379310344828,
+      0.896551724137931
+     ]
+    },
+    "constraint": null
+   },
+   "high_confidence_errors": [
+    {
+     "id": "m15203",
+     "label": "social_query",
+     "predicted": "news_query",
+     "probability": 0.9873838126471071
+    },
+    {
+     "id": "m8322",
+     "label": "general_quirky",
+     "predicted": "recommendation_events",
+     "probability": 0.9851234928064784
+    },
+    {
+     "id": "m4130",
+     "label": "alarm_query",
+     "predicted": "alarm_set",
+     "probability": 0.9765851500920102
+    },
+    {
+     "id": "m4166",
+     "label": "audio_volume_other",
+     "predicted": "audio_volume_up",
+     "probability": 0.9679053188244999
+    },
+    {
+     "id": "m5911",
+     "label": "music_settings",
+     "predicted": "play_music",
+     "probability": 0.9626143496379762
+    },
+    {
+     "id": "m13242",
+     "label": "general_quirky",
+     "predicted": "cooking_recipe",
+     "probability": 0.9596868345284544
+    },
+    {
+     "id": "m5812",
+     "label": "audio_volume_other",
+     "predicted": "music_settings",
+     "probability": 0.9570403558546677
+    },
+    {
+     "id": "m2165",
+     "label": "takeaway_query",
+     "predicted": "cooking_query",
+     "probability": 0.9562480338520185
+    },
+    {
+     "id": "m12800",
+     "label": "transport_query",
+     "predicted": "recommendation_locations",
+     "probability": 0.9196663311473322
+    },
+    {
+     "id": "m5691",
+     "label": "music_likeness",
+     "predicted": "play_music",
+     "probability": 0.9186568438564081
+    },
+    {
+     "id": "m3834",
+     "label": "iot_hue_lightdim",
+     "predicted": "iot_hue_lightoff",
+     "probability": 0.912010768700327
+    },
+    {
+     "id": "m10349",
+     "label": "play_game",
+     "predicted": "play_music",
+     "probability": 0.9114358047715807
+    },
+    {
+     "id": "m4268",
+     "label": "music_settings",
+     "predicted": "play_music",
+     "probability": 0.9103658967958133
+    }
+   ],
+   "calls": {
+    "latency": {
+     "n": 288,
+     "p50_ms": 518.45,
+     "p90_ms": 735.9900000000001,
+     "p95_ms": 1168.23,
+     "p99_ms": 1727.5749999999998,
+     "max_ms": 2182.5,
+     "spread": 3.3321921111003947,
+     "retried": 0,
+     "unrecorded": 288,
+     "concurrency": [],
+     "concurrency_unknown": 288
+    },
+    "case_latency_p90_ms": {
+     "value": 732.0,
+     "interval": [
+      680.8,
+      950.6
+     ]
+    },
+    "throughput": null,
+    "cost_per_10k_usd": 0.17375000000000002,
+    "cost_total_usd": 0.005004000000000001,
+    "cost_source": "billed",
+    "cost_unknown": 0,
+    "price": null
+   }
+  },
+  {
+   "candidate": {
+    "model": "flash-lite@vercel",
+    "variant": "with_none"
+   },
+   "answered_by": "vercel_ai_gateway/google/gemini-3.1-flash-lite",
+   "answered_by_all": [
+    "vercel_ai_gateway/google/gemini-3.1-flash-lite"
+   ],
+   "n": 288,
+   "probabilities": false,
+   "failures": {
+    "calls": 288,
+    "failed": 0,
+    "unsupported": 0,
+    "data_errors": 0,
+    "unlabeled": 0,
+    "never_asked": 0,
+    "failed_cases": 0,
+    "refused_cases": 0
+   },
+   "split": "stratified k-fold (87 test cases of the fixed evaluation set held out)",
+   "split_method": "stratified-kfold",
+   "accuracy": {
+    "value": 0.8645833333333334,
+    "interval": [
+     0.8263888888888888,
+     0.90625
+    ]
+   },
+   "measures": {
+    "macro_f1": {
+     "value": 0.8366576479076479,
+     "interval": null
+    }
+   },
+   "auroc": {
+    "value": 0.9250606002338901,
+    "interval": [
+     0.9094971557034829,
+     0.9509210103402416
+    ]
+   },
+   "brier": 0.25,
+   "ece": 0.11458333333333333,
+   "selective": [
+    {
+     "target_accuracy": 0.95,
+     "coverage": {
+      "value": 0.0,
+      "interval": [
+       0.0,
+       0.0
+      ]
+     },
+     "accuracy": null,
+     "n": 0,
+     "errors": 0,
+     "lower": 0.0,
+     "labels_needed": null,
+     "min_probability": null
+    }
+   ],
+   "error_loss_threshold": null,
+   "floors": [],
+   "sweep": null,
+   "objective": {
+    "objective": {
+     "name": "accuracy",
+     "params": {},
+     "direction": "max",
+     "sets": null,
+     "unit": "share",
+     "label": "accuracy (all)",
+     "code_sha256": null
+    },
+    "value": 0.8706467661691543,
+    "interval": [
+     0.8257462686567164,
+     0.9154228855721394
+    ],
+    "rule": null,
+    "constraint": null
+   },
+   "tiebreak": [],
+   "test": {
+    "n": 87,
+    "accuracy": 0.8505747126436781,
+    "coverage": 0.0,
+    "sure_accuracy": null,
+    "tuned_accuracy": null,
+    "primary": {
+     "value": 0.8505747126436781,
+     "interval": [
+      0.7701149425287356,
+      0.9195402298850575
+     ]
+    },
+    "constraint": null
+   },
+   "high_confidence_errors": [
+    {
+     "id": "m944",
+     "label": "datetime_convert",
+     "predicted": "datetime_query",
+     "probability": 1.0
+    },
+    {
+     "id": "m2480",
+     "label": "takeaway_order",
+     "predicted": "takeaway_query",
+     "probability": 1.0
+    },
+    {
+     "id": "m10931",
+     "label": "lists_query",
+     "predicted": "music_query",
+     "probability": 1.0
+    },
+    {
+     "id": "m13242",
+     "label": "general_quirky",
+     "predicted": "cooking_recipe",
+     "probability": 1.0
+    },
+    {
+     "id": "m4166",
+     "label": "audio_volume_other",
+     "predicted": "audio_volume_up",
+     "probability": 1.0
+    },
+    {
+     "id": "m2165",
+     "label": "takeaway_query",
+     "predicted": "cooking_query",
+     "probability": 1.0
+    },
+    {
+     "id": "m8795",
+     "label": "calendar_query",
+     "predicted": "lists_query",
+     "probability": 1.0
+    },
+    {
+     "id": "m9562",
+     "label": "play_radio",
+     "predicted": "play_podcasts",
+     "probability": 1.0
+    },
+    {
+     "id": "m5332",
+     "label": "datetime_convert",
+     "predicted": "datetime_query",
+     "probability": 1.0
+    },
+    {
+     "id": "m16225",
+     "label": "email_addcontact",
+     "predicted": "email_querycontact",
+     "probability": 1.0
+    },
+    {
+     "id": "m3834",
+     "label": "iot_hue_lightdim",
+     "predicted": "iot_hue_lightoff",
+     "probability": 1.0
+    },
+    {
+     "id": "m12800",
+     "label": "transport_query",
+     "predicted": "recommendation_locations",
+     "probability": 1.0
+    },
+    {
+     "id": "m9827",
+     "label": "play_audiobook",
+     "predicted": "play_music",
+     "probability": 1.0
+    },
+    {
+     "id": "m14",
+     "label": "iot_hue_lighton",
+     "predicted": "iot_hue_lightdim",
+     "probability": 1.0
+    },
+    {
+     "id": "m8978",
+     "label": "calendar_set",
+     "predicted": "calendar_query",
+     "probability": 1.0
+    },
+    {
+     "id": "m5812",
+     "label": "audio_volume_other",
+     "predicted": "music_settings",
+     "probability": 1.0
+    },
+    {
+     "id": "m3364",
+     "label": "general_joke",
+     "predicted": "general_quirky",
+     "probability": 1.0
+    },
+    {
+     "id": "m608",
+     "label": "audio_volume_up",
+     "predicted": "audio_volume_mute",
+     "probability": 1.0
+    },
+    {
+     "id": "m14481",
+     "label": "general_quirky",
+     "predicted": "qa_factoid",
+     "probability": 1.0
+    },
+    {
+     "id": "m5911",
+     "label": "music_settings",
+     "predicted": "play_music",
+     "probability": 1.0
+    },
+    {
+     "id": "m4702",
+     "label": "audio_volume_up",
+     "predicted": "iot_wemo_on",
+     "probability": 1.0
+    },
+    {
+     "id": "m6055",
+     "label": "iot_hue_lightoff",
+     "predicted": "iot_hue_lighton",
+     "probability": 1.0
+    },
+    {
+     "id": "m2255",
+     "label": "takeaway_order",
+     "predicted": "takeaway_query",
+     "probability": 1.0
+    },
+    {
+     "id": "m2016",
+     "label": "iot_hue_lightdim",
+     "predicted": "iot_hue_lightoff",
+     "probability": 1.0
+    },
+    {
+     "id": "m13372",
+     "label": "general_quirky",
+     "predicted": "recommendation_events",
+     "probability": 1.0
+    },
+    {
+     "id": "m15565",
+     "label": "social_post",
+     "predicted": "email_sendemail",
+     "probability": 1.0
+    },
+    {
+     "id": "m10216",
+     "label": "cooking_recipe",
+     "predicted": "cooking_query",
+     "probability": 1.0
+    },
+    {
+     "id": "m8322",
+     "label": "general_quirky",
+     "predicted": "recommendation_events",
+     "probability": 1.0
+    },
+    {
+     "id": "m12264",
+     "label": "transport_query",
+     "predicted": "qa_factoid",
+     "probability": 1.0
+    },
+    {
+     "id": "m15203",
+     "label": "social_query",
+     "predicted": "news_query",
+     "probability": 1.0
+    },
+    {
+     "id": "m5691",
+     "label": "music_likeness",
+     "predicted": "play_music",
+     "probability": 1.0
+    },
+    {
+     "id": "m14917",
+     "label": "qa_factoid",
+     "predicted": "music_query",
+     "probability": 1.0
+    },
+    {
+     "id": "m10349",
+     "label": "play_game",
+     "predicted": "play_music",
+     "probability": 1.0
+    }
+   ],
+   "calls": {
+    "latency": {
+     "n": 288,
+     "p50_ms": 1132.15,
+     "p90_ms": 1541.7200000000003,
+     "p95_ms": 1684.925,
+     "p99_ms": 2081.1499999999996,
+     "max_ms": 2482.9,
+     "spread": 1.8382281499801258,
+     "retried": 0,
+     "unrecorded": 288,
+     "concurrency": [],
+     "concurrency_unknown": 288
+    },
+    "case_latency_p90_ms": {
+     "value": 1535.0,
+     "interval": [
+      1425.5,
+      1599.4
+     ]
+    },
+    "throughput": null,
+    "cost_per_10k_usd": 3.1464149305555553,
+    "cost_total_usd": 0.09061675,
+    "cost_source": "list",
+    "cost_unknown": 0,
+    "price": null
+   }
+  },
+  {
+   "candidate": {
+    "model": "haiku@vercel",
+    "variant": "with_none"
+   },
+   "answered_by": "vercel_ai_gateway/anthropic/claude-haiku-4.5",
+   "answered_by_all": [
+    "vercel_ai_gateway/anthropic/claude-haiku-4.5"
+   ],
+   "n": 288,
+   "probabilities": false,
+   "failures": {
+    "calls": 288,
+    "failed": 0,
+    "unsupported": 0,
+    "data_errors": 0,
+    "unlabeled": 0,
+    "never_asked": 0,
+    "failed_cases": 0,
+    "refused_cases": 0
+   },
+   "split": "stratified k-fold (87 test cases of the fixed evaluation set held out)",
+   "split_method": "stratified-kfold",
+   "accuracy": {
+    "value": 0.8541666666666666,
+    "interval": [
+     0.8125,
+     0.8958333333333334
+    ]
+   },
+   "measures": {
+    "macro_f1": {
+     "value": 0.8420078532578532,
+     "interval": null
+    }
+   },
+   "auroc": {
+    "value": 0.9266055778483161,
+    "interval": [
+     0.9069765369157939,
+     0.9472570953939489
+    ]
+   },
+   "brier": 0.2777777777777778,
+   "ece": 0.1319444444444445,
+   "selective": [
+    {
+     "target_accuracy": 0.95,
+     "coverage": {
+      "value": 0.0,
+      "interval": [
+       0.0,
+       0.0
+      ]
+     },
+     "accuracy": null,
+     "n": 0,
+     "errors": 0,
+     "lower": 0.0,
+     "labels_needed": null,
+     "min_probability": null
+    }
+   ],
+   "error_loss_threshold": null,
+   "floors": [],
+   "sweep": null,
+   "objective": {
+    "objective": {
+     "name": "accuracy",
+     "params": {},
+     "direction": "max",
+     "sets": null,
+     "unit": "share",
+     "label": "accuracy (all)",
+     "code_sha256": null
+    },
+    "value": 0.8656716417910447,
+    "interval": [
+     0.8159203980099502,
+     0.9104477611940298
+    ],
+    "rule": null,
+    "constraint": null
+   },
+   "tiebreak": [],
+   "test": {
+    "n": 87,
+    "accuracy": 0.8275862068965517,
+    "coverage": 0.0,
+    "sure_accuracy": null,
+    "tuned_accuracy": null,
+    "primary": {
+     "value": 0.8275862068965517,
+     "interval": [
+      0.7471264367816092,
+      0.896551724137931
+     ]
+    },
+    "constraint": null
+   },
+   "high_confidence_errors": [
+    {
+     "id": "m10931",
+     "label": "lists_query",
+     "predicted": "music_query",
+     "probability": 1.0
+    },
+    {
+     "id": "m2480",
+     "label": "takeaway_order",
+     "predicted": "takeaway_query",
+     "probability": 1.0
+    },
+    {
+     "id": "m5152",
+     "label": "music_settings",
+     "predicted": "music_query",
+     "probability": 1.0
+    },
+    {
+     "id": "m13242",
+     "label": "general_quirky",
+     "predicted": "cooking_recipe",
+     "probability": 1.0
+    },
+    {
+     "id": "m4166",
+     "label": "audio_volume_other",
+     "predicted": "audio_volume_up",
+     "probability": 1.0
+    },
+    {
+     "id": "m2165",
+     "label": "takeaway_query",
+     "predicted": "cooking_query",
+     "probability": 1.0
+    },
+    {
+     "id": "m5919",
+     "label": "news_query",
+     "predicted": "qa_factoid",
+     "probability": 1.0
+    },
+    {
+     "id": "m8795",
+     "label": "calendar_query",
+     "predicted": "alarm_query",
+     "probability": 1.0
+    },
+    {
+     "id": "m9562",
+     "label": "play_radio",
+     "predicted": "play_music",
+     "probability": 1.0
+    },
+    {
+     "id": "m16225",
+     "label": "email_addcontact",
+     "predicted": "email_querycontact",
+     "probability": 1.0
+    },
+    {
+     "id": "m3834",
+     "label": "iot_hue_lightdim",
+     "predicted": "iot_hue_lightoff",
+     "probability": 1.0
+    },
+    {
+     "id": "m12800",
+     "label": "transport_query",
+     "predicted": "recommendation_locations",
+     "probability": 1.0
+    },
+    {
+     "id": "m730",
+     "label": "iot_hue_lightoff",
+     "predicted": "iot_wemo_off",
+     "probability": 1.0
+    },
+    {
+     "id": "m14",
+     "label": "iot_hue_lighton",
+     "predicted": "iot_hue_lightdim",
+     "probability": 1.0
+    },
+    {
+     "id": "m8978",
+     "label": "calendar_set",
+     "predicted": "calendar_query",
+     "probability": 1.0
+    },
+    {
+     "id": "m4813",
+     "label": "datetime_query",
+     "predicted": "datetime_convert",
+     "probability": 1.0
+    },
+    {
+     "id": "m1176",
+     "label": "music_query",
+     "predicted": "qa_factoid",
+     "probability": 1.0
+    },
+    {
+     "id": "m6093",
+     "label": "weather_query",
+     "predicted": "iot_hue_lightchange",
+     "probability": 1.0
+    },
+    {
+     "id": "m14481",
+     "label": "general_quirky",
+     "predicted": "qa_factoid",
+     "probability": 1.0
+    },
+    {
+     "id": "m5911",
+     "label": "music_settings",
+     "predicted": "play_music",
+     "probability": 1.0
+    },
+    {
+     "id": "m2578",
+     "label": "iot_hue_lightoff",
+     "predicted": "iot_wemo_off",
+     "probability": 1.0
+    },
+    {
+     "id": "m4702",
+     "label": "audio_volume_up",
+     "predicted": "iot_wemo_on",
+     "probability": 1.0
+    },
+    {
+     "id": "m2174",
+     "label": "music_query",
+     "predicted": "qa_factoid",
+     "probability": 1.0
+    },
+    {
+     "id": "m6055",
+     "label": "iot_hue_lightoff",
+     "predicted": "iot_hue_lightchange",
+     "probability": 1.0
+    },
+    {
+     "id": "m6959",
+     "label": "calendar_set",
+     "predicted": "alarm_set",
+     "probability": 1.0
+    },
+    {
+     "id": "m2255",
+     "label": "takeaway_order",
+     "predicted": "takeaway_query",
+     "probability": 1.0
+    },
+    {
+     "id": "m2016",
+     "label": "iot_hue_lightdim",
+     "predicted": "iot_hue_lightoff",
+     "probability": 1.0
+    },
+    {
+     "id": "m13372",
+     "label": "general_quirky",
+     "predicted": "datetime_query",
+     "probability": 1.0
+    },
+    {
+     "id": "m7232",
+     "label": "calendar_query",
+     "predicted": "recommendation_events",
+     "probability": 1.0
+    },
+    {
+     "id": "m9554",
+     "label": "play_radio",
+     "predicted": "play_music",
+     "probability": 1.0
+    },
+    {
+     "id": "m8322",
+     "label": "general_quirky",
+     "predicted": "recommendation_events",
+     "probability": 1.0
+    },
+    {
+     "id": "m4268",
+     "label": "music_settings",
+     "predicted": "play_music",
+     "probability": 1.0
+    },
+    {
+     "id": "m10216",
+     "label": "cooking_recipe",
+     "predicted": "cooking_query",
+     "probability": 1.0
+    },
+    {
+     "id": "m15199",
+     "label": "social_query",
+     "predicted": "general_quirky",
+     "probability": 1.0
+    },
+    {
+     "id": "m10349",
+     "label": "play_game",
+     "predicted": "play_music",
+     "probability": 1.0
+    },
+    {
+     "id": "m14917",
+     "label": "qa_factoid",
+     "predicted": "music_query",
+     "probability": 1.0
+    },
+    {
+     "id": "m15203",
+     "label": "social_query",
+     "predicted": "news_query",
+     "probability": 1.0
+    },
+    {
+     "id": "m5691",
+     "label": "music_likeness",
+     "predicted": "play_music",
+     "probability": 1.0
+    }
+   ],
+   "calls": {
+    "latency": {
+     "n": 288,
+     "p50_ms": 1062.25,
+     "p90_ms": 1401.1900000000003,
+     "p95_ms": 1628.985,
+     "p99_ms": 2563.7859999999973,
+     "max_ms": 3100.2,
+     "spread": 2.4135429512826523,
+     "retried": 0,
+     "unrecorded": 288,
+     "concurrency": [],
+     "concurrency_unknown": 288
+    },
+    "case_latency_p90_ms": {
+     "value": 1424.2,
+     "interval": [
+      1360.6875,
+      1569.8
+     ]
+    },
+    "throughput": null,
+    "cost_per_10k_usd": 15.700555555555555,
+    "cost_total_usd": 0.45217599999999997,
+    "cost_source": "list",
+    "cost_unknown": 0,
+    "price": null
+   }
+  },
+  {
+   "candidate": {
+    "model": "jev@vercel",
+    "variant": "with_none"
+   },
+   "answered_by": "typesafe-ai/jev",
+   "answered_by_all": [
+    "typesafe-ai/jev"
+   ],
+   "n": 288,
+   "probabilities": true,
+   "failures": {
+    "calls": 288,
+    "failed": 0,
+    "unsupported": 0,
+    "data_errors": 0,
+    "unlabeled": 0,
+    "never_asked": 0,
+    "failed_cases": 0,
+    "refused_cases": 0
+   },
+   "split": "stratified k-fold (87 test cases of the fixed evaluation set held out)",
+   "split_method": "stratified-kfold",
+   "accuracy": {
+    "value": 0.8541666666666666,
+    "interval": [
+     0.8125,
+     0.8958333333333334
+    ]
+   },
+   "measures": {
+    "macro_f1": {
+     "value": 0.8393765493765493,
+     "interval": null
+    }
+   },
+   "auroc": {
+    "value": 0.971396619555917,
+    "interval": [
+     0.957439162416452,
+     0.9840242363971278
+    ]
+   },
+   "brier": 0.22713457532320863,
+   "ece": 0.053058038885712436,
+   "selective": [
+    {
+     "target_accuracy": 0.95,
+     "coverage": {
+      "value": 0.7512437810945274,
+      "interval": [
+       0.6915422885572139,
+       0.8109452736318408
+      ]
+     },
+     "accuracy": 0.9337748344370861,
+     "n": 151,
+     "errors": 10,
+     "lower": 0.8902567112212969,
+     "labels_needed": null,
+     "min_probability": 0.8854166666666666
+    }
+   ],
+   "error_loss_threshold": null,
+   "floors": [],
+   "sweep": null,
+   "objective": {
+    "objective": {
+     "name": "accuracy",
+     "params": {},
+     "direction": "max",
+     "sets": null,
+     "unit": "share",
+     "label": "accuracy (all)",
+     "code_sha256": null
+    },
+    "value": 0.8557213930348259,
+    "interval": [
+     0.8059701492537313,
+     0.900497512437811
+    ],
+    "rule": null,
+    "constraint": null
+   },
+   "tiebreak": [],
+   "test": {
+    "n": 87,
+    "accuracy": 0.8505747126436781,
+    "coverage": 0.7241379310344828,
+    "sure_accuracy": 0.9523809523809523,
+    "tuned_accuracy": null,
+    "primary": {
+     "value": 0.8505747126436781,
+     "interval": [
+      0.7816091954022989,
+      0.9195402298850575
+     ]
+    },
+    "constraint": null
+   },
+   "high_confidence_errors": [
+    {
+     "id": "m15203",
+     "label": "social_query",
+     "predicted": "news_query",
+     "probability": 1.0
+    },
+    {
+     "id": "m13242",
+     "label": "general_quirky",
+     "predicted": "cooking_recipe",
+     "probability": 1.0
+    },
+    {
+     "id": "m5911",
+     "label": "music_settings",
+     "predicted": "play_music",
+     "probability": 1.0
+    },
+    {
+     "id": "m4268",
+     "label": "music_settings",
+     "predicted": "play_music",
+     "probability": 0.96875
+    },
+    {
+     "id": "m3834",
+     "label": "iot_hue_lightdim",
+     "predicted": "iot_hue_lightoff",
+     "probability": 0.9591836734693877
+    },
+    {
+     "id": "m10931",
+     "label": "lists_query",
+     "predicted": "music_query",
+     "probability": 0.95
+    },
+    {
+     "id": "m5152",
+     "label": "music_settings",
+     "predicted": "play_music",
+     "probability": 0.9186046511627908
+    },
+    {
+     "id": "m4130",
+     "label": "alarm_query",
+     "predicted": "alarm_set",
+     "probability": 0.9175257731958764
+    },
+    {
+     "id": "m15333",
+     "label": "social_query",
+     "predicted": "social_post",
+     "probability": 0.913978494623656
+    },
+    {
+     "id": "m5691",
+     "label": "music_likeness",
+     "predicted": "play_music",
+     "probability": 0.9090909090909092
+    }
+   ],
+   "calls": {
+    "latency": {
+     "n": 288,
+     "p50_ms": 410.55,
+     "p90_ms": 582.71,
+     "p95_ms": 738.3599999999998,
+     "p99_ms": 1085.841,
+     "max_ms": 2086.0,
+     "spread": 2.644844720496894,
+     "retried": 0,
+     "unrecorded": 288,
+     "concurrency": [],
+     "concurrency_unknown": 288
+    },
+    "case_latency_p90_ms": {
+     "value": 629.6,
+     "interval": [
+      553.9,
+      732.9
+     ]
+    },
+    "throughput": null,
+    "cost_per_10k_usd": 0.5861902083333334,
+    "cost_total_usd": 0.016882278,
+    "cost_source": "billed",
+    "cost_unknown": 0,
+    "price": null
+   }
+  },
+  {
+   "candidate": {
+    "model": "laya@vercel",
+    "variant": "with_none"
+   },
+   "answered_by": "convaiinnovations/laya",
+   "answered_by_all": [
+    "convaiinnovations/laya"
+   ],
+   "n": 288,
+   "probabilities": true,
+   "failures": {
+    "calls": 288,
+    "failed": 0,
+    "unsupported": 0,
+    "data_errors": 0,
+    "unlabeled": 0,
+    "never_asked": 0,
+    "failed_cases": 0,
+    "refused_cases": 0
+   },
+   "split": "stratified k-fold (87 test cases of the fixed evaluation set held out)",
+   "split_method": "stratified-kfold",
+   "accuracy": {
+    "value": 0.40625,
+    "interval": [
+     0.3506944444444444,
+     0.4618055555555556
+    ]
+   },
+   "measures": {
+    "macro_f1": {
+     "value": 0.36032660195131594,
+     "interval": null
+    }
+   },
+   "auroc": {
+    "value": 0.8449342980460135,
+    "interval": [
+     0.817375435259544,
+     0.8671827828194486
+    ]
+   },
+   "brier": 0.9308635151525616,
+   "ece": 0.3836091401332446,
+   "selective": [
+    {
+     "target_accuracy": 0.95,
+     "coverage": {
+      "value": 0.0,
+      "interval": [
+       0.0,
+       0.0
+      ]
+     },
+     "accuracy": null,
+     "n": 0,
+     "errors": 0,
+     "lower": 0.0,
+     "labels_needed": null,
+     "min_probability": null
+    }
+   ],
+   "error_loss_threshold": null,
+   "floors": [],
+   "sweep": null,
+   "objective": {
+    "objective": {
+     "name": "accuracy",
+     "params": {},
+     "direction": "max",
+     "sets": null,
+     "unit": "share",
+     "label": "accuracy (all)",
+     "code_sha256": null
+    },
+    "value": 0.39800995024875624,
+    "interval": [
+     0.3283582089552239,
+     0.46766169154228854
+    ],
+    "rule": null,
+    "constraint": null
+   },
+   "tiebreak": [],
+   "test": {
+    "n": 87,
+    "accuracy": 0.42528735632183906,
+    "coverage": 0.0,
+    "sure_accuracy": null,
+    "tuned_accuracy": null,
+    "primary": {
+     "value": 0.42528735632183906,
+     "interval": [
+      0.3218390804597701,
+      0.5287356321839081
+     ]
+    },
+    "constraint": null
+   },
+   "high_confidence_errors": [
+    {
+     "id": "m16470",
+     "label": "email_addcontact",
+     "predicted": "email_sendemail",
+     "probability": 1.0
+    },
+    {
+     "id": "m15987",
+     "label": "email_addcontact",
+     "predicted": "email_sendemail",
+     "probability": 1.0
+    },
+    {
+     "id": "m17111",
+     "label": "email_querycontact",
+     "predicted": "email_sendemail",
+     "probability": 1.0
+    },
+    {
+     "id": "m3486",
+     "label": "audio_volume_down",
+     "predicted": "iot_hue_lightchange",
+     "probability": 1.0
+    },
+    {
+     "id": "m16002",
+     "label": "email_query",
+     "predicted": "email_sendemail",
+     "probability": 1.0
+    },
+    {
+     "id": "m16353",
+     "label": "email_query",
+     "predicted": "email_sendemail",
+     "probability": 1.0
+    },
+    {
+     "id": "m5611",
+     "label": "audio_volume_down",
+     "predicted": "iot_hue_lightchange",
+     "probability": 1.0
+    },
+    {
+     "id": "m16627",
+     "label": "email_query",
+     "predicted": "email_sendemail",
+     "probability": 1.0
+    },
+    {
+     "id": "m16317",
+     "label": "email_query",
+     "predicted": "email_sendemail",
+     "probability": 1.0
+    },
+    {
+     "id": "m4155",
+     "label": "audio_volume_other",
+     "predicted": "iot_hue_lightchange",
+     "probability": 1.0
+    },
+    {
+     "id": "m15946",
+     "label": "email_querycontact",
+     "predicted": "email_sendemail",
+     "probability": 1.0
+    },
+    {
+     "id": "m16178",
+     "label": "email_query",
+     "predicted": "email_sendemail",
+     "probability": 1.0
+    },
+    {
+     "id": "m16781",
+     "label": "email_addcontact",
+     "predicted": "email_sendemail",
+     "probability": 1.0
+    },
+    {
+     "id": "m5219",
+     "label": "audio_volume_down",
+     "predicted": "iot_hue_lightchange",
+     "probability": 0.9999
+    },
+    {
+     "id": "m5579",
+     "label": "audio_volume_other",
+     "predicted": "iot_hue_lightchange",
+     "probability": 0.9997999399819946
+    },
+    {
+     "id": "m2403",
+     "label": "iot_hue_lightup",
+     "predicted": "iot_hue_lightchange",
+     "probability": 0.9997995991983968
+    },
+    {
+     "id": "m5911",
+     "label": "music_settings",
+     "predicted": "play_music",
+     "probability": 0.9997991161108879
+    },
+    {
+     "id": "m4119",
+     "label": "news_query",
+     "predicted": "qa_factoid",
+     "probability": 0.9990991892703432
+    },
+    {
+     "id": "m16907",
+     "label": "email_querycontact",
+     "predicted": "email_sendemail",
+     "probability": 0.9989990991892703
+    },
+    {
+     "id": "m4130",
+     "label": "alarm_query",
+     "predicted": "alarm_set",
+     "probability": 0.9987983176447026
+    },
+    {
+     "id": "m16693",
+     "label": "email_addcontact",
+     "predicted": "email_sendemail",
+     "probability": 0.9986990893625538
+    },
+    {
+     "id": "m5324",
+     "label": "takeaway_query",
+     "predicted": "email_sendemail",
+     "probability": 0.9986973947895792
+    },
+    {
+     "id": "m12800",
+     "label": "transport_query",
+     "predicted": "recommendation_locations",
+     "probability": 0.9980773122849625
+    },
+    {
+     "id": "m5812",
+     "label": "audio_volume_other",
+     "predicted": "iot_hue_lightchange",
+     "probability": 0.9970988395358144
+    },
+    {
+     "id": "m80",
+     "label": "iot_hue_lightup",
+     "predicted": "iot_hue_lightchange",
+     "probability": 0.9969903691813804
+    },
+    {
+     "id": "m9554",
+     "label": "play_radio",
+     "predicted": "play_music",
+     "probability": 0.9968887996788438
+    },
+    {
+     "id": "m3474",
+     "label": "audio_volume_down",
+     "predicted": "iot_hue_lightchange",
+     "probability": 0.9963931469792605
+    },
+    {
+     "id": "m5974",
+     "label": "alarm_query",
+     "predicted": "alarm_set",
+     "probability": 0.9943616592831253
+    },
+    {
+     "id": "m1630",
+     "label": "audio_volume_up",
+     "predicted": "play_music",
+     "probability": 0.99318705540527
+    },
+    {
+     "id": "m168",
+     "label": "takeaway_query",
+     "predicted": "iot_wemo_off",
+     "probability": 0.9929732985344308
+    },
+    {
+     "id": "m4887",
+     "label": "music_likeness",
+     "predicted": "iot_wemo_off",
+     "probability": 0.9927572678804949
+    },
+    {
+     "id": "m10755",
+     "label": "lists_remove",
+     "predicted": "iot_cleaning",
+     "probability": 0.990215264187867
+    },
+    {
+     "id": "m14317",
+     "label": "qa_factoid",
+     "predicted": "iot_hue_lightdim",
+     "probability": 0.9900477302731796
+    },
+    {
+     "id": "m8795",
+     "label": "calendar_query",
+     "predicted": "iot_hue_lightdim",
+     "probability": 0.9893964110929854
+    },
+    {
+     "id": "m508",
+     "label": "alarm_query",
+     "predicted": "alarm_set",
+     "probability": 0.9884836852207294
+    },
+    {
+     "id": "m286",
+     "label": "iot_hue_lighton",
+     "predicted": "iot_cleaning",
+     "probability": 0.9862584621602506
+    },
+    {
+     "id": "m46",
+     "label": "general_greet",
+     "predicted": "qa_factoid",
+     "probability": 0.9839238173254147
+    },
+    {
+     "id": "m5823",
+     "label": "audio_volume_down",
+     "predicted": "iot_hue_lightchange",
+     "probability": 0.9818521207093228
+    },
+    {
+     "id": "m10760",
+     "label": "lists_query",
+     "predicted": "lists_createoradd",
+     "probability": 0.9783375314861461
+    },
+    {
+     "id": "m6093",
+     "label": "weather_query",
+     "predicted": "iot_hue_lightchange",
+     "probability": 0.9728377412437456
+    },
+    {
+     "id": "m2030",
+     "label": "music_query",
+     "predicted": "play_music",
+     "probability": 0.9712086057793714
+    },
+    {
+     "id": "m2016",
+     "label": "iot_hue_lightdim",
+     "predicted": "iot_hue_lightchange",
+     "probability": 0.9684091376826508
+    },
+    {
+     "id": "m9827",
+     "label": "play_audiobook",
+     "predicted": "play_music",
+     "probability": 0.9679855028692238
+    },
+    {
+     "id": "m3030",
+     "label": "music_likeness",
+     "predicted": "iot_coffee",
+     "probability": 0.9652926099957283
+    },
+    {
+     "id": "m608",
+     "label": "audio_volume_up",
+     "predicted": "audio_volume_mute",
+     "probability": 0.947426396955738
+    },
+    {
+     "id": "m4171",
+     "label": "iot_hue_lightoff",
+     "predicted": "iot_hue_lightchange",
+     "probability": 0.9425111925111925
+    },
+    {
+     "id": "m5497",
+     "label": "datetime_convert",
+     "predicted": "iot_hue_lightchange",
+     "probability": 0.9415343369766963
+    },
+    {
+     "id": "m13172",
+     "label": "qa_maths",
+     "predicted": "iot_coffee",
+     "probability": 0.9400968646444048
+    },
+    {
+     "id": "m13766",
+     "label": "qa_maths",
+     "predicted": "iot_coffee",
+     "probability": 0.9400968646444048
+    },
+    {
+     "id": "m10927",
+     "label": "lists_query",
+     "predicted": "lists_createoradd",
+     "probability": 0.9373359580052493
+    },
+    {
+     "id": "m2903",
+     "label": "iot_cleaning",
+     "predicted": "audio_volume_mute",
+     "probability": 0.9340457685664939
+    },
+    {
+     "id": "m3834",
+     "label": "iot_hue_lightdim",
+     "predicted": "iot_hue_lightchange",
+     "probability": 0.9302490382668557
+    },
+    {
+     "id": "m15203",
+     "label": "social_query",
+     "predicted": "news_query",
+     "probability": 0.9289318303811057
+    },
+    {
+     "id": "m2578",
+     "label": "iot_hue_lightoff",
+     "predicted": "iot_cleaning",
+     "probability": 0.9283121597096188
+    },
+    {
+     "id": "m1030",
+     "label": "iot_hue_lightdim",
+     "predicted": "iot_hue_lightchange",
+     "probability": 0.9265861027190333
+    },
+    {
+     "id": "m12233",
+     "label": "transport_ticket",
+     "predicted": "transport_taxi",
+     "probability": 0.9262007420034092
+    },
+    {
+     "id": "m10381",
+     "label": "play_game",
+     "predicted": "iot_hue_lightchange",
+     "probability": 0.9163436288608229
+    },
+    {
+     "id": "m13242",
+     "label": "general_quirky",
+     "predicted": "cooking_recipe",
+     "probability": 0.9108324974924774
+    },
+    {
+     "id": "m1710",
+     "label": "music_settings",
+     "predicted": "audio_volume_mute",
+     "probability": 0.9090181163046742
+    },
+    {
+     "id": "m158",
+     "label": "iot_hue_lightdim",
+     "predicted": "iot_hue_lightchange",
+     "probability": 0.9078021523178809
+    }
+   ],
+   "calls": {
+    "latency": {
+     "n": 288,
+     "p50_ms": 455.6,
+     "p90_ms": 696.39,
+     "p95_ms": 872.4999999999989,
+     "p99_ms": 1440.9699999999998,
+     "max_ms": 1962.3,
+     "spread": 3.162796312554872,
+     "retried": 0,
+     "unrecorded": 288,
+     "concurrency": [],
+     "concurrency_unknown": 288
+    },
+    "case_latency_p90_ms": {
+     "value": 682.5,
+     "interval": [
+      631.7,
+      787.0
+     ]
+    },
+    "throughput": null,
+    "cost_per_10k_usd": 0.0,
+    "cost_total_usd": 0.0,
+    "cost_source": "billed",
+    "cost_unknown": 0,
+    "price": null
+   }
+  }
+ ]
+}

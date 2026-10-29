@@ -1,0 +1,962 @@
+{
+ "schema": "s1flow/report@1",
+ "task": "massive-en-intent",
+ "variant": "base",
+ "at": "2026-10-22T00:00:00Z",
+ "evaluations": [
+  {
+   "candidate": {
+    "model": "clef",
+    "variant": "base"
+   },
+   "answered_by": "clef",
+   "answered_by_all": [
+    "clef"
+   ],
+   "n": 288,
+   "probabilities": true,
+   "failures": {
+    "calls": 288,
+    "failed": 0,
+    "unsupported": 0,
+    "data_errors": 0,
+    "unlabeled": 0,
+    "never_asked": 0,
+    "failed_cases": 0,
+    "refused_cases": 0
+   },
+   "split": "stratified k-fold (87 test cases of the fixed evaluation set held out)",
+   "split_method": "stratified-kfold",
+   "accuracy": {
+    "value": 0.8888888888888888,
+    "interval": [
+     0.8506944444444444,
+     0.9270833333333334
+    ]
+   },
+   "measures": {
+    "macro_f1": {
+     "value": 0.8739009139009138,
+     "interval": null
+    }
+   },
+   "auroc": {
+    "value": 0.9978145042886292,
+    "interval": [
+     0.9961740331511366,
+     0.9991492758638139
+    ]
+   },
+   "brier": 0.1648263104861111,
+   "ece": 0.03471215277777773,
+   "selective": [
+    {
+     "target_accuracy": 0.95,
+     "coverage": {
+      "value": 0.8208955223880597,
+      "interval": [
+       0.7710199004975125,
+       0.8756218905472637
+      ]
+     },
+     "accuracy": 0.9515151515151515,
+     "n": 165,
+     "errors": 8,
+     "lower": 0.9142196714519981,
+     "labels_needed": 68392,
+     "min_probability": 0.7741
+    }
+   ],
+   "error_loss_threshold": null,
+   "floors": [],
+   "sweep": null,
+   "objective": {
+    "objective": {
+     "name": "accuracy",
+     "params": {},
+     "direction": "max",
+     "sets": null,
+     "unit": "share",
+     "label": "accuracy (all)",
+     "code_sha256": null
+    },
+    "value": 0.8905472636815921,
+    "interval": [
+     0.845771144278607,
+     0.9303482587064676
+    ],
+    "rule": null,
+    "constraint": null
+   },
+   "tiebreak": [],
+   "test": {
+    "n": 87,
+    "accuracy": 0.8850574712643678,
+    "coverage": 0.8160919540229885,
+    "sure_accuracy": 0.971830985915493,
+    "tuned_accuracy": null,
+    "primary": {
+     "value": 0.8850574712643678,
+     "interval": [
+      0.8160919540229885,
+      0.9540229885057471
+     ]
+    },
+    "constraint": null
+   },
+   "high_confidence_errors": [
+    {
+     "id": "m13242",
+     "label": "general_quirky",
+     "predicted": "cooking_recipe",
+     "probability": 0.9644
+    },
+    {
+     "id": "m16781",
+     "label": "email_addcontact",
+     "predicted": "email_sendemail",
+     "probability": 0.9058
+    },
+    {
+     "id": "m8978",
+     "label": "calendar_set",
+     "predicted": "calendar_query",
+     "probability": 0.903
+    },
+    {
+     "id": "m15203",
+     "label": "social_query",
+     "predicted": "news_query",
+     "probability": 0.9021
+    }
+   ],
+   "calls": {
+    "latency": {
+     "n": 288,
+     "p50_ms": 520.3,
+     "p90_ms": 787.49,
+     "p95_ms": 903.5899999999998,
+     "p99_ms": 1282.3249999999996,
+     "max_ms": 1604.6,
+     "spread": 2.464587737843551,
+     "retried": 0,
+     "unrecorded": 288,
+     "concurrency": [],
+     "concurrency_unknown": 288
+    },
+    "case_latency_p90_ms": {
+     "value": 786.5,
+     "interval": [
+      745.8,
+      871.9
+     ]
+    },
+    "throughput": {
+     "per_min": 864.0,
+     "seconds": 20.0,
+     "calls": 288,
+     "concurrency": 8,
+     "measured": true
+    },
+    "cost_per_10k_usd": 3.364033333333333,
+    "cost_total_usd": 0.09688416,
+    "cost_source": "list",
+    "cost_unknown": 0,
+    "price": {
+     "input_per_mtok": 0.24,
+     "output_per_mtok": 0.0,
+     "per_request": 0.0,
+     "per_image": 0.0,
+     "as_of": "2026-10-04",
+     "source": "https://developers.cloudflare.com/workers-ai/platform/pricing/"
+    }
+   }
+  },
+  {
+   "candidate": {
+    "model": "clef-flash",
+    "variant": "base"
+   },
+   "answered_by": "clef-flash",
+   "answered_by_all": [
+    "clef-flash"
+   ],
+   "n": 288,
+   "probabilities": true,
+   "failures": {
+    "calls": 288,
+    "failed": 0,
+    "unsupported": 0,
+    "data_errors": 0,
+    "unlabeled": 0,
+    "never_asked": 0,
+    "failed_cases": 0,
+    "refused_cases": 0
+   },
+   "split": "stratified k-fold (87 test cases of the fixed evaluation set held out)",
+   "split_method": "stratified-kfold",
+   "accuracy": {
+    "value": 0.9027777777777778,
+    "interval": [
+     0.8680555555555556,
+     0.9375868055555555
+    ]
+   },
+   "measures": {
+    "macro_f1": {
+     "value": 0.8859361934361935,
+     "interval": null
+    }
+   },
+   "auroc": {
+    "value": 0.9978066589180807,
+    "interval": [
+     0.9962761624914555,
+     0.9991296410689777
+    ]
+   },
+   "brier": 0.15272782472222224,
+   "ece": 0.032766319444444504,
+   "selective": [
+    {
+     "target_accuracy": 0.95,
+     "coverage": {
+      "value": 0.8656716417910447,
+      "interval": [
+       0.8159203980099502,
+       0.9104477611940298
+      ]
+     },
+     "accuracy": 0.9425287356321839,
+     "n": 174,
+     "errors": 10,
+     "lower": 0.9044659694218127,
+     "labels_needed": null,
+     "min_probability": 0.8427
+    }
+   ],
+   "error_loss_threshold": null,
+   "floors": [],
+   "sweep": null,
+   "objective": {
+    "objective": {
+     "name": "accuracy",
+     "params": {},
+     "direction": "max",
+     "sets": null,
+     "unit": "share",
+     "label": "accuracy (all)",
+     "code_sha256": null
+    },
+    "value": 0.8955223880597015,
+    "interval": [
+     0.8507462686567164,
+     0.9353233830845771
+    ],
+    "rule": null,
+    "constraint": null
+   },
+   "tiebreak": [],
+   "test": {
+    "n": 87,
+    "accuracy": 0.9195402298850575,
+    "coverage": 0.9080459770114943,
+    "sure_accuracy": 0.9367088607594937,
+    "tuned_accuracy": null,
+    "primary": {
+     "value": 0.9195402298850575,
+     "interval": [
+      0.8560344827586207,
+      0.9655172413793104
+     ]
+    },
+    "constraint": null
+   },
+   "high_confidence_errors": [
+    {
+     "id": "m13242",
+     "label": "general_quirky",
+     "predicted": "cooking_recipe",
+     "probability": 0.9592
+    },
+    {
+     "id": "m4166",
+     "label": "audio_volume_other",
+     "predicted": "audio_volume_up",
+     "probability": 0.9591
+    },
+    {
+     "id": "m286",
+     "label": "iot_hue_lighton",
+     "predicted": "iot_hue_lightup",
+     "probability": 0.9403
+    },
+    {
+     "id": "m8978",
+     "label": "calendar_set",
+     "predicted": "calendar_query",
+     "probability": 0.9379
+    },
+    {
+     "id": "m16225",
+     "label": "email_addcontact",
+     "predicted": "email_querycontact",
+     "probability": 0.9293
+    },
+    {
+     "id": "m12800",
+     "label": "transport_query",
+     "predicted": "recommendation_locations",
+     "probability": 0.9285
+    },
+    {
+     "id": "m50",
+     "label": "datetime_convert",
+     "predicted": "datetime_query",
+     "probability": 0.918
+    },
+    {
+     "id": "m13984",
+     "label": "qa_definition",
+     "predicted": "general_quirky",
+     "probability": 0.9063
+    }
+   ],
+   "calls": {
+    "latency": {
+     "n": 288,
+     "p50_ms": 257.75,
+     "p90_ms": 521.59,
+     "p95_ms": 550.395,
+     "p99_ms": 851.5369999999999,
+     "max_ms": 1095.1,
+     "spread": 3.303732298739088,
+     "retried": 0,
+     "unrecorded": 288,
+     "concurrency": [],
+     "concurrency_unknown": 288
+    },
+    "case_latency_p90_ms": {
+     "value": 522.8,
+     "interval": [
+      499.0,
+      542.8
+     ]
+    },
+    "throughput": {
+     "per_min": 1440.0,
+     "seconds": 12.0,
+     "calls": 288,
+     "concurrency": 8,
+     "measured": true
+    },
+    "cost_per_10k_usd": 1.2615125,
+    "cost_total_usd": 0.03633156,
+    "cost_source": "list",
+    "cost_unknown": 0,
+    "price": {
+     "input_per_mtok": 0.09,
+     "output_per_mtok": 0.0,
+     "per_request": 0.0,
+     "per_image": 0.0,
+     "as_of": "2026-10-04",
+     "source": "https://developers.cloudflare.com/workers-ai/platform/pricing/"
+    }
+   }
+  },
+  {
+   "candidate": {
+    "model": "d1@vercel",
+    "variant": "base"
+   },
+   "answered_by": "liquid/d1",
+   "answered_by_all": [
+    "liquid/d1"
+   ],
+   "n": 288,
+   "probabilities": true,
+   "failures": {
+    "calls": 288,
+    "failed": 0,
+    "unsupported": 0,
+    "data_errors": 0,
+    "unlabeled": 0,
+    "never_asked": 0,
+    "failed_cases": 0,
+    "refused_cases": 0
+   },
+   "split": "stratified k-fold (87 test cases of the fixed evaluation set held out)",
+   "split_method": "stratified-kfold",
+   "accuracy": {
+    "value": 0.8645833333333334,
+    "interval": [
+     0.8263888888888888,
+     0.90625
+    ]
+   },
+   "measures": {
+    "macro_f1": {
+     "value": 0.8606206429735841,
+     "interval": null
+    }
+   },
+   "auroc": {
+    "value": 0.9921163132222164,
+    "interval": [
+     0.9880586819854014,
+     0.9965881684397334
+    ]
+   },
+   "brier": 0.22274864183549672,
+   "ece": 0.05291813550728178,
+   "selective": [
+    {
+     "target_accuracy": 0.95,
+     "coverage": {
+      "value": 0.6716417910447762,
+      "interval": [
+       0.6119402985074627,
+       0.736318407960199
+      ]
+     },
+     "accuracy": 0.9333333333333333,
+     "n": 135,
+     "errors": 9,
+     "lower": 0.8865503814412177,
+     "labels_needed": null,
+     "min_probability": 0.9178638073494562
+    }
+   ],
+   "error_loss_threshold": null,
+   "floors": [],
+   "sweep": null,
+   "objective": {
+    "objective": {
+     "name": "accuracy",
+     "params": {},
+     "direction": "max",
+     "sets": null,
+     "unit": "share",
+     "label": "accuracy (all)",
+     "code_sha256": null
+    },
+    "value": 0.8557213930348259,
+    "interval": [
+     0.8059701492537313,
+     0.9054726368159204
+    ],
+    "rule": null,
+    "constraint": null
+   },
+   "tiebreak": [],
+   "test": {
+    "n": 87,
+    "accuracy": 0.8850574712643678,
+    "coverage": 0.6781609195402298,
+    "sure_accuracy": 0.9661016949152542,
+    "tuned_accuracy": null,
+    "primary": {
+     "value": 0.8850574712643678,
+     "interval": [
+      0.8160919540229885,
+      0.9425287356321839
+     ]
+    },
+    "constraint": null
+   },
+   "high_confidence_errors": [
+    {
+     "id": "m8978",
+     "label": "calendar_set",
+     "predicted": "calendar_query",
+     "probability": 0.9932473008086559
+    },
+    {
+     "id": "m5911",
+     "label": "music_settings",
+     "predicted": "play_music",
+     "probability": 0.9830913306037004
+    },
+    {
+     "id": "m8322",
+     "label": "general_quirky",
+     "predicted": "recommendation_events",
+     "probability": 0.9786129189871315
+    },
+    {
+     "id": "m13242",
+     "label": "general_quirky",
+     "predicted": "cooking_recipe",
+     "probability": 0.968291890888292
+    },
+    {
+     "id": "m4268",
+     "label": "music_settings",
+     "predicted": "play_music",
+     "probability": 0.9645213063010221
+    },
+    {
+     "id": "m12800",
+     "label": "transport_query",
+     "predicted": "recommendation_locations",
+     "probability": 0.9529629107475418
+    },
+    {
+     "id": "m5812",
+     "label": "audio_volume_other",
+     "predicted": "music_settings",
+     "probability": 0.9448666964755553
+    },
+    {
+     "id": "m4166",
+     "label": "audio_volume_other",
+     "predicted": "audio_volume_up",
+     "probability": 0.9373357688463503
+    },
+    {
+     "id": "m12264",
+     "label": "transport_query",
+     "predicted": "weather_query",
+     "probability": 0.9172745681845167
+    },
+    {
+     "id": "m16225",
+     "label": "email_addcontact",
+     "predicted": "email_querycontact",
+     "probability": 0.9101851032513195
+    }
+   ],
+   "calls": {
+    "latency": {
+     "n": 288,
+     "p50_ms": 493.79999999999995,
+     "p90_ms": 601.44,
+     "p95_ms": 656.7399999999998,
+     "p99_ms": 807.125,
+     "max_ms": 1084.9,
+     "spread": 1.6345180234912922,
+     "retried": 0,
+     "unrecorded": 288,
+     "concurrency": [],
+     "concurrency_unknown": 288
+    },
+    "case_latency_p90_ms": {
+     "value": 608.9,
+     "interval": [
+      557.4,
+      628.9
+     ]
+    },
+    "throughput": {
+     "per_min": 960.0,
+     "seconds": 18.0,
+     "calls": 288,
+     "concurrency": 8,
+     "measured": true
+    },
+    "cost_per_10k_usd": 0.1643847222222222,
+    "cost_total_usd": 0.0047342799999999996,
+    "cost_source": "billed",
+    "cost_unknown": 0,
+    "price": null
+   }
+  },
+  {
+   "candidate": {
+    "model": "jev",
+    "variant": "base"
+   },
+   "answered_by": "jev-1.14.0",
+   "answered_by_all": [
+    "jev-1.14.0",
+    "jev-1.13.0"
+   ],
+   "n": 288,
+   "probabilities": true,
+   "failures": {
+    "calls": 288,
+    "failed": 0,
+    "unsupported": 0,
+    "data_errors": 0,
+    "unlabeled": 0,
+    "never_asked": 0,
+    "failed_cases": 0,
+    "refused_cases": 0
+   },
+   "split": "stratified k-fold (87 test cases of the fixed evaluation set held out)",
+   "split_method": "stratified-kfold",
+   "accuracy": {
+    "value": 0.8611111111111112,
+    "interval": [
+     0.8194444444444444,
+     0.9027777777777778
+    ]
+   },
+   "measures": {
+    "macro_f1": {
+     "value": 0.8484656084656084,
+     "interval": null
+    }
+   },
+   "auroc": {
+    "value": 0.9822247719676503,
+    "interval": [
+     0.9716624228407281,
+     0.9919935677039924
+    ]
+   },
+   "brier": 0.2208322396240746,
+   "ece": 0.06713839786756463,
+   "selective": [
+    {
+     "target_accuracy": 0.95,
+     "coverage": {
+      "value": 0.6865671641791045,
+      "interval": [
+       0.6268656716417911,
+       0.7512437810945274
+      ]
+     },
+     "accuracy": 0.9492753623188406,
+     "n": 138,
+     "errors": 7,
+     "lower": 0.9068389384191298,
+     "labels_needed": null,
+     "min_probability": 0.89
+    }
+   ],
+   "error_loss_threshold": null,
+   "floors": [],
+   "sweep": null,
+   "objective": {
+    "objective": {
+     "name": "accuracy",
+     "params": {},
+     "direction": "max",
+     "sets": null,
+     "unit": "share",
+     "label": "accuracy (all)",
+     "code_sha256": null
+    },
+    "value": 0.8656716417910447,
+    "interval": [
+     0.8159203980099502,
+     0.9104477611940298
+    ],
+    "rule": null,
+    "constraint": null
+   },
+   "tiebreak": [],
+   "test": {
+    "n": 87,
+    "accuracy": 0.8505747126436781,
+    "coverage": 0.7011494252873564,
+    "sure_accuracy": 0.9672131147540983,
+    "tuned_accuracy": null,
+    "primary": {
+     "value": 0.8505747126436781,
+     "interval": [
+      0.7701149425287356,
+      0.9195402298850575
+     ]
+    },
+    "constraint": null
+   },
+   "high_confidence_errors": [
+    {
+     "id": "m13242",
+     "label": "general_quirky",
+     "predicted": "cooking_recipe",
+     "probability": 1.0
+    },
+    {
+     "id": "m8978",
+     "label": "calendar_set",
+     "predicted": "calendar_query",
+     "probability": 1.0
+    },
+    {
+     "id": "m5911",
+     "label": "music_settings",
+     "predicted": "play_music",
+     "probability": 1.0
+    },
+    {
+     "id": "m4268",
+     "label": "music_settings",
+     "predicted": "play_music",
+     "probability": 0.96
+    },
+    {
+     "id": "m2165",
+     "label": "takeaway_query",
+     "predicted": "cooking_query",
+     "probability": 0.9393939393939393
+    },
+    {
+     "id": "m16353",
+     "label": "email_query",
+     "predicted": "email_querycontact",
+     "probability": 0.93
+    },
+    {
+     "id": "m15203",
+     "label": "social_query",
+     "predicted": "news_query",
+     "probability": 0.9090909090909092
+    },
+    {
+     "id": "m8322",
+     "label": "general_quirky",
+     "predicted": "recommendation_events",
+     "probability": 0.9
+    },
+    {
+     "id": "m5812",
+     "label": "audio_volume_other",
+     "predicted": "music_settings",
+     "probability": 0.9
+    }
+   ],
+   "calls": {
+    "latency": {
+     "n": 288,
+     "p50_ms": 163.2,
+     "p90_ms": 223.59,
+     "p95_ms": 234.39,
+     "p99_ms": 272.904,
+     "max_ms": 440.4,
+     "spread": 1.6722058823529413,
+     "retried": 0,
+     "unrecorded": 288,
+     "concurrency": [],
+     "concurrency_unknown": 288
+    },
+    "case_latency_p90_ms": {
+     "value": 226.9,
+     "interval": [
+      218.4,
+      234.6
+     ]
+    },
+    "throughput": {
+     "per_min": 2468.571428571429,
+     "seconds": 7.0,
+     "calls": 288,
+     "concurrency": 8,
+     "measured": true
+    },
+    "cost_per_10k_usd": 0.5631091666666668,
+    "cost_total_usd": 0.016217544000000004,
+    "cost_source": "list",
+    "cost_unknown": 0,
+    "price": {
+     "input_per_mtok": 0.042,
+     "output_per_mtok": 0.0,
+     "per_request": 0.0,
+     "per_image": 0.0,
+     "as_of": "2026-10-03",
+     "source": "TypeSafe's list price for jev (output free); the API returns no cost"
+    }
+   }
+  },
+  {
+   "candidate": {
+    "model": "luna@decisions",
+    "variant": "base"
+   },
+   "answered_by": "gpt-6-luna",
+   "answered_by_all": [
+    "gpt-6-luna"
+   ],
+   "n": 288,
+   "probabilities": true,
+   "failures": {
+    "calls": 288,
+    "failed": 0,
+    "unsupported": 0,
+    "data_errors": 0,
+    "unlabeled": 0,
+    "never_asked": 0,
+    "failed_cases": 0,
+    "refused_cases": 0
+   },
+   "split": "stratified k-fold (87 test cases of the fixed evaluation set held out)",
+   "split_method": "stratified-kfold",
+   "accuracy": {
+    "value": 0.8472222222222222,
+    "interval": [
+     0.8020833333333334,
+     0.8855034722222221
+    ]
+   },
+   "measures": {
+    "macro_f1": {
+     "value": 0.8369450919450919,
+     "interval": null
+    }
+   },
+   "auroc": {
+    "value": 0.982565625483784,
+    "interval": [
+     0.9706876284092765,
+     0.9919886582220876
+    ]
+   },
+   "brier": 0.22885902777777772,
+   "ece": 0.05760416666666678,
+   "selective": [
+    {
+     "target_accuracy": 0.95,
+     "coverage": {
+      "value": 0.7263681592039801,
+      "interval": [
+       0.6616915422885572,
+       0.7860696517412935
+      ]
+     },
+     "accuracy": 0.952054794520548,
+     "n": 146,
+     "errors": 7,
+     "lower": 0.9118344470410071,
+     "labels_needed": 41982,
+     "min_probability": 0.82
+    }
+   ],
+   "error_loss_threshold": null,
+   "floors": [],
+   "sweep": null,
+   "objective": {
+    "objective": {
+     "name": "accuracy",
+     "params": {},
+     "direction": "max",
+     "sets": null,
+     "unit": "share",
+     "label": "accuracy (all)",
+     "code_sha256": null
+    },
+    "value": 0.845771144278607,
+    "interval": [
+     0.7910447761194029,
+     0.8955223880597015
+    ],
+    "rule": null,
+    "constraint": null
+   },
+   "tiebreak": [],
+   "test": {
+    "n": 87,
+    "accuracy": 0.8505747126436781,
+    "coverage": 0.7931034482758621,
+    "sure_accuracy": 0.9565217391304348,
+    "tuned_accuracy": null,
+    "primary": {
+     "value": 0.8505747126436781,
+     "interval": [
+      0.7755747126436782,
+      0.9195402298850575
+     ]
+    },
+    "constraint": null
+   },
+   "high_confidence_errors": [
+    {
+     "id": "m13242",
+     "label": "general_quirky",
+     "predicted": "cooking_recipe",
+     "probability": 1.0
+    },
+    {
+     "id": "m2165",
+     "label": "takeaway_query",
+     "predicted": "cooking_query",
+     "probability": 1.0
+    },
+    {
+     "id": "m8978",
+     "label": "calendar_set",
+     "predicted": "calendar_query",
+     "probability": 1.0
+    },
+    {
+     "id": "m10931",
+     "label": "lists_query",
+     "predicted": "music_query",
+     "probability": 0.99
+    },
+    {
+     "id": "m15203",
+     "label": "social_query",
+     "predicted": "news_query",
+     "probability": 0.99
+    },
+    {
+     "id": "m50",
+     "label": "datetime_convert",
+     "predicted": "datetime_query",
+     "probability": 0.97
+    },
+    {
+     "id": "m12800",
+     "label": "transport_query",
+     "predicted": "recommendation_locations",
+     "probability": 0.93
+    },
+    {
+     "id": "m5911",
+     "label": "music_settings",
+     "predicted": "play_music",
+     "probability": 0.93
+    },
+    {
+     "id": "m8322",
+     "label": "general_quirky",
+     "predicted": "recommendation_events",
+     "probability": 0.93
+    }
+   ],
+   "calls": {
+    "latency": {
+     "n": 288,
+     "p50_ms": 272.29999999999995,
+     "p90_ms": 403.08000000000004,
+     "p95_ms": 595.3549999999999,
+     "p99_ms": 3360.758,
+     "max_ms": 3439.9,
+     "spread": 12.342115313991922,
+     "retried": 0,
+     "unrecorded": 288,
+     "concurrency": [],
+     "concurrency_unknown": 288
+    },
+    "case_latency_p90_ms": {
+     "value": 413.1,
+     "interval": [
+      342.8,
+      519.6
+     ]
+    },
+    "throughput": {
+     "per_min": 1234.2857142857144,
+     "seconds": 14.0,
+     "calls": 288,
+     "concurrency": 8,
+     "measured": true
+    },
+    "cost_per_10k_usd": 0.7626423611111112,
+    "cost_total_usd": 0.0219641,
+    "cost_source": "list",
+    "cost_unknown": 0,
+    "price": {
+     "input_per_mtok": 0.1,
+     "output_per_mtok": 0.0,
+     "per_request": 0.0,
+     "per_image": 0.0,
+     "as_of": "2026-10-09",
+     "source": "https://openai.com/api/pricing/ (Decisions API, no output charge)"
+    }
+   }
+  }
+ ]
+}

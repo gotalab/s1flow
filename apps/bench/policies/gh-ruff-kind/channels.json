@@ -1,0 +1,6 @@
+{
+ "schema": "s1flow/channels@1",
+ "channels": {
+  "next": 1
+ }
+}

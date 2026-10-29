@@ -1,0 +1,91 @@
+name: s1flow check
+description: >
+  Ask the current policy and the changed one about today's test cases, compare them case by case,
+  and keep one comment on the pull request up to date. Fails when the change is worse.
+inputs:
+  tasks:
+    description: Task ids, space-separated. Default every task with a current policy.
+    default: ""
+  against:
+    description: The version to compare with (a channel or vN).
+    default: current
+  candidate:
+    description: A channel, vN or `draft`. Default the edited question, else the next channel.
+    default: ""
+  sample:
+    description: Check this many test cases per task (a cheap PR check). Empty checks them all.
+    default: ""
+  cached-only:
+    description: "`auto` (no calls on a pull request from a fork, which gets no secrets), `true` or `false`."
+    default: auto
+  working-directory:
+    description: The project directory, with s1flow.toml (`s1flow init` makes s1flow/).
+    default: s1flow
+  package:
+    description: Where to install s1flow from when the project's pyproject.toml does not list it (a requirement with the `eval` extra the CLI needs, e.g. `s1flow[eval] @ git+https://...`). Empty runs this Action's own copy with the dependency versions in its uv.lock, so the CLI is the version of the Action; a project that lists s1flow runs the s1flow it locked.
+    default: ""
+  comment:
+    description: Keep a comment on the pull request.
+    default: "true"
+runs:
+  using: composite
+  steps:
+    - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+    - name: Restore the answer cache
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ${{ inputs.working-directory }}/.cache
+        key: s1flow-cache-1-${{ github.run_id }}  # -1-: the answer shape of 2026-10-22 (design review C)
+        restore-keys: s1flow-cache-1-
+    - name: Check
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        TASKS: ${{ inputs.tasks }}
+        AGAINST: ${{ inputs.against }}
+        CANDIDATE: ${{ inputs.candidate }}
+        SAMPLE: ${{ inputs.sample }}
+        CACHED_ONLY: ${{ inputs.cached-only }}
+        COMMENT: ${{ inputs.comment }}
+        FORK: ${{ github.event.pull_request.head.repo.fork }}
+        PR: ${{ github.event.pull_request.number }}
+        PACKAGE: ${{ inputs.package }}
+        ACTION_PATH: ${{ github.action_path }}
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        set +e -uo pipefail  # the runner starts bash with -e; an exit code here is a result, not a crash
+        out="$RUNNER_TEMP/s1flow"; mkdir -p "$out"
+        if [ -z "$TASKS" ]; then
+          TASKS=$(for f in policies/*/channels.json; do jq -e '.channels.current' "$f" >/dev/null && basename "$(dirname "$f")"; done | tr '\n' ' ')
+          if [ -z "$TASKS" ] && compgen -G 'policies/*/channels.json' >/dev/null; then
+            echo "::error::no policies/*/channels.json names a current version; select one with s1flow promote TASK@vN --connections PATH"; exit 1
+          fi
+        fi
+        args=(--against "$AGAINST")
+        [ -n "$CANDIDATE" ] && args+=(--candidate "$CANDIDATE")
+        [ -n "$SAMPLE" ] && [ -n "$PR" ] && args+=(--sample "$SAMPLE")   # outside a PR, every case
+        if [ "$CACHED_ONLY" = true ] || { [ "$CACHED_ONLY" = auto ] && [ "$FORK" = true ]; }; then args+=(--cached-only); fi
+        # a project whose pyproject.toml lists s1flow (s1flow's apps/bench, or an app's own) runs the s1flow it locked
+        if grep -Eq '"s1flow([][<>=~!; ]|")' pyproject.toml 2>/dev/null; then jf=(uv run --frozen s1flow)
+        # otherwise PACKAGE as given, or this Action's copy with the dependency versions its uv.lock pins, in the
+        # Action's own environment (a caller's UV_PROJECT_ENVIRONMENT would point the sync at their venv)
+        elif [ -n "$PACKAGE" ]; then jf=(uvx --from "$PACKAGE" s1flow)
+        else jf=(env -u UV_PROJECT_ENVIRONMENT -u UV_NO_SYNC uv run --project "$ACTION_PATH" --frozen --no-dev --extra eval s1flow); fi
+        failed=0
+        for t in $TASKS; do
+          "${jf[@]}" check "$t" "${args[@]}" --json --markdown "$out/$t.md" > "$out/$t.json"
+          code=$?
+          verdict=$(jq -r '.verdict // "error"' "$out/$t.json" 2>/dev/null || echo error)
+          echo "$t: $verdict (exit $code)"
+          [ -f "$out/$t.md" ] && cat "$out/$t.md" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$code" = 1 ]; then failed=1; echo "::error title=s1flow check::$t is worse than $AGAINST";
+          elif [ "$code" = 2 ] && [ "$verdict" = pending ]; then echo "::warning title=s1flow check::$t is pending: answers needed that only a run with keys can get";
+          elif [ "$code" != 0 ]; then failed=1; echo "::error title=s1flow check::$t could not be checked (exit $code)"; fi
+          if [ "$COMMENT" = true ] && [ -n "$PR" ] && [ -f "$out/$t.md" ]; then
+            marker="<!-- s1flow-check:$t -->"
+            id=$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" --paginate --jq ".[] | select(.body | startswith(\"$marker\")) | .id" | head -1)
+            if [ -n "$id" ]; then gh api -X PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$id" -F body=@"$out/$t.md" >/dev/null
+            else gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" -F body=@"$out/$t.md" >/dev/null; fi
+          fi
+        done
+        exit $failed

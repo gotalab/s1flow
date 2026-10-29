@@ -1,0 +1,216 @@
+[project]
+name = "s1flow"
+version = "0.1.0a1"
+description = "Evaluate decision models (Jev, Clef, d1, OpenAI Decisions) on your own data, then run the one you trust in your app and CI"
+keywords = ["decision model", "system one", "jev", "llm evaluation", "confidence threshold", "classification", "routing"]
+dynamic = ["readme"]
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
+authors = [
+    { name = "Gota", email = "75576618+gotalab@users.noreply.github.com" }
+]
+requires-python = ">=3.13"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+# The base is what an app needs to call a decision model (s1flow.Client) or decide with its policy (s1flow.policies).
+dependencies = [
+    "httpx>=0.28.1",
+    "pydantic>=2.13.5",
+]
+
+[project.urls]
+Repository = "https://github.com/gotalab/s1flow"
+Issues = "https://github.com/gotalab/s1flow/issues"
+
+[project.scripts]
+s1flow = "s1flow.cli:main"
+
+[project.optional-dependencies]
+eval = [  # evaluation commands; runtime CLI commands use the base dependencies
+    "numpy>=2.5.3",
+    "scikit-learn>=1.9.1",
+    "scipy>=1.18.1",
+]
+llm = [  # the `llm` provider
+    "litellm>=1.103.2,!=1.107.0",  # 1.107.0 was a malicious release (2026-10-21), pulled from PyPI
+]
+optimize = [  # GEPA needs the evaluation and reflection-model extras
+    "s1flow[eval,llm]",
+    "gepa>=0.1.4",
+]
+images = [  # a policy whose states carry images (Pillow prepares them)
+    "pillow>=13.0.0",
+]
+otel = [
+    "opentelemetry-api>=1.30",
+]
+
+# apps/: private projects that use the package the way a user would (apps/bench: s1flow's own evaluation).
+[tool.uv]
+exclude-newer = "7 days"
+
+[tool.uv.workspace]
+members = ["apps/bench"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[build-system]
+requires = ["hatchling>=1.27", "hatch-fancy-pypi-readme>=25.1"]
+build-backend = "hatchling.build"
+
+# README.md uses relative links so they work on GitHub on any branch; PyPI gets them absolute.
+[tool.hatch.metadata.hooks.fancy-pypi-readme]
+content-type = "text/markdown"
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.fragments]]
+path = "README.md"
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.substitutions]]
+pattern = '(src|srcset)="(?!https?:)([^"]+)"'
+replacement = '\1="https://raw.githubusercontent.com/gotalab/s1flow/main/\2"'
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.substitutions]]
+pattern = 'href="(?!https?:|#)([^"]+)"'
+replacement = 'href="https://github.com/gotalab/s1flow/blob/main/\1"'
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.substitutions]]
+pattern = '\]\((?!https?:|#)([^)]+)\)'
+replacement = '](https://github.com/gotalab/s1flow/blob/main/\1)'
+
+[tool.hatch.build.targets.sdist]
+only-include = ["src", "skills", "README.md"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/s1flow"]
+
+# The Agent Skill travels with the package, so a base install can write it (s1flow skill install).
+[tool.hatch.build.targets.wheel.force-include]
+"skills/s1flow" = "s1flow/skills/s1flow"
+
+[dependency-groups]
+dev = [
+    "s1flow[eval,llm,optimize,otel,images]",  # every extra, so mypy and the tests see the whole package
+    "mypy>=2.4.0",
+    "opentelemetry-sdk>=1.30",
+    "pytest>=9.1.1",
+    "respx>=0.23.1",
+    "import-linter>=2.5",
+    "jsonschema>=4.26",
+]
+
+[tool.mypy]
+python_version = "3.13"
+files = ["src/s1flow"]
+plugins = ["pydantic.mypy"]
+check_untyped_defs = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+no_implicit_optional = true
+strict_equality = true
+
+# The contract and the code that touches the wire are held to strict typing.
+[[tool.mypy.overrides]]
+module = ["s1flow.core.*", "s1flow.client.*", "s1flow.policies.*", "s1flow.cli", "s1flow.skill", "s1flow.eval.records", "s1flow.eval.run", "s1flow.eval.verify", "s1flow.project.*"]
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+warn_return_any = true
+
+[[tool.mypy.overrides]]
+module = ["litellm.*", "gepa.*", "sklearn.*", "scipy.*", "respx.*"]
+ignore_missing_imports = true
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+
+[tool.importlinter]
+root_package = "s1flow"
+include_external_packages = true
+exclude_type_checking_imports = true  # what a module loads when it runs
+
+# Imports point one way: cli -> integrations | sources -> eval -> project -> policies -> client -> core.
+[[tool.importlinter.contracts]]
+name = "Packages depend downward only"
+type = "layers"
+layers = [
+    "s1flow.cli : s1flow.doctor : s1flow.skill",
+    "s1flow.integrations | s1flow.sources",
+    "s1flow.eval",
+    "s1flow.project",
+    "s1flow.policies",
+    "s1flow.client",
+    "s1flow.core.envfile",
+    "s1flow.core.place",
+    "s1flow.core.errors | s1flow.core.clock",
+]
+
+[[tool.importlinter.contracts]]
+name = "core needs the standard library alone"
+type = "forbidden"
+source_modules = ["s1flow.core.errors", "s1flow.core.place", "s1flow.core.envfile", "s1flow.core.clock"]
+forbidden_modules = ["pydantic", "httpx", "numpy", "scipy", "sklearn", "litellm", "PIL", "opentelemetry"]
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+name = "The model-calling layer imports no other layer of s1flow"
+type = "forbidden"
+source_modules = ["s1flow.client"]
+forbidden_modules = ["s1flow.cli", "s1flow.integrations", "s1flow.eval", "s1flow.project", "s1flow.policies"]
+
+[[tool.importlinter.contracts]]
+name = "The model-calling layer loads no evaluation stack"
+type = "forbidden"
+source_modules = ["s1flow.client"]
+forbidden_modules = ["numpy", "scipy", "sklearn", "litellm", "PIL", "opentelemetry"]
+ignore_imports = [
+    "s1flow.client.providers.llm -> litellm",  # only when an `llm` model is built
+    "s1flow.client.images -> PIL",  # inside the functions that prepare an image, when a state holds one
+]
+
+[[tool.importlinter.contracts]]
+# The CLI (cli.py) imports each command's modules when the command runs: tests/test_cli.py runs the base install's.
+name = "Policies, doctor and skill load no evaluation stack"
+type = "forbidden"
+source_modules = ["s1flow.policies", "s1flow.doctor", "s1flow.skill"]
+forbidden_modules = ["numpy", "scipy", "sklearn", "litellm", "PIL"]
+ignore_imports = [
+    "s1flow.client.images -> PIL",  # inside the functions that prepare an image, when a state holds one
+    "s1flow.client.providers.llm -> litellm",  # only when an `llm` model is built
+]
+
+[[tool.importlinter.contracts]]
+name = "Where cases come from is the CLI's to call: nothing below it imports a source"
+type = "forbidden"
+source_modules = ["s1flow.core", "s1flow.client", "s1flow.policies", "s1flow.eval", "s1flow.project"]
+forbidden_modules = ["s1flow.sources"]
+
+[[tool.importlinter.contracts]]
+name = "The evaluation runs no command (git and GitHub are integrations.git, called by the CLI)"
+type = "forbidden"
+source_modules = ["s1flow.eval"]
+forbidden_modules = ["subprocess"]
+
+[[tool.importlinter.contracts]]
+name = "Objectives are declared with pydantic alone (measuring them is eval.objectives.measure)"
+type = "forbidden"
+source_modules = ["s1flow.eval.objectives.declare"]
+forbidden_modules = ["numpy", "scipy", "sklearn", "litellm", "PIL", "s1flow.eval.objectives.measure"]
+ignore_imports = ["s1flow.client.images -> PIL", "s1flow.client.providers.llm -> litellm"]
+
+[[tool.importlinter.contracts]]
+name = "Decision-model providers need no LiteLLM or evaluation stack"
+type = "forbidden"
+source_modules = ["s1flow.client.providers.typesafe", "s1flow.client.providers.gateway", "s1flow.client.providers.openrouter", "s1flow.client.providers.cloudflare", "s1flow.client.providers.openai_decisions"]
+forbidden_modules = ["numpy", "scipy", "sklearn", "litellm", "PIL", "s1flow.client.providers.llm"]
+ignore_imports = ["s1flow.client.images -> PIL"]  # inside the functions that prepare an image
+
+[[tool.importlinter.contracts]]
+name = "Connection declarations do not construct providers"
+type = "forbidden"
+source_modules = ["s1flow.client.lineup"]
+forbidden_modules = ["s1flow.client.providers", "s1flow.client._client"]

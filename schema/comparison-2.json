@@ -1,0 +1,1367 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "https://github.com/gotalab/s1flow/blob/main/schema/comparison-2.json",
+ "$defs": {
+  "Boolean": {
+   "additionalProperties": false,
+   "properties": {
+    "type": {
+     "const": "boolean",
+     "default": "boolean",
+     "title": "Type",
+     "type": "string"
+    },
+    "instructions": {
+     "title": "Instructions",
+     "type": "string"
+    },
+    "criteria": {
+     "anyOf": [
+      {
+       "additionalProperties": {
+        "type": "string"
+       },
+       "type": "object"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Criteria"
+    }
+   },
+   "required": [
+    "instructions"
+   ],
+   "title": "Boolean",
+   "type": "object"
+  },
+  "Box": {
+   "additionalProperties": false,
+   "description": "One bounding box of the target described in `instructions` (jev 1.14, 2026-10-15).\n\nThere is no \"not found\" answer: ask a Boolean alongside when the target may be absent.",
+   "properties": {
+    "type": {
+     "const": "box",
+     "default": "box",
+     "title": "Type",
+     "type": "string"
+    },
+    "instructions": {
+     "title": "Instructions",
+     "type": "string"
+    }
+   },
+   "required": [
+    "instructions"
+   ],
+   "title": "Box",
+   "type": "object"
+  },
+  "CalibrationPoint": {
+   "additionalProperties": false,
+   "properties": {
+    "probability": {
+     "title": "Probability",
+     "type": "number"
+    },
+    "observed": {
+     "title": "Observed",
+     "type": "number"
+    },
+    "n": {
+     "title": "N",
+     "type": "integer"
+    }
+   },
+   "required": [
+    "probability",
+    "observed",
+    "n"
+   ],
+   "title": "CalibrationPoint",
+   "type": "object"
+  },
+  "Calls": {
+   "additionalProperties": false,
+   "description": "What the calls took rather than what they answered: how long an app waits and what the model charges\n(API cost). Read from the call records alone (metrics.calls).",
+   "properties": {
+    "latency": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/Latency"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "case_latency_p90_ms": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/Estimate"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "throughput": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/Throughput"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "cost_per_10k_usd": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Cost Per 10K Usd"
+    },
+    "cost_total_usd": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Cost Total Usd"
+    },
+    "cost_source": {
+     "anyOf": [
+      {
+       "enum": [
+        "billed",
+        "list",
+        "mixed"
+       ],
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Cost Source"
+    },
+    "cost_unknown": {
+     "default": 0,
+     "title": "Cost Unknown",
+     "type": "integer"
+    },
+    "price": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/Price"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    }
+   },
+   "title": "Calls",
+   "type": "object"
+  },
+  "ChartData": {
+   "additionalProperties": false,
+   "description": "Report-owned dev series; exploratory sweeps are distinct from CV estimates.\n\n``selection_sweep`` holds dev rates while its selected cut, when present,\nis the minimum probability chosen on all dev cases.  For binary kinds the\ncandidate's selected P(positive) threshold stays fixed during that sweep.",
+   "properties": {
+    "scope": {
+     "const": "dev",
+     "default": "dev",
+     "title": "Scope",
+     "type": "string"
+    },
+    "rule": {
+     "const": "out-of-fold",
+     "default": "out-of-fold",
+     "title": "Rule",
+     "type": "string"
+    },
+    "n": {
+     "title": "N",
+     "type": "integer"
+    },
+    "raw_value": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Raw Value"
+    },
+    "cv_value": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Cv Value"
+    },
+    "threshold_sweep": {
+     "default": [],
+     "items": {
+      "$ref": "#/$defs/ThresholdPoint"
+     },
+     "title": "Threshold Sweep",
+     "type": "array"
+    },
+    "distribution": {
+     "default": [],
+     "items": {
+      "$ref": "#/$defs/ProbabilityBin"
+     },
+     "title": "Distribution",
+     "type": "array"
+    },
+    "calibration": {
+     "default": [],
+     "items": {
+      "$ref": "#/$defs/CalibrationPoint"
+     },
+     "title": "Calibration",
+     "type": "array"
+    },
+    "selection_sweep": {
+     "default": [],
+     "items": {
+      "$ref": "#/$defs/SelectionPoint"
+     },
+     "title": "Selection Sweep",
+     "type": "array"
+    },
+    "selection_basis": {
+     "anyOf": [
+      {
+       "enum": [
+        "selected-answer probability",
+        "box confidence"
+       ],
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Selection Basis"
+    },
+    "selection_unavailable": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Selection Unavailable"
+    },
+    "unavailable": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Unavailable"
+    }
+   },
+   "required": [
+    "n",
+    "raw_value",
+    "cv_value"
+   ],
+   "title": "ChartData",
+   "type": "object"
+  },
+  "Choice": {
+   "additionalProperties": false,
+   "properties": {
+    "type": {
+     "const": "choice",
+     "default": "choice",
+     "title": "Type",
+     "type": "string"
+    },
+    "instructions": {
+     "title": "Instructions",
+     "type": "string"
+    },
+    "criteria": {
+     "additionalProperties": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "title": "Criteria",
+     "type": "object"
+    }
+   },
+   "required": [
+    "instructions",
+    "criteria"
+   ],
+   "title": "Choice",
+   "type": "object"
+  },
+  "ComparisonRow": {
+   "additionalProperties": false,
+   "properties": {
+    "candidate": {
+     "title": "Candidate",
+     "type": "string"
+    },
+    "model": {
+     "title": "Model",
+     "type": "string"
+    },
+    "variant": {
+     "title": "Variant",
+     "type": "string"
+    },
+    "n": {
+     "description": "Answered labelled development cases scored for this candidate",
+     "minimum": 0,
+     "title": "N",
+     "type": "integer"
+    },
+    "value": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Value"
+    },
+    "interval": {
+     "anyOf": [
+      {
+       "maxItems": 2,
+       "minItems": 2,
+       "prefixItems": [
+        {
+         "type": "number"
+        },
+        {
+         "type": "number"
+        }
+       ],
+       "type": "array"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Interval"
+    },
+    "rule": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/DecisionRule"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "metrics": {
+     "additionalProperties": {
+      "$ref": "#/$defs/Estimate"
+     },
+     "title": "Metrics",
+     "type": "object"
+    },
+    "excluded": {
+     "items": {
+      "type": "string"
+     },
+     "title": "Excluded",
+     "type": "array"
+    },
+    "adoption_blocked": {
+     "items": {
+      "type": "string"
+     },
+     "title": "Adoption Blocked",
+     "type": "array"
+    },
+    "probabilities": {
+     "title": "Probabilities",
+     "type": "boolean"
+    },
+    "failures": {
+     "$ref": "#/$defs/Failures"
+    },
+    "calls": {
+     "$ref": "#/$defs/Calls"
+    },
+    "measurement": {
+     "$ref": "#/$defs/Measurement"
+    },
+    "question": {
+     "discriminator": {
+      "mapping": {
+       "boolean": "#/$defs/Boolean",
+       "box": "#/$defs/Box",
+       "choice": "#/$defs/Choice",
+       "score": "#/$defs/Score"
+      },
+      "propertyName": "type"
+     },
+     "oneOf": [
+      {
+       "$ref": "#/$defs/Boolean"
+      },
+      {
+       "$ref": "#/$defs/Choice"
+      },
+      {
+       "$ref": "#/$defs/Score"
+      },
+      {
+       "$ref": "#/$defs/Box"
+      }
+     ],
+     "title": "Question"
+    },
+    "charts": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/ChartData"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    }
+   },
+   "required": [
+    "candidate",
+    "model",
+    "variant",
+    "n",
+    "value",
+    "interval",
+    "rule",
+    "metrics",
+    "probabilities",
+    "failures",
+    "calls",
+    "measurement",
+    "question"
+   ],
+   "title": "ComparisonRow",
+   "type": "object"
+  },
+  "Constraints": {
+   "additionalProperties": false,
+   "description": "Limits a model must stay within to be chosen at all: two on its calls (latency, API cost per 10,000 cases,\nEvaluation.calls), one on its labels, and two floors on what a binary question reads positive. The P(positive)\nthreshold the objective sets is chosen among those that keep the floors; a model that no threshold lets keep them\non the dev cases is not chosen (a floor is never relaxed to find one).",
+   "properties": {
+    "latency_p99_ms": {
+     "anyOf": [
+      {
+       "exclusiveMinimum": 0,
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Latency P99 Ms"
+    },
+    "cost_per_10k_usd": {
+     "anyOf": [
+      {
+       "minimum": 0,
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Cost Per 10K Usd"
+    },
+    "min_labels": {
+     "anyOf": [
+      {
+       "exclusiveMinimum": 0,
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Min Labels"
+    },
+    "min_precision": {
+     "anyOf": [
+      {
+       "exclusiveMinimum": 0,
+       "maximum": 1,
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Min Precision"
+    },
+    "min_recall": {
+     "anyOf": [
+      {
+       "exclusiveMinimum": 0,
+       "maximum": 1,
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Min Recall"
+    }
+   },
+   "title": "Constraints",
+   "type": "object"
+  },
+  "DecisionRule": {
+   "additionalProperties": false,
+   "description": "Binary threshold and optional lower bound on the chosen value's probability.",
+   "properties": {
+    "threshold": {
+     "anyOf": [
+      {
+       "maximum": 1,
+       "minimum": 0,
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Threshold"
+    },
+    "min_probability": {
+     "anyOf": [
+      {
+       "maximum": 1,
+       "minimum": 0,
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Min Probability"
+    }
+   },
+   "title": "DecisionRule",
+   "type": "object"
+  },
+  "Estimate": {
+   "additionalProperties": false,
+   "properties": {
+    "value": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Value"
+    },
+    "interval": {
+     "anyOf": [
+      {
+       "maxItems": 2,
+       "minItems": 2,
+       "prefixItems": [
+        {
+         "type": "number"
+        },
+        {
+         "type": "number"
+        }
+       ],
+       "type": "array"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Interval"
+    }
+   },
+   "required": [
+    "value"
+   ],
+   "title": "Estimate",
+   "type": "object"
+  },
+  "Failures": {
+   "additionalProperties": false,
+   "description": "`calls` to `unlabeled` count call records; the `*_cases` and `never_asked` count labelled cases.\nA case never asked or with every call failed has no answer the model gave: a candidate missing one is\nnot compared with the others (`missing`). A refused case is the model's limit, left out of its denominator.\nThe case counts are None in an evaluation stored before 2026-10-19 (not counted then).",
+   "properties": {
+    "calls": {
+     "title": "Calls",
+     "type": "integer"
+    },
+    "failed": {
+     "title": "Failed",
+     "type": "integer"
+    },
+    "unsupported": {
+     "title": "Unsupported",
+     "type": "integer"
+    },
+    "data_errors": {
+     "title": "Data Errors",
+     "type": "integer"
+    },
+    "unlabeled": {
+     "title": "Unlabeled",
+     "type": "integer"
+    },
+    "never_asked": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Never Asked"
+    },
+    "failed_cases": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Failed Cases"
+    },
+    "refused_cases": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Refused Cases"
+    }
+   },
+   "required": [
+    "calls",
+    "failed",
+    "unsupported",
+    "data_errors",
+    "unlabeled"
+   ],
+   "title": "Failures",
+   "type": "object"
+  },
+  "JsonValue": {},
+  "KindParams": {
+   "additionalProperties": false,
+   "description": "What a question's type leaves open, the same in a task (`Task.kind_params`) and a policy (`kind`):\n`positive` scores a choice as binary (P(positive) against a true / false label), `iou` is a box's bar\nfor a hit (0.5 when unset). An unset one is left out of the JSON.",
+   "properties": {
+    "positive": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Positive"
+    },
+    "iou": {
+     "anyOf": [
+      {
+       "exclusiveMinimum": 0,
+       "maximum": 1,
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Iou"
+    }
+   },
+   "title": "KindParams",
+   "type": "object"
+  },
+  "Latency": {
+   "additionalProperties": false,
+   "description": "Per answered call: the answering attempt alone (retries left out).",
+   "properties": {
+    "n": {
+     "title": "N",
+     "type": "integer"
+    },
+    "p50_ms": {
+     "title": "P50 Ms",
+     "type": "number"
+    },
+    "p90_ms": {
+     "title": "P90 Ms",
+     "type": "number"
+    },
+    "p95_ms": {
+     "title": "P95 Ms",
+     "type": "number"
+    },
+    "p99_ms": {
+     "title": "P99 Ms",
+     "type": "number"
+    },
+    "max_ms": {
+     "title": "Max Ms",
+     "type": "number"
+    },
+    "spread": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Spread"
+    },
+    "retried": {
+     "title": "Retried",
+     "type": "integer"
+    },
+    "unrecorded": {
+     "title": "Unrecorded",
+     "type": "integer"
+    },
+    "concurrency": {
+     "items": {
+      "type": "integer"
+     },
+     "title": "Concurrency",
+     "type": "array"
+    },
+    "concurrency_unknown": {
+     "title": "Concurrency Unknown",
+     "type": "integer"
+    }
+   },
+   "required": [
+    "n",
+    "p50_ms",
+    "p90_ms",
+    "p95_ms",
+    "p99_ms",
+    "max_ms",
+    "spread",
+    "retried",
+    "unrecorded",
+    "concurrency",
+    "concurrency_unknown"
+   ],
+   "title": "Latency",
+   "type": "object"
+  },
+  "Measurement": {
+   "additionalProperties": false,
+   "properties": {
+    "provider": {
+     "title": "Provider",
+     "type": "string"
+    },
+    "model_id": {
+     "title": "Model Id",
+     "type": "string"
+    },
+    "distribution": {
+     "enum": [
+      "native",
+      "sampled",
+      "none",
+      "mixed",
+      "unknown"
+     ],
+     "title": "Distribution",
+     "type": "string"
+    },
+    "declared_concurrency": {
+     "anyOf": [
+      {
+       "minimum": 1,
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Declared Concurrency"
+    }
+   },
+   "required": [
+    "provider",
+    "model_id",
+    "distribution",
+    "declared_concurrency"
+   ],
+   "title": "Measurement",
+   "type": "object"
+  },
+  "MetricDefinition": {
+   "additionalProperties": false,
+   "description": "Meaning of one key in :attr:`ComparisonRow.metrics`.",
+   "properties": {
+    "key": {
+     "title": "Key",
+     "type": "string"
+    },
+    "label": {
+     "title": "Label",
+     "type": "string"
+    },
+    "unit": {
+     "enum": [
+      "share",
+      "number"
+     ],
+     "title": "Unit",
+     "type": "string"
+    },
+    "basis": {
+     "title": "Basis",
+     "type": "string"
+    },
+    "direction": {
+     "enum": [
+      "max",
+      "min"
+     ],
+     "title": "Direction",
+     "type": "string"
+    }
+   },
+   "required": [
+    "key",
+    "label",
+    "unit",
+    "basis",
+    "direction"
+   ],
+   "title": "MetricDefinition",
+   "type": "object"
+  },
+  "Objective": {
+   "additionalProperties": false,
+   "description": "One objective. Everything that changes its value is in `params`; `sets` is the Rule field it\nchooses (None: it reads the plain answer).",
+   "properties": {
+    "name": {
+     "title": "Name",
+     "type": "string"
+    },
+    "params": {
+     "additionalProperties": {
+      "$ref": "#/$defs/JsonValue"
+     },
+     "default": {},
+     "title": "Params",
+     "type": "object"
+    },
+    "direction": {
+     "enum": [
+      "max",
+      "min"
+     ],
+     "title": "Direction",
+     "type": "string"
+    },
+    "sets": {
+     "anyOf": [
+      {
+       "enum": [
+        "min_probability",
+        "threshold"
+       ],
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Sets"
+    },
+    "unit": {
+     "enum": [
+      "share",
+      "number"
+     ],
+     "title": "Unit",
+     "type": "string"
+    },
+    "label": {
+     "title": "Label",
+     "type": "string"
+    },
+    "code_sha256": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Code Sha256"
+    }
+   },
+   "required": [
+    "name",
+    "direction",
+    "sets",
+    "unit",
+    "label"
+   ],
+   "title": "Objective",
+   "type": "object"
+  },
+  "Price": {
+   "additionalProperties": false,
+   "description": "A model's list price, declared in s1flow.toml (`price.input_per_mtok = ...`) for a model that bills nothing back.\n\nWhat it costs is an estimate from the tokens the model reports (client/cost.py): a model can charge what\ntokens do not show (cached input, unseen reasoning, a minimum), so a model that returns what it billed\n(AI Gateway, OpenRouter) is never priced from here. A price these four parts cannot write is left out.",
+   "properties": {
+    "input_per_mtok": {
+     "default": 0.0,
+     "minimum": 0,
+     "title": "Input Per Mtok",
+     "type": "number"
+    },
+    "output_per_mtok": {
+     "default": 0.0,
+     "minimum": 0,
+     "title": "Output Per Mtok",
+     "type": "number"
+    },
+    "per_request": {
+     "default": 0.0,
+     "minimum": 0,
+     "title": "Per Request",
+     "type": "number"
+    },
+    "per_image": {
+     "default": 0.0,
+     "minimum": 0,
+     "title": "Per Image",
+     "type": "number"
+    },
+    "as_of": {
+     "title": "As Of",
+     "type": "string"
+    },
+    "source": {
+     "title": "Source",
+     "type": "string"
+    }
+   },
+   "required": [
+    "as_of",
+    "source"
+   ],
+   "title": "Price",
+   "type": "object"
+  },
+  "ProbabilityBin": {
+   "additionalProperties": false,
+   "properties": {
+    "lower": {
+     "title": "Lower",
+     "type": "number"
+    },
+    "upper": {
+     "title": "Upper",
+     "type": "number"
+    },
+    "positives": {
+     "title": "Positives",
+     "type": "integer"
+    },
+    "negatives": {
+     "title": "Negatives",
+     "type": "integer"
+    }
+   },
+   "required": [
+    "lower",
+    "upper",
+    "positives",
+    "negatives"
+   ],
+   "title": "ProbabilityBin",
+   "type": "object"
+  },
+  "Score": {
+   "additionalProperties": false,
+   "description": "Levels 0..L-1, described in order by `criteria`.",
+   "properties": {
+    "type": {
+     "const": "score",
+     "default": "score",
+     "title": "Type",
+     "type": "string"
+    },
+    "instructions": {
+     "title": "Instructions",
+     "type": "string"
+    },
+    "criteria": {
+     "items": {
+      "type": "string"
+     },
+     "title": "Criteria",
+     "type": "array"
+    }
+   },
+   "required": [
+    "instructions",
+    "criteria"
+   ],
+   "title": "Score",
+   "type": "object"
+  },
+  "SelectionPoint": {
+   "additionalProperties": false,
+   "description": "One exploratory dev point for the minimum probability selection curve.\n\n``coverage`` is the share of answered labelled dev cases accepted at this\ncut.  ``sure_accuracy`` is intentionally nullable: an empty accepted\nset has no accuracy to report.  Counts are kept alongside the rates so a\nrenderer never has to reconstruct them from the chart.",
+   "properties": {
+    "min_probability": {
+     "maximum": 1,
+     "minimum": 0,
+     "title": "Min Probability",
+     "type": "number"
+    },
+    "coverage": {
+     "maximum": 1,
+     "minimum": 0,
+     "title": "Coverage",
+     "type": "number"
+    },
+    "sure_accuracy": {
+     "anyOf": [
+      {
+       "maximum": 1,
+       "minimum": 0,
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Sure Accuracy"
+    },
+    "accepted": {
+     "minimum": 0,
+     "title": "Accepted",
+     "type": "integer"
+    },
+    "correct": {
+     "minimum": 0,
+     "title": "Correct",
+     "type": "integer"
+    },
+    "total": {
+     "minimum": 0,
+     "title": "Total",
+     "type": "integer"
+    }
+   },
+   "required": [
+    "min_probability",
+    "coverage",
+    "sure_accuracy",
+    "accepted",
+    "correct",
+    "total"
+   ],
+   "title": "SelectionPoint",
+   "type": "object"
+  },
+  "ThresholdPoint": {
+   "additionalProperties": false,
+   "properties": {
+    "threshold": {
+     "maximum": 1,
+     "minimum": 0,
+     "title": "Threshold",
+     "type": "number"
+    },
+    "objective": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Objective"
+    },
+    "precision": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Precision"
+    },
+    "recall": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Recall"
+    },
+    "misses": {
+     "title": "Misses",
+     "type": "integer"
+    },
+    "false_alarms": {
+     "title": "False Alarms",
+     "type": "integer"
+    }
+   },
+   "required": [
+    "threshold",
+    "objective",
+    "precision",
+    "recall",
+    "misses",
+    "false_alarms"
+   ],
+   "title": "ThresholdPoint",
+   "type": "object"
+  },
+  "Throughput": {
+   "additionalProperties": false,
+   "properties": {
+    "per_min": {
+     "title": "Per Min",
+     "type": "number"
+    },
+    "seconds": {
+     "title": "Seconds",
+     "type": "number"
+    },
+    "calls": {
+     "title": "Calls",
+     "type": "integer"
+    },
+    "concurrency": {
+     "title": "Concurrency",
+     "type": "integer"
+    },
+    "measured": {
+     "title": "Measured",
+     "type": "boolean"
+    }
+   },
+   "required": [
+    "per_min",
+    "seconds",
+    "calls",
+    "concurrency",
+    "measured"
+   ],
+   "title": "Throughput",
+   "type": "object"
+  }
+ },
+ "additionalProperties": false,
+ "properties": {
+  "schema": {
+   "const": "s1flow/comparison@2",
+   "default": "s1flow/comparison@2",
+   "title": "Schema",
+   "type": "string"
+  },
+  "id": {
+   "title": "Id",
+   "type": "string"
+  },
+  "task": {
+   "title": "Task",
+   "type": "string"
+  },
+  "source": {
+   "default": "",
+   "title": "Source",
+   "type": "string"
+  },
+  "at": {
+   "title": "At",
+   "type": "string"
+  },
+  "scope": {
+   "const": "dev",
+   "default": "dev",
+   "title": "Scope",
+   "type": "string"
+  },
+  "question_type": {
+   "enum": [
+    "boolean",
+    "choice",
+    "box"
+   ],
+   "title": "Question Type",
+   "type": "string"
+  },
+  "kind_params": {
+   "$ref": "#/$defs/KindParams"
+  },
+  "objective": {
+   "$ref": "#/$defs/Objective"
+  },
+  "constraints": {
+   "$ref": "#/$defs/Constraints"
+  },
+  "data_digest": {
+   "title": "Data Digest",
+   "type": "string"
+  },
+  "evaluation_contract_digest": {
+   "title": "Evaluation Contract Digest",
+   "type": "string"
+  },
+  "input_adapter_digest": {
+   "title": "Input Adapter Digest",
+   "type": "string"
+  },
+  "binding_digests": {
+   "additionalProperties": {
+    "type": "string"
+   },
+   "title": "Binding Digests",
+   "type": "object"
+  },
+  "run_digests": {
+   "additionalProperties": {
+    "type": "string"
+   },
+   "title": "Run Digests",
+   "type": "object"
+  },
+  "n": {
+   "description": "All labelled development cases in the task",
+   "minimum": 0,
+   "title": "N",
+   "type": "integer"
+  },
+  "metric_definitions": {
+   "items": {
+    "$ref": "#/$defs/MetricDefinition"
+   },
+   "title": "Metric Definitions",
+   "type": "array"
+  },
+  "notices": {
+   "items": {
+    "type": "string"
+   },
+   "title": "Notices",
+   "type": "array"
+  },
+  "candidates": {
+   "items": {
+    "$ref": "#/$defs/ComparisonRow"
+   },
+   "title": "Candidates",
+   "type": "array"
+  }
+ },
+ "required": [
+  "id",
+  "task",
+  "at",
+  "question_type",
+  "kind_params",
+  "objective",
+  "constraints",
+  "data_digest",
+  "evaluation_contract_digest",
+  "input_adapter_digest",
+  "binding_digests",
+  "run_digests",
+  "n",
+  "metric_definitions",
+  "candidates"
+ ],
+ "title": "Comparison",
+ "type": "object"
+}

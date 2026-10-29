@@ -1,0 +1,737 @@
+[
+  {
+    "id": "book-yes-un",
+    "history": [
+      { "role": "user", "text": "今週末、箱根で一泊できる宿探して。2人で" },
+      { "role": "agent", "text": "土曜泊で「箱根湯本 翠の宿」が空いています。2名・朝夕食付きで38,000円です。この条件で予約しますか？" }
+    ],
+    "user": "うん",
+    "label": "must",
+    "why": "予約するかの確認に対する承認なので、予約作業を始める必要がある。"
+  },
+  {
+    "id": "email-send-ok",
+    "history": [
+      { "role": "user", "text": "大家さんに、エアコン壊れたから修理お願いしたいってメール書いて" },
+      { "role": "agent", "text": "下書きを作りました。\n\n件名：エアコン故障のご相談\n本文：いつもお世話になっております。302号室の山本です。昨日からリビングのエアコンが作動しなくなりました。修理のご手配をお願いできますでしょうか。\n\nこの文面で送信してよろしいですか？" }
+    ],
+    "user": "OK",
+    "label": "must",
+    "why": "送信確認への承認で、送らなければメールが止まったままになる。"
+  },
+  {
+    "id": "plan-a-sorede",
+    "history": [
+      { "role": "agent", "text": "引っ越し業者の見積もりが2社から届きました。A社は9月の平日午前で62,000円、B社は土曜午後で78,000円です。A社でよければこのまま仮押さえします。" }
+    ],
+    "user": "それで",
+    "label": "must",
+    "why": "A社での仮押さえ提案への同意なので、手配を進める必要がある。"
+  },
+  {
+    "id": "restaurant-iine-hold",
+    "history": [
+      { "role": "user", "text": "金曜、大学の友達とご飯行くから店探しといて" },
+      { "role": "agent", "text": "金曜19時、渋谷の和食「こもれび」はいかがでしょう。個室があって1人5,000円前後です。4名で席を押さえておきましょうか？" }
+    ],
+    "user": "いいね",
+    "label": "must",
+    "why": "「押さえておきましょうか」への肯定なので予約作業が発生する。"
+  },
+  {
+    "id": "reminder-onegai",
+    "history": [
+      { "role": "agent", "text": "歯医者の予約、10月8日(水)15:30で確定しました。前日の夜にリマインダーも設定しておきましょうか？" }
+    ],
+    "user": "お願い",
+    "label": "must",
+    "why": "リマインダー設定の申し出を承認しており、設定作業が必要。"
+  },
+  {
+    "id": "hotel-jaa-yasui",
+    "history": [
+      { "role": "user", "text": "大阪出張、10/14泊で梅田近くのビジホ" },
+      { "role": "agent", "text": "候補は2つです。\n1. ホテルグランツ梅田：9,800円、駅徒歩3分\n2. 梅田ステイイン：7,200円、駅徒歩9分\nどちらにしましょうか。" }
+    ],
+    "user": "じゃあ安い方で",
+    "label": "must",
+    "why": "選択肢から決定が出たので、梅田ステイインの予約に進む必要がある。"
+  },
+  {
+    "id": "change-to-three",
+    "history": [
+      { "role": "user", "text": "日曜のランチ、4人で予約して" },
+      { "role": "agent", "text": "承知しました。「トラットリア・ソーレ」に日曜12:00、4名で予約手続きを進めています。" }
+    ],
+    "user": "あ、やっぱり3人で",
+    "label": "must",
+    "why": "進行中の予約の人数変更で、反映しないと誤った予約になる。"
+  },
+  {
+    "id": "budget-to-30k",
+    "history": [
+      { "role": "user", "text": "年末に沖縄行きたい、航空券探して" },
+      { "role": "agent", "text": "12/28出発・1/2戻りで、往復5万円以内の便を探しています。少々お待ちください。" }
+    ],
+    "user": "予算3万に変えて",
+    "label": "must",
+    "why": "検索中の条件変更なので、すぐに条件を差し替える必要がある。"
+  },
+  {
+    "id": "wait-before-submit",
+    "history": [
+      { "role": "user", "text": "区のワクチン接種の予約フォーム埋めといて" },
+      { "role": "agent", "text": "必要事項を入力しました。10月12日(日)10:00、区民センター会場です。では申し込みフォームを送信します。" }
+    ],
+    "user": "ちょっと待って",
+    "label": "must",
+    "why": "送信直前の中断要求で、止めないと意図しない申し込みが確定する。"
+  },
+  {
+    "id": "stop-unsubscribe",
+    "history": [
+      { "role": "user", "text": "いらないメルマガ全部解除しといて" },
+      { "role": "agent", "text": "メルマガの一括解除を進めています（12件中5件完了）。" }
+    ],
+    "user": "それやめといて",
+    "label": "must",
+    "why": "実行中の作業の中止指示で、止めなければ解除が進んでしまう。"
+  },
+  {
+    "id": "self-correct-train-date",
+    "history": [
+      { "role": "user", "text": "15日の新幹線取って、朝イチで新大阪まで" },
+      { "role": "agent", "text": "10月15日(水) 東京→新大阪、6:00発のぞみ1号で空席を確認しています。" }
+    ],
+    "user": "ごめん16日だった",
+    "label": "must",
+    "why": "ユーザー自身の日付の誤りの訂正で、このままだと違う日を予約してしまう。"
+  },
+  {
+    "id": "rain-bbq-musing",
+    "history": [
+      { "role": "user", "text": "明日の河原BBQ、段取りまとめて管理しといて" },
+      { "role": "agent", "text": "明日10時集合、多摩川河川敷で8名、食材は朝9時にネットスーパーから受け取りで手配済みです。" }
+    ],
+    "user": "明日雨かなあ",
+    "label": "must",
+    "why": "エージェントが管理中の屋外予定に関わる懸念で、天気確認や延期判断が期待されている。"
+  },
+  {
+    "id": "hungry-pending-restaurant",
+    "history": [
+      { "role": "user", "text": "今日の夜ご飯の店、あとで探してほしい。声かけるわ" },
+      { "role": "agent", "text": "承知しました。お声がけいただければすぐ探します。" }
+    ],
+    "user": "お腹すいた",
+    "label": "must",
+    "why": "保留していた店探しの合図になっており、今すぐ探す必要がある。"
+  },
+  {
+    "id": "complaint-wrong-count",
+    "history": [
+      { "role": "user", "text": "土曜の焼肉、4人で19時ね" },
+      { "role": "agent", "text": "予約完了しました。「炭火焼肉 まる」土曜19:00〜、3名様です。" }
+    ],
+    "user": "いや4人って言ったよね？",
+    "label": "must",
+    "why": "予約内容の誤りへの指摘で、人数の修正と謝罪が必要。"
+  },
+  {
+    "id": "mouiiyo-angry-while-working",
+    "history": [
+      { "role": "user", "text": "だから禁煙で大浴場あるとこって言ってるじゃん" },
+      { "role": "agent", "text": "失礼しました。条件を見直して、引き続き他の候補も探しています…" }
+    ],
+    "user": "もういいよ",
+    "label": "must",
+    "why": "苛立ちながら進行中の検索を打ち切る意思表示で、作業停止と応答が必要。"
+  },
+  {
+    "id": "nohist-koyo-question",
+    "history": [],
+    "user": "来週の京都、紅葉まだ早い？",
+    "label": "must",
+    "why": "会話の最初の具体的な質問で、答えを待っている。"
+  },
+  {
+    "id": "add-milk",
+    "history": [
+      { "role": "user", "text": "卵と食パン切れたからネットスーパーで頼んで" },
+      { "role": "agent", "text": "イオンネットスーパーで卵10個パックと食パン6枚切りをカートに入れました。本日18〜20時のお届けで注文します。" }
+    ],
+    "user": "あ、ついでに牛乳も",
+    "label": "must",
+    "why": "確定前の注文への追加依頼で、反映しないと牛乳が届かない。"
+  },
+  {
+    "id": "digits-verification-code",
+    "history": [
+      { "role": "user", "text": "楽天のログイン通らないんだけど見てくれる？" },
+      { "role": "agent", "text": "SMSで確認コードが送られているはずです。届いた6桁の番号を教えてください。" }
+    ],
+    "user": "482913",
+    "label": "must",
+    "why": "意味のない数字列に見えるが、エージェントが求めた確認コードへの回答。"
+  },
+  {
+    "id": "sw-fix-tests-un",
+    "history": [
+      { "role": "user", "text": "npm test 回して" },
+      { "role": "agent", "text": "テストを実行しました。48件中3件が失敗しています（いずれも date-utils のタイムゾーン関連）。修正しますか？" }
+    ],
+    "user": "うん",
+    "label": "must",
+    "why": "修正の提案への承認で、コード修正作業を始める必要がある。"
+  },
+  {
+    "id": "sw-migration-wait",
+    "history": [
+      { "role": "user", "text": "usersテーブルにカラム追加するマイグレーション流しといて" },
+      { "role": "agent", "text": "マイグレーションを実行中です…（DATABASE_URL の接続先に適用しています）" }
+    ],
+    "user": "待って、本番じゃないよね？",
+    "label": "must",
+    "why": "実行中の危険な操作への停止と確認の要求で、即座に応答が必要。"
+  },
+  {
+    "id": "sw-naming-change",
+    "history": [
+      { "role": "agent", "text": "APIレスポンスのキー名を userId に統一しました。変更は api/handlers 以下の6ファイルです。" }
+    ],
+    "user": "あ、それ user_id の方がいいかも",
+    "label": "must",
+    "why": "完了した変更に対する方針変更で、再修正が必要。"
+  },
+  {
+    "id": "cancel-scheduled-draft",
+    "history": [
+      { "role": "user", "text": "来週の町内会の議事録、下書き作っといてくれる？" },
+      { "role": "agent", "text": "承知しました。明日の朝までに、先月の議事録の形式に合わせて下書きを作っておきますね。" }
+    ],
+    "user": "あ、それ自分でやるからいいや",
+    "label": "must",
+    "why": "予定済みの作業の取り消しで、伝わらないと不要な作業が実行される。"
+  },
+  {
+    "id": "flight-cancelled",
+    "history": [
+      { "role": "agent", "text": "明日のANA 241便 羽田→福岡 8:15発、座席とホテルの手配はすべて完了しています。" }
+    ],
+    "user": "フライト欠航になった…",
+    "label": "must",
+    "why": "手配済みの旅程が崩れた悪い知らせで、代替便やホテルの対応が必要。"
+  },
+  {
+    "id": "tashikani-change-sunday",
+    "history": [
+      { "role": "user", "text": "土曜に子どもたち連れて動物園行く予定にしといて" },
+      { "role": "agent", "text": "予定に入れました。ただ、天気予報では土曜は一日雨で、日曜は晴れです。日曜に変えた方がいいかもしれません。" }
+    ],
+    "user": "たしかに",
+    "label": "must",
+    "why": "予定変更の提案への同意で、日曜への変更か確認が必要になる。"
+  },
+  {
+    "id": "thanks-plus-bus",
+    "history": [
+      { "role": "agent", "text": "河口湖行きの高速バス、土曜7:10新宿発で2名分予約しました。" }
+    ],
+    "user": "ありがとう！あと帰りのバスも調べといて",
+    "label": "must",
+    "why": "お礼の後ろに新しい依頼が付いている。"
+  },
+  {
+    "id": "ok-ambiguous-choice",
+    "history": [
+      { "role": "agent", "text": "レンタカーは、A: コンパクトカー 1日6,600円、B: ミニバン 1日12,100円 のどちらにしますか？" }
+    ],
+    "user": "OK",
+    "label": "must",
+    "why": "二択の質問に「OK」では決まらないため、どちらか聞き返す必要がある。"
+  },
+  {
+    "id": "ryokai-to-cancel-fee",
+    "history": [
+      { "role": "user", "text": "来週の美容院、キャンセルしたい" },
+      { "role": "agent", "text": "前日以降のキャンセルのため、キャンセル料1,500円が発生します。それでもキャンセルしますか？" }
+    ],
+    "user": "了解",
+    "label": "must",
+    "why": "キャンセル料込みでの実行確認への同意で、キャンセル手続きが必要。"
+  },
+  {
+    "id": "tickets-kaatte",
+    "history": [
+      { "role": "user", "text": "ミセスのライブ、リセールで出たら教えて" },
+      { "role": "agent", "text": "11/22 東京ドーム公演のリセールが出ました！S席2枚連番で残り2セットです。今購入しますか？" }
+    ],
+    "user": "買って",
+    "label": "must",
+    "why": "時間制限のある購入への明確な指示。"
+  },
+  {
+    "id": "yappari-iiya-in-progress",
+    "history": [
+      { "role": "user", "text": "ドラム式洗濯機、主要な家電量販店で値段比べて" },
+      { "role": "agent", "text": "ヨドバシ、ビック、ケーズなど5社の価格比較表を作成中です。3社分まで取得しました。" }
+    ],
+    "user": "やっぱりいいや",
+    "label": "must",
+    "why": "進行中の作業の取り消しで、止めて了承を返す必要がある。"
+  },
+  {
+    "id": "birthday-self-correct",
+    "history": [
+      { "role": "user", "text": "母の誕生日3月12日だから、前日にリマインドして" },
+      { "role": "agent", "text": "3月11日(水) 9:00に「明日はお母様の誕生日」のリマインダーを設定しました。" }
+    ],
+    "user": "あ、ごめん13日だった",
+    "label": "must",
+    "why": "ユーザー自身の誤りの訂正で、リマインダー日付の修正が必要。"
+  },
+  {
+    "id": "moving-delivery",
+    "history": [
+      { "role": "agent", "text": "Amazon定期おトク便、次回は10月10日にミネラルウォーター2ケースをお届け予定です。" }
+    ],
+    "user": "そういえば来週引っ越すんだよね",
+    "label": "must",
+    "why": "雑談に見えるが、配送先の変更や日程調整が必要になる情報。"
+  },
+  {
+    "id": "question-mark-only",
+    "history": [
+      { "role": "agent", "text": "ご指定の条件では該当がなかったため、SGL→DBLユースでの手配となります。差額はバウチャー精算です。" }
+    ],
+    "user": "？",
+    "label": "must",
+    "why": "説明が伝わっていない合図で、わかりやすく言い直す必要がある。"
+  },
+  {
+    "id": "takai-to-booking-question",
+    "history": [
+      { "role": "user", "text": "来月の札幌、金曜夜に行って日曜に帰る便" },
+      { "role": "agent", "text": "JAL 金曜19:30羽田発・日曜18:00新千歳発で、往復84,000円です。この便で予約しますか？" }
+    ],
+    "user": "高っ",
+    "label": "must",
+    "why": "予約確認への事実上の拒否で、安い代替案を出す必要がある。"
+  },
+  {
+    "id": "maaiika-accept-20h",
+    "history": [
+      { "role": "user", "text": "今日19時に2人で「鮨 ひかり」取れる？" },
+      { "role": "agent", "text": "19時は満席でした。20時なら空いています。20時で予約しますか？" }
+    ],
+    "user": "まあいっか",
+    "label": "must",
+    "why": "消極的だが20時での予約を受け入れており、予約作業が必要。"
+  },
+  {
+    "id": "thumbs-to-send-question",
+    "history": [
+      { "role": "agent", "text": "幹事の佐藤さんへ「当日は15分ほど遅れます」と送信しますか？" }
+    ],
+    "user": "👍",
+    "label": "must",
+    "why": "絵文字だけだが送信確認への承認で、送信作業が必要。"
+  },
+  {
+    "id": "wrong-file",
+    "history": [
+      { "role": "user", "text": "経費精算用に今月の領収書まとめたPDF送って" },
+      { "role": "agent", "text": "こちらです：receipts_2026-08.pdf" }
+    ],
+    "user": "それ先月のやつじゃない？",
+    "label": "must",
+    "why": "成果物の誤りの指摘で、正しいファイルの用意が必要。"
+  },
+  {
+    "id": "nohist-urgent-room",
+    "history": [],
+    "user": "至急！明日の10時の会議室押さえてない",
+    "label": "must",
+    "why": "会話冒頭の緊急の依頼。"
+  },
+  {
+    "id": "sw-dont-touch-file",
+    "history": [
+      { "role": "user", "text": "ログイン周りのバグ直して" },
+      { "role": "agent", "text": "原因は auth/session.ts のトークン更新処理でした。修正中です。あわせて config/legacy-auth.ts も整理しています。" }
+    ],
+    "user": "いや、legacy の方は触らないで",
+    "label": "must",
+    "why": "作業中の範囲の制限で、すぐ止めないと不要な変更が入る。"
+  },
+  {
+    "id": "allergy-mid-booking",
+    "history": [
+      { "role": "user", "text": "記念日ディナー、コース料理のお店予約して" },
+      { "role": "agent", "text": "恵比寿のフレンチ「ル・シエル」で、土曜19時のシェフおまかせコースを予約手続き中です。" }
+    ],
+    "user": "ちなみに私、エビアレルギーなんだよね",
+    "label": "must",
+    "why": "進行中のコース予約に影響する情報で、店への伝達や確認が必要。"
+  },
+  {
+    "id": "madaa",
+    "history": [
+      { "role": "user", "text": "明日のプレゼン資料、競合3社の料金まとめて表にしといて" },
+      { "role": "agent", "text": "承知しました。調べてまとめます。" }
+    ],
+    "user": "まだ？",
+    "label": "must",
+    "why": "進捗の催促で、状況報告か成果物を待っている。"
+  },
+  {
+    "id": "halfway-eto-atowa",
+    "history": [
+      { "role": "agent", "text": "キャンプ用品の買い物リストに、テント・寝袋・ランタンを追加しました。他に何か追加しますか？" }
+    ],
+    "user": "えーと、あとは",
+    "label": "either",
+    "why": "書きかけで続きが来そうなので、起きても待っても大きな差はない。"
+  },
+  {
+    "id": "nohist-ame-kanaa",
+    "history": [],
+    "user": "明日雨かなあ",
+    "label": "either",
+    "why": "管理中の予定がなく独り言に近いが、天気を答えても害はない。"
+  },
+  {
+    "id": "nohist-bad-presentation",
+    "history": [],
+    "user": "今日のプレゼン散々だった",
+    "label": "either",
+    "why": "作業依頼はないが、ねぎらいの返事をしても自然。"
+  },
+  {
+    "id": "bare-url-nohist",
+    "history": [],
+    "user": "https://www.nikkei.com/article/DGXZQO1234567",
+    "label": "either",
+    "why": "URLだけで意図が不明だが、要約するなどで起きても無駄ではない。"
+  },
+  {
+    "id": "uun-hesitation",
+    "history": [
+      { "role": "agent", "text": "週末の家族旅行、軽井沢の貸別荘（1泊45,000円、4名まで）はいかがでしょう？" }
+    ],
+    "user": "うーん",
+    "label": "either",
+    "why": "迷いの表明で、別案を出してもユーザーの返事を待ってもよい。"
+  },
+  {
+    "id": "nohist-tired",
+    "history": [],
+    "user": "今日は疲れたなー",
+    "label": "either",
+    "why": "雑談で作業はないが、一言返しても問題ない。"
+  },
+  {
+    "id": "allergy-nohist",
+    "history": [],
+    "user": "ちなみに私、エビアレルギーなんだよね",
+    "label": "either",
+    "why": "今すぐの作業はないが、今後のために記録しておく価値はある。"
+  },
+  {
+    "id": "nohist-zaitaku",
+    "history": [],
+    "user": "明日は在宅",
+    "label": "either",
+    "why": "予定の共有にとどまるが、宅配の受け取りなどに活かせるかもしれない。"
+  },
+  {
+    "id": "monday-tough",
+    "history": [
+      { "role": "agent", "text": "来週の予定をまとめました。月：9時定例→11時歯医者→14時客先訪問→18時懇親会、火：終日在宅、水：10時面談。" }
+    ],
+    "user": "月曜きついなあ",
+    "label": "either",
+    "why": "感想にとどまるが、調整を提案しても押し付けにはならない。"
+  },
+  {
+    "id": "thanks-howareyou",
+    "history": [
+      { "role": "agent", "text": "来月の電気・ガスの口座振替の変更手続き、すべて完了しました。" }
+    ],
+    "user": "ありがとう、ところで最近どう？",
+    "label": "either",
+    "why": "雑談の問いかけで、返事をしてもリアクションだけでも困らない。"
+  },
+  {
+    "id": "sw-comments-whatever",
+    "history": [
+      { "role": "agent", "text": "リファクタリングが完了しました。ついでに古いTODOコメントも削除しています。テストは全件通過です。" }
+    ],
+    "user": "コメントは残しててもよかったけど、まあいいや",
+    "label": "either",
+    "why": "軽い不満だが本人が受け入れており、戻すか尋ねても尋ねなくてもよい。"
+  },
+  {
+    "id": "sportsday-happy",
+    "history": [],
+    "user": "今日娘の運動会でリレー1位だった！最高の一日",
+    "label": "either",
+    "why": "嬉しい報告で作業はないが、言葉で返しても自然。"
+  },
+  {
+    "id": "dochiramo-iinaa",
+    "history": [
+      { "role": "agent", "text": "父の日のプレゼント候補です。A: 名入れの今治タオルセット 6,800円、B: 燻製ナッツとクラフトビールのセット 5,500円。" }
+    ],
+    "user": "うーん、どっちもいいなあ",
+    "label": "either",
+    "why": "決めかねているだけで、後押ししても本人の決定を待ってもよい。"
+  },
+  {
+    "id": "takai-info-only",
+    "history": [
+      { "role": "user", "text": "名古屋まで高速バスで行くといくら？" },
+      { "role": "agent", "text": "昼行バスで片道4,800円です。ちなみに新幹線だと片道11,300円です。" }
+    ],
+    "user": "高っ",
+    "label": "either",
+    "why": "参考情報への感想で、依頼は済んでいるが安い手段を補足しても害はない。"
+  },
+  {
+    "id": "nohist-weekend-free",
+    "history": [],
+    "user": "今週末ひま〜",
+    "label": "either",
+    "why": "つぶやきだが、予定の提案をしてもおかしくない。"
+  },
+  {
+    "id": "ryokai-finished-report",
+    "history": [
+      { "role": "user", "text": "来週の出張、全部手配しといて" },
+      { "role": "agent", "text": "手配完了しました。往路：10/7 のぞみ15号、ホテル：ダイワロイネット名古屋 2泊、復路：10/9 のぞみ40号。詳細はカレンダーに登録済みです。" }
+    ],
+    "user": "了解",
+    "label": "sleep",
+    "why": "完了報告への受領で、やり残しはない。"
+  },
+  {
+    "id": "ok-info",
+    "history": [
+      { "role": "agent", "text": "お知らせです。明日10/1から、ご利用中の駐輪場の月額料金が2,000円から2,200円に変わります。お手続きは不要です。" }
+    ],
+    "user": "OK",
+    "label": "sleep",
+    "why": "手続き不要の情報への了承で、することはない。"
+  },
+  {
+    "id": "thanks-after-booking",
+    "history": [
+      { "role": "agent", "text": "日曜11時、美容院「hair salon Lua」でカットとカラーの予約が取れました。" }
+    ],
+    "user": "ありがとう",
+    "label": "sleep",
+    "why": "完了した作業へのお礼のみ。"
+  },
+  {
+    "id": "mouiiyo-thanks-decline",
+    "history": [
+      { "role": "user", "text": "近所で日曜もやってる内科ある？" },
+      { "role": "agent", "text": "申し訳ありません、徒歩圏内では見つかりませんでした。範囲を広げて探しましょうか？" }
+    ],
+    "user": "もういいよ、ありがと",
+    "label": "sleep",
+    "why": "穏やかに申し出を断っており、進行中の作業もない。"
+  },
+  {
+    "id": "tashikani-no-change",
+    "history": [
+      { "role": "agent", "text": "ちなみに会場は駅の改札から地下直結なので、雨でも傘はいらなそうです。" }
+    ],
+    "user": "たしかに",
+    "label": "sleep",
+    "why": "情報への相づちで、変える計画はない。"
+  },
+  {
+    "id": "iine-info",
+    "history": [
+      { "role": "agent", "text": "来月から最寄りのスーパーが24時間営業になるそうです。" }
+    ],
+    "user": "いいね",
+    "label": "sleep",
+    "why": "提案ではなく情報への感想なので作業は発生しない。"
+  },
+  {
+    "id": "ryokai-user-action",
+    "history": [
+      { "role": "agent", "text": "ビザ申請の書類はそろいました。残りはパスポート用の証明写真だけなので、明日までに撮ってこのチャットに送ってください。" }
+    ],
+    "user": "了解",
+    "label": "sleep",
+    "why": "次に動くのはユーザー側で、エージェントがすることはない。"
+  },
+  {
+    "id": "yappari-iiya-decline-offer",
+    "history": [
+      { "role": "agent", "text": "冷蔵庫にある鶏むね肉と白菜で作れるレシピ、いくつか送りましょうか？" }
+    ],
+    "user": "やっぱりいいや",
+    "label": "sleep",
+    "why": "まだ始めていない申し出を断っただけで、止める作業もない。"
+  },
+  {
+    "id": "samu",
+    "history": [],
+    "user": "寒っ",
+    "label": "sleep",
+    "why": "ただのつぶやき。"
+  },
+  {
+    "id": "garbage-jkl",
+    "history": [
+      { "role": "agent", "text": "Wi-Fiルーターの再起動手順をお送りしました。" }
+    ],
+    "user": "ｊｋｌ；",
+    "label": "sleep",
+    "why": "誤入力で意味がない。"
+  },
+  {
+    "id": "digits-nohist",
+    "history": [],
+    "user": "0000000000",
+    "label": "sleep",
+    "why": "文脈のない数字の羅列で、誤送信と考えられる。"
+  },
+  {
+    "id": "a-only",
+    "history": [
+      { "role": "agent", "text": "今月のサブスク支出は合計8,340円でした。先月と変わりありません。" }
+    ],
+    "user": "あ",
+    "label": "sleep",
+    "why": "一文字だけの誤送信とみられ、待っているものはない。"
+  },
+  {
+    "id": "www",
+    "history": [
+      { "role": "user", "text": "猫がキーボードの上で寝てて仕事できない" },
+      { "role": "agent", "text": "それは最強の業務妨害ですね。今日は猫様の勤務日ということで。" }
+    ],
+    "user": "ｗｗｗ",
+    "label": "sleep",
+    "why": "冗談への笑いだけ。"
+  },
+  {
+    "id": "oyasumi",
+    "history": [
+      { "role": "agent", "text": "明日の朝7時に、天気と電車の遅延情報をまとめてお送りします。" }
+    ],
+    "user": "おやすみ",
+    "label": "sleep",
+    "why": "会話を閉じる挨拶で、朝の作業はすでに予定済み。"
+  },
+  {
+    "id": "atode-yomu",
+    "history": [
+      { "role": "user", "text": "ふるさと納税、おすすめの返礼品調べて" },
+      { "role": "agent", "text": "調査結果をまとめました。\n1. 北海道白糠町のいくら（寄付額1万円）…\n2. 宮崎県都城市の豚肉セット…\n3. 山形県寒河江市のさくらんぼ…\n（以下、比較表と注意点）" }
+    ],
+    "user": "あとで読む",
+    "label": "sleep",
+    "why": "報告は受け取り済みで、今すぐ求められていることはない。"
+  },
+  {
+    "id": "busy-later",
+    "history": [
+      { "role": "agent", "text": "年賀状のデザイン、和風と写真入りのどちらにしますか？締め切りは11月末です。" }
+    ],
+    "user": "今手離せないからあとで返す",
+    "label": "sleep",
+    "why": "回答の保留で、締め切りにも余裕があり今することはない。"
+  },
+  {
+    "id": "maaiika-coupon",
+    "history": [
+      { "role": "user", "text": "このピザ屋のクーポン使えるか見て" },
+      { "role": "agent", "text": "申し訳ありません、そのクーポンは9月20日で期限切れでした。" }
+    ],
+    "user": "まあいっか",
+    "label": "sleep",
+    "why": "結果を受け入れているだけで、次の作業は求められていない。"
+  },
+  {
+    "id": "tasukaru",
+    "history": [
+      { "role": "agent", "text": "保育園の書類、提出期限の10/3までに必要なものをリストにしてカレンダーに登録しました。" }
+    ],
+    "user": "助かる〜",
+    "label": "sleep",
+    "why": "完了した作業へのお礼だけ。"
+  },
+  {
+    "id": "yoroshiku-already-agreed",
+    "history": [
+      { "role": "user", "text": "土曜のゴルフ、雨だったら中止にしたい" },
+      { "role": "agent", "text": "承知しました。土曜の朝6時に天気を確認して、雨ならキャンセル連絡まで済ませてご報告します。" }
+    ],
+    "user": "よろしくね",
+    "label": "sleep",
+    "why": "承認に見えるが、段取りはすでに合意済みで新しく始める作業はない。"
+  },
+  {
+    "id": "un-to-checkin-info",
+    "history": [
+      { "role": "agent", "text": "念のためお伝えすると、宿のチェックインは15時からです。それより早く着いた場合は荷物だけ預けられます。" }
+    ],
+    "user": "うん",
+    "label": "sleep",
+    "why": "質問ではない情報への相づちで、することはない。"
+  },
+  {
+    "id": "thumbs-to-sent",
+    "history": [
+      { "role": "agent", "text": "幹事の佐藤さんへ「当日は15分ほど遅れます」と送信しました。" }
+    ],
+    "user": "👍",
+    "label": "sleep",
+    "why": "送信完了の報告への反応だけ。"
+  },
+  {
+    "id": "haai-while-working",
+    "history": [
+      { "role": "user", "text": "近くで土曜に子ども連れで行ける室内の遊び場探して" },
+      { "role": "agent", "text": "調べています。少々お待ちください。" }
+    ],
+    "user": "はーい",
+    "label": "sleep",
+    "why": "作業中への相づちで、エージェントはすでに動いている。"
+  },
+  {
+    "id": "sw-deploy-thanks",
+    "history": [
+      { "role": "user", "text": "さっきの修正、本番にデプロイして" },
+      { "role": "agent", "text": "デプロイ完了しました。本番でログイン〜決済のフローを確認済みで、エラーは出ていません。" }
+    ],
+    "user": "ありがとう、助かった",
+    "label": "sleep",
+    "why": "完了したデプロイへのお礼のみ。"
+  },
+  {
+    "id": "sw-lint-ok",
+    "history": [
+      { "role": "agent", "text": "作業は以上です。lintのwarningが2件（未使用のimport）残っていますが、動作には影響ありません。" }
+    ],
+    "user": "OK",
+    "label": "sleep",
+    "why": "対応を尋ねていない報告への了承で、追加作業は求められていない。"
+  },
+  {
+    "id": "sw-yattoka",
+    "history": [
+      { "role": "user", "text": "型エラー全部潰して" },
+      { "role": "agent", "text": "tsc の型エラーが0件になりました。テストも全件通過しています。" }
+    ],
+    "user": "やっとか〜",
+    "label": "sleep",
+    "why": "完了への安堵の感想だけ。"
+  }
+]

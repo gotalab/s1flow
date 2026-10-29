@@ -1,0 +1,79 @@
+# Judge a pull request's description with a task's current policy, as a check on the PR.
+# There is no separate judge Action: this is the decide Action, and the workflow turns its answer
+# into the check's result. The task (here `pr-description`, a boolean task you write and evaluate
+# first) asks, for instance, "Does the description say why the change is made and how it was tested?".
+#   true                 -> the check passes
+#   false                -> a warning on the PR; the check fails only with BLOCK set to "true"
+#   below_min_probability=true -> a notice ("a person should look"), the check passes
+#   the call failed      -> a notice, the check passes (a fork's PR gets no secrets)
+# Start with BLOCK "false" and turn it on once `s1flow feedback measure` has measured the policy in production.
+# `connections` is a dedicated trusted config: every connection listed in that s1flow.toml is granted here.
+# Copy to .github/workflows/.
+name: s1flow judge pr
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+permissions:
+  contents: read
+env:
+  BLOCK: "false"
+jobs:
+  judge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - id: state
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+          BODY: ${{ github.event.pull_request.body }}
+        run: |
+          {
+            echo 'json<<S1FLOW_EOF'
+            jq -cn --arg t "$TITLE" --arg b "${BODY:0:3000}" '{title: $t, body: $b}'
+            echo 'S1FLOW_EOF'
+          } >> "$GITHUB_OUTPUT"
+      - id: s1
+        uses: gotalab/s1flow/decide@main
+        continue-on-error: true
+        with:
+          working-directory: s1flow
+          policy: pr-description
+          state: ${{ steps.state.outputs.json }}
+          connections: s1flow.toml
+          case-id: "#${{ github.event.pull_request.number }}"
+          log: ${{ runner.temp }}/s1flow-log.jsonl
+        env:
+          # The s1flow.toml above is the trusted allow-list; these are the keys its listed connections may read.
+          AI_GATEWAY_API_KEY: ${{ secrets.AI_GATEWAY_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      - name: Turn the answer into the check
+        env:
+          OUTCOME: ${{ steps.s1.outcome }}
+          ANSWER: ${{ steps.s1.outputs.answer }}
+          PROBABILITY: ${{ steps.s1.outputs.probability }}
+          BELOW_MIN_PROBABILITY: ${{ steps.s1.outputs.below_min_probability }}
+          DECISION_ID: ${{ steps.s1.outputs.decision_id }}
+          POLICY: ${{ steps.s1.outputs.policy }}
+        run: |
+          if [ "$OUTCOME" != success ]; then
+            echo "::notice::s1flow could not judge this PR (the call failed); a person should look"
+            exit 0
+          fi
+          echo "$POLICY: $ANSWER (probability $PROBABILITY, below_min_probability $BELOW_MIN_PROBABILITY, decision_id $DECISION_ID)" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$BELOW_MIN_PROBABILITY" = true ]; then
+            echo "::notice::s1flow returned a probability below its minimum for whether the description says why and how it was tested; a person should look"
+          elif [ "$ANSWER" = false ]; then
+            echo "::warning::The description does not seem to say why the change is made and how it was tested"
+            [ "$BLOCK" = true ] && exit 1
+          fi
+          exit 0
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: s1flow-log-${{ github.run_id }}
+          path: ${{ runner.temp }}/s1flow-log.jsonl
+          if-no-files-found: ignore

@@ -1,0 +1,300 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "https://github.com/gotalab/s1flow/blob/main/schema/policy-set-2.json",
+ "$defs": {
+  "Asked": {
+   "additionalProperties": false,
+   "properties": {
+    "question": {
+     "discriminator": {
+      "mapping": {
+       "boolean": "#/$defs/Boolean",
+       "choice": "#/$defs/Choice"
+      },
+      "propertyName": "type"
+     },
+     "oneOf": [
+      {
+       "$ref": "#/$defs/Boolean"
+      },
+      {
+       "$ref": "#/$defs/Choice"
+      }
+     ],
+     "title": "Question"
+    },
+    "kind": {
+     "$ref": "#/$defs/KindParams",
+     "default": {}
+    },
+    "rule": {
+     "$ref": "#/$defs/DecisionRule"
+    }
+   },
+   "required": [
+    "question",
+    "rule"
+   ],
+   "title": "Asked",
+   "type": "object"
+  },
+  "Boolean": {
+   "additionalProperties": false,
+   "properties": {
+    "type": {
+     "const": "boolean",
+     "default": "boolean",
+     "title": "Type",
+     "type": "string"
+    },
+    "instructions": {
+     "title": "Instructions",
+     "type": "string"
+    },
+    "criteria": {
+     "anyOf": [
+      {
+       "additionalProperties": {
+        "type": "string"
+       },
+       "type": "object"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Criteria"
+    }
+   },
+   "required": [
+    "instructions"
+   ],
+   "title": "Boolean",
+   "type": "object"
+  },
+  "Choice": {
+   "additionalProperties": false,
+   "properties": {
+    "type": {
+     "const": "choice",
+     "default": "choice",
+     "title": "Type",
+     "type": "string"
+    },
+    "instructions": {
+     "title": "Instructions",
+     "type": "string"
+    },
+    "criteria": {
+     "additionalProperties": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "title": "Criteria",
+     "type": "object"
+    }
+   },
+   "required": [
+    "instructions",
+    "criteria"
+   ],
+   "title": "Choice",
+   "type": "object"
+  },
+  "DecisionRule": {
+   "additionalProperties": false,
+   "description": "Binary threshold and optional lower bound on the chosen value's probability.",
+   "properties": {
+    "threshold": {
+     "anyOf": [
+      {
+       "maximum": 1,
+       "minimum": 0,
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Threshold"
+    },
+    "min_probability": {
+     "anyOf": [
+      {
+       "maximum": 1,
+       "minimum": 0,
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Min Probability"
+    }
+   },
+   "title": "DecisionRule",
+   "type": "object"
+  },
+  "Entry": {
+   "additionalProperties": false,
+   "properties": {
+    "version": {
+     "minimum": 1,
+     "title": "Version",
+     "type": "integer"
+    },
+    "digest": {
+     "title": "Digest",
+     "type": "string"
+    },
+    "policy": {
+     "$ref": "#/$defs/PolicySpec"
+    }
+   },
+   "required": [
+    "version",
+    "digest",
+    "policy"
+   ],
+   "title": "Entry",
+   "type": "object"
+  },
+  "KindParams": {
+   "additionalProperties": false,
+   "description": "What a question's type leaves open, the same in a task (`Task.kind_params`) and a policy (`kind`):\n`positive` scores a choice as binary (P(positive) against a true / false label), `iou` is a box's bar\nfor a hit (0.5 when unset). An unset one is left out of the JSON.",
+   "properties": {
+    "positive": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Positive"
+    },
+    "iou": {
+     "anyOf": [
+      {
+       "exclusiveMinimum": 0,
+       "maximum": 1,
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Iou"
+    }
+   },
+   "title": "KindParams",
+   "type": "object"
+  },
+  "PolicySpec": {
+   "additionalProperties": false,
+   "properties": {
+    "schema": {
+     "const": "s1flow/policy@2",
+     "default": "s1flow/policy@2",
+     "title": "Schema",
+     "type": "string"
+    },
+    "task": {
+     "title": "Task",
+     "type": "string"
+    },
+    "version": {
+     "minimum": 1,
+     "title": "Version",
+     "type": "integer"
+    },
+    "connection": {
+     "title": "Connection",
+     "type": "string"
+    },
+    "model_id": {
+     "minLength": 1,
+     "title": "Model Id",
+     "type": "string"
+    },
+    "questions": {
+     "additionalProperties": {
+      "$ref": "#/$defs/Asked"
+     },
+     "maxProperties": 1,
+     "minProperties": 1,
+     "title": "Questions",
+     "type": "object"
+    },
+    "at": {
+     "title": "At",
+     "type": "string"
+    },
+    "s1flow_version": {
+     "title": "S1Flow Version",
+     "type": "string"
+    },
+    "state_schema": {
+     "anyOf": [
+      {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "State Schema"
+    }
+   },
+   "required": [
+    "task",
+    "version",
+    "connection",
+    "model_id",
+    "questions"
+   ],
+   "title": "PolicySpec",
+   "type": "object"
+  }
+ },
+ "additionalProperties": false,
+ "properties": {
+  "schema": {
+   "const": "s1flow/policy-set@2",
+   "default": "s1flow/policy-set@2",
+   "title": "Schema",
+   "type": "string"
+  },
+  "channel": {
+   "title": "Channel",
+   "type": "string"
+  },
+  "policies": {
+   "additionalProperties": {
+    "$ref": "#/$defs/Entry"
+   },
+   "title": "Policies",
+   "type": "object"
+  }
+ },
+ "required": [
+  "channel",
+  "policies"
+ ],
+ "title": "PolicySet",
+ "type": "object"
+}

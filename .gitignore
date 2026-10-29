@@ -1,0 +1,29 @@
+.venv/
+__pycache__/
+.env
+
+# Runtime store coordination; never part of a policy artifact.
+.write.lock
+.env.1password
+
+# Notes, research and one-off experiment write-ups: kept locally, not published.
+/PLAN.md
+/Makefile
+/docs/PRODUCT.md
+/docs/DESIGN.md
+/apps/bench/research/
+/apps/bench/reports/decisions-latency-2026-10-07.jsonl
+/apps/bench/reports/formats.md
+/apps/bench/reports/gh-gemini-priority/ablation-jev.md
+/apps/bench/reports/gh-gemini-priority/combiners-jev.md
+/apps/bench/reports/gh-gemini-priority/context-jev.md
+/apps/bench/reports/gh-gemini-priority/decompose-jev.md
+/apps/bench/reports/gh-gemini-priority/optimize-jev.md
+/apps/bench/reports/gh-gemini-priority/widen-jev.md
+/apps/bench/reports/gh-ruff-decision/team-context.md
+/apps/bench/reports/gh-ts-intended/team-atoms-jev.md
+/apps/bench/reports/gh-ts-intended/team-context.md
+/apps/bench/reports/massive-ja-intent/optimize-d1.md
+/apps/bench/reports/massive-ja-intent/optimize-jev.md
+/apps/bench/reports/nod-wake/optimize-d1.md
+/apps/bench/reports/nod-wake/optimize-jev.md

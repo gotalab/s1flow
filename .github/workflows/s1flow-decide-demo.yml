@@ -1,0 +1,66 @@
+# Demo of the s1flow decide Action on this repository: a PR from an s1flow/decide-demo* branch is labelled
+# with gh-ruff-area's current policy (apps/bench), from its title and body. The trusted s1flow.toml
+# grants every connection listed in it to this workflow. The real use is
+# examples/s1flow-decide-issues.yml (issue events need the default branch).
+name: s1flow decide demo
+on:
+  pull_request:
+    types: [opened, edited]
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+jobs:
+  decide:
+    if: startsWith(github.head_ref, 's1flow/decide-demo')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - id: state
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+          BODY: ${{ github.event.pull_request.body }}
+        run: |
+          {
+            echo 'json<<S1FLOW_EOF'
+            jq -cn --arg t "$TITLE" --arg b "${BODY:0:1500}" '{title: $t, body: $b}'
+            echo 'S1FLOW_EOF'
+          } >> "$GITHUB_OUTPUT"
+      - id: s1
+        uses: ./decide
+        continue-on-error: true  # a failed call leaves the PR as it is
+        with:
+          working-directory: apps/bench
+          policy: gh-ruff-area
+          state: ${{ steps.state.outputs.json }}
+          connections: s1flow.toml
+          case-id: "#${{ github.event.pull_request.number }}"
+          log: ${{ runner.temp }}/s1flow-log.jsonl
+        env:
+          # The s1flow.toml above is the trusted allow-list; these are the keys its listed connections may read.
+          AI_GATEWAY_API_KEY: ${{ secrets.AI_GATEWAY_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      - name: Act on the answer
+        if: steps.s1.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          ANSWER: ${{ steps.s1.outputs.answer }}
+          PROBABILITY: ${{ steps.s1.outputs.probability }}
+          BELOW_MIN_PROBABILITY: ${{ steps.s1.outputs.below_min_probability }}
+          DECISION_ID: ${{ steps.s1.outputs.decision_id }}
+          POLICY: ${{ steps.s1.outputs.policy }}
+        run: |
+          # This workflow labels only sure answers; another could label every answer, or comment the probability.
+          if [ "$BELOW_MIN_PROBABILITY" = true ]; then label="needs-triage"; else label="area:$ANSWER"; fi
+          gh label create "$label" --force -R "$GITHUB_REPOSITORY" >/dev/null
+          gh pr edit "$PR" -R "$GITHUB_REPOSITORY" --add-label "$label"
+          echo "$POLICY: $ANSWER (probability $PROBABILITY, below_min_probability $BELOW_MIN_PROBABILITY, decision_id $DECISION_ID) -> $label" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: s1flow-log-${{ github.run_id }}
+          path: ${{ runner.temp }}/s1flow-log.jsonl

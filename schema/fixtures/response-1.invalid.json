@@ -1,0 +1,21 @@
+{
+ "answers": {
+  "kind": {
+   "type": "choice",
+   "choice": "bug",
+   "probabilities": "high",
+   "confidence": 0.7
+  }
+ },
+ "answered_by": "toy:t1-1",
+ "usage": {
+  "input_tokens": 10,
+  "output_tokens": 0,
+  "cost_usd": 1e-05,
+  "cost_source": null,
+  "raw": null
+ },
+ "latency_ms": 5.0,
+ "retries": 0,
+ "provider_metadata": {}
+}

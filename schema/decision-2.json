@@ -1,0 +1,501 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "https://github.com/gotalab/s1flow/blob/main/schema/decision-2.json",
+ "$defs": {
+  "BooleanAnswer": {
+   "additionalProperties": false,
+   "properties": {
+    "type": {
+     "const": "boolean",
+     "default": "boolean",
+     "title": "Type",
+     "type": "string"
+    },
+    "probability": {
+     "title": "Probability",
+     "type": "number"
+    }
+   },
+   "required": [
+    "probability"
+   ],
+   "title": "BooleanAnswer",
+   "type": "object"
+  },
+  "BoxAnswer": {
+   "additionalProperties": false,
+   "properties": {
+    "type": {
+     "const": "box",
+     "default": "box",
+     "title": "Type",
+     "type": "string"
+    },
+    "box": {
+     "$ref": "#/$defs/BoxEdges"
+    },
+    "confidence": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Confidence"
+    },
+    "agreement": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Agreement"
+    }
+   },
+   "required": [
+    "box"
+   ],
+   "title": "BoxAnswer",
+   "type": "object"
+  },
+  "BoxEdges": {
+   "description": "Edges as fractions of the image's height (top, bottom) and width (left, right), from the top-left.",
+   "properties": {
+    "top": {
+     "maximum": 1,
+     "minimum": 0,
+     "title": "Top",
+     "type": "number"
+    },
+    "bottom": {
+     "maximum": 1,
+     "minimum": 0,
+     "title": "Bottom",
+     "type": "number"
+    },
+    "left": {
+     "maximum": 1,
+     "minimum": 0,
+     "title": "Left",
+     "type": "number"
+    },
+    "right": {
+     "maximum": 1,
+     "minimum": 0,
+     "title": "Right",
+     "type": "number"
+    }
+   },
+   "required": [
+    "top",
+    "bottom",
+    "left",
+    "right"
+   ],
+   "title": "BoxEdges",
+   "type": "object"
+  },
+  "ChoiceAnswer": {
+   "additionalProperties": false,
+   "properties": {
+    "type": {
+     "const": "choice",
+     "default": "choice",
+     "title": "Type",
+     "type": "string"
+    },
+    "choice": {
+     "title": "Choice",
+     "type": "string"
+    },
+    "probabilities": {
+     "anyOf": [
+      {
+       "additionalProperties": {
+        "type": "number"
+       },
+       "type": "object"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Probabilities"
+    },
+    "confidence": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Confidence"
+    }
+   },
+   "required": [
+    "choice"
+   ],
+   "title": "ChoiceAnswer",
+   "type": "object"
+  },
+  "Refusal": {
+   "additionalProperties": false,
+   "description": "The model declined to answer this question (its limit, not a failed call).",
+   "properties": {
+    "type": {
+     "const": "refusal",
+     "default": "refusal",
+     "title": "Type",
+     "type": "string"
+    },
+    "reason": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Reason"
+    }
+   },
+   "title": "Refusal",
+   "type": "object"
+  },
+  "Response": {
+   "additionalProperties": false,
+   "description": "One call's answers, keyed by question name.",
+   "properties": {
+    "answers": {
+     "additionalProperties": {
+      "discriminator": {
+       "mapping": {
+        "boolean": "#/$defs/BooleanAnswer",
+        "box": "#/$defs/BoxAnswer",
+        "choice": "#/$defs/ChoiceAnswer",
+        "refusal": "#/$defs/Refusal",
+        "score": "#/$defs/ScoreAnswer"
+       },
+       "propertyName": "type"
+      },
+      "oneOf": [
+       {
+        "$ref": "#/$defs/BooleanAnswer"
+       },
+       {
+        "$ref": "#/$defs/ChoiceAnswer"
+       },
+       {
+        "$ref": "#/$defs/ScoreAnswer"
+       },
+       {
+        "$ref": "#/$defs/BoxAnswer"
+       },
+       {
+        "$ref": "#/$defs/Refusal"
+       }
+      ]
+     },
+     "title": "Answers",
+     "type": "object"
+    },
+    "answered_by": {
+     "title": "Answered By",
+     "type": "string"
+    },
+    "usage": {
+     "$ref": "#/$defs/Usage"
+    },
+    "latency_ms": {
+     "default": 0.0,
+     "title": "Latency Ms",
+     "type": "number"
+    },
+    "retries": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Retries"
+    },
+    "provider_metadata": {
+     "additionalProperties": true,
+     "title": "Provider Metadata",
+     "type": "object"
+    }
+   },
+   "required": [
+    "answers",
+    "answered_by"
+   ],
+   "title": "Response",
+   "type": "object"
+  },
+  "ScoreAnswer": {
+   "additionalProperties": false,
+   "properties": {
+    "type": {
+     "const": "score",
+     "default": "score",
+     "title": "Type",
+     "type": "string"
+    },
+    "score": {
+     "title": "Score",
+     "type": "number"
+    },
+    "probabilities": {
+     "anyOf": [
+      {
+       "additionalProperties": {
+        "type": "number"
+       },
+       "type": "object"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Probabilities"
+    },
+    "confidence": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Confidence"
+    }
+   },
+   "required": [
+    "score"
+   ],
+   "title": "ScoreAnswer",
+   "type": "object"
+  },
+  "Usage": {
+   "additionalProperties": false,
+   "properties": {
+    "input_tokens": {
+     "default": 0,
+     "title": "Input Tokens",
+     "type": "integer"
+    },
+    "output_tokens": {
+     "default": 0,
+     "title": "Output Tokens",
+     "type": "integer"
+    },
+    "cost_usd": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Cost Usd"
+    },
+    "cost_source": {
+     "anyOf": [
+      {
+       "enum": [
+        "billed",
+        "list"
+       ],
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Cost Source"
+    },
+    "raw": {
+     "anyOf": [
+      {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Raw"
+    }
+   },
+   "title": "Usage",
+   "type": "object"
+  }
+ },
+ "additionalProperties": false,
+ "description": "One successful call. case_id may repeat; decision_id identifies this judgment.",
+ "properties": {
+  "value": {
+   "anyOf": [
+    {
+     "type": "boolean"
+    },
+    {
+     "type": "integer"
+    },
+    {
+     "type": "string"
+    },
+    {
+     "$ref": "#/$defs/BoxEdges"
+    }
+   ],
+   "title": "Value"
+  },
+  "probability": {
+   "anyOf": [
+    {
+     "type": "number"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Probability"
+  },
+  "below_min_probability": {
+   "anyOf": [
+    {
+     "type": "boolean"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Below Min Probability"
+  },
+  "p_positive": {
+   "anyOf": [
+    {
+     "type": "number"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "P Positive"
+  },
+  "distribution": {
+   "anyOf": [
+    {
+     "items": {
+      "type": "number"
+     },
+     "type": "array"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Distribution"
+  },
+  "expected": {
+   "anyOf": [
+    {
+     "type": "number"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Expected"
+  },
+  "confidence": {
+   "anyOf": [
+    {
+     "type": "number"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Confidence"
+  },
+  "decision_id": {
+   "minLength": 1,
+   "title": "Decision Id",
+   "type": "string"
+  },
+  "policy": {
+   "title": "Policy",
+   "type": "string"
+  },
+  "policy_digest": {
+   "title": "Policy Digest",
+   "type": "string"
+  },
+  "answered_by": {
+   "title": "Answered By",
+   "type": "string"
+  },
+  "latency_ms": {
+   "title": "Latency Ms",
+   "type": "number"
+  },
+  "execution_digest": {
+   "title": "Execution Digest",
+   "type": "string"
+  },
+  "response": {
+   "anyOf": [
+    {
+     "$ref": "#/$defs/Response"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null
+  }
+ },
+ "required": [
+  "value",
+  "decision_id",
+  "policy",
+  "policy_digest",
+  "answered_by",
+  "latency_ms",
+  "execution_digest"
+ ],
+ "title": "Decision",
+ "type": "object"
+}

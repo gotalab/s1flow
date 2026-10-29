@@ -1,0 +1,24 @@
+{
+ "schema": "s1flow/run@2",
+ "request_digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+ "id": "example-case",
+ "label": null,
+ "model": "example",
+ "variant": "base",
+ "prompt": "example-prompt",
+ "distribution": null,
+ "at": "2026-10-24T00:00:00Z",
+ "outcome": "answered",
+ "answer": {
+  "type": "boolean",
+  "probability": 0.8
+ },
+ "answered_by": "model-v1",
+ "usage": null,
+ "latency_ms": null,
+ "retries": null,
+ "concurrency": null,
+ "cached": null,
+ "reason": null,
+ "status": null
+}

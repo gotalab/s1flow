@@ -1,0 +1,25 @@
+{
+ "schema": "s1flow/log@2",
+ "type": "answered",
+ "at": "2026-10-24T00:00:00.000Z",
+ "case_id": "example-case",
+ "state_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+ "state": null,
+ "decision": {
+  "value": true,
+  "probability": 0.8,
+  "below_min_probability": null,
+  "p_positive": 0.8,
+  "distribution": null,
+  "expected": null,
+  "confidence": null,
+  "decision_id": "example-decision-1",
+  "policy": "example@v1",
+  "policy_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "answered_by": "model-v1",
+  "latency_ms": 12.0,
+  "execution_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "response": null
+ },
+ "unexpected": true
+}

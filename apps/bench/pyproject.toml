@@ -1,0 +1,14 @@
+# s1flow's own evaluation project, a private consumer of the package: it depends on s1flow the way a user's
+# app would, and the workspace (the root pyproject.toml) resolves that dependency to the source in this
+# repository. Never built or published.
+[project]
+name = "s1flow-bench"
+version = "0"
+requires-python = ">=3.13"
+dependencies = ["s1flow[eval,llm,optimize]"]
+
+[tool.uv]
+package = false
+
+[tool.uv.sources]
+s1flow = { workspace = true }

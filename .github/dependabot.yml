@@ -1,0 +1,24 @@
+# Keeps the pinned Action SHAs and uv.lock current. A release waits 7 days before Dependabot proposes it,
+# so a compromised release is usually pulled before it reaches this repository. pyproject.toml's
+# exclude-newer holds uv.lock to the same 7 days; an urgent fix younger than that needs
+# `uv lock --upgrade-package NAME --exclude-newer-package NAME=<now>`.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directories: ["/", "/decide"]  # the workflows, and the two composite Actions users run
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      actions:
+        patterns: ["*"]
+  - package-ecosystem: uv
+    directory: "/"
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      python:
+        patterns: ["*"]

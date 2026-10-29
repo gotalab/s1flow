@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; base-uri 'none'; form-action 'none'">
+<title>__TITLE__</title>
+<style>
+:root { color-scheme:light; font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; color:#202734; background:#fff; --ink:#202734; --muted:#596577; --line:#e0e4eb; --accent:#414bd4; }
+* { box-sizing:border-box; }
+body { margin:0; }
+main { max-width:1280px; margin:auto; padding:40px 32px 72px; }
+h1 { font-size:32px; line-height:1.2; margin:6px 0 14px; font-weight:650; }
+h2 { font-size:22px; margin:0 0 14px; font-weight:600; }
+h3 { font-size:17px; margin:12px 0 6px; }
+p { margin:8px 0; }
+header { margin-bottom:34px; }
+.question { max-width:880px; font-size:20px; }
+.meta { color:var(--muted); font-size:13px; }
+.source { font-size:13px; max-width:950px; }
+section { margin-top:36px; }
+.section-head { display:flex; align-items:baseline; gap:16px; justify-content:space-between; flex-wrap:wrap; }
+.controls { font-size:13px; }
+button,select,input { font:inherit; }
+button,select { color:var(--ink); background:#fff; border:1px solid #bbc3cf; border-radius:4px; min-height:36px; padding:6px 10px; }
+button { cursor:pointer; }
+button:hover { border-color:var(--accent); }
+button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
+input { accent-color:var(--accent); }
+summary { cursor:pointer; }
+details { margin:12px 0; }
+#metric-options { display:flex; flex-wrap:wrap; gap:8px 20px; margin:12px 0 18px; }
+#metric-options label { display:flex; align-items:center; gap:6px; min-height:32px; }
+.table-wrap { overflow-x:auto; }
+table { border-collapse:collapse; width:100%; font-variant-numeric:tabular-nums; font-size:14px; }
+th { text-align:right; font-weight:550; color:var(--muted); border-bottom:1px solid #bbc3cf; padding:12px 10px; min-width:100px; }
+th:first-child,th:nth-child(2),td:first-child,td:nth-child(2) { text-align:left; }
+td { padding:12px 10px; text-align:right; border-bottom:1px solid var(--line); white-space:nowrap; }
+td:first-child { font-weight:550; }
+th:first-child,td:first-child { position:sticky; left:0; z-index:1; min-width:120px; width:120px; max-width:120px; white-space:normal; overflow-wrap:anywhere; background:#fff; }
+th:nth-child(2),td:nth-child(2) { position:sticky; left:120px; z-index:1; min-width:100px; width:100px; max-width:100px; white-space:normal; overflow-wrap:anywhere; background:#fff; }
+tr.group-start td { border-top:1px solid #bbc3cf; }
+.missing { color:var(--muted); }
+.estimate { font-size:11px; color:var(--muted); display:block; }
+.figures { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:30px 26px; }
+.axis-controls { display:flex; flex-wrap:wrap; gap:12px 24px; margin:12px 0; align-items:end; }
+.axis-controls label { display:flex; flex-direction:column; gap:4px; font-size:13px; color:var(--muted); }
+.axis-controls select { max-width:100%; }
+.axis-controls .toggle { flex-direction:row; align-items:center; min-height:36px; }
+#relationship-figures { max-width:1060px; margin:auto; }
+#relationship-figures figure+figure { margin-top:24px; }
+figure { margin:0; min-width:0; }
+figure svg { display:block; width:100%; height:auto; }
+.figure-tools { display:flex; justify-content:flex-end; gap:6px; margin-top:5px; font-size:12px; }
+.figure-tools button { padding:3px 9px; min-height:30px; }
+.notice { color:#795019; font-size:13px; }
+.notice:empty,.source:empty,[hidden] { display:none!important; }
+#data-notes { font-size:13px; color:var(--muted); }
+#data-notes p { margin:6px 0; }
+.measurement { padding:10px 0; border-bottom:1px solid var(--line); }
+.measurement summary { font-size:14px; }
+dl { display:grid; grid-template-columns:minmax(120px,1fr) 3fr; gap:5px 18px; font-size:13px; }
+dt { color:var(--muted); } dd { margin:0; overflow-wrap:anywhere; }
+pre { white-space:pre-wrap; overflow-wrap:anywhere; font:12px/1.6 ui-monospace,monospace; }
+footer { margin-top:40px; border-top:1px solid var(--line); padding-top:16px; color:var(--muted); font-size:12px; overflow-wrap:anywhere; }
+#error { color:#9a381b; }
+#export-status { font-size:12px; color:var(--muted); }
+@media(max-width:850px) { .figures { grid-template-columns:1fr; } main { padding:28px 20px 48px; } }
+@media(max-width:480px) { main { padding:22px 14px 40px; } h1 { font-size:27px; } .question { font-size:18px; } h2 { font-size:20px; } th,td { padding:10px 9px; } }
+@media print { th:first-child,td:first-child,th:nth-child(2),td:nth-child(2) { position:static; min-width:0; } @page { size:A4 landscape; margin:12mm; } main { max-width:none; padding:0; } .controls,.figure-tools,#export-status,#diagnostics-controls { display:none!important; } .table-wrap { overflow:visible; } table { font-size:10px; } th,td { padding:6px; min-width:0; } .figures { grid-template-columns:1fr 1fr; } figure { break-inside:avoid; } header,section { margin-top:18px; } }
+</style>
+</head>
+<body>
+<main>
+<div id="error" role="alert" hidden></div>
+<header>
+  <p class="meta" id="report-context"></p>
+  <h1>Model comparison</h1>
+  <p class="question" id="question"></p>
+  <p class="source" id="source"></p>
+</header>
+<section aria-labelledby="relationship-title">
+  <h2 id="relationship-title">Performance and trade-offs</h2>
+  <p class="meta" id="initial-view"></p>
+  <div class="axis-controls controls">
+    <label>Vertical axis<select id="y-axis"></select></label>
+    <label>Horizontal axis<select id="x-axis"></select></label>
+    <label class="toggle"><input type="checkbox" id="focus-range"> Focus on observed range</label>
+    <label class="toggle"><input type="checkbox" id="show-intervals"> Show recorded 95% intervals</label>
+  </div>
+  <div class="axis-controls controls">
+    <label class="toggle"><input type="checkbox" id="add-comparison"> Compare a second metric</label>
+    <label id="second-axis-label" hidden>Second vertical axis<select id="second-axis"></select></label>
+  </div>
+  <div id="relationship-figures"></div>
+</section>
+<section aria-labelledby="comparison-title">
+  <div class="section-head"><h2 id="comparison-title">Results side by side</h2><span class="meta">Grouped by model and instructions</span></div>
+  <details class="controls" id="metric-picker"><summary>Metrics shown</summary><div id="metric-options"></div></details>
+  <div class="table-wrap" tabindex="0" role="region" aria-label="Multi-metric comparison table"><table><thead id="table-head"></thead><tbody id="table-body"></tbody></table></div>
+  <p class="meta">— = not measured. Intervals are shown where available. Cost and latency include their recorded measurement conditions below.</p>
+  <div id="data-notes"></div>
+</section>
+<section aria-labelledby="diagnostics-title">
+  <details id="diagnostics"><summary id="diagnostics-title">Inspect probability and threshold evidence</summary>
+    <p class="meta">Exploratory development curves. These do not replace the comparison estimates or change a policy.</p>
+    <label id="diagnostics-controls">Candidate <select id="diagnostic-candidate"><option value="">Choose a candidate</option></select></label>
+    <p id="diagnostic-unavailable" class="meta"></p><div class="figures" id="diagnostic-figures"></div>
+  </details>
+</section>
+<section aria-labelledby="method-title">
+  <h2 id="method-title">Evaluation context</h2>
+  <p id="evaluation-context" class="meta"></p>
+  <p id="reference-targets" class="meta"></p>
+  <div id="metric-definitions"></div>
+  <details><summary>Models, instructions and measurement conditions</summary><div id="measurements"></div></details>
+</section>
+<p id="export-status" role="status"></p>
+<footer id="provenance"></footer>
+</main>
+<script id="comparison-data" type="application/json">__DATA__</script>
+<script>
+'use strict';
+const D=JSON.parse(document.getElementById('comparison-data').textContent);
+const rows=D.candidates;
+const definitions=D.metric_definitions;
+const $=id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg';
+const INK='#202734', MUTED='#596577', LINE='#e0e4eb', ACCENT='#414bd4';
+const finite=x=>typeof x==='number'&&Number.isFinite(x);
+const fmt=(x,unit='number')=>!finite(x)?'—':unit==='share'?`${(x*100).toFixed(1)}%`:unit==='usd'?`$${x.toLocaleString('en-US',{maximumSignificantDigits:4})}`:unit==='ms'?`${Math.round(x).toLocaleString('en-US')} ms`:x.toLocaleString('en-US',{maximumSignificantDigits:4});
+const cost=r=>r.calls?.cost_unknown?null:r.calls?.cost_per_10k_usd;
+const latency=r=>r.calls?.latency?.p90_ms;
+const selected=new Set();
+const figureStore=new Map();
+function el(tag,text,cls) { const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n; }
+function txt(id,value) { $(id).textContent=value; }
+function svgNode(parent,tag,attrs={},text) {const n=document.createElementNS(NS,tag);for(const [k,v] of Object.entries(attrs))n.setAttribute(k,String(v));if(text!==undefined)n.textContent=text;parent.appendChild(n);return n;}
+function label(parent,x,y,text,attrs={}) {return svgNode(parent,'text',{x,y,fill:INK,'font-size':13,'font-family':'Arial, sans-serif',...attrs},text);}
+const textMeasure=document.createElement('canvas').getContext('2d');
+function textLines(text,width,size) {
+  textMeasure.font=`${size}px Arial, sans-serif`;
+  const lines=[];let line='';
+  for(const word of String(text).split(/\s+/)) {
+    if(line&&textMeasure.measureText(line+' '+word).width>width){lines.push(line);line='';}
+    if(line)line+=' ';
+    for(const character of word){if(line&&textMeasure.measureText(line+character).width>width){lines.push(line);line='';}line+=character;}
+  }
+  if(line)lines.push(line);return lines;
+}
+function wrapped(parent,x,y,text,width,size=12,color=MUTED) {const lines=textLines(text,width,size);lines.forEach((line,i)=>label(parent,x,y+i*(size+4),line,{'font-size':size,fill:color}));return lines.length*(size+4);}
+function niceStep(span) {if(!(span>0))return 1;const p=10**Math.floor(Math.log10(span/4));const n=span/4/p;return (n<=1?1:n<=2?2:n<=5?5:10)*p;}
+function scale(values,unit) {if(unit==='share')return [0,1,.25];const known=values.filter(finite);let low=Math.min(0,...known),high=Math.max(0,...known);if(low===high)high=low+1;const step=niceStep(high-low);return [Math.floor(low/step)*step,Math.ceil(high/step)*step,step];}
+function tick(x,unit) {return unit==='share'?`${Number((x*100).toFixed(2))}%`:unit==='usd'?`$${x.toLocaleString('en-US',{maximumSignificantDigits:3})}`:x.toLocaleString('en-US',{maximumSignificantDigits:3});}
+function sourceLines() {const question=(rows.find(r=>r.variant==='base')||rows[0])?.question?.instructions||'';const excerpt=question.length>160?question.slice(0,157)+'…':question;return `${excerpt?'Base question'+(question.length>160?' (excerpt)':'')+': '+excerpt+' · ':''}${D.task} · ${D.n} labelled dev examples · snapshot ${D.id.slice(0,12)}${D.source?' · '+D.source:''}`;}
+function newSvg(title,width) {const svg=document.createElementNS(NS,'svg');svg.setAttribute('xmlns',NS);svg.setAttribute('role','img');svg.setAttribute('aria-label',title);svgNode(svg,'title',{},title);svgNode(svg,'rect',{width:'100%',height:'100%',fill:'#fff'});return svg;}
+function finish(svg,width,height,caption) {const used=wrapped(svg,18,height,caption,width-36,11);svg.setAttribute('viewBox',`0 0 ${width} ${height+used+14}`);svg.setAttribute('width',width);svg.setAttribute('height',height+used+14);return svg;}
+const axes=[...definitions,
+  {key:'api-cost',label:'API cost / 10,000 inputs',unit:'usd',direction:'min',basis:'Recorded billed or estimated API costs; unpriced calls remain unknown.',get:cost},
+  {key:'latency',label:'p90 latency (ms)',unit:'ms',direction:'min',basis:'Recorded answering-attempt latency. '+(conditionNotes()||'Retry delays are excluded when recorded.'),get:latency}];
+const models=[...new Set(rows.map(r=>r.model))];
+const palette=['#3268a8','#b65328','#258274','#8653a3','#8b731c','#ae4473'];
+const color=r=>palette[models.indexOf(r.model)%palette.length];
+const estimate=(r,d)=>d.get?{value:d.get(r)}:r.metrics[d.key]||{};
+function relationshipFigure(xd,yd,width) {
+  const title=`${yd.label} × ${xd.label}`;
+  const svg=newSvg(title,width);let top=26;
+  top+=wrapped(svg,18,top,title,width-36,20,INK)+8;
+  top+=wrapped(svg,18,top,`${yd.direction==='min'?'Lower':'Higher'} ${yd.label}; ${xd.direction==='min'?'lower':'higher'} ${xd.label}.`,width-36,12)+18;
+  const intervals=$('show-intervals').checked;
+  const data=rows.map((r,i)=>({row:r,index:i+1,x:estimate(r,xd),y:estimate(r,yd)}));
+  const known=data.filter(p=>finite(p.x.value)&&finite(p.y.value));
+  const range=(key,d)=>{
+    const values=known.flatMap(p=>[p[key].value,...(intervals?p[key].interval||[]:[])]).filter(finite);
+    if(!$('focus-range').checked||!values.length)return scale(values,d.unit);
+    const low=Math.min(...values),high=Math.max(...values),step=niceStep(Math.max(high-low,Math.abs(high)*.05,.01));
+    let lo=Math.floor(low/step)*step,hi=Math.ceil(high/step)*step;
+    if(lo===hi){lo-=step;hi+=step;}
+    if(d.unit==='share'){lo=Math.max(0,lo);hi=Math.min(1,hi);}
+    if(d.unit==='usd'||d.unit==='ms')lo=Math.max(0,lo);
+    return [lo,hi,step];
+  };
+  const [xlo,xhi,xstep]=range('x',xd),[ylo,yhi,ystep]=range('y',yd);
+  const left=64,right=width-30,height=width<500?280:340,bottom=top+height;
+  // Inset data from the frame so boundary values and interval caps remain visible.
+  const X=v=>left+12+(v-xlo)/(xhi-xlo)*(right-left-24),Y=v=>bottom-12-(v-ylo)/(yhi-ylo)*(height-24);
+  const xTickStep=right-left<400?xstep*2:xstep;
+  for(let t=xlo;t<=xhi+xstep*.01;t+=xTickStep){svgNode(svg,'line',{x1:X(t),x2:X(t),y1:top,y2:bottom,stroke:LINE});label(svg,X(t),bottom+22,tick(t,xd.unit),{'text-anchor':'middle','font-size':11,fill:MUTED});}
+  for(let t=ylo;t<=yhi+ystep*.01;t+=ystep){svgNode(svg,'line',{x1:left,x2:right,y1:Y(t),y2:Y(t),stroke:LINE});label(svg,left-9,Y(t)+4,tick(t,yd.unit),{'text-anchor':'end','font-size':11,fill:MUTED});}
+  if(intervals)for(const p of known){const c=color(p.row),x=X(p.x.value),y=Y(p.y.value);
+    if(p.x.interval?.every(finite))svgNode(svg,'line',{x1:X(p.x.interval[0]),x2:X(p.x.interval[1]),y1:y,y2:y,stroke:c,'stroke-opacity':.45});
+    if(p.y.interval?.every(finite))svgNode(svg,'line',{x1:x,x2:x,y1:Y(p.y.interval[0]),y2:Y(p.y.interval[1]),stroke:c,'stroke-opacity':.45});
+  }
+  // Number tags identify every candidate without moving its measured coordinate.
+  const occupied=[];
+  for(const p of known){const x=X(p.x.value),y=Y(p.y.value),c=color(p.row);
+    const dot=svgNode(svg,'circle',{cx:x,cy:y,r:4,fill:c});svgNode(dot,'title',{},`${p.index}. ${p.row.model} · ${p.row.variant}: ${xd.label} ${fmt(p.x.value,xd.unit)}, ${yd.label} ${fmt(p.y.value,yd.unit)}`);
+    let position;
+    const offsets=[[12,-14],[12,16],[-18,-14],[-18,16],[30,-14],[30,16],[-36,-14],[-36,16]];
+    for(let radius=0;radius<known.length+1&&!position;radius++)for(const [dx,dy] of offsets){const bx=Math.max(left+12,Math.min(right-12,x+dx)),by=Math.max(top+12,Math.min(bottom-12,y+dy+radius*27));
+      if(!occupied.some(q=>Math.abs(q[0]-bx)<25&&Math.abs(q[1]-by)<25)&&!known.some(q=>Math.abs(X(q.x.value)-bx)<13&&Math.abs(Y(q.y.value)-by)<13)){position=[bx,by];break;}}
+    position=position||[x,y];occupied.push(position);const [bx,by]=position;
+    svgNode(svg,'line',{x1:x,x2:bx,y1:y,y2:by,stroke:c,'stroke-opacity':.6});
+    svgNode(svg,'circle',{cx:bx,cy:by,r:10,fill:'#fff',stroke:c,'stroke-width':1.5});label(svg,bx,by+4,String(p.index),{'text-anchor':'middle','font-size':11,fill:c});
+  }
+  if(!known.length)wrapped(svg,left+12,top+40,'No candidates have both measurements. All candidates remain in the table.',right-left-24,14);
+  let y=bottom+47;y+=wrapped(svg,left,y,xd.label,right-left,13,INK)+14;
+  const columns=width>=800?3:width>=520?2:1,colWidth=(width-36)/columns;
+  for(let start=0;start<data.length;start+=columns){let used=0;for(let j=0;j<columns&&start+j<data.length;j++){const p=data[start+j],x=18+j*colWidth;
+    label(svg,x,y,String(p.index).padStart(2,'0'),{fill:color(p.row),'font-size':12,'font-weight':600});
+    const missing=!finite(p.x.value)||!finite(p.y.value);
+    const caption=`${p.row.model} · ${p.row.variant}${missing?' — not plotted (missing '+[!finite(p.x.value)?xd.label:null,!finite(p.y.value)?yd.label:null].filter(Boolean).join(' / ')+')':''}`;
+    used=Math.max(used,wrapped(svg,x+25,y,caption,colWidth-35,12,missing?MUTED:INK));}y+=used+10;}
+  y+=10;y+=wrapped(svg,18,y,`Vertical: ${yd.basis} Horizontal: ${xd.basis}`,width-36,11)+8;
+  return finish(svg,width,y,`${$('focus-range').checked?'Axes focus on the observed range. ':''}${known.length} / ${rows.length} candidates plotted. Number tags identify candidates; small dots mark measured coordinates. ${intervals?'Whiskers show recorded 95% intervals where available. ':''}${sourceLines()}`);
+}
+function renderRelationships() {
+  const parent=$('relationship-figures');parent.replaceChildren();for(const key of [...figureStore.keys()])if(key.startsWith('relationship-'))figureStore.delete(key);
+  const xd=axes.find(d=>d.key===$('x-axis').value),yd=axes.find(d=>d.key===$('y-axis').value);
+  mountFigure(parent,'relationship-main',width=>relationshipFigure(xd,yd,width));
+  $('second-axis-label').hidden=!$('add-comparison').checked;
+  if($('add-comparison').checked){const second=axes.find(d=>d.key===$('second-axis').value);mountFigure(parent,'relationship-second',width=>relationshipFigure(xd,second,width));}
+}
+function plotFigure(title,basis,width,points,xd,yd,xTitle,yTitle,{target=null,diagonal=false}={}) {
+  const svg=newSvg(title,width);let top=26;top+=wrapped(svg,18,top,title,width-36,20,INK)+5;top+=wrapped(svg,18,top,basis,width-36,12)+24;
+  const left=64,right=width-24,bottom=top+220,X=x=>left+(x-xd[0])/(xd[1]-xd[0])*(right-left),Y=y=>bottom-(y-yd[0])/(yd[1]-yd[0])*220;
+  if(finite(target)) {svgNode(svg,'rect',{x:left,y:Y(target),width:right-left,height:Y(target)-top,fill:ACCENT,'fill-opacity':.06});svgNode(svg,'line',{x1:left,x2:right,y1:Y(target),y2:Y(target),stroke:MUTED,'stroke-dasharray':'4 4'});label(svg,right-4,Y(target)+16,`Reference ${fmt(target,'share')}`,{'text-anchor':'end','font-size':11,fill:MUTED});}
+  for(let i=0;i<=4;i++){const v=i/4;svgNode(svg,'line',{x1:left,x2:right,y1:Y(v),y2:Y(v),stroke:LINE});label(svg,left-8,Y(v)+4,`${Math.round(v*100)}%`,{'text-anchor':'end','font-size':11,fill:MUTED});label(svg,X(v),bottom+20,`${Math.round(v*100)}%`,{'text-anchor':'middle','font-size':11,fill:MUTED});}
+  if(diagonal)svgNode(svg,'line',{x1:X(0),x2:X(1),y1:Y(0),y2:Y(1),stroke:MUTED,'stroke-dasharray':'4 4'});
+  const good=points.filter(p=>finite(p[0])&&finite(p[1]));
+  if(!diagonal&&good.length>1)svgNode(svg,'polyline',{points:good.map(p=>`${X(p[0])},${Y(p[1])}`).join(' '),fill:'none',stroke:ACCENT,'stroke-width':2});
+  if(diagonal)for(const p of good)svgNode(svg,'circle',{cx:X(p[0]),cy:Y(p[1]),r:4,fill:ACCENT});
+  label(svg,(left+right)/2,bottom+44,xTitle,{'text-anchor':'middle','font-size':12});
+  label(svg,15,(top+bottom)/2,yTitle,{transform:`rotate(-90 15 ${(top+bottom)/2})`,'text-anchor':'middle','font-size':12});
+  return finish(svg,width,bottom+72,`Exploratory dev values, not held-out results. ${sourceLines()}`);
+}
+function mountFigure(parent,id,build) {
+  const figure=el('figure');const holder=el('div');figure.appendChild(holder);
+  const tools=el('div',undefined,'figure-tools');for(const type of ['svg','png']){const b=el('button',type.toUpperCase());b.type='button';b.setAttribute('aria-label',`Save ${id} as ${type.toUpperCase()}`);b.addEventListener('click',()=>downloadFigure(id,type));tools.appendChild(b);}figure.appendChild(tools);parent.appendChild(figure);
+  figureStore.set(id,{holder,build});drawFigure(id);
+}
+function drawFigure(id) {const f=figureStore.get(id);if(!f)return;const width=Math.max(320,Math.round(f.holder.getBoundingClientRect().width));f.holder.replaceChildren(f.build(width));}
+function download(blob,name) {const url=URL.createObjectURL(blob),a=el('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+async function downloadFigure(id,type) {
+  try {
+    const f=figureStore.get(id);const svg=f.build(900);const xml=new XMLSerializer().serializeToString(svg);const blob=new Blob([xml],{type:'image/svg+xml;charset=utf-8'});const name=`${D.task}-${id}`.replace(/[^a-zA-Z0-9._-]/g,'-');
+    if(type==='svg')download(blob,`${name}.svg`);
+    else {const url=URL.createObjectURL(blob);try {const img=new Image();img.src=url;await img.decode();const canvas=document.createElement('canvas');canvas.width=1800;canvas.height=Number(svg.getAttribute('height'))*2;const ctx=canvas.getContext('2d');ctx.drawImage(img,0,0,canvas.width,canvas.height);const png=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));if(!png)throw new Error('PNG export unavailable');download(png,`${name}.png`);}finally{URL.revokeObjectURL(url);}}
+    txt('export-status',`${type.toUpperCase()} saved with its metric definition and source.`);
+  }catch(error){txt('export-status',`Could not export: ${error.message}`);}
+}
+function renderTable() {
+  const defs=definitions.filter(d=>selected.has(d.key));const head=el('tr');
+  for(const text of ['Model','Instructions',...defs.map(d=>d.label),'Cost / 10k','p90 latency','Answered'])head.appendChild(el('th',text));
+  $('table-head').replaceChildren(head);const body=$('table-body');body.replaceChildren();
+  rows.forEach((r,i)=>{const tr=el('tr',undefined,i&&rows[i-1].model!==r.model?'group-start':'');tr.append(el('td',r.model),el('td',r.variant));
+    for(const d of defs){const m=r.metrics[d.key];const cell=el('td',fmt(m?.value,d.unit),finite(m?.value)?'':'missing');if(m?.interval)cell.appendChild(el('span',`${fmt(m.interval[0],d.unit)}–${fmt(m.interval[1],d.unit)}`,'estimate'));tr.appendChild(cell);}
+    const c=el('td',fmt(cost(r),'usd'));if(r.calls?.cost_source&&r.calls.cost_source!=='billed')c.appendChild(el('span',r.calls.cost_source==='list'?'estimated':r.calls.cost_source,'estimate'));tr.append(c,el('td',fmt(latency(r),'ms')),el('td',`${r.n} / ${D.n}`));body.appendChild(tr);
+  });
+
+}
+function conditionNotes() {
+  const parts=[];const all=rows.filter(r=>r.calls?.latency).map(r=>r.calls.latency);const concurrencies=new Set(all.flatMap(l=>l.concurrency||[]));
+  if(concurrencies.size>1)parts.push('Different recorded concurrency levels; latency is not a controlled speed comparison.');
+  if(all.some(l=>l.unrecorded||l.concurrency_unknown))parts.push('Some retry or concurrency records are missing.');
+  return parts.join(' ');
+}
+function renderDiagnostics() {
+  const parent=$('diagnostic-figures');parent.replaceChildren();for(const key of [...figureStore.keys()])if(key.startsWith('diagnostic-'))figureStore.delete(key);
+  const r=rows.find(r=>r.candidate===$('diagnostic-candidate').value);txt('diagnostic-unavailable','');if(!r)return;
+  const c=r.charts||{};const basis=`${r.model} · ${r.variant} · ${r.n} answered dev examples`;
+  if(c.selection_sweep?.length)mountFigure(parent,'diagnostic-coverage',width=>plotFigure('Accepted share and accuracy',`${basis}. ${c.selection_basis}.`,width,c.selection_sweep.map(p=>[p.coverage,p.sure_accuracy]),[0,1],[0,1],'Accepted share','Accuracy within accepted answers',{target:D.objective.name==='coverage'?D.objective.params.target_accuracy:null}));
+  if(c.threshold_sweep?.length)mountFigure(parent,'diagnostic-precision-recall',width=>plotFigure('Precision and recall across cutoffs',basis,width,c.threshold_sweep.map(p=>[p.recall,p.precision]),[0,1],[0,1],'Recall','Precision'));
+  if(c.calibration?.length)mountFigure(parent,'diagnostic-calibration',width=>plotFigure('Predicted and observed positive share',`${basis}. Bins contain at least 5 examples.`,width,c.calibration.map(p=>[p.probability,p.observed]),[0,1],[0,1],D.kind_params?.positive?`Predicted P(${D.kind_params.positive})`:'Predicted P(True)','Observed positive share',{diagonal:true}));
+  txt('diagnostic-unavailable',c.selection_unavailable||c.unavailable||(!parent.children.length?'No probability curves recorded for this candidate.':''));
+}
+function renderContext() {
+  txt('evaluation-context',D.objective.sets?`Development evidence only. The configured ${D.objective.label} objective fits a reading rule on development folds. Plain-answer metrics and fitted-rule metrics are distinguished below.`:`Development evidence only. The configured ${D.objective.label} objective measures the existing reading without fitting a rule. Metric definitions are below.`);
+  const targets=Object.entries(D.constraints||{}).filter(([,v])=>v!==null&&v!==undefined);
+  txt('reference-targets',targets.length?`Recorded reference conditions: ${targets.map(([k,v])=>`${k} = ${v}`).join(' · ')}. Candidates remain visible when these are not reached.`:'');
+  for(const d of definitions){const p=el('p',undefined,'meta');p.append(el('strong',`${d.label}. `),document.createTextNode(d.basis));$('metric-definitions').appendChild(p);}
+  for(const r of rows){const detail=el('details',undefined,'measurement');detail.appendChild(el('summary',`${r.model} · ${r.variant}`));const dl=el('dl');const l=r.calls?.latency||{};
+    const values=[['Evidence',r.excluded?.join(' · ')||'Saved run evidence'],['Answered / labelled',`${r.n} / ${D.n}`],['Refused / failed / missing',`${r.failures?.refused_cases??'unknown'} / ${r.failures?.failed_cases??'unknown'} / ${r.failures?.never_asked??'unknown'}`],['Provider / model',`${r.measurement?.provider} / ${r.measurement?.model_id}`],['Probability evidence',r.measurement?.distribution||'unknown'],['Recorded concurrency',(l.concurrency||[]).join(', ')||'unknown'],['Declared concurrency',r.measurement?.declared_concurrency??'provider default'],['p50 / p90 / p99',`${fmt(l.p50_ms,'ms')} / ${fmt(l.p90_ms,'ms')} / ${fmt(l.p99_ms,'ms')}`],['Cost basis',`${r.calls?.cost_source||'unknown'} · ${r.calls?.cost_unknown||0} unpriced calls`],['Fitted reading rule',JSON.stringify(r.rule)]];
+    for(const [k,v] of values)dl.append(el('dt',k),el('dd',String(v)));detail.appendChild(dl);detail.appendChild(el('pre',JSON.stringify(r.question,null,2)));$('measurements').appendChild(detail);
+  }
+}
+try {
+  if(D.schema!=='s1flow/comparison@2')throw new Error('Generate a new comparison snapshot with s1flow compare TASK --out comparison.json.');
+  txt('report-context',`${D.task} · ${D.n} labelled dev examples · ${new Set(rows.map(r=>r.model)).size} models · ${new Set(rows.map(r=>r.variant)).size} instruction variants`);
+  const base=rows.find(r=>r.variant==='base')||rows[0];txt('question',base?.question?.instructions||'');txt('source',D.source||'');
+  const params=D.objective.params||{};
+  // Read the saved key's JSON; Python and JavaScript serialize spacing/floats differently.
+  const canonical=value=>JSON.stringify(value,(_,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.keys(v).sort().map(k=>[k,v[k]])):v);
+  const objectivePrefix=`objective:${D.objective.name}`;
+  const configured=definitions.find(d=>(D.objective.name==='coverage'&&d.key.startsWith('coverage:')&&Number(d.key.slice(9))===params.target_accuracy)
+    ||(d.key.startsWith(objectivePrefix+'{')&&canonical(JSON.parse(d.key.slice(objectivePrefix.length)))===canonical(params)));
+  const primary=configured||definitions.find(d=>d.key===D.objective.name)||definitions[0];
+  const defaultKeys=[primary?.key,...(D.objective.name==='coverage'?['accepted_accuracy:'+params.target_accuracy]:[]),'accuracy','precision','recall','macro_f1','mean_iou'];
+  for(const d of definitions){if(defaultKeys.includes(d.key))selected.add(d.key);const label=el('label'),input=el('input');input.type='checkbox';input.value=d.key;input.checked=selected.has(d.key);input.addEventListener('change',()=>{input.checked?selected.add(d.key):selected.delete(d.key);renderTable();});label.append(input,document.createTextNode(d.label));$('metric-options').appendChild(label);}
+  for(const id of ['x-axis','y-axis','second-axis'])for(const d of axes){const option=el('option',d.label);option.value=d.key;$(id).appendChild(option);}
+  $('x-axis').value='api-cost';$('y-axis').value=primary.key;
+  $('second-axis').value=(definitions.find(d=>d.key==='accepted_accuracy:'+params.target_accuracy)||definitions.find(d=>d.key!==primary.key)||primary).key;
+  txt('initial-view',`Initial view: ${configured?'Task objective ('+D.objective.label+')':'available metric ('+primary.label+'; Task objective is not in this snapshot)'} against API cost. Switch axes to inspect other relationships; this does not change scores or reading rules.`);
+  for(const id of ['x-axis','y-axis','second-axis','add-comparison','show-intervals','focus-range'])$(id).addEventListener('change',renderRelationships);
+  for(const note of D.notices||[])$('data-notes').appendChild(el('p',note));
+  renderRelationships();renderTable();
+  for(const r of rows){const option=el('option',`${r.model} · ${r.variant}`);option.value=r.candidate;$('diagnostic-candidate').appendChild(option);}
+  $('diagnostic-candidate').addEventListener('change',renderDiagnostics);$('diagnostics').addEventListener('toggle',()=>{if($('diagnostics').open)renderDiagnostics();});
+  renderContext();txt('provenance',`Snapshot ${D.id} · computed ${D.at}. Saved evidence, not a live model benchmark. Regenerate after changing data, instructions, models or evaluation conditions.`);
+  let resizeFrame;new ResizeObserver(()=>{cancelAnimationFrame(resizeFrame);resizeFrame=requestAnimationFrame(()=>{for(const id of figureStore.keys())drawFigure(id);});}).observe(document.querySelector('main'));
+}catch(error){$('error').hidden=false;txt('error',`Could not display this report: ${error.message}`);console.error(error);}
+</script>
+</body>
+</html>
