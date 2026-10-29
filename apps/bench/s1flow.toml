@@ -32,7 +32,7 @@ default = ["jev", "d1@vercel", "luna@decisions"]
 [models.jev]
 provider = "typesafe"
 id = "jev-latest"
-# `jev-latest` follows the latest jev (1.13 on 2026-10-16), so it is an alias: it runs and compares, and a
+# `jev-latest` follows the latest jev (1.13 on 2026-10-16, 1.14 on 2026-10-29), so it is an alias: it runs and compares, and a
 # policy names a version instead (`jev:1.14`).
 capabilities.image = true
 price.input_per_mtok = 0.042
@@ -169,6 +169,84 @@ provider = "openrouter"
 id = "scaledown/classify-1"
 capabilities.context_tokens = 1000000
 note = "ScaleDown classify-1 (2026-10-13). 429 'max queue length' on every call on 2026-10-17: not verified."
+
+# Added 2026-10-29: OpenRouter's decision models from 2026-10-17 on (GET /api/v1/models?output_modalities=decisions),
+# and the decision models already in the line-up that OpenRouter now serves too. Not measured on a task yet.
+[models."d1.1@openrouter"]
+provider = "openrouter"
+id = "liquid/d1.1"
+capabilities.context_tokens = 65536
+capabilities.image = true
+note = "Liquid d1.1, d1's successor (2026-10-27)."
+
+[models."mammoth@openrouter"]
+provider = "openrouter"
+id = "baseten/mammoth-1"
+capabilities.context_tokens = 16384
+capabilities.image = true
+note = "Baseten mammoth-1, 27B from Qwen3.5-27B, open weights (2026-10-21)."
+
+[models."elephant@openrouter"]
+provider = "openrouter"
+id = "baseten/elephant-1"
+capabilities.context_tokens = 16384
+capabilities.image = true
+note = "Baseten elephant-1, 9B from Qwen3.5-9B, open weights (2026-10-21)."
+
+[models."joey@openrouter"]
+provider = "openrouter"
+id = "baseten/joey-1"
+capabilities.context_tokens = 16384
+capabilities.image = true
+note = "Baseten joey-1, 2B (2026-10-29)."
+
+[models."drex-max@openrouter"]
+provider = "openrouter"
+id = "nace-ai/drex-max"
+capabilities.context_tokens = 262144
+capabilities.image = true
+note = "Nace drex-max (2026-10-21)."
+
+[models."drex-1.5@openrouter"]
+provider = "openrouter"
+id = "nace-ai/drex-v1.5"
+capabilities.context_tokens = 131072
+
+[models."span-01@openrouter"]
+provider = "openrouter"
+id = "respan/span-01"
+capabilities.question_types = ["boolean"]  # 400 on choice and score (2026-10-29)
+
+[models."span-01-lite@openrouter"]
+provider = "openrouter"
+id = "respan/span-01-lite"
+capabilities.question_types = ["boolean"]  # 400 on choice and score (2026-10-29)
+
+[models."mercury-paid@openrouter"]
+provider = "openrouter"
+id = "inception/mercury-decide"
+capabilities.context_tokens = 65536
+capabilities.image = true
+note = "The paid mercury-decide, without the free variant's rate limit."
+
+[models."luna@openrouter"]
+provider = "openrouter"
+id = "openai/gpt-6-luna-decisions"
+capabilities.image = true
+note = "gpt-6-luna on OpenRouter; luna@decisions is the same model on OpenAI's own Decisions API."
+
+[models."clef@openrouter"]
+provider = "openrouter"
+id = "cloudflare/clef"
+capabilities.context_tokens = 65536
+capabilities.image = true
+note = "Clef without the clef-proxy relay. OpenRouter routes it to other hosts (PrimeIntellect, DeepInfra on 2026-10-29): compare its answers with clef's (Workers AI) before relying on it."
+
+[models."clef-flash@openrouter"]
+provider = "openrouter"
+id = "cloudflare/clef-flash"
+capabilities.context_tokens = 24576
+capabilities.image = true
 
 [models.clef]
 provider = "cloudflare"

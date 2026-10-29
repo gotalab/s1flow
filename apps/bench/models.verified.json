@@ -91,6 +91,36 @@
     }
    }
   },
+  "clef-flash@openrouter": {
+   "at": "2026-10-29T22:19:56Z",
+   "answered_by": "cloudflare/clef-flash",
+   "checks": {
+    "boolean": {
+     "ok": true,
+     "detail": "P(true) 0.98 / 0.02"
+    },
+    "choice": {
+     "ok": true,
+     "detail": "blue 0.95 / red 0.96"
+    },
+    "score": {
+     "ok": true,
+     "detail": "2.97 / 1.02 (want 3 / 1)"
+    },
+    "image": {
+     "ok": true,
+     "detail": "red 0.98 / blue 0.98"
+    },
+    "images": {
+     "ok": true,
+     "detail": "red 0.97 / blue 0.96"
+    },
+    "box": {
+     "ok": false,
+     "detail": "Rejected: rejected by the provider (400): {\"error\":{\"message\":\"DeepInfra does not accept \\\"image_url\\\" parts in state\",\"code\":400}}"
+    }
+   }
+  },
   "clef-omni@openrouter": {
    "at": "2026-10-17T05:46:24Z",
    "answered_by": "cloudflare/clef-omni-20261009",
@@ -121,6 +151,36 @@
     }
    }
   },
+  "clef@openrouter": {
+   "at": "2026-10-29T22:20:00Z",
+   "answered_by": "cloudflare/clef",
+   "checks": {
+    "boolean": {
+     "ok": true,
+     "detail": "P(true) 0.99 / 0.01"
+    },
+    "choice": {
+     "ok": true,
+     "detail": "blue 0.99 / red 0.99"
+    },
+    "score": {
+     "ok": true,
+     "detail": "2.98 / 1.01 (want 3 / 1)"
+    },
+    "image": {
+     "ok": true,
+     "detail": "red 0.99 / blue 0.99"
+    },
+    "images": {
+     "ok": true,
+     "detail": "red 0.99 / blue 0.98"
+    },
+    "box": {
+     "ok": false,
+     "detail": "Rejected: rejected by the provider (400): {\"error\":{\"message\":\"PrimeIntellect does not accept \\\"image_url\\\" parts in state\",\"code\":400}}"
+    }
+   }
+  },
   "d1-ultra@openrouter": {
    "at": "2026-10-17T05:46:23Z",
    "answered_by": "liquid/d1-ultra-20261015",
@@ -136,6 +196,36 @@
     "score": {
      "ok": true,
      "detail": "3.00 / 1.00 (want 3 / 1)"
+    },
+    "image": {
+     "ok": true,
+     "detail": "red 1.00 / blue 1.00"
+    },
+    "images": {
+     "ok": true,
+     "detail": "red 1.00 / blue 1.00"
+    },
+    "box": {
+     "ok": false,
+     "detail": "Rejected: rejected by the provider (400): {\"error\":{\"message\":\"Liquid does not accept box questions; question \\\"disc\\\" is a box\",\"code\":400}}"
+    }
+   }
+  },
+  "d1.1@openrouter": {
+   "at": "2026-10-29T22:19:55Z",
+   "answered_by": "liquid/d1.1-20261027",
+   "checks": {
+    "boolean": {
+     "ok": true,
+     "detail": "P(true) 1.00 / 0.00"
+    },
+    "choice": {
+     "ok": true,
+     "detail": "blue 1.00 / red 1.00"
+    },
+    "score": {
+     "ok": true,
+     "detail": "2.99 / 1.00 (want 3 / 1)"
     },
     "image": {
      "ok": true,
@@ -271,9 +361,39 @@
     }
    }
   },
-  "luna@decisions": {
-   "at": "2026-10-15T19:58:22Z",
-   "answered_by": "gpt-6-luna",
+  "drex-1.5@openrouter": {
+   "at": "2026-10-29T22:19:56Z",
+   "answered_by": "nace-ai/drex-v1.5-20261009",
+   "checks": {
+    "boolean": {
+     "ok": true,
+     "detail": "P(true) 0.99 / 0.00"
+    },
+    "choice": {
+     "ok": true,
+     "detail": "blue 1.00 / red 1.00"
+    },
+    "score": {
+     "ok": true,
+     "detail": "3.00 / 1.00 (want 3 / 1)"
+    },
+    "image": {
+     "ok": false,
+     "detail": "Rejected: rejected by the provider (400): {\"error\":{\"message\":\"DeepInfra does not accept \\\"image_url\\\" parts in state\",\"code\":400}}"
+    },
+    "images": {
+     "ok": false,
+     "detail": "not asked: image failed"
+    },
+    "box": {
+     "ok": false,
+     "detail": "not asked: image failed"
+    }
+   }
+  },
+  "drex-max@openrouter": {
+   "at": "2026-10-29T22:19:56Z",
+   "answered_by": "nace-ai/drex-max-20261016",
    "checks": {
     "boolean": {
      "ok": true,
@@ -297,7 +417,7 @@
     },
     "box": {
      "ok": false,
-     "detail": "Unsupported: the Decisions API has no box questions (disc)"
+     "detail": "Rejected: rejected by the provider (400): {\"error\":{\"message\":\"DeepInfra does not accept box questions; question \\\"disc\\\" is a box\",\"code\":400}}"
     }
    }
   },
@@ -328,6 +448,36 @@
     "box": {
      "ok": false,
      "detail": "not asked: image failed"
+    }
+   }
+  },
+  "elephant@openrouter": {
+   "at": "2026-10-29T22:20:19Z",
+   "answered_by": "baseten/elephant-1-20261021",
+   "checks": {
+    "boolean": {
+     "ok": true,
+     "detail": "P(true) 0.96 / 0.00"
+    },
+    "choice": {
+     "ok": true,
+     "detail": "blue 1.00 / red 1.00"
+    },
+    "score": {
+     "ok": true,
+     "detail": "2.98 / 1.00 (want 3 / 1)"
+    },
+    "image": {
+     "ok": true,
+     "detail": "red 1.00 / blue 1.00"
+    },
+    "images": {
+     "ok": true,
+     "detail": "red 1.00 / blue 1.00"
+    },
+    "box": {
+     "ok": false,
+     "detail": "Rejected: rejected by the provider (400): {\"error\":{\"message\":\"BaseTen does not accept box questions; question \\\"disc\\\" is a box\",\"code\":400}}"
     }
    }
   },
@@ -422,8 +572,8 @@
    }
   },
   "jev": {
-   "at": "2026-10-15T19:58:20Z",
-   "answered_by": "jev-1.13.0",
+   "at": "2026-10-29T22:20:31Z",
+   "answered_by": "jev-1.14.0",
    "checks": {
     "boolean": {
      "ok": true,
@@ -446,8 +596,8 @@
      "detail": "red 1.00 / blue 1.00"
     },
     "box": {
-     "ok": false,
-     "detail": "ProviderError: 400: {\"detail\":{\"error_type\":\"api_usage_error\",\"message\":\"Invalid request.\"}}"
+     "ok": true,
+     "detail": "IoU 0.93, confidence 0.95"
     }
    }
   },
@@ -661,6 +811,36 @@
     }
    }
   },
+  "joey@openrouter": {
+   "at": "2026-10-29T22:20:19Z",
+   "answered_by": "baseten/joey-1-20261029",
+   "checks": {
+    "boolean": {
+     "ok": true,
+     "detail": "P(true) 0.98 / 0.01"
+    },
+    "choice": {
+     "ok": true,
+     "detail": "blue 1.00 / red 1.00"
+    },
+    "score": {
+     "ok": true,
+     "detail": "2.99 / 1.00 (want 3 / 1)"
+    },
+    "image": {
+     "ok": true,
+     "detail": "red 1.00 / blue 1.00"
+    },
+    "images": {
+     "ok": true,
+     "detail": "red 1.00 / blue 1.00"
+    },
+    "box": {
+     "ok": false,
+     "detail": "Rejected: rejected by the provider (400): {\"error\":{\"message\":\"BaseTen does not accept box questions; question \\\"disc\\\" is a box\",\"code\":400}}"
+    }
+   }
+  },
   "kev@openrouter": {
    "at": "2026-10-15T19:58:21Z",
    "answered_by": "jaredpalmer/kev-4b-20260924",
@@ -718,6 +898,126 @@
     "box": {
      "ok": false,
      "detail": "not asked: image failed"
+    }
+   }
+  },
+  "luna@decisions": {
+   "at": "2026-10-15T19:58:22Z",
+   "answered_by": "gpt-6-luna",
+   "checks": {
+    "boolean": {
+     "ok": true,
+     "detail": "P(true) 1.00 / 0.00"
+    },
+    "choice": {
+     "ok": true,
+     "detail": "blue 1.00 / red 1.00"
+    },
+    "score": {
+     "ok": true,
+     "detail": "3.00 / 1.00 (want 3 / 1)"
+    },
+    "image": {
+     "ok": true,
+     "detail": "red 1.00 / blue 1.00"
+    },
+    "images": {
+     "ok": true,
+     "detail": "red 1.00 / blue 1.00"
+    },
+    "box": {
+     "ok": false,
+     "detail": "Unsupported: the Decisions API has no box questions (disc)"
+    }
+   }
+  },
+  "luna@openrouter": {
+   "at": "2026-10-29T22:19:55Z",
+   "answered_by": "openai/gpt-6-luna-decisions-20261006",
+   "checks": {
+    "boolean": {
+     "ok": true,
+     "detail": "P(true) 1.00 / 0.00"
+    },
+    "choice": {
+     "ok": true,
+     "detail": "blue 1.00 / red 1.00"
+    },
+    "score": {
+     "ok": true,
+     "detail": "3.00 / 1.00 (want 3 / 1)"
+    },
+    "image": {
+     "ok": true,
+     "detail": "red 1.00 / blue 1.00"
+    },
+    "images": {
+     "ok": true,
+     "detail": "red 1.00 / blue 1.00"
+    },
+    "box": {
+     "ok": false,
+     "detail": "Rejected: rejected by the provider (400): {\"error\":{\"message\":\"OpenAI does not accept box questions; question \\\"disc\\\" is a box\",\"code\":400}}"
+    }
+   }
+  },
+  "mammoth@openrouter": {
+   "at": "2026-10-29T22:20:19Z",
+   "answered_by": "baseten/mammoth-1-20261021",
+   "checks": {
+    "boolean": {
+     "ok": true,
+     "detail": "P(true) 0.99 / 0.00"
+    },
+    "choice": {
+     "ok": true,
+     "detail": "blue 0.99 / red 0.98"
+    },
+    "score": {
+     "ok": true,
+     "detail": "3.00 / 1.00 (want 3 / 1)"
+    },
+    "image": {
+     "ok": true,
+     "detail": "red 1.00 / blue 1.00"
+    },
+    "images": {
+     "ok": true,
+     "detail": "red 1.00 / blue 1.00"
+    },
+    "box": {
+     "ok": false,
+     "detail": "Rejected: rejected by the provider (400): {\"error\":{\"message\":\"BaseTen does not accept box questions; question \\\"disc\\\" is a box\",\"code\":400}}"
+    }
+   }
+  },
+  "mercury-paid@openrouter": {
+   "at": "2026-10-29T22:19:55Z",
+   "answered_by": "inception/mercury-decide-20260930",
+   "checks": {
+    "boolean": {
+     "ok": true,
+     "detail": "P(true) 1.00 / 0.00"
+    },
+    "choice": {
+     "ok": true,
+     "detail": "blue 1.00 / red 1.00"
+    },
+    "score": {
+     "ok": true,
+     "detail": "3.00 / 1.00 (want 3 / 1)"
+    },
+    "image": {
+     "ok": true,
+     "detail": "red 1.00 / blue 1.00"
+    },
+    "images": {
+     "ok": true,
+     "detail": "red 1.00 / blue 1.00"
+    },
+    "box": {
+     "ok": false,
+     "detail": "Rejected: rejected by the provider (400): {\"error\":{\"message\":\"Inception does not accept box questions; question \\\"disc\\\" is a box\",\"code\":400}}"
     }
    }
   },
@@ -800,6 +1100,66 @@
     "image": {
      "ok": false,
      "detail": "Rejected: rejected by the provider (400): {\"error\":{\"message\":\"Upstage does not accept \\\"image_url\\\" parts in state\",\"code\":400}}"
+    },
+    "images": {
+     "ok": false,
+     "detail": "not asked: image failed"
+    },
+    "box": {
+     "ok": false,
+     "detail": "not asked: image failed"
+    }
+   }
+  },
+  "span-01-lite@openrouter": {
+   "at": "2026-10-29T22:20:19Z",
+   "answered_by": "respan/span-01-lite-20260925",
+   "checks": {
+    "boolean": {
+     "ok": true,
+     "detail": "P(true) 1.00 / 0.01"
+    },
+    "choice": {
+     "ok": false,
+     "detail": "ProviderError: 400: {\"error\":{\"message\":\"Respan only accepts noul questions whose instructions and criteria are plain strings (question \\\"colour\\\")\",\"code\":400}}"
+    },
+    "score": {
+     "ok": false,
+     "detail": "ProviderError: 400: {\"error\":{\"message\":\"Respan only accepts noul questions whose instructions and criteria are plain strings (question \\\"apples\\\")\",\"code\":400}}"
+    },
+    "image": {
+     "ok": false,
+     "detail": "Rejected: rejected by the provider (400): {\"error\":{\"message\":\"Respan does not accept \\\"image_url\\\" parts in state\",\"code\":400}}"
+    },
+    "images": {
+     "ok": false,
+     "detail": "not asked: image failed"
+    },
+    "box": {
+     "ok": false,
+     "detail": "not asked: image failed"
+    }
+   }
+  },
+  "span-01@openrouter": {
+   "at": "2026-10-29T22:20:19Z",
+   "answered_by": "respan/span-01-20260925",
+   "checks": {
+    "boolean": {
+     "ok": true,
+     "detail": "P(true) 1.00 / 0.01"
+    },
+    "choice": {
+     "ok": false,
+     "detail": "ProviderError: 400: {\"error\":{\"message\":\"Respan only accepts noul questions whose instructions and criteria are plain strings (question \\\"colour\\\")\",\"code\":400}}"
+    },
+    "score": {
+     "ok": false,
+     "detail": "ProviderError: 400: {\"error\":{\"message\":\"Respan only accepts noul questions whose instructions and criteria are plain strings (question \\\"apples\\\")\",\"code\":400}}"
+    },
+    "image": {
+     "ok": false,
+     "detail": "Rejected: rejected by the provider (400): {\"error\":{\"message\":\"Respan does not accept \\\"image_url\\\" parts in state\",\"code\":400}}"
     },
     "images": {
      "ok": false,
