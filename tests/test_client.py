@@ -337,7 +337,7 @@ def test_blank_answering_model_is_a_provider_failure(toml, answered_by):
 def test_policy_validate_invalid_utf8_is_clean_cli_error(tmp_path):
     source = tmp_path / 'invalid.json'
     source.write_bytes(b'\xff\xfeinvalid')
-    done = s1flow('policy', 'validate', str(source), '--json', cwd=tmp_path)
+    done = s1flow('policy', 'create', str(source), '--check', '--json', cwd=tmp_path)
     assert done.returncode == 2
     assert 'Traceback' not in done.stderr and 'Traceback' not in done.stdout
     assert 'not a v2 policy' in done.stderr + done.stdout

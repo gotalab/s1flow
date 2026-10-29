@@ -38,7 +38,7 @@ s1flow promote ticket-bug@v1 --connections connections.toml --json
 `.github/workflows/`; the Skill comes from the plugin or `s1flow skill install` (see
 [CLI, agents and CI](cli-and-ci.md#the-agent-skill)). The project's line-up compares three decision models that all work with a single key, `OPENROUTER_API_KEY`
 (about $0.02 per 1,000 calls on issue-sized inputs). Cases can come from GitHub issues, app logs or labels you
-already have. Fetching cases from GitHub (`s1flow github fetch`) needs the `gh` CLI, installed and signed in.
+already have. Fetching cases from GitHub (the Skill's `scripts/github.py`) needs the `gh` CLI, installed and signed in.
 
 A `Task` defines an evaluation: the data, how to read the label, the question, the objective, the constraints
 and how to split the cases. Reuse your app's own input-preparation function, or replay the inputs your app

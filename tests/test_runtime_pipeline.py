@@ -76,7 +76,7 @@ def exercise_runtime(root: Path, python: str = sys.executable, *, evaluate: bool
             'questions': {'bug': {'question': {'type': 'boolean', 'instructions': 'Is this a bug?'},
                                   'rule': {'threshold': .5}}},
         }))
-        checked = json.loads(cli('policy', 'validate', source, '--connections', models, '--json').stdout)
+        checked = json.loads(cli('policy', 'create', source, '--connections', models, '--check', '--json').stdout)
         assert checked['binding_checked'] and not calls
         created = json.loads(cli('policy', 'create', source, '--root', root / 'policies', '--json').stdout)
         policy_path = Path(created['path'])
@@ -116,9 +116,9 @@ print(json.dumps({"decision_id": decision.decision_id, "value": decision.value})
         assert len(calls) == 4
         bad = json.loads(source.read_text()); bad['provider'] = 'untrusted.module:factory'
         rejected = root / 'bad.json'; rejected.write_text(json.dumps(bad))
-        cli('policy', 'validate', rejected, '--connections', models, expected=2)
+        cli('policy', 'create', rejected, '--connections', models, '--check', expected=2)
         bad.pop('provider'); bad['model_id'] = 'not-allowed'; rejected.write_text(json.dumps(bad))
-        cli('policy', 'validate', rejected, '--connections', models, expected=2)
+        cli('policy', 'create', rejected, '--connections', models, '--check', expected=2)
         cli('decide', *common, '--state', '[{"type":"image","url":"http://127.0.0.1/secret"}]', expected=2)
         assert len(calls) == 4  # all three refusals above happen before network access
 

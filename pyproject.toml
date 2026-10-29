@@ -133,13 +133,13 @@ root_package = "s1flow"
 include_external_packages = true
 exclude_type_checking_imports = true  # what a module loads when it runs
 
-# Imports point one way: cli -> integrations | sources -> eval -> project -> policies -> client -> core.
+# Imports point one way: cli -> integrations -> eval -> project -> policies -> client -> core.
 [[tool.importlinter.contracts]]
 name = "Packages depend downward only"
 type = "layers"
 layers = [
     "s1flow.cli : s1flow.doctor : s1flow.skill",
-    "s1flow.integrations | s1flow.sources",
+    "s1flow.integrations",
     "s1flow.eval",
     "s1flow.project",
     "s1flow.policies",
@@ -184,13 +184,7 @@ ignore_imports = [
 ]
 
 [[tool.importlinter.contracts]]
-name = "Where cases come from is the CLI's to call: nothing below it imports a source"
-type = "forbidden"
-source_modules = ["s1flow.core", "s1flow.client", "s1flow.policies", "s1flow.eval", "s1flow.project"]
-forbidden_modules = ["s1flow.sources"]
-
-[[tool.importlinter.contracts]]
-name = "The evaluation runs no command (git and GitHub are integrations.git, called by the CLI)"
+name = "The evaluation runs no command (git is integrations.git, called by the CLI)"
 type = "forbidden"
 source_modules = ["s1flow.eval"]
 forbidden_modules = ["subprocess"]

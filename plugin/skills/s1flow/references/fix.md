@@ -24,7 +24,7 @@ It adds only decisions whose state was deliberately kept (`keep_state=True` or `
 To improve the question, use the explicit development command:
 
 ```bash
-s1flow optimize prompt <task> --budget 800 --patience 5
+s1flow optimize <task> --budget 800 --patience 5
 ```
 
 It proposes a new question with the optimization extra and writes it to the next channel only when

@@ -14,7 +14,7 @@ saved with the result; `optimize` checks the new question on it.
 Two optional inputs give the reflection LM more than right and wrong answers:
 `tasks/<id>/context.md` (how the team decides: a triage policy, CONTRIBUTING, a bot's
 prompt) and a `rationale` field on a row (why that case got its label, e.g. the
-maintainers' comments around the labelling; `s1flow github rationale` adds them). Neither reaches the
+maintainers' comments around the labelling; the Skill's scripts/github.py rationale adds them). Neither reaches the
 model being optimized.
 """
 

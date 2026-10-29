@@ -19,16 +19,6 @@ def test_sha_is_the_head_of_the_repository_the_project_is_in(tmp_path):
     assert git.sha(inside) == head and git.sha(beside) != head
 
 
-def test_a_dry_run_lists_the_steps_and_changes_nothing(tmp_path):
-    head = repo(tmp_path)
-    (tmp_path / "policy.json").write_text("{}")
-    pr = git.open_pr(tmp_path, "s1flow/optimize-toy", [tmp_path / "policy.json", tmp_path / "gone.json"], "toy: v2", "body", dry_run=True)
-    assert pr.files == ["policy.json"] and pr.commands[0] == "git switch -c s1flow/optimize-toy"
-    assert any(c.startswith("gh pr create --base main") for c in pr.commands)
-    assert git.sha(tmp_path) == head and "policy.json" in subprocess.run(
-        ["git", "status", "--porcelain"], cwd=tmp_path, capture_output=True, text=True).stdout  # nothing committed
-
-
 def test_the_evaluation_runs_no_command():
     import importlib
     import pkgutil

@@ -11,8 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 @pytest.mark.parametrize("command, option", [
-    (["policy", "validate", str(ROOT / "schema/fixtures/policy-2.valid.json")], "--project"),
-    (["policy", "create", str(ROOT / "schema/fixtures/policy-2.valid.json")], "--connections"),
+    (["policy", "create", str(ROOT / "schema/fixtures/policy-2.valid.json"), "--check"], "--project"),
     (["policy", "create", str(ROOT / "schema/fixtures/policy-2.valid.json")], "--project"),
     (["policy", "export"], "--connections"),
     (["init", "new-project"], "--project"),
@@ -20,7 +19,6 @@ ROOT = Path(__file__).resolve().parents[1]
     (["skill", "path"], "--project"),
     (["cases", "check", "ticket"], "--connections"),
     (["cases", "correct", "ticket", "case-1", "--verdict", "keep", "--reason", "checked"], "--connections"),
-    (["github", "audit", "owner/repo"], "--connections"),
 ])
 @pytest.mark.parametrize("prefix", [False, True])
 def test_unused_context_options_fail_before_work(tmp_path, command, option, prefix):
@@ -32,8 +30,7 @@ def test_unused_context_options_fail_before_work(tmp_path, command, option, pref
 
 
 @pytest.mark.parametrize("words, expected", [
-    (["policy", "validate"], {"--connections"}),
-    (["policy", "create"], set()),
+    (["policy", "create"], {"--connections"}),
     (["policy", "export"], {"--project"}),
     (["cases", "check"], {"--project"}),
     (["cases", "review"], {"--project", "--connections"}),
@@ -58,7 +55,7 @@ def test_offline_comparison_rejects_live_configuration(tmp_path, option):
 
 def test_group_prefix_does_not_bypass_leaf_option_scope(tmp_path):
     policy = ROOT / "schema/fixtures/policy-2.valid.json"
-    done = cli("policy", "--project", str(tmp_path), "validate", str(policy), cwd=tmp_path)
+    done = cli("policy", "--project", str(tmp_path), "create", str(policy), "--check", cwd=tmp_path)
     assert done.returncode == 2 and "--project does not apply" in done.stderr
 
 

@@ -1,9 +1,16 @@
-"""A repository's GitHub history as data: fetch it, see how its labels are used, and why a case got its label.
+"""A repository's GitHub history as data, for collecting a task's cases: fetch it, see how its labels are used,
+and why a case got its label. Standard library only; it calls GitHub through the GitHub CLI (`gh`, logged in).
 
-`s1flow github fetch owner/repo`      -> data/raw/github/<owner>__<repo>/{issues,prs}.jsonl, labels.json
-`s1flow github audit owner/repo`      -> how labels are used today, and by whom (audit.md)
-`s1flow github rationale owner/repo --id TASK` -> each row of tasks/TASK/data.jsonl gets the maintainers' comments
-                                                 around its labelling as `rationale` (GEPA's reflection LM reads it)
+    python <skill>/scripts/github.py fetch owner/repo [--project DIR] [--issues 1000] [--prs 500] [--page 25]
+        -> <project>/data/raw/github/<owner>__<repo>/{issues,prs}.jsonl, labels.json (resumable)
+    python <skill>/scripts/github.py audit owner/repo [--project DIR]
+        -> how labels are used today, and by whom (audit.md beside them)
+    python <skill>/scripts/github.py rationale owner/repo --id TASK [--project DIR]
+        -> each row of tasks/TASK/data.jsonl gets the maintainers' comments around its labelling as `rationale`
+           (GEPA's reflection LM reads it; the model never does)
+
+The project is found as the CLI finds it: `--project DIR` is DIR or its s1flow/ child, whichever holds
+s1flow.toml; without it, the current directory and its parents up to the git root are searched.
 
 Turning the fetched issues into a task (data.jsonl and task.py) is the agent's step, as the Skill's collect
 reference says: which issues are one decision, and what the criteria are, is decided with the user.
@@ -15,24 +22,28 @@ arrive and the cursor is saved, so an interrupted fetch resumes where it stopped
 
 from __future__ import annotations
 
+import argparse
 import collections
 import json
 import shutil
 import subprocess
+import sys
 import time
 from pathlib import Path
 from typing import Any
 
-from ..core.errors import ConfigError, NotFound
-from ..project import Project
 
-GH_MISSING = "s1flow github calls GitHub through the GitHub CLI: install gh (https://cli.github.com) and run gh auth login"
+class Stop(Exception):
+    """A problem to report in one line (exit 2), not a traceback."""
+
+
+GH_MISSING = "github.py calls GitHub through the GitHub CLI: install gh (https://cli.github.com) and run gh auth login"
 
 
 def require_gh() -> None:
     """The GitHub CLI, or one line saying what to install."""
     if shutil.which("gh") is None:
-        raise ConfigError(GH_MISSING)
+        raise Stop(GH_MISSING)
 
 
 BOT_SUFFIXES = ("[bot]", "-bot", "bot")
@@ -85,8 +96,8 @@ query($owner: String!, $name: String!) {
 }"""
 
 
-def repo_dir(project: Project, repo: str) -> Path:
-    return project.root / "data" / "raw" / "github" / repo.replace("/", "__")
+def repo_dir(project: Path, repo: str) -> Path:
+    return project / "data" / "raw" / "github" / repo.replace("/", "__")
 
 
 def is_bot(actor: dict[str, Any] | None) -> bool:
@@ -126,7 +137,7 @@ def _pace(rate: dict[str, Any]) -> None:
         time.sleep(max(0.0, reset - time.time()) + 5)
 
 
-def fetch(project: Project, repo: str, kind: str, limit: int, page: int) -> int:
+def fetch(project: Path, repo: str, kind: str, limit: int, page: int) -> int:
     """Append up to `limit` issues or merged PRs (newest first). Returns how many are stored."""
     owner, name = repo.split("/")
     out = repo_dir(project, repo)
@@ -160,10 +171,10 @@ def fetch(project: Project, repo: str, kind: str, limit: int, page: int) -> int:
     return have
 
 
-def load(project: Project, repo: str, kind: str) -> list[dict[str, Any]]:
+def load(project: Path, repo: str, kind: str) -> list[dict[str, Any]]:
     path = repo_dir(project, repo) / f"{kind}.jsonl"
     if not path.exists():
-        raise NotFound(f"nothing fetched from {repo} yet ({path}): run s1flow github fetch {repo} first")
+        raise Stop(f"nothing fetched from {repo} yet ({path}): run github.py fetch {repo} first")
     seen, rows = set(), []
     for line in path.read_text().split("\n"):
         if line.strip():
@@ -174,7 +185,7 @@ def load(project: Project, repo: str, kind: str) -> list[dict[str, Any]]:
     return rows
 
 
-def label_descriptions(project: Project, repo: str) -> dict[str, str]:
+def label_descriptions(project: Path, repo: str) -> dict[str, str]:
     path = repo_dir(project, repo) / "labels.json"
     return {l["name"]: l.get("description") or "" for l in json.loads(path.read_text())} if path.exists() else {}
 
@@ -195,7 +206,7 @@ def labelled_by(issue: dict[str, Any]) -> dict[str, str]:
 # ---------- audit ----------
 
 
-def audit(project: Project, repo: str) -> str:
+def audit(project: Path, repo: str) -> str:
     issues = load(project, repo, "issues")
     descs = label_descriptions(project, repo)
     n = len(issues)
@@ -240,7 +251,7 @@ MAINTAINERS = {"OWNER", "MEMBER", "COLLABORATOR"}
 BOILERPLATE = ("reserving self-assignment",)  # bot replies unrelated to the decision
 
 
-def fetch_comments(project: Project, repo: str, numbers: list[int], per_query: int = 20) -> dict[int, list[dict[str, Any]]]:
+def fetch_comments(project: Path, repo: str, numbers: list[int], per_query: int = 20) -> dict[int, list[dict[str, Any]]]:
     """Comments of the given issues, cached in comments.jsonl. Aliased queries fetch 20 issues at a time."""
     owner, name = repo.split("/")
     path = repo_dir(project, repo) / "comments.jsonl"
@@ -294,9 +305,9 @@ def rationale(issue: dict[str, Any], label: str, comments: list[dict[str, Any]],
     return " / ".join(" ".join(c["body"].split())[:chars] for c in picked[-3:])
 
 
-def add_rationales(project: Project, repo: str, task_id: str) -> tuple[int, int]:
+def add_rationales(project: Path, repo: str, task_id: str) -> tuple[int, int]:
     """Fill `rationale` on a GitHub task's rows from the comments around their labelling."""
-    d = project.tasks_dir / task_id
+    d = project / "tasks" / task_id
     rows = [json.loads(l) for l in (d / "data.jsonl").read_text().split("\n") if l.strip()]
     issues = {i["number"]: i for i in load(project, repo, "issues")}
     numbers = [int(r["id"].lstrip("#")) for r in rows]
@@ -308,3 +319,65 @@ def add_rationales(project: Project, repo: str, task_id: str) -> tuple[int, int]
         filled += bool(why)
     (d / "data.jsonl").write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows))
     return filled, len(rows)
+
+
+# ---------- the command line ----------
+
+CONFIG, DIR = "s1flow.toml", "s1flow"
+
+
+def find_project(given: Path | None) -> Path:
+    """DIR or DIR/s1flow with s1flow.toml; without DIR, the nearest from the current directory up to the git root."""
+    def at(d: Path) -> Path | None:
+        return next((c for c in (d, d / DIR) if (c / CONFIG).is_file()), None)
+
+    if given is not None:
+        found = at(given.resolve())
+        if found is None:
+            raise Stop(f"no s1flow project in {given}: neither it nor {given / DIR} holds {CONFIG}")
+        return found
+    here = Path.cwd().resolve()
+    for d in (here, *here.parents):
+        if (found := at(d)) is not None:
+            return found
+        if (d / ".git").exists():
+            break
+    raise Stop(f"no s1flow project found from {here}: give --project DIR, or run s1flow init")
+
+
+def main(argv: list[str] | None = None) -> int:
+    ap = argparse.ArgumentParser(prog="github.py", description="Fetch a GitHub repository's issues and PRs, audit its labels, add why each case got its label.")
+    sub = ap.add_subparsers(dest="action", required=True)
+    f = sub.add_parser("fetch", help="the newest issues and merged PRs (resumable)")
+    a = sub.add_parser("audit", help="how labels are used today, and by whom")
+    r = sub.add_parser("rationale", help="each case's labelling comments as `rationale`")
+    for p in (f, a, r):
+        p.add_argument("repo", help="owner/name")
+        p.add_argument("--project", type=Path, help="the s1flow project: a directory with s1flow.toml, or its parent (default: found from here)")
+    f.add_argument("--issues", type=int, default=1000, help="newest issues to keep")
+    f.add_argument("--prs", type=int, default=500, help="newest merged PRs to keep")
+    f.add_argument("--page", type=int, default=25)
+    r.add_argument("--id", dest="task", metavar="TASK", required=True)
+    args = ap.parse_args(argv)
+    try:
+        project = find_project(args.project)
+        if "/" not in args.repo:
+            raise Stop(f"repository {args.repo!r}: give it as owner/name")
+        if args.action == "audit":  # reads what fetch saved: no gh needed
+            print(audit(project, args.repo))
+            return 0
+        require_gh()
+        if args.action == "fetch":
+            print(f"issues: {fetch(project, args.repo, 'issues', args.issues, args.page)}")
+            print(f"prs: {fetch(project, args.repo, 'prs', args.prs, max(5, args.page // 2))}")
+        else:
+            filled, n = add_rationales(project, args.repo, args.task)
+            print(f"{filled}/{n} cases have a rationale")
+    except (Stop, RuntimeError, OSError) as e:
+        print(f"error: {e}", file=sys.stderr)
+        return 2
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

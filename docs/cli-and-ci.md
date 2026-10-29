@@ -19,7 +19,7 @@ drives collecting cases, comparing, reviewing and improving through the same CLI
 implementation.
 
 A typical request to your agent: *"Use s1flow to decide whether a new GitHub issue is a bug. Call the task is-bug,
-collect 200 labeled issues, compare the models and show me the result."* The Skill runs `s1flow github fetch`, `cases check`, `run`
+collect 200 labeled issues, compare the models and show me the result."* The Skill fetches the issues with its `github.py` script, then runs `cases check`, `run`
 and `compare`, and leaves the choice of candidate to you.
 
 ## GitHub Actions

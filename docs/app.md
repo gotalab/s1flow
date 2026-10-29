@@ -52,13 +52,13 @@ Now write `bug.json`. You don't need any evaluation data, model responses or pla
 ```
 
 ```bash
-s1flow policy validate bug.json --connections connections.toml --json
+s1flow policy create bug.json --connections connections.toml --check --json
 s1flow policy create bug.json --root policies --json
 s1flow decide --policy ticket-bug@v1 --path policies/ticket-bug/v1.json \
   --connections connections.toml --state '{"text":"Crash on startup"}' --json
 ```
 
-`policy validate` checks the policy without calling a model. With `--connections`, it also checks that the
+`policy create --check` checks the policy without calling a model or saving it. With `--connections`, it also checks that the
 file defines the connection and that the connection allows the policy's model ID. `policy create` saves the policy as a new version that can't be changed,
 stamped with when it was created and which SDK version created it. It doesn't make that version live, and it
 doesn't claim the policy has been evaluated.

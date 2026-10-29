@@ -1,6 +1,6 @@
 """google-gemini/gemini-cli: which `priority/` label does a new issue get?
 
-Built from the issues `s1flow github fetch google-gemini/gemini-cli` saved that carry
+Built from the issues `github.py fetch google-gemini/gemini-cli` (the Skill's script) saved that carry
 exactly one `priority/` label (any labeller). The criteria start from the
 repository's own label descriptions; a TODO marks a label without one.
 """

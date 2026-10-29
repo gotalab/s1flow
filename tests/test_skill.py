@@ -73,8 +73,8 @@ def test_install_writes_both_agent_dirs_at_the_git_root(repo, capsys):
         assert (copy / "SKILL.md").read_text() == (skill.source() / "SKILL.md").read_text()
         assert {p.stem for p in (copy / "references").iterdir()} == set(TOPICS)
         marker = json.loads((copy / skill.MARKER).read_text())
-        assert marker["schema"] == "s1flow/skill-marker@1" and marker["s1flow_version"] == skill.version() and set(marker["files"]) == {"SKILL.md", "scripts/charts.py", "scripts/charts.html", *(f"references/{t}.md" for t in TOPICS)}
-    assert out.count(f"(s1flow {skill.version()}): {3 + len(TOPICS)} added") == 2  # SKILL.md, renderer, template and references
+        assert marker["schema"] == "s1flow/skill-marker@1" and marker["s1flow_version"] == skill.version() and set(marker["files"]) == {"SKILL.md", "scripts/charts.py", "scripts/charts.html", "scripts/github.py", *(f"references/{t}.md" for t in TOPICS)}
+    assert out.count(f"(s1flow {skill.version()}): {4 + len(TOPICS)} added") == 2  # SKILL.md, renderer, template, github.py and references
     assert not (repo / "sub" / ".claude").exists() and not (repo.parent / "home").exists()
 
 
@@ -98,7 +98,7 @@ def test_a_file_changed_there_is_kept_unless_forced(repo, capsys):
 
     code, out, _ = run("skill", "install", "--dir", str(repo / ".claude/skills"), capsys=capsys)
     assert code == 0 and "  skipped references/review.md: changed there (--force overwrites it)" in out
-    assert f"{len(TOPICS) + 2} unchanged, 1 skipped" in out and mine.read_text() == "our own notes\n"
+    assert f"{len(TOPICS) + 3} unchanged, 1 skipped" in out and mine.read_text() == "our own notes\n"
     assert skill.install(repo / ".claude/skills").skipped == ["references/review.md"]  # still protected the next time
 
     run("skill", "install", "--dir", str(repo / ".claude/skills"), "--force", capsys=capsys)
