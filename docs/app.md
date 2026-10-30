@@ -58,8 +58,8 @@ s1flow decide --policy ticket-bug@v1 --path policies/ticket-bug/v1.json \
   --connections connections.toml --state '{"text":"Crash on startup"}' --json
 ```
 
-`adopt --spec FILE --check` checks the policy without calling a model or saving it. With `--connections`, it also checks that the
-file defines the connection and that the connection allows the policy's model ID. `adopt --spec` saves the policy as a new version that can't be changed,
+`adopt --spec FILE --check` validates the spec and that the connection file (`--connections`, else the project's
+`s1flow.toml`) defines its connection and allows its model ID, without calling a model or saving anything. `adopt --spec` saves the policy as a new version that can't be changed,
 stamped with when it was created and which SDK version created it, and makes it current; it doesn't claim the
 policy has been evaluated.
 

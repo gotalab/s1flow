@@ -69,7 +69,7 @@ def test_a_policy_loads_from_the_policy_set_as_from_policies(shipped, tmp_path):
     assert "evidence" not in loaded.spec.model_dump() and loaded.spec.digest == direct.spec.digest  # the log names the version in policies/
     assert loaded.spec == direct.spec
     assert runtime_load("gh-ruff-area", path=out).spec.version == 3
-    assert runtime_load("gh-ruff-area@v3", path=out).spec.version == 3 and runtime_load("gh-ruff-area@current", path=out).spec.version == 3
+    assert runtime_load("gh-ruff-area@v3", path=out).spec.version == 3
     with pytest.raises(NotFound, match="holds gh-ruff-area@v3, not gh-ruff-area@v2"):
         runtime_load("gh-ruff-area@v2", path=out)
     with pytest.raises(ConfigError, match="name a task"):

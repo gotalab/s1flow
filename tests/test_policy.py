@@ -99,8 +99,9 @@ def test_current_is_the_one_channel(store, tmp_path):
     (tmp_path / "policies" / "t" / "channels.json").write_text('{"schema": "s1flow/channels@1", "channels": {"current": 1, "next": 1}}')
     with pytest.raises(ConfigError, match="the one channel is `current`"):
         store.current("t")
-    with pytest.raises(ConfigError, match="the one channel is `current`"):
-        runtime_load("t@next", root=tmp_path / "policies")
+    for name in ("t@next", "t@current"):
+        with pytest.raises(ConfigError, match=r"TASK \(its current version\) or TASK@vN"):
+            runtime_load(name, root=tmp_path / "policies")
 
 
 def test_a_broken_policy_file_is_a_config_error(store, tmp_path):

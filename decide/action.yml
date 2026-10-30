@@ -6,13 +6,13 @@ description: >
   A failed call fails the step; use `continue-on-error` to carry on without an answer.
 inputs:
   policy:
-    description: "The policy: TASK (its current version), TASK@current or TASK@vN, as a log names it (gh-ruff-area@v3)."
+    description: "The policy: TASK (its current version) or TASK@vN, as a log names it (gh-ruff-area@v3)."
     required: true
   state:
     description: The state as JSON, the same shape the task was evaluated on.
     required: true
   connections:
-    description: A trusted s1flow.toml containing only the connections this workflow grants to the policy.
+    description: A trusted connection file (TOML) listing only the models this workflow lets the policy call.
     required: true
   case-id:
     description: An application id for log context (an issue or PR number); it may repeat and is not a feedback key.
@@ -21,13 +21,13 @@ inputs:
     description: A policy file, or a policy set from `s1flow export` (policies.json), instead of the project's policies/.
     default: ""
   log:
-    description: Append the answer to this JSONL file (keep it, e.g. as an artifact, for `s1flow feedback`).
+    description: Append the answer to this JSONL file (keep it, e.g. as an artifact, for `s1flow feedback measure`).
     default: ""
   keep-state:
     description: "`true` keeps the state in the log, so `s1flow feedback measure --add` can add the case as a labelled one once its right answer is known. Needs `log`."
     default: "false"
   working-directory:
-    description: The project directory, with s1flow.toml and policies/ (`s1flow init` makes s1flow/).
+    description: The directory the step runs in, the project (with policies/), or where `path` and `connections` are.
     default: s1flow
   package:
     description: The package requirement to install in this workflow when pyproject.toml does not list s1flow; a project that lists it runs its locked copy. Empty runs this Action's own copy (the base install, which decides) with the dependency versions in its uv.lock; set e.g. `s1flow[images] @ git+https://...` only when the policy needs an extra.

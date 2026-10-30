@@ -5,7 +5,7 @@ description: Build, measure, ship and improve typed yes/no and one-of-N decision
 
 # s1flow
 
-s1flow asks a model one typed question about an input (`state`): yes/no, or one of up to 20 options. A task holds
+s1flow asks a model one typed question about an input (`state`): yes/no, or one of as many options as the model takes (often about 20). A task holds
 the labelled cases and the question (`tasks/<id>/task.py`); a policy is the version an app runs
 (`policies/<task>/vN.json`). If the CLI is absent: `uv tool install "s1flow[eval]"`.
 
