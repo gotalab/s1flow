@@ -40,10 +40,11 @@ edited files, so review that diff.
 A policy that was never evaluated, written by hand, is saved and made current by `adopt --spec FILE --reason
 "..."` with only the base runtime; s1flow reports that there is no evidence for it.
 
-To go back to a version that ran before, adopt it again: `s1flow adopt TASK CANDIDATE` with its candidate
-saves it as the next version, measured like any other, and `adopt --spec` with its spec (renumbered) saves it
-unevaluated. Versions are only added, so the pull request is checked as any adopt is; reverting the one that
-adopted the newer version would remove a saved version, which the check refuses.
+To go back to a version that ran before, save it again as the next version: `adopt --spec` with its `vN.json`
+renumbered brings back exactly that spec, unevaluated; `s1flow adopt TASK CANDIDATE` with its candidate measures
+that candidate again on today's task, question and cases. Versions are only added, so the pull request is checked
+as any adopt is; reverting the one that adopted the newer version would remove a saved version, which the check
+Action refuses.
 
 Only `adopt` points `current`, and each time it does, it appends why to `policies/<task>/history.jsonl` (when,
 which version, the one before, who, why, and for a measured candidate the held-out test's verdict). A candidate it
@@ -52,7 +53,7 @@ one passes leaves a trace.
 
 ```bash
 s1flow adopt --spec spec.json --reason "hand-written first rule" --json
-s1flow adopt ticket-bug@v1 --reason "v2 misreads feature requests"
+s1flow adopt ticket-bug d1@vercel/short --reason "v2 misreads feature requests"
 s1flow export ticket-bug --out policies.json
 ```
 
