@@ -26,6 +26,16 @@ date, and writes nothing when the candidate falls short on the test set: `--forc
 evaluation record marks it `forced`, with your reason as the why, but never mismatched identities. On the pull request, the `s1flow check` Action compares the version the base branch ships
 with the one the pull request makes current, on today's test cases, and fails when it is worse.
 
+The check asks both versions again rather than trusting what their evidence says, because the pull request could
+have written that evidence. So a version adopted with `--force` fails the check like any other version below; the
+comment shows that it was forced, by whom and why, and merging it anyway is a person's call. A version adopted with
+`adopt --spec` has no evidence and is asked like any other. Going back to a version that ran before the base
+branch's current (the base commit's `history.jsonl` says so) is a rollback: the check measures it and shows the
+numbers, but passes. A check that cannot measure (a pull request from a fork gets no keys, and some answers are not
+cached) is pending; the workflow `s1flow init --ci` writes fails on it (`on-pending: fail`; `warn` lets it pass).
+When the pull request edits `task.py`, `split.json` or `s1flow.toml`, which set the rules the check applies, the
+comment says so: the check used the edited rules, so review that diff.
+
 A policy that was never evaluated, written by hand, is saved and made current by `adopt --spec FILE --reason
 "..."` with only the base runtime; s1flow reports that there is no evidence for it.
 

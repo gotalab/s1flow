@@ -30,6 +30,11 @@ Then open a pull request with the change to `policies/<task>/`. The `s1flow chec
 base branch ships with the new current, and merging the pull request is the release; nothing is switched after it.
 `adopt` refuses stale evidence, and writes nothing when the held-out test shows the candidate below; `--force`
 writes it anyway and the record marks it `forced`, with the reason as the why; the person decides that, not the agent.
+The check still fails on a forced version (it asks both versions again; it never trusts stored evidence) and shows
+the reason; merging it anyway is the person's call. A rollback (`adopt TASK@vN` to a version that ran before) is
+measured and passes. A pending check (no keys, answers not cached) fails under the `on-pending: fail` that
+`init --ci` writes. A comment that flags an edited `task.py`, `split.json` or `s1flow.toml` means the rules
+changed with the version: say so in the pull request.
 
 The user or an agent with authority chooses the candidate and records why. `adopt` then explicitly scores that
 selected candidate on the held-out test and records the result. The choice may differ from the

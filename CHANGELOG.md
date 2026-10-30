@@ -61,6 +61,16 @@
   file yet; a later run does. The file is now
   `s1flow/split@2` (`schema/split-2.json`) without `uses`: it counted only the uses on the machine that ran. `@1`
   files still read. `check --json` no longer has `test_uses`.
+- The `s1flow check` Action fails a pending check (`on-pending: fail`, the new input's default; `warn` restores
+  the warning). `s1flow init --ci` writes `on-pending: fail` into the workflow. A check that cannot measure (a
+  pull request from a fork gets no keys, and some answers are not cached) no longer lets the change merge.
+- `check` never passes on stored evidence: it asks both versions again. A version adopted with `--force` fails as
+  any version below does; the comment shows that it was forced, by whom and why. A version adopted without an
+  evaluation (`adopt --spec`) is checked like any other (it used to stop with "no evaluation record"). A
+  candidate that ran before the version it is checked against (`--history FILE`, default the task's
+  `history.jsonl`; the Action passes the base commit's) gets the new verdict `rollback`: measured, shown, exit 0.
+  The comment flags a pull request that edits `task.py`, `split.json` or `s1flow.toml`, which set the rules the
+  check applies.
 
 Each removed command fails with one line naming what replaces it.
 

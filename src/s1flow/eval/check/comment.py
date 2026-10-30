@@ -43,11 +43,11 @@ def markdown(task: Task, r: CheckResult) -> str:
     o0 = task.primary
     if r.verdict == "pending":
         return "\n".join([MARKER.format(task=task.id), f"### s1flow check · {task.id}: ⏸ pending", "", *[f"- {x}" for x in r.reasons + r.notes]]) + "\n"
-    head = {"fail": "❌ fail", "better": "✅ pass (better)", "no_difference": "✅ pass (no difference shown)", "pass": "✅ pass"}[r.verdict]
+    head = {"fail": "❌ fail", "better": "✅ pass (better)", "no_difference": "✅ pass (no difference shown)", "pass": "✅ pass", "rollback": "✅ pass (rollback)"}[r.verdict]
     sides = r.sides
     two = len(sides) == 2
     L = [MARKER.format(task=task.id), f"### s1flow check · {task.id}: {head}", ""]
-    what = " and ".join(f"**{s.name}** ({s.policy}, {s.model}" + (f"/{s.variant}" if s.variant != "base" else "") + ")" for s in reversed(sides))
+    what = " and ".join(f"**{s.name}** ({s.policy}, {s.model}" + (f"/{s.variant}" if s.variant not in ("base", None) else "") + ")" for s in reversed(sides))
     L.append(f"Asked {what} again about today's {r.n} test cases and compared them." if two else f"Checked {what} on today's {r.n} test cases.")
     L.append("")
     L += [f"- {x}" for x in r.reasons]

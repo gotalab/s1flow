@@ -6,6 +6,9 @@
 # $0.01; for other models, 80 x their price per call. `sample` sets the number of cases.
 #
 # Secrets: OPENROUTER_API_KEY. A policy on another model needs its key too: `s1flow doctor --policy <task>`.
+#
+# on-pending: a check that cannot measure (a pull request from a fork gets no keys, and some answers are not
+# cached) fails, so nothing unmeasured merges. `warn` lets it pass with a warning.
 name: s1flow check
 on:
   pull_request:
@@ -24,5 +27,6 @@ jobs:
         with:
           working-directory: "{workdir}"
           sample: "40"
+          on-pending: fail
         env:
           OPENROUTER_API_KEY: ${{{{ secrets.OPENROUTER_API_KEY }}}}

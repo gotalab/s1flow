@@ -901,7 +901,7 @@ def adopt(a: argparse.Namespace) -> int:
 
 
 def check(a: argparse.Namespace) -> int:
-    """Ask both versions about today's test cases and compare them case by case. Exit 0 pass, 1 worse, 2 could not run or pending."""
+    """Ask both versions about today's test cases and compare them case by case. Exit 0 pass (or a rollback), 1 worse, 2 could not run or pending."""
     from .eval import check as checking
     from .eval.check import comment
     from .eval.task import load
@@ -917,7 +917,10 @@ def check(a: argparse.Namespace) -> int:
         write(comment.error_markdown(task_id, message))
 
     task = _guard(lambda: load(project(a), task_id), failed)
-    r = _guard(lambda: checking.check(task, a.against, a.candidate, a.sample, a.cached_only), failed)
+    from .policies import history
+
+    r = _guard(lambda: checking.check(task, a.against, a.candidate, a.sample, a.cached_only,
+                                      history=None if a.history is None else history.read(a.history)), failed)
     md = comment.markdown(task, r)
     write(md)
     print(r.model_dump_json(indent=1) if a.json else md)
@@ -1045,6 +1048,7 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--candidate", help="current, vN, or `draft` (the task's current question); default: current when --against names another version, else the edited question")
     p.add_argument("--sample", type=positive, help="check this many test cases only (a cheap PR check)")
     p.add_argument("--cached-only", action="store_true", help="make no calls (no keys, e.g. a PR from a fork); pending when some are needed")
+    p.add_argument("--history", type=Path, help="the history.jsonl that tells a rollback (default the task's; the Action passes the base commit's)")
     p.add_argument("--json", action="store_true")
     p.add_argument("--markdown", type=Path, help="also write the PR comment here")
 

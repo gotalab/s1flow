@@ -27,7 +27,10 @@ and `report`, and leaves the choice of candidate to you.
 `decide/action.yml` uses the base package and an explicit `connections` input, and outputs the decision ID and
 whether the answer cleared the threshold. Evaluation uses `action.yml` with the `eval` extra (`s1flow init --ci` writes a workflow for it): on a pull request
 that adopts a policy, it tests the version the pull request makes current against the one the base branch ships, on the
-test cases, and posts the result as a comment. Merging the pull request is the release.
+test cases, and posts the result as a comment. Merging the pull request is the release. A check that cannot
+measure fails unless the workflow sets `on-pending: warn`; a rollback to a version the base commit's `history.jsonl`
+shows running before passes, with its numbers shown; a pull request that edits `task.py`, `split.json` or
+`s1flow.toml` gets a warning that the check used the edited rules.
 
 Input is passed through files and environment variables, never pasted into shell commands. The workflow installs
 the package you choose up front; loading a policy at runtime never installs anything. In production workflows,
