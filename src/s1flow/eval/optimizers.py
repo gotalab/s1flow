@@ -102,6 +102,6 @@ def resolve(optimizer: Optimizer | str) -> Optimizer:
         made = next(iter(found)).load()()
     except Exception as e:  # a third-party factory: whatever it raises (an import, a bad target) is its package's
         raise ConfigError(f"the {optimizer!r} optimizer ({GROUP} entry point) failed to load: {type(e).__name__}: {e}") from None
-    if not isinstance(made, Optimizer):
+    if isinstance(made, type) or not isinstance(made, Optimizer):
         raise ConfigError(f"the {optimizer!r} entry point made {made!r}, which has no `name`, `settings()` and `run(problem)`")
     return made
