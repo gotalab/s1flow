@@ -31,7 +31,7 @@ ships no scheduler.
    --fresh --concurrency N` (current is called again: add it to the cost in step 2).
 5. **Read `s1flow report <task>`.** The new version is listed next to the current policy, each with
    its own threshold fitted on train + val; `=` means the intervals overlap. Read the objectives first,
-   then the calls (latency p50 / p90 / p99, `API $/10k`), which order the tied after what `tiebreak` lists.
+   then the calls (latency p50 / p90 / p99, `API $/10k`), which order the tied where `tiebreak` lists `"latency"` and `"cost"`.
 6. **If it is worth it, compare with current.** Show the list. If the human or authorized agent picks it,
    `s1flow adopt <task> <model>:<version> --reason "..."` (it becomes current in the working tree; never
    `adopt` on your own, see `adopt-and-run.md`), then `s1flow check <task> --against v<N>` asks it and the version

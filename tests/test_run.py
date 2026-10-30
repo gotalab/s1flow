@@ -1,5 +1,6 @@
 import asyncio
 import json
+import re
 
 import pytest
 from conftest import make_project
@@ -173,3 +174,24 @@ def test_a_task_whose_id_differs_from_its_directory_is_refused(tmp_path):
     (d / "task.py").write_text(scaffold.stub("bug", "Bug?"))  # runs and policies would go to bug/, the lookup to t-bug
     with pytest.raises(ConfigError, match=r"id 'bug' does not match its directory tasks/t-bug: set id='t-bug'"):
         load(p, "t-bug")
+
+
+def test_the_task_init_writes_spells_out_the_defaults(tmp_path):
+    p = make_project(tmp_path / "p", {"fake": lambda b: Fake(b.spec.id)})
+    written = scaffold.stub("t", "Bug?")
+    bare = re.sub(r"\n    # Every value below.*?\n    constraints=Constraints\(\),", "\n    objective=Accuracy(),", written, flags=re.S)
+    assert "split=" not in bare and "tiebreak=" not in bare
+    rows = "".join(json.dumps({"id": str(i), "text": "x", "label": i % 2 == 0}) + "\n" for i in range(20))
+    tasks = []
+    for name, text in (("t", written), ("t", bare)):
+        d = p.tasks_dir / name
+        d.mkdir(parents=True, exist_ok=True)
+        (d / "task.py").write_text(text)
+        (d / "data.jsonl").write_text(rows)
+        tasks.append(load(p, name))
+    spelled, default = tasks
+    assert spelled.split == default.split and spelled.constraints == default.constraints
+    assert spelled.objectives == default.objectives and spelled.ties == default.ties == [*default.objectives[1:], "latency", "cost"]
+    assert spelled.evaluation_contract_digest == default.evaluation_contract_digest  # what was measured is measured alike
+    moved = {default.copy(tiebreak=t).evaluation_contract_digest for t in (["cost", "latency"], ["cost"], ["latency"])}
+    assert len(moved) == 3 and default.evaluation_contract_digest not in moved  # another order is another selection rule

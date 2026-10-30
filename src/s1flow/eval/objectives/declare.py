@@ -10,9 +10,9 @@ is no basis for the weights): a model is chosen on the objective among those tha
 only models whose intervals overlap the best are compared on `tiebreak`, in its order. `tiebreak`'s objectives are
 measured at the rule the objective sets, the one a policy reads with; they choose none of their own.
 
-Everything here is measured on the answers. What the calls took (latency, API cost) is never an objective and
-never in `tiebreak`: it is read from the call records (Evaluation.calls) in two places only, the limits a model
-must stay within (`Constraints`) and the fixed order after `tiebreak` among the still tied (eval/select.py).
+Everything here is measured on the answers. What the calls took (latency, API cost) is never an objective: it is
+read from the call records (Evaluation.calls) in two places only, the limits a model must stay within
+(`Constraints`) and `tiebreak`'s "latency" and "cost", where it lists them (eval/select.py).
 
 | objective                   | value                                                    | kind     | sets            | direction | constraint                         |
 |-----------------------------|----------------------------------------------------------|----------|-----------------|-----------|------------------------------------|
@@ -199,15 +199,25 @@ def _table_keys(o: Objective, kind: Kind, where: str) -> None:
         raise ConfigError(f"{where}: the loss table charges a right answer ({', '.join(right)}); a right answer loses 0")
 
 
+CallKey = Literal["latency", "cost"]
+CALL_KEYS: tuple[CallKey, ...] = ("latency", "cost")  # what the calls took, as `tiebreak` may name it (eval/select.py)
+
+
 def check(objective: Any, tiebreak: list[Any], kind: Kind, where: str, custom: frozenset[str] = frozenset()) -> None:
     """What a task.py may declare, refused when it loads (`where`: the task; `custom`: the keys of its custom objectives,
     objectives/custom.py)."""
     allowed = ", ".join(k for k in kind.objectives if k in BUILT_IN)
     if not isinstance(objective, Objective):
         raise ConfigError(f"{where}: objective= is one objective (Coverage(...), Accuracy(), ...), got {type(objective).__name__}")
+    calls = [x for x in tiebreak if isinstance(x, str)]
+    if bad := next((x for x in calls if x not in CALL_KEYS), None):
+        raise ConfigError(f"{where}: tiebreak= takes objectives and {' and '.join(map(repr, CALL_KEYS))}, got {bad!r}")
+    if dup := next((x for x in CALL_KEYS if calls.count(x) > 1), None):
+        raise ConfigError(f"{where}: {dup!r} is listed twice in tiebreak=")
+    tiebreak = [x for x in tiebreak if not isinstance(x, str)]
     if bad := next((x for x in tiebreak if not isinstance(x, Objective)), None):
-        raise ConfigError(f"{where}: tiebreak= lists objectives (Accuracy(), MacroF1(), ...), got {type(bad).__name__}; latency and API cost "
-                          "come after it on their own, and limit candidates as constraints= (latency_p99_ms, cost_per_10k_usd)")
+        raise ConfigError(f"{where}: tiebreak= lists objectives (Accuracy(), MacroF1(), ...) and \"latency\" / \"cost\", got {type(bad).__name__}; "
+                          "latency and API cost limit candidates as constraints= (latency_p99_ms, cost_per_10k_usd)")
     seen: set[str] = set()
     if objective.sets != "min_probability" and (c := next((x for x in tiebreak if x.name == "coverage"), None)):
         raise ConfigError(f"{where}: {c.label} in tiebreak=: coverage decides min_probability, so it only ranks as the objective; "

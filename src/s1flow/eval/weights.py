@@ -34,7 +34,7 @@ def sensitivity(task: Task, preds: dict[str, metrics.Preds], variants: dict[str,
             return []
         t = task.copy(objective=o)
         evs = [metrics.evaluate(t, pr, variant=(variants or {}).get(name, "base")) for name, pr in preds.items()]
-        ranked = rank(t.primary, t.objectives[1:], t.constraints, evs)
+        ranked = rank(t.primary, t.ties, t.constraints, evs)
         fits = [x for x in ranked if not x.excluded and x.scores[0].value is not None]
         out.append(Reweighted(factor=f, objective=t.primary, recommended=fits[0].candidate if fits else None, tied=[x.candidate for x in ranked if x.tied_with_best]))
     return out

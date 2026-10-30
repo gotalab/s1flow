@@ -6,9 +6,9 @@ Cases: tasks/{task_id}/data.jsonl, one labelled case per line, for example
 `label` is the right answer (None leaves the row out).
 """
 
-from s1flow.objectives import Accuracy
+from s1flow.objectives import Accuracy, Constraints
 from s1flow.questions import Boolean
-from s1flow.eval import Task
+from s1flow.eval import Split, Task
 
 task = Task(
     id={task_id_repr},
@@ -17,7 +17,17 @@ task = Task(
     question_id="q",
     question=Boolean(instructions={instructions}),
     label=lambda r: r["label"],
-    # What to choose by (it also sets how the policy reads the answers; tiebreak=[...] breaks ties). Others: Recall(max_false_alarm=0.05), ExpectedLoss(fn=5, fp=1),
-    # F1(), or Coverage(target_accuracy=0.95) when the workflow acts only on sure answers.
+    # Every value below is s1flow's default, written out so you can see what decides; change any of them.
+    # The cases held out as the test share (stratified by label) and never shown while choosing, and the
+    # cross-validation over the rest. The first command that needs the test share writes it to split.json.
+    split=Split(test=0.3, k=5, seed=1),
+    # What to choose by (it also sets how the policy reads the answers). Others: Recall(max_false_alarm=0.05),
+    # ExpectedLoss(fn=5, fp=1), F1(), or Coverage(target_accuracy=0.95) when the workflow acts only on sure answers.
     objective=Accuracy(),
+    # What orders the candidates the objective cannot tell apart, in order: more objectives (F1(), ...),
+    # "latency" (p90 per case) and "cost" (API cost per 10,000 cases); one left out here is not used.
+    tiebreak=["latency", "cost"],
+    # What a model may not exceed to be chosen at all: latency_p99_ms=, cost_per_10k_usd=, min_labels=, and on a
+    # binary question min_precision= and min_recall=.
+    constraints=Constraints(),
 )

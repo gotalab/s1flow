@@ -80,7 +80,7 @@ def headline(task: Task, evs: list[Evaluation]) -> str:
         return "No candidate has an answer to every case." if any(e.n for e in evs) else "No results."
     objs = task.objectives
     o0 = objs[0]
-    ranked = rank(task.primary, objs[1:], task.constraints, scored)
+    ranked = rank(task.primary, task.ties, task.constraints, scored)
     by = {e.candidate.name: e for e in scored}
     fits = [x for x in ranked if not x.excluded and x.scores[0].value is not None]
     excluded = [x for x in ranked if x.excluded]
@@ -103,9 +103,10 @@ def headline(task: Task, evs: list[Evaluation]) -> str:
     others = [x.candidate for x in tied if x is not leader]
     if others:
         parts.append(f"Its interval overlaps with {', '.join(others)}: the selection heuristic groups them for tiebreaking; interval overlap does not establish equivalence.")
-        unlike = unlike_among_tied(ranked, scored)
+        unlike = unlike_among_tied(ranked, scored) if "latency" in task.ties else None
         if chosen is not leader:
-            words = [*(o.label for o in objs[1:]), *([] if unlike else ["p90 latency"]), "API cost"]
+            words = [t.label if not isinstance(t, str) else "API cost" if t == "cost" else "p90 latency"
+                     for t in task.ties if not (t == "latency" and unlike)]
             if words == ["API cost"]:
                 parts.append(f"Of those, the lowest API cost is chosen: **{chosen.candidate}**{tail(chosen)}.")
             else:
@@ -134,7 +135,7 @@ def objectives_table(task: Task, evs: list[Evaluation]) -> list[str]:
     if not scored:
         return []
     objs = task.objectives
-    ranked = rank(task.primary, objs[1:], task.constraints, scored)
+    ranked = rank(task.primary, task.ties, task.constraints, scored)
     floors = {e.candidate.name: e.floors for e in scored}
     head = "| model | " + " | ".join(o.label for o in objs) + " | rule | constraints |"
     L = ["", "## Objectives and constraints", "", head, "|---|" + "---|" * (len(objs) + 2)]
@@ -165,7 +166,7 @@ def weights_table(task: Task, evs: list[Evaluation], preds: dict[str, metrics.Pr
     moved = sensitivity(task, {e.candidate.name: preds[e.candidate.name] for e in scored if e.candidate.name in preds})
     if not moved:
         return []
-    ranked = rank(task.primary, task.objectives[1:], task.constraints, scored)
+    ranked = rank(task.primary, task.ties, task.constraints, scored)
     fits = [x for x in ranked if not x.excluded and x.scores[0].value is not None]
     now = fits[0].candidate if fits else None
     L = ["", "## With other weights", "", "| weights | recommended | tied |", "|---|---|---|",
@@ -332,7 +333,7 @@ def calls_table(task: Task, evs: list[Evaluation]) -> list[str]:
     if not rows:
         return []
     budget = task.constraints.latency_p99_ms
-    frontier = pareto(task.primary, rank(task.primary, task.objectives[1:], task.constraints, compared(rows)), {e.candidate.name: e for e in rows})
+    frontier = pareto(task.primary, rank(task.primary, task.ties, task.constraints, compared(rows)), {e.candidate.name: e for e in rows})
     L = [
         "", "## Calls (latency and API cost)", "",
         "| model | calls | p50 | p90 | p99 | max | spread (p99/p50) | retried | concurrency |" + (f" p99 ≤ {budget:.0f}ms |" if budget is not None else "")

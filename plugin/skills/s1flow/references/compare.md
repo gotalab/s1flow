@@ -47,8 +47,8 @@ complete ones by the task's declared objective, `tiebreak` and constraints, and 
 snapshot contains metric definitions (unit and measurement basis) and each candidate's values and intervals.
 Plain-answer metrics, configured objective scores at a fitted rule, and selective coverage/accuracy pairs are
 kept distinct. Read all relevant metrics. The ranking's pick follows the task's declared objective; among candidates
-it cannot tell apart it currently prefers lower latency, then lower API cost, which is a default, not a
-measured difference. Missing or stale evidence remains unknown.
+it cannot tell apart it follows `tiebreak`, which the template sets to lower latency, then lower API cost: a
+preference written in task.py, not a measured difference. Missing or stale evidence remains unknown.
 
 The person owns the decision criteria, including concerns not represented by a metric. An agent may explain
 trade-offs, but must not invent weights, priorities or a strict cutoff, or select a candidate unless authorized
