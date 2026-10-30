@@ -78,11 +78,12 @@
   candidate older than the version it is checked against that ran before it (`--history FILE`, default the
   task's `history.jsonl`; the Action passes the base commit's) gets the new verdict `rollback`: measured, shown,
   exit 0. The Action fails a pull request that rewrites, renames or removes a saved `vN.json` or
-  `vN.evaluation.json` (or whose files it cannot list), and
+  `vN.evaluation.json` (a file renamed into a new version's name is fine), or whose files it cannot list (GitHub
+  lists at most 3000), and
   flags one that edits files under `tasks/<task>/` or `s1flow.toml`, which set the rules and the cases the check
   applies.
 - `report` marks no pick: the `*` mark and `ranking[].recommended` are gone, and `=` marks the candidates the
-  objective cannot tell apart at the top (`ranking[].tied`). The Markdown report's headline says which candidate
+  objective cannot tell apart at the top (`ranking[].tied_with_best`). The Markdown report's headline says which candidate
   the tiebreak puts first instead of which is "chosen", and its `◎` is now `=`. The weights table shows the
   candidates tied at the top with the weights halved and doubled, in place of a recommended one.
 - A `tiebreak` with neither `"latency"` nor `"cost"` no longer has them added after it: with no tiebreak, the

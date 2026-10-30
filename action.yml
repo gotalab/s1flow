@@ -90,14 +90,17 @@ runs:
             grep -q "HTTP 404" "$lookup" || echo "::warning title=s1flow check::$1: could not read the base commit's history.jsonl; no rollback is recognised"
           fi
         }
-        # the files this change touches, as "status filename" (a renamed file under its old name too): the check reads
+        # the files this change touches, as "status filename" (a renamed file's old name as "renamed-from"): the check reads
         # both versions, the rules and the cases from the change itself, so an edit to a saved version fails and an
-        # edit to the rules or the cases is flagged. Not knowing the files fails: a rewritten version could pass.
+        # edit to the rules or the cases is flagged. Not knowing the files fails: a rewritten version could pass. GitHub
+        # lists at most 3000 files, so a change that touches that many is not known either.
         changed=""; listed=0
         if [ -n "$PR" ]; then
           if changed=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR/files" --paginate \
-              --jq '.[] | "\(.status) \(.filename)", (select(.previous_filename) | "\(.status) \(.previous_filename)")' 2>"$lookup"); then
-            listed=1
+              --jq '.[] | "\(.status) \(.filename)", (select(.previous_filename) | "\(.status)-from \(.previous_filename)")' 2>"$lookup"); then
+            if [ "$(grep -cv '^[a-z]*-from ' <<<"$changed")" -ge 3000 ]; then
+              echo "::error title=s1flow check::the pull request touches 3000 files or more, more than GitHub lists, so an edit to a saved version cannot be ruled out"
+            else listed=1; fi
           else
             echo "::error title=s1flow check::could not list the pull request's files ($(head -c 200 "$lookup" | tr '\n' ' ')), so an edit to a saved version cannot be ruled out"
           fi
@@ -123,7 +126,7 @@ runs:
           echo "$t: $verdict (exit $code)"
           # a saved version is never rewritten (adopt only adds one): an edited one would be checked as what it now says
           [ -n "$PR" ] && [ "$listed" = 0 ] && failed=1
-          rewritten=$(grep -E "^(modified|removed|renamed|changed) ${re_dir:+$re_dir/}policies/$t/v[0-9]+(\.evaluation)?\.json$" <<<"$changed" | cut -d' ' -f2- | sed 's/^/`/; s/$/`/' | paste -sd, - | sed 's/,/, /g')
+          rewritten=$(grep -E "^(modified|removed|renamed-from|changed) ${re_dir:+$re_dir/}policies/$t/v[0-9]+(\.evaluation)?\.json$" <<<"$changed" | cut -d' ' -f2- | sed 's/^/`/; s/$/`/' | paste -sd, - | sed 's/,/, /g')
           if [ -n "$rewritten" ]; then
             failed=1; echo "::error title=s1flow check::$t: this change rewrites $rewritten; a saved version is never rewritten (adopt saves a new one)"
             [ -f "$out/$t.md" ] && printf '\n> [!CAUTION]\n> This change rewrites %s. A saved version is never rewritten: `s1flow adopt` saves a new one. The check fails.\n' "$rewritten" >> "$out/$t.md"
