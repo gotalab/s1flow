@@ -68,6 +68,8 @@ def policy(version: int, model: str, question=QUESTION) -> EvaluatedPolicy:
 
 
 def ship(task: Task, *rs: EvaluatedPolicy, current: int = 1, candidate: int | None = None) -> None:
+    """`current` the version the base branch ships; `candidate` the one a pull request made current (check it
+    --against v{current})."""
     store = task.policies
     # Connections are explicitly owned by this application, never embedded in a policy.
     make_project(task.where.root, {r.spec.connection: fake for r in rs})
@@ -78,9 +80,7 @@ def ship(task: Task, *rs: EvaluatedPolicy, current: int = 1, candidate: int | No
         r.evidence.evaluation_contract_digest = task.evaluation_contract_digest
         r.evidence.data_sha256 = task.data_digest
         store.write_new(r)
-    store.set_channel("toy", current)
-    if candidate:
-        store.set_channel("toy", candidate, "next")
+    store.set_current("toy", candidate or current)
 
 
 def test_the_split_is_made_once_and_never_moves(task, tmp_path):
@@ -126,8 +126,8 @@ def test_the_split_starts_from_an_optimization_split(task):
 
 def test_a_worse_candidate_fails(task):
     ship(task, policy(1, "good"), policy(2, "bad"), candidate=2)
-    r = check.check(task)
-    assert (r.verdict, r.exit) == ("fail", 1) and [s.name for s in r.sides] == ["current", "next"]
+    r = check.check(task, against="v1")
+    assert (r.verdict, r.exit) == ("fail", 1) and [s.name for s in r.sides] == ["v1", "current"]
     assert r.sides[1].sure_accuracy == 0.0 and r.diff and r.diff.sure_accuracy.interval[1] < 0
     md = comment.markdown(task, r)
     assert md.startswith("<!-- s1flow-check:toy -->") and "❌ fail" in md
@@ -135,15 +135,15 @@ def test_a_worse_candidate_fails(task):
 
 def test_a_more_cautious_candidate_is_worse_on_coverage(task):
     ship(task, policy(1, "good"), policy(2, "below_min_probability"), candidate=2)
-    r = check.check(task)
+    r = check.check(task, against="v1")
     assert r.exit == 1 and r.diff and r.diff.primary.diff == pytest.approx(-1.0)
 
 
 def test_the_same_answers_pass_and_are_cached(task):
     ship(task, policy(1, "good"), policy(2, "good"), candidate=2)
-    r = check.check(task, sample=20)
+    r = check.check(task, against="v1", sample=20)
     assert (r.verdict, r.exit, r.n) == ("no_difference", 0, 20)
-    again = check.check(task, sample=20)
+    again = check.check(task, against="v1", sample=20)
     assert again.sides[0].calls == 0 and again.sides[0].cached == 20 and again.test_uses == 2
 
 
@@ -175,10 +175,10 @@ def test_recall_is_checked_on_its_false_alarms(task):
     """bad says "a" for every "c": half the negatives are false alarms."""
     t = recall_task(task)
     ship(t, binary(1, "good"), binary(2, "bad"), candidate=2)
-    r = check.check(t)
+    r = check.check(t, against="v1")
     assert r.verdict == "fail" and r.primary_label == "recall at 10% false alarms or fewer"
-    assert "next: the false-alarm rate is above the cap 10% (one-sided 95%: its lower bound is over the cap)" in r.reasons
-    assert "the false-alarm rate is higher than current's (the difference's 95% interval is above 0)" in r.reasons
+    assert "current: the false-alarm rate is above the cap 10% (one-sided 95%: its lower bound is over the cap)" in r.reasons
+    assert "the false-alarm rate is higher than v1's (the difference's 95% interval is above 0)" in r.reasons
 
 
 def test_a_floor_broken_on_the_check_cases_fails(task):
@@ -192,9 +192,9 @@ def test_a_floor_broken_on_the_check_cases_fails(task):
 def test_a_candidate_that_keeps_the_bound_is_better_than_one_that_breaks_it(task):
     t = recall_task(task)
     ship(t, binary(1, "bad"), binary(2, "good"), candidate=2)
-    r = check.check(t)
+    r = check.check(t, against="v1")
     assert r.verdict == "better" and not r.reasons
-    assert any("on the test cases current's false-alarm rate exceeds the cap 10%, so next, which keeps the cap even at a lower recall, counts as better" in n for n in r.notes)
+    assert any("on the test cases v1's false-alarm rate exceeds the cap 10%, so current, which keeps the cap even at a lower recall, counts as better" in n for n in r.notes)
 
 
 def test_an_edited_question_is_checked_as_draft(task):
@@ -217,11 +217,11 @@ def test_no_policy_leaves_no_split(task):
 
 def test_without_keys_only_the_cache_answers(task):
     ship(task, policy(1, "good"), policy(2, "bad"), candidate=2)
-    r = check.check(task, cached_only=True)
-    assert (r.verdict, r.exit) == ("pending", 2) and set(r.need_calls) == {"current", "next"}
+    r = check.check(task, against="v1", cached_only=True)
+    assert (r.verdict, r.exit) == ("pending", 2) and set(r.need_calls) == {"v1", "current"}
     assert "⏸ pending" in comment.markdown(task, r)
-    check.check(task)  # with keys: the answers are cached now
-    assert check.check(task, cached_only=True).verdict == "fail"
+    check.check(task, against="v1")  # with keys: the answers are cached now
+    assert check.check(task, against="v1", cached_only=True).verdict == "fail"
 
 
 def test_init_makes_a_project(tmp_path):
@@ -242,10 +242,10 @@ def test_init_makes_a_project(tmp_path):
     assert all(x.startswith("kept") for x in scaffold.init(proj, "ticket-bug")[:1])
 
 
-def test_an_edit_wins_over_the_candidate_channel(task):
+def test_an_adopted_version_wins_over_an_edit(task):
     ship(task, policy(1, "good", Choice(instructions="Old wording?", criteria={c: None for c in CLASSES})), policy(2, "good"), candidate=2)
-    assert check.default_candidate(task, task.policies.read("toy")) == "draft"
-    assert check.default_candidate(task, task.policies.read("toy", version=2)) is None  # the question as shipped, the candidate is itself
+    assert check.default_candidate(task, task.policies.read("toy", version=1)) == "current"  # the pull request adopted v2
+    assert check.default_candidate(task, task.policies.read("toy")) is None  # current, its question as shipped: itself
 
 
 def test_every_call_failing_is_not_a_pass(task, monkeypatch):
@@ -276,49 +276,18 @@ def test_a_cost_not_known_is_not_free_and_a_list_price_estimates_it(task):
     task.policies.write_new(priced)
     path = task.where.root / "s1flow.toml"
     path.write_text(path.read_text() + '\n[models.tokens.price]\ninput_per_mtok = 1.0\nas_of = "2026-10-19"\nsource = "t"\n')
-    task.policies.set_channel("toy", 2)
+    task.policies.set_current("toy", 2)
     task.project = type(task.where)(task.where.root)  # reload the application-owned connection price
     r = check.check(task, sample=20)  # cached answers priced from the current binding
     s = r.sides[0]
     assert s.cached == 20 and s.cost_source == "list" and s.cost_per_10k_usd == pytest.approx(100 * 1.0 / 1_000_000 * 10_000)
 
 
-def test_promote_says_the_held_out_verdict_and_whether_check_ran(task, monkeypatch):
-    def promote(*args):
-        return cli("promote", *args, "--connections", str(task.where.config))
-
-    ship(task, policy(1, "good"), policy(2, "good"))
-    taskdir = task.where.root / "tasks" / "toy"
-    taskdir.mkdir(parents=True)
-    (taskdir / "task.py").write_text("from s1flow.eval import Task\nfrom s1flow.client import Choice\nfrom s1flow.objectives import Coverage\ntask = Task(id='toy', cases='../../data.jsonl', state=lambda r: {'text': r['text']}, label=lambda r: r['text'], question=Choice(instructions='Which?', criteria={'a':None,'b':None,'c':None}), objective=Coverage(target_accuracy=0.9))\n")
-    # Promotion validates the input adapter identity of the actual module the CLI loads.
-    from s1flow.eval.task import load
-    loaded = load(task.where, "toy")
-    for version in (1, 2):
-        policy_ = task.policies.read("toy", version=version)
-        record_path = task.policies.dir("toy") / f"v{version}.evaluation.json"
-        record = json.loads(record_path.read_text())
-        record["evidence"]["execution_digest"] = DecisionPolicy(policy_.spec, client=loaded.where.client()).execution_digest
-        record["evidence"]["input_adapter_digest"] = loaded.input_adapter_digest
-        record["evidence"]["evaluation_contract_digest"] = loaded.evaluation_contract_digest
-        record["evidence"]["data_sha256"] = loaded.data_digest
-        record_path.write_text(json.dumps(record))
+def test_check_writes_no_record_and_promote_is_gone(task, monkeypatch):
+    ship(task, policy(1, "good"), policy(2, "good"), candidate=2)
+    assert check.check(task, against="v1").verdict == "no_difference"
+    assert not (task.where.reports_dir / "toy").exists()  # the pull request's check is the record
     monkeypatch.chdir(task.where.root)
-    got = promote("toy@v2", "--json")
-    assert got.exit_code == 0, got.err
-    first = json.loads(got.output)
-    assert first["previous_version"] == 1 and first["evaluated"] is True
-    assert first["test_verdict"] is None and first["check"] is None
-    task.policies.set_channel("toy", 1)
-    checked = check.check(task, candidate="v2")
-    assert checked.verdict == "no_difference"
-    got = promote("toy@v2", "--json")
-    again = json.loads(got.output)
-    assert again["check"]["verdict"] == "no_difference" and again["check"]["n"] == checked.n
-    assert promote("toy@v1", "--channel", "staging").output == "staging -> toy@v1; evaluated; held-out test: none\n"
-    moved = json.loads(promote("toy@v2", "--channel", "staging", "--json").output)
-    assert moved["policy"] == "toy@v2" and moved["previous_version"] == 1 and moved["channel"] == "staging"
-    bad = promote("toy@next")
-    assert bad.exit_code == 2 and "promote needs TASK@vN" in bad.err
-    bad = promote("toy@2")
-    assert bad.exit_code == 2 and "channel '2'" in bad.err and "not a version" in bad.err
+    gone = cli("promote", "toy@v2")
+    assert gone.exit_code == 2 and "it is now `adopt`" in gone.err
+

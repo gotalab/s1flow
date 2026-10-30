@@ -185,8 +185,7 @@ def test_doctor_on_a_policy(project):
 
     store = Store(project / "policies")
     r = policy(task="t")
-    store.write_new(r.model_copy(update={"spec": r.spec.model_copy(update={"model_id": "jaredpalmer/kev-4b"})}))
-    store.set_channel("t", 1)
+    store.write_new(r.model_copy(update={"spec": r.spec.model_copy(update={"model_id": "jaredpalmer/kev-4b"})}), current=True)
     with (project / "s1flow.toml").open("a") as f:
         f.write('\n[models.fake]\nprovider = "openrouter"\nid = "jaredpalmer/kev-4b"\n')
     done = s1flow("doctor", "--policy", "t", "--connections", str(project / "s1flow.toml"), cwd=project)

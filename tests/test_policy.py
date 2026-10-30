@@ -82,26 +82,30 @@ def store(tmp_path):
     return Store(tmp_path / "policies")
 
 
-def test_versions_are_never_rewritten_and_channels_move(store, tmp_path):
+def test_versions_are_never_rewritten_and_current_moves(store, tmp_path):
     store.write_new(policy())
     with pytest.raises(ConfigError, match="already has v1"):
         store.write_new(policy())
-    store.write_new(policy(version=2))
-    assert store.set_channel("t", 1) == {"current": 1}
-    assert store.set_channel("t", 2, "next") == {"next": 2, "current": 1}
-    assert store.read("t").spec.version == 1 and store.read("t", channel="next").spec.version == 2
+    assert store.current("t") is None
+    store.write_new(policy(version=2), current=True)
+    assert store.current("t") == 2 and store.read("t").spec.version == 2
+    store.set_current("t", 1)  # a rollback
+    assert store.read("t").spec.version == 1
     with pytest.raises(NotFound):
-        store.set_channel("t", 3)
+        store.set_current("t", 3)
     raw = json.loads((tmp_path / "policies" / "t" / "v1.json").read_text())
     assert raw["schema"] == "s1flow/policy@2" and "api_key" not in json.dumps(raw)
 
 
-def test_current_refuses_a_version_below_on_its_test(store):
-    store.write_new(policy(test="below"))
-    with pytest.raises(S1flowError, match="held-out"):
-        store.set_channel("t", 1)
-    assert store.set_channel("t", 1, "next") == {"next": 1}  # only current is guarded
-    assert store.set_channel("t", 1, force=True)["current"] == 1
+def test_a_file_from_0_1_0a1_with_next_and_named_channels_reads_its_current(store, tmp_path):
+    store.write_new(policy())
+    store.write_new(policy(version=2))
+    (tmp_path / "policies" / "t" / "channels.json").write_text('{"schema": "s1flow/channels@1", "channels": {"current": 1, "next": 2, "staging": 2}}')
+    assert store.current("t") == 1
+    with pytest.raises(ConfigError, match="the one channel is `current`"):
+        runtime_load("t@next", root=tmp_path / "policies")
+    store.set_current("t", 2)
+    assert json.loads((tmp_path / "policies" / "t" / "channels.json").read_text())["channels"] == {"current": 2}
 
 
 def test_a_broken_policy_file_is_a_config_error(store, tmp_path):
@@ -186,14 +190,13 @@ def test_development_discovery_and_explicit_runtime_store(tmp_path, monkeypatch)
     (tmp_path / "s1flow").mkdir()
     (tmp_path / "s1flow" / "s1flow.toml").write_text("default = []\n[models]\n")
     store = Store(tmp_path / "s1flow" / "policies")
-    store.write_new(policy())
-    store.set_channel("t", 1)
+    store.write_new(policy(), current=True)
     (tmp_path / "app" / "src").mkdir(parents=True)
     monkeypatch.chdir(tmp_path / "app" / "src")
     with pytest.raises(ConfigError, match="path=.*root="):
         runtime_load("t")
     assert runtime_load("t", root=store.root).spec.ref == "t@v1"
-    with pytest.raises(NotFound, match="next"):
+    with pytest.raises(ConfigError, match="next"):
         runtime_load("t@next", root=store.root)
     assert Project.discover().root == tmp_path / "s1flow"
 
@@ -387,7 +390,7 @@ def test_adopt_chooses_from_the_runs_and_names_the_version(tmp_path):
     assert r.answered_by == "sharp:0.97-v2" and task.where.client().connections.build(r.spec.connection).id == "sharp:0.97"
     assert r.spec.rule.min_probability == pytest.approx(0.97) and r.evidence.compared == ["good", "good:2", "vague"]
     assert r.selection.by == "you" and r.selection.recommended == "good" and r.spec.s1flow_version
-    assert task.policies.channels("toy") == {"next": 1} and r.spec.state_schema == {"type": "object", "properties": {"y": {"type": "boolean"}}, "required": ["y"], "additionalProperties": False}
+    assert task.policies.current("toy") == 1 and r.spec.state_schema == {"type": "object", "properties": {"y": {"type": "boolean"}}, "required": ["y"], "additionalProperties": False}
     assert r.evidence.evaluation.objective and r.evidence.evaluation.objective.objective == Coverage()
 
 
@@ -428,21 +431,11 @@ def test_a_policy_dumps_the_same_bytes_whatever_the_hash_seed(tmp_path):
     assert len(outs) == 1 and '"question_types":["boolean","box","choice","score"]' in outs.pop()
 
 
-def test_a_channel_is_any_name_and_a_bad_one_is_refused(store, tmp_path):
-    store.write_new(policy())
-    assert store.set_channel("t", 1, "staging") == {"staging": 1}
-    assert runtime_load("t@staging", root=tmp_path / "policies").spec.version == 1
-    for bad in ("Staging", "v2", "3", "draft", "a b", "-x"):
-        with pytest.raises(ConfigError, match="lowercase letters, digits and -"):
-            store.set_channel("t", 1, bad)
-    (tmp_path / "policies" / "t" / "channels.json").write_text('{"Prod": 1}')
-    with pytest.raises(ConfigError, match="channels.json"):
-        store.read("t", channel="staging")
+
 
 
 def test_a_decision_names_the_content_that_made_it(store, tmp_path):
-    store.write_new(policy())
-    store.set_channel("t", 1)
+    store.write_new(policy(), current=True)
     path = tmp_path / "policies" / "t" / "v1.json"
     raw = json.loads(path.read_text())
     want = policies.file.policy_digest(raw)
@@ -519,14 +512,14 @@ def test_every_stored_policy_reads_with_the_policy_layer_alone(tmp_path):
 
 def test_a_name_that_is_not_there_lists_the_ones_that_are(store, tmp_path):
     store.write_new(policy())
+    with pytest.raises(NotFound, match=r"t has no current version"):
+        store.read("t")
     store.write_new(policy(version=2))
-    store.set_channel("t", 1)
+    store.set_current("t", 1)
     with pytest.raises(NotFound, match=r"no policy of 'x'; tasks with policies: t"):
         store.read("x")
-    with pytest.raises(NotFound, match=r"t has no 'staging' channel"):
-        store.read("t", channel="staging")
     with pytest.raises(NotFound, match="no policy .*v9.json"):
-        store.set_channel("t", 9)
+        store.set_current("t", 9)
     log = tmp_path / "log.jsonl"
     d = policies.DecisionPolicy(policy().spec, client=policy_client(), log=log)
     with pytest.raises(ConfigError, match="label 'kind/nope' is not an answer to its question"):

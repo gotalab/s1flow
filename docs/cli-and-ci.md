@@ -26,7 +26,8 @@ and `report`, and leaves the choice of candidate to you.
 
 `decide/action.yml` uses the base package and an explicit `connections` input, and outputs the decision ID and
 whether the answer cleared the threshold. Evaluation uses `action.yml` with the `eval` extra (`s1flow init --ci` writes a workflow for it): on a pull request
-that changes a policy, it tests the new policy against the current one on the test cases and posts the result as a comment.
+that adopts a policy, it tests the version the pull request makes current against the one the base branch ships, on the
+test cases, and posts the result as a comment. Merging the pull request is the release.
 
 Input is passed through files and environment variables, never pasted into shell commands. The workflow installs
 the package you choose up front; loading a policy at runtime never installs anything. In production workflows,

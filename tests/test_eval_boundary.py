@@ -82,7 +82,7 @@ def test_run_adopt_and_check_share_runtime_interpretation_and_freshness(tmp_path
     selected = adopt.adopt(task, "m", "test", "local deterministic evidence")
     adopt.validate_evidence(task, selected)
     assert selected.evidence.evaluation.test is not None
-    result = check.check(task, against="next")
+    result = check.check(task)  # adopt made it current
     assert result.verdict == "pass" and result.sides[0].accuracy == 1 and result.test_uses >= 2
     # A standalone application only needs its runtime spec and trusted connections.
     from s1flow.policies import DecisionPolicy
@@ -300,7 +300,7 @@ def test_final_check_does_not_certify_cached_latency_from_other_concurrency(tmp_
     path.write_text(path.read_text() + "concurrency = 8\n")
     task.project = Project(task.where.root)
     task.constraints = Constraints(latency_p99_ms=10)
-    result = check.check(task, against="next", cached_only=True)
+    result = check.check(task, cached_only=True)
     assert result.sides[0].cached == result.n and result.sides[0].calls == 0
     assert result.verdict == "pending" and result.sides[0].latency_p99_ms is None
     assert "latency constraint cannot be verified" in result.reasons[0]
@@ -359,3 +359,15 @@ def test_price_change_invalidates_scoring_evidence_while_raw_requests_remain_reu
     assert not fresh.fits and "API cost" in fresh.rows()[0].excluded[0]
     with pytest.raises(S1flowError, match="API cost"):
         adopt.adopt(task, "m", "test", "new price exceeds cap", listed=fresh)
+
+
+def test_adopt_writes_no_version_below_on_the_held_out_test_unless_forced(tmp_path, monkeypatch):
+    from s1flow.eval import adopt, metrics
+    from s1flow.objectives import ExpectedLoss
+
+    task = scoring_task(tmp_path, ExpectedLoss())
+    monkeypatch.setattr(metrics, "test_verdict", lambda task, e: "below")
+    held = adopt.adopt(task, "m", "test", "below on test")
+    assert held.evidence.test == "below" and task.policies.versions("toy") == [] and task.policies.current("toy") is None
+    shipped = adopt.adopt(task, "m", "test", "shipped anyway", force=True)
+    assert task.policies.versions("toy") == [shipped.spec.version] and task.policies.current("toy") == shipped.spec.version

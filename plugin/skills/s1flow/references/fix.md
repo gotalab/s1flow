@@ -27,6 +27,6 @@ To improve the question, use the explicit development command:
 s1flow optimize <task> --budget 800 --patience 5
 ```
 
-It proposes a new question with the optimization extra and writes it to the next channel only when
-the measured result qualifies. The held-out test remains the final check; never treat optimization's
+It proposes a new question with the optimization extra and writes it as current only when the
+measured result qualifies; the pull request that carries it ships it when it merges. The held-out test remains the final check; never treat optimization's
 surrogate score or a historical benchmark as current production evidence.

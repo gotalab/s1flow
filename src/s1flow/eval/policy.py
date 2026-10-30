@@ -1,15 +1,13 @@
 """Evaluation records compose with, and reference, separately stored runtime specs."""
 from __future__ import annotations
 
-import json
 from pathlib import Path
 from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 from ..client.models import ModelSpec
-from ..core import clock
-from ..core.errors import ConfigError, NotFound, S1flowError
+from ..core.errors import ConfigError, NotFound
 from ..project import Project
-from ..policies.file import CURRENT, NEXT, Policies, PolicySpec, Ref, atomic_write, channel_name
+from ..policies.file import CURRENT, Policies, PolicySpec, Ref, atomic_write
 from .candidate import Candidate
 from .evaluation import Evaluation
 
@@ -88,7 +86,7 @@ class EvaluationRecord(BaseModel):
 
 
 class Store:
-    """Evaluated policy store. Runtime storage owns locks, publication and channels."""
+    """Evaluated policy store. Runtime storage owns locks, publication and the current version."""
 
     def __init__(self, root: Path):
         self.runtime = Policies(root)
@@ -103,8 +101,11 @@ class Store:
     def next_version(self, task: str) -> int:
         return self.runtime.next_version(task)
 
-    def channels(self, task: str) -> dict[str, int]:
-        return self.runtime.channels(task)
+    def current(self, task: str) -> int | None:
+        return self.runtime.current(task)
+
+    def set_current(self, task: str, version: int) -> None:
+        self.runtime.set_current(task, version)
 
     def tasks(self) -> list[str]:
         return self.runtime.tasks()
@@ -126,31 +127,16 @@ class Store:
         except (ValidationError, OSError) as e:
             raise ConfigError(f'{path}: invalid evaluation record: {e}') from None
 
-    def write_new(self, policy: EvaluatedPolicy) -> None:
+    def write_new(self, policy: EvaluatedPolicy, *, current: bool = False) -> None:
+        """Save the policy and its evaluation record; `current` also makes it the version that runs."""
         # Validate before any write, including values copied with model_copy(update=...).
         policy = EvaluatedPolicy.model_validate_json(policy.model_dump_json())
         record = EvaluationRecord.from_policy(policy)
         with self.runtime.locked(policy.spec.task):
             self.runtime._write_new(policy.spec)
             atomic_write(self._record_path(policy.spec), record.dump(), immutable=True)
-
-    def set_channel(self, task: str, version: int, channel: str = CURRENT, force: bool = False) -> dict[str, int]:
-        channel_name(channel)
-        with self.runtime.locked(task):
-            spec = self.runtime.read(task, version=version)
-            record_path = self._record_path(spec)
-            evaluated = self.read(task, version=version) if record_path.exists() else None
-            below = evaluated is not None and evaluated.evidence.test == 'below'
-            if channel == CURRENT and below and not force:
-                raise S1flowError(f'{spec.ref} is below on the held-out test share; promote with --force if intended')
-            if below and force:
-                # Record the explicit override before changing a channel. Failure keeps the channel unchanged.
-                path = self.runtime._file(task, 'promotion-overrides.jsonl')
-                text = path.read_text() if path.exists() else ''
-                text += json.dumps({'at': clock.now(ms=True), 'policy': spec.ref, 'policy_digest': spec.digest,
-                                    'channel': channel, 'force': True}, sort_keys=True) + '\n'
-                atomic_write(path, text)
-            return self.runtime._set_channel(task, version, channel)
+            if current:
+                self.runtime._set_current(policy.spec.task, policy.spec.version)
 
 
 def store(project: Project) -> Store:
@@ -160,7 +146,7 @@ def store(project: Project) -> Store:
 class Shipped(BaseModel):
     policy: str
     version: int
-    channels: list[str]
+    current: bool
     candidate: str | None
     model: str
     model_version: str | None
@@ -173,7 +159,7 @@ class Shipped(BaseModel):
 
 class TaskPolicies(BaseModel):
     task: str
-    channels: dict[str, int]
+    current: int | None
     policies: list[Shipped]
 
 
@@ -185,8 +171,7 @@ def overview(project: Project, tasks: list[str] | None = None) -> list[TaskPolic
     lineup = project.lineup()
     out = []
     for task in tasks or known:
-        channels = saved.channels(task)
-        order = sorted(channels, key=lambda name: (name != CURRENT, name != NEXT, name))
+        current = saved.current(task)
         shipped = []
         for version in reversed(saved.versions(task)):
             spec = saved.runtime.read(task, version=version)
@@ -195,10 +180,10 @@ def overview(project: Project, tasks: list[str] | None = None) -> list[TaskPolic
             configured = lineup.models.get(model)
             declared = next((name for name, item in (configured.versions or {}).items() if item.id == spec.model_id), None) if configured else None
             model_version = requested or declared
-            shipped.append(Shipped(policy=spec.ref, version=version, channels=[name for name in order if channels[name] == version],
+            shipped.append(Shipped(policy=spec.ref, version=version, current=version == current,
                                    candidate=record.candidate.name if record else None, model=model, model_version=model_version,
                                    answered_by=record.answered_by if record else None,
                                    pin='yes' if model_version else None if configured is None else 'alias' if configured.versions else 'no',
                                    at=spec.at, digest=spec.digest, evaluated=record is not None))
-        out.append(TaskPolicies(task=task, channels={name: channels[name] for name in order}, policies=shipped))
+        out.append(TaskPolicies(task=task, current=current, policies=shipped))
     return out

@@ -1,16 +1,16 @@
 name: s1flow check
 description: >
-  Ask the current policy and the changed one about today's test cases, compare them case by case,
-  and keep one comment on the pull request up to date. Fails when the change is worse.
+  Ask the policy the base branch ships and the one this change ships about today's test cases, compare them
+  case by case, and keep one comment on the pull request up to date. Fails when the change is worse.
 inputs:
   tasks:
     description: Task ids, space-separated. Default every task with a current policy.
     default: ""
   against:
-    description: The version to compare with (a channel or vN).
-    default: current
+    description: The version to compare with (vN or current). Default the version current names on the base commit (the PR's base branch, or the commit before a push), else current.
+    default: ""
   candidate:
-    description: A channel, vN or `draft`. Default the edited question, else the next channel.
+    description: current, vN or `draft`. Default current when it differs from the version compared with, else the edited question.
     default: ""
   sample:
     description: Check this many test cases per task (a cheap PR check). Empty checks them all.
@@ -49,6 +49,8 @@ runs:
         COMMENT: ${{ inputs.comment }}
         FORK: ${{ github.event.pull_request.head.repo.fork }}
         PR: ${{ github.event.pull_request.number }}
+        BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        WORKDIR: ${{ inputs.working-directory }}
         PACKAGE: ${{ inputs.package }}
         ACTION_PATH: ${{ github.action_path }}
         GH_TOKEN: ${{ github.token }}
@@ -58,10 +60,23 @@ runs:
         if [ -z "$TASKS" ]; then
           TASKS=$(for f in policies/*/channels.json; do jq -e '.channels.current' "$f" >/dev/null && basename "$(dirname "$f")"; done | tr '\n' ' ')
           if [ -z "$TASKS" ] && compgen -G 'policies/*/channels.json' >/dev/null; then
-            echo "::error::no policies/*/channels.json names a current version; select one with s1flow promote TASK@vN --connections PATH"; exit 1
+            echo "::error::no policies/*/channels.json names a current version; s1flow adopt TASK CANDIDATE picks one"; exit 1
           fi
         fi
-        args=(--against "$AGAINST")
+        # base_version: the version the base commit ships (empty when it has none); merging this change makes the
+        # working tree's current the one that runs. A lookup that fails for another reason than a missing file warns.
+        lookup="$RUNNER_TEMP/s1flow-base.err"
+        shipped() {
+          base_version=""
+          local dir="${WORKDIR#./}" body; dir="${dir%/}"; [ "$dir" = . ] && dir=""
+          [ -n "$BASE" ] && [ "$BASE" != 0000000000000000000000000000000000000000 ] || return 0
+          if body=$(gh api -H "Accept: application/vnd.github.raw" "repos/$GITHUB_REPOSITORY/contents/${dir:+$dir/}policies/$1/channels.json?ref=$BASE" 2>"$lookup"); then
+            base_version=$(jq -r '.channels.current // empty' <<<"$body" 2>/dev/null)
+          elif ! grep -q "HTTP 404" "$lookup"; then
+            echo "::warning title=s1flow check::$1: could not read the base commit's channels.json ($(head -c 200 "$lookup" | tr '\n' ' ')); checking current alone"
+          fi
+        }
+        args=()
         [ -n "$CANDIDATE" ] && args+=(--candidate "$CANDIDATE")
         [ -n "$SAMPLE" ] && [ -n "$PR" ] && args+=(--sample "$SAMPLE")   # outside a PR, every case
         if [ "$CACHED_ONLY" = true ] || { [ "$CACHED_ONLY" = auto ] && [ "$FORK" = true ]; }; then args+=(--cached-only); fi
@@ -73,12 +88,14 @@ runs:
         else jf=(env -u UV_PROJECT_ENVIRONMENT -u UV_NO_SYNC uv run --project "$ACTION_PATH" --frozen --no-dev --extra eval s1flow); fi
         failed=0
         for t in $TASKS; do
-          "${jf[@]}" check "$t" "${args[@]}" --json --markdown "$out/$t.md" > "$out/$t.json"
+          against="$AGAINST"
+          if [ -z "$against" ]; then shipped "$t"; against=${base_version:+v$base_version}; against=${against:-current}; fi
+          "${jf[@]}" check "$t" --against "$against" "${args[@]}" --json --markdown "$out/$t.md" > "$out/$t.json"
           code=$?
           verdict=$(jq -r '.verdict // "error"' "$out/$t.json" 2>/dev/null || echo error)
           echo "$t: $verdict (exit $code)"
           [ -f "$out/$t.md" ] && cat "$out/$t.md" >> "$GITHUB_STEP_SUMMARY"
-          if [ "$code" = 1 ]; then failed=1; echo "::error title=s1flow check::$t is worse than $AGAINST";
+          if [ "$code" = 1 ]; then failed=1; echo "::error title=s1flow check::$t is worse than $against";
           elif [ "$code" = 2 ] && [ "$verdict" = pending ]; then echo "::warning title=s1flow check::$t is pending: answers needed that only a run with keys can get";
           elif [ "$code" != 0 ]; then failed=1; echo "::error title=s1flow check::$t could not be checked (exit $code)"; fi
           if [ "$COMMENT" = true ] && [ -n "$PR" ] && [ -f "$out/$t.md" ]; then

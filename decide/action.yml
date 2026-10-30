@@ -1,12 +1,12 @@
 name: s1flow decide
 description: >
-  Answer one case with a policy (a task's `current` channel by default) and return the answer with its
+  Answer one case with a policy (a task's current version by default) and return the answer with its
   probability, decision id and lower-bound status as outputs, for the workflow to act on. The caller
   supplies the trusted model connections explicitly.
   A failed call fails the step; use `continue-on-error` to carry on without an answer.
 inputs:
   policy:
-    description: "The policy: TASK (its current channel), TASK@channel or TASK@vN, as a log names it (gh-ruff-area@v3)."
+    description: "The policy: TASK (its current version), TASK@current or TASK@vN, as a log names it (gh-ruff-area@v3)."
     required: true
   state:
     description: The state as JSON, the same shape the task was evaluated on.

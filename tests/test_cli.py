@@ -64,7 +64,7 @@ def test_every_command_takes_h_and_its_help_ends_with_the_exit_codes():
     from s1flow.cli import parser
 
     found = list(_commands(parser()))
-    assert ("cases", "review") in found and ("policy", "export") in found and ("policy", "create") in found and ("optimize",) in found and ("report",) in found and len(found) == 21
+    assert ("cases", "review") in found and ("policy", "export") in found and ("policy", "create") in found and ("optimize",) in found and ("report",) in found and len(found) == 20
     for words in found + [("cases",), ("feedback",), ("policy",), ("skill",)]:
         done = cli(*words, "-h")
         assert done.exit_code == 0 and " ".join(EXITS.split()) in " ".join(done.output.split()), words
@@ -104,7 +104,7 @@ def test_names_are_checked_at_the_entry_and_the_right_ones_listed(tmp_path):
 
 
 def test_tasks_is_the_overview_of_what_runs(tmp_path):
-    """Per task, the policy on each channel: candidate, version, the id that answers, pinned or not."""
+    """Per task, the current policy: candidate, version, the id that answers, pinned or not."""
     import json
     import shutil
 
@@ -112,18 +112,18 @@ def test_tasks_is_the_overview_of_what_runs(tmp_path):
 
     (tmp_path / "s1flow.toml").write_text((BENCH / "s1flow.toml").read_text())
     shutil.copytree(BENCH / "policies", tmp_path / "policies")
-    (tmp_path / "policies" / "gh-ruff-area" / "channels.json").write_text('{"schema": "s1flow/channels@1", "channels": {"current": 1, "next": 3, "staging": 2}}\n')
+    (tmp_path / "policies" / "gh-ruff-area" / "channels.json").write_text('{"schema": "s1flow/channels@1", "channels": {"current": 1, "next": 3, "staging": 2}}\n')  # 0.1.0a1's
     done = s1flow("tasks", "--json", cwd=tmp_path)
     assert done.returncode == 0, done.stderr
     area = next(t for t in json.loads(done.stdout) if t["task"] == "gh-ruff-area")
-    assert area["channels"] == {"current": 1, "next": 3, "staging": 2}
+    assert area["current"] == 1
     v = {r["version"]: r for r in area["policies"]}
     assert (v[1]["candidate"], v[1]["model_version"], v[1]["answered_by"], v[1]["pin"]) == ("d1@vercel", None, "liquid/d1", "no")
-    assert v[3]["candidate"] == "d1@vercel/improve-d1@vercel-20261016-0701" and v[2]["channels"] == ["staging"]
+    assert v[3]["candidate"] == "d1@vercel/improve-d1@vercel-20261016-0701" and v[1]["current"] and not v[3]["current"]
     assert (v[2]["candidate"], v[2]["model_version"], v[2]["pin"]) == ("jev", "1.14", "yes")  # an old policy sends jev-1.14.0
     text = s1flow("tasks", "gh-ruff-area", cwd=tmp_path).stdout.splitlines()
-    assert text[1].split() == ["gh-ruff-area", "current", "gh-ruff-area@v1", "d1@vercel", "-", "liquid/d1", "no"]
-    assert [x.split()[1] for x in text[1:4]] == ["current", "next", "staging"]
+    assert text[0].split()[:2] == ["task", "current"] and len(text) == 3  # the header, the one row, the legend
+    assert text[1].split() == ["gh-ruff-area", "gh-ruff-area@v1", "d1@vercel", "-", "liquid/d1", "no"]
     done = s1flow("tasks", "ruff-area", cwd=tmp_path)
     assert done.returncode == 2 and done.stderr.startswith("error: no task 'ruff-area'; tasks: gh-ruff-area")
 

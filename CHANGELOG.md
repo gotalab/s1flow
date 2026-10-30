@@ -21,5 +21,22 @@
 - `report` no longer writes `reports/<task>/<variant>/latest.md` and `latest.json`. `--out DIR` takes a directory
   (`compare --out` took a file) and writes `DIR/comparison.json` (what `compare --out` wrote) and `DIR/questions/<variant>.md` / `.json` (what `latest.*` held) for each
   question with runs. Its `--variant` option is gone: every question variant is in one report.
+- Merging the pull request is the release. `s1flow promote` and the `next` channel are gone: `adopt` (and
+  `optimize`, when it finds a better question) saves the new version and makes it current in `channels.json`, so the
+  pull request shows the switch and its merge ships it. `policy create` makes the version it saves current too. A
+  rollback is a pull request that points `current` at an older version.
+- `adopt` writes nothing when the held-out test shows the candidate below (exit 1); `--force`, which was on
+  `promote`, now writes it anyway. `promotion-overrides.jsonl` is no longer written.
+- Named channels (`TASK@staging`) are gone: a policy is `TASK`, `TASK@current` or `TASK@vN`. A `channels.json`
+  from 0.1.0a1 still reads its `current`; its other names are ignored and dropped on the next write. A policy set
+  0.1.0a1 exported from another channel still loads by `TASK` or `TASK@vN`.
+  `policy export --channel` is gone (it exports each task's current version), and `s1flow.policies.NEXT` with it.
+- `check` compares current with `--against vN`; its default candidate is current when `--against` names another
+  version, else an edited question. The `s1flow check` Action reads the version `current` names on the base
+  commit (the pull request's base, or the commit before a push) and passes it as `--against`; its `against`
+  input now defaults to that; when it cannot read the base commit, it warns and checks current alone. `check`
+  no longer writes `reports/<task>/checks.json`.
+- `s1flow tasks` shows each task's current policy; its `--json` has `current` (a version) in place of
+  `channels`, and each policy `current: true|false` in place of `channels: [...]`.
 
 Each removed command fails with one line naming what replaces it.

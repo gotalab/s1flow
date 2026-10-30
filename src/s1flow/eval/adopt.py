@@ -31,7 +31,7 @@ from ..client.identity import digest, execution_digest, require_provider_revisio
 from ..core.errors import ConfigError, NotFound, S1flowError
 from ..policies import DecisionPolicy
 from ..policies.rule import DecisionRule
-from ..policies.file import NEXT, PolicySpec, asked as one_question, policy_id
+from ..policies.file import PolicySpec, asked as one_question, policy_id
 from .candidate import Candidate
 from ..policies.state_shape import schema_of
 from . import evalset, metrics, weights
@@ -52,17 +52,17 @@ def adoptable(spec: ModelSpec, model: str) -> None:
 
 
 def validate_evidence(task: Task, policy: EvaluatedPolicy) -> None:
-    """Only current model/input/data conditions can support an evaluated channel change."""
+    """Only current model/input/data conditions can support adopting an evaluated policy."""
     runtime = DecisionPolicy(policy.spec, client=task.where.client())
     adoptable(runtime.model_spec, policy.spec.connection)
     if runtime.execution_digest != policy.evidence.execution_digest:
-        raise ConfigError(f"{policy.spec.ref}: execution conditions changed; measure and adopt again before promotion")
+        raise ConfigError(f"{policy.spec.ref}: execution conditions changed; measure and adopt again")
     if policy.evidence.input_adapter_digest != task.input_adapter_digest:
-        raise ConfigError(f"{policy.spec.ref}: input adapter changed; measure and adopt again before promotion")
+        raise ConfigError(f"{policy.spec.ref}: input adapter changed; measure and adopt again")
     if policy.evidence.evaluation_contract_digest != task.evaluation_contract_digest:
-        raise ConfigError(f"{policy.spec.ref}: evaluation contract changed or is unknown; rescore and adopt again before promotion")
+        raise ConfigError(f"{policy.spec.ref}: evaluation contract changed or is unknown; rescore and adopt again")
     if task.data_digest != policy.evidence.data_sha256:
-        raise ConfigError(f"{policy.spec.ref}: input data or labels changed; measure and adopt again before promotion")
+        raise ConfigError(f"{policy.spec.ref}: input data or labels changed; measure and adopt again")
 
 
 def _run_digest(task: Task, model: str, variant: str) -> str:
@@ -214,12 +214,13 @@ def shortlist(task: Task, only: list[str] | None = None, variants: list[str] | N
 
 
 def adopt(
-    task: Task, pick: str, by: str, reason: str, *, only: list[str] | None = None, channel: str | None = NEXT,
+    task: Task, pick: str, by: str, reason: str, *, only: list[str] | None = None, force: bool = False,
     variants: list[str] | None = None, write: bool = True, listed: Shortlist | None = None, git_sha: str | None = None,
 ) -> EvaluatedPolicy:
-    """The policy of the picked candidate (a name from the shortlist). `write` False returns the next
-    version without storing it (optimize stores it only when check finds it better). `git_sha`: the commit
-    it was made at (the CLI asks git, integrations/git.py)."""
+    """The policy of the picked candidate (a name from the shortlist), stored as the task's current version: the
+    pull request that carries it ships it when it merges. One below on the held-out test is not stored unless
+    `force`. `write` False returns the next version without storing it (optimize stores it only when check finds
+    it better). `git_sha`: the commit it was made at (the CLI asks git, integrations/git.py)."""
     before_data = task.data_digest
     s = listed or shortlist(task, only, variants)
     if (s.data_digest != before_data or s.input_adapter_digest != task.input_adapter_digest or
@@ -267,8 +268,6 @@ def adopt(
         ),
     )
     validate_evidence(task, r)
-    if write:
-        policies.write_new(r)
-        if channel:
-            policies.set_channel(task.id, r.spec.version, channel)
+    if write and (r.evidence.test != "below" or force):
+        policies.write_new(r, current=True)
     return r

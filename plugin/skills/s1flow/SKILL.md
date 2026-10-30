@@ -34,7 +34,7 @@ Read the one reference for the job at hand (`s1flow guide <topic>` prints it too
 | Compare model × question variants; inspect or paginate the compact result | `references/compare.md` |
 | Review the labels with the user (`cases review`, `cases correct`, the random sample) | `references/review.md` |
 | Render a report with multiple metrics and exportable figures from a saved snapshot | `references/charts.md` |
-| Pick a policy with the user, promote it, call it from the app | `references/adopt-and-run.md` |
+| Pick a policy with the user, release it with a pull request, call it from the app | `references/adopt-and-run.md` |
 | A provider offers a new version of a model: notice it, ask, run, compare with current | `references/new-version.md` |
 | Call it from a GitHub workflow or another language (an example to copy) | `references/workflow.md` |
 | What a decision log line looks like, and its JSON Schema | `references/logs.md` |
@@ -46,4 +46,4 @@ The runtime returns `decision_id`; store it when a later label may arrive. Feedb
 only a log annotation. `below_min_probability` is `null` when unset, otherwise `true` or `false`.
 Comparison evidence is dev-scoped: unknowns stay unknown; source/date, provider/model, measured concurrency,
 billed/list (displayed as estimated)/mixed/unknown cost remain visible; `adopt` records the selected candidate and reason and
-reads its held-out result, while `promote` alone changes the active channel.
+reads its held-out result, and makes it current: merging the pull request that carries it is the release.

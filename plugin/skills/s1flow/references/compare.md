@@ -57,12 +57,12 @@ Policy adoption remains a separate action:
 
 ```bash
 s1flow adopt <task> <candidate> --reason "..."
-s1flow check <task> --candidate next
-s1flow promote <task>@v<N> --connections s1flow.toml
+s1flow check <task> --against v<N>
 ```
 
 `report` and the HTML page do not adopt or activate anything. `adopt` records the selected
-candidate and reason; `check` is the explicit held-out comparison; `promote` changes the active channel. A valid
+candidate and reason and makes it current; `check` is the explicit held-out comparison; merging the pull request
+that carries the change releases it. A valid
 unevaluated policy can still be run through the base runtime when that is an intentional, separately reviewed
 path, but it has no evaluation evidence.
 

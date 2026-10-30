@@ -58,8 +58,7 @@ def client(monkeypatch: pytest.MonkeyPatch, *, spec: ModelSpec | None = None,
 def test_unevaluated_policy_roundtrip_and_events(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     store = Policies(tmp_path / 'policies')
     spec = policy()
-    store.write_new(spec)
-    store.set_channel('ticket', 1)
+    store.write_new(spec, current=True)
     assert store.read('ticket').digest == spec.digest
     c, calls = client(monkeypatch)
     log = tmp_path / 'events.jsonl'
@@ -159,16 +158,17 @@ def test_invalid_answer_never_becomes_decision(monkeypatch: pytest.MonkeyPatch) 
         DecisionPolicy(policy(), client=c).decide('input')
 
 
-def test_immutable_publish_and_concurrent_channel_writes(tmp_path: Path) -> None:
+def test_immutable_publish_and_concurrent_current_writes(tmp_path: Path) -> None:
     root = tmp_path / 'policies'
     stores = [Policies(root), Policies(root)]
     with ThreadPoolExecutor(max_workers=2) as pool:
         results = list(pool.map(lambda store: _publish(store, policy()), stores))
     assert sorted(results) == ['conflict', 'saved']
     assert stores[0].read('ticket', version=1).digest == policy().digest
+    stores[0].write_new(policy().model_copy(update={'version': 2}))
     with ThreadPoolExecutor(max_workers=2) as pool:
-        list(pool.map(lambda channel: Policies(root).set_channel('ticket', 1, channel), ['current', 'next']))
-    assert stores[0].channels('ticket') == {'current': 1, 'next': 1}
+        list(pool.map(lambda version: Policies(root).set_current('ticket', version), [1, 2]))
+    assert stores[0].current('ticket') in (1, 2)
     assert not list((root / 'ticket').glob('.v1.json.*'))
 
 
@@ -196,7 +196,7 @@ def test_named_store_rejects_symlink_escape(tmp_path: Path) -> None:
 
 def test_export_is_runtime_only_and_digest_checked(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     store = Policies(tmp_path / 'policies')
-    store.write_new(policy()); store.set_channel('ticket', 1)
+    store.write_new(policy(), current=True)
     bundle = export(store.root)
     source = tmp_path / 'policies.json'
     source.write_text(bundle.dump())

@@ -6,32 +6,32 @@ the evaluation extra:
 
 ```bash
 s1flow policy create spec.json --connections s1flow.toml --check
-s1flow policy create spec.json --root policies
-s1flow promote ticket-kind@v3 --root policies --connections s1flow.toml --json
+s1flow policy create spec.json --root policies --connections s1flow.toml
 ```
 
-`policy create` only accepts a v2 `PolicySpec` and never overwrites a saved version. With `--check` it
-only validates the file; adding `--connections` also binds its `connection` and `model_id` to the trusted
-connections in that file. `promote` always checks that binding. A valid unevaluated version can be
-activated manually. If an evaluation record exists, `promote` also checks that its execution digest
-still matches the supplied connections and reports the held-out test result. `--force` can override a
-below test verdict; it cannot make stale execution conditions current.
+`policy create` only accepts a v2 `PolicySpec`, never overwrites a saved version, and makes the version it saves
+current. With `--check` it only validates the file; adding `--connections` also binds its `connection` and
+`model_id` to the trusted connections in that file. Such a version has no evaluation evidence.
 
 The evaluation loop is:
 
 ```bash
 s1flow report <task>                            # the candidates by the objective (--json: every metric)
-s1flow adopt <task> <candidate> --reason "..."  # write the next policy and adoption record
-s1flow check <task> --candidate next             # final held-out check
-s1flow promote <task>@v<N> --connections s1flow.toml
+s1flow adopt <task> <candidate> --reason "..."  # write the policy and adoption record, and make it current
+s1flow check <task> --against v<N>              # final held-out check against the version it replaces
 ```
+
+Then open a pull request with the change to `policies/<task>/`. The `s1flow check` Action compares the version the
+base branch ships with the new current, and merging the pull request is the release; nothing is switched after it.
+`adopt` refuses stale evidence, and writes nothing when the held-out test shows the candidate below; `--force`
+writes it anyway, and the person decides that, not the agent.
 
 The user or an agent with authority chooses the candidate and records why. `adopt` then explicitly scores that
 selected candidate on the held-out test and records the result. The choice may differ from the
 explicit objective-based ranking when the candidate is eligible. `report` and the optional HTML
 page describe development data; they do not activate a runtime policy. `check` is the final test comparison
-before promotion. Recommendation, adoption, and the current channel remain separate; an ordinary `report`
-do not read the held-out share.
+before the merge. The ranking's pick and the adoption remain separate; an ordinary `report` does not read the
+held-out share.
 Historical benchmark files are reference material only and are not proof that a current model works;
 run the current task when a claim matters.
 

@@ -1,25 +1,26 @@
 """The `s1flow` console script: every command, in the standard library's argparse.
 
 Each command imports what it needs when it runs, so the base install (pydantic and httpx) runs init, decide,
-feedback record, policy, an unevaluated promote, doctor, skill and guide: an app or a workflow decides and
+feedback record, policy, doctor, skill and guide: an app or a workflow decides and
 records feedback, and an agent makes a project and gets the Skill, without the evaluation stack. The other commands need s1flow[eval]; on the base
 install they end in one line saying what to install, not a traceback. `s1flow --help` lists every command in one
 table (HELP), and a command that does not exist is one line naming the closest.
 
     s1flow decide --model jev --state @issue.json --questions @qs.json        call a model (s1flow.client)
     s1flow decide --model jev --state @issue.json --boolean "Is it a bug report?"   one yes / no question
-    s1flow decide --policy gh-ruff-area[@next|@v3] --state @issue.json [--path policies.json] [--case-id] [--log [--keep-state]] [--github-output]
+    s1flow decide --policy gh-ruff-area[@v3] --state @issue.json [--path policies.json] [--case-id] [--log [--keep-state]] [--github-output]
     s1flow feedback record gh-ruff-area@v3 DECISION_ID formatter --log log.jsonl   the right answer, once known
     s1flow feedback measure gh-ruff-area log.jsonl [--dry-run]               production from the logs (s1flow[eval])
-    s1flow policy create spec.json [--root policies] [--connections PATH] [--check]   a runtime spec, unevaluated (--check: validate only)
-    s1flow policy export [gh-ruff-area ...] [--channel current] --out policies.json        one file for an app to vendor
+    s1flow policy create spec.json [--root policies] [--connections PATH] [--check]   a runtime spec, unevaluated, made current (--check: validate only)
+    s1flow policy export [gh-ruff-area ...] --out policies.json        each task's current policy in one file, for an app to vendor
     s1flow doctor [--models jev,d1@vercel | --policy gh-ruff-area[@…]] [--reach] [--json]   the keys and hosts they need
     s1flow skill install [--dir PATH ...] [--user] [--force]    write the Agent Skill where agents read it (skill.py)
     s1flow skill path                                           the package's own copy
     s1flow guide [topic]                                        print the Skill's routing table, or one reference
 
-A policy is named TASK[@channel|@vN] wherever a command takes one (the current channel when none is given),
-so its id in a log (`gh-ruff-area@v3`) is input as it is.
+A policy is named TASK[@vN] wherever a command takes one (the current version when none is given), so its id
+in a log (`gh-ruff-area@v3`) is input as it is. channels.json names the current version; the pull request that
+changes it ships it when it merges (adopt, optimize and policy create point it at the version they save).
 
 Exit codes, the same for every command (EXITS), shown in every --help:
 
@@ -54,18 +55,17 @@ if TYPE_CHECKING:
     from .project import Project
 
 EXITS = "Exit codes: 0 done; 1 a gate failed or something was found (check fails, doctor or models --verify finds a problem); 2 usage, configuration, could not run, or check pending."
-BASE = ("init", "decide", "feedback", "policy", "promote", "doctor", "skill", "guide")  # what the base install runs (feedback record, unevaluated promote)
+BASE = ("init", "decide", "feedback", "policy", "doctor", "skill", "guide")  # what the base install runs (feedback record)
 # Every command, as `s1flow --help` lists it.
 TABLE = (
     ("init", "make a project in ./s1flow: s1flow.toml, a task with --task, the CI workflow with --ci"),
-    ("tasks", "every task: the policy on each channel, its candidate, the model id that answers, pinned or not"),
+    ("tasks", "every task: its current policy, its candidate, the model id that answers, pinned or not"),
     ("models", "the line-up in s1flow.toml, and what --verify found each model takes"),
     ("run", "ask the models about a task's cases (cached): runs/<task>/"),
     ("report", "every model and question variant on the saved runs, best first by the task's objective; --out DIR writes it"),
-    ("adopt", "write a candidate as the task's next policy, with why (the next channel)"),
-    ("promote", "point a channel (default current) at a policy version"),
+    ("adopt", "write a candidate as the task's current policy, with why (merging the change ships it)"),
     ("check", "compare two versions on today's test cases, case by case (the CI gate)"),
-    ("optimize", "optimize the current policy's question; adopt it as next when better (s1flow[optimize])"),
+    ("optimize", "optimize the current policy's question; adopt it as current when better (s1flow[optimize])"),
     ("cases", "check a task's cases; review and correct their labels"),
     ("decide", "call a model (--model), or decide with a task's policy (--policy)"),
     ("feedback", "record the right answer for a case a policy decided (record); measure policies in production (measure, s1flow[eval])"),
@@ -79,7 +79,7 @@ HELP = "\n".join([
     "--project PATH selects a project without changing cwd; --connections PATH selects one trusted connection file.",
     "Use these options only where listed by COMMAND --help; they also work before the command. SDK calls do not discover projects.", "", "Commands:",
     *(f"  {name:<16} {what}" for name, what in TABLE), "",
-    "init, decide, feedback record, policy, unevaluated promote, doctor, skill and guide run on the base install; "
+    "init, decide, feedback record, policy, doctor, skill and guide run on the base install; "
     "the others need the eval extra: install s1flow[eval].",
     EXITS,
 ])
@@ -89,6 +89,7 @@ GITHUB_SCRIPT = "the Skill's script, python .agents/skills/s1flow/scripts/github
 RENAMED = {  # commands renamed or removed: none runs under its old name, the error names what replaces it
     "propose": "`report` (the list) or `adopt` (write the one picked)", "improve": "`optimize TASK`", "gh": GITHUB_SCRIPT,
     "github": GITHUB_SCRIPT, "compare": "`report`", "rank": "`report`",
+    "promote": "`adopt` (it makes the version current; merging that change ships it)",
     "data": "`cases`", "release": "`policy`", "record-feedback": "`feedback record`",
 }
 
@@ -173,7 +174,7 @@ def missing_extra(e: ModuleNotFoundError) -> str | None:
     return f"error: this needs s1flow[{extra}] ({e}): install s1flow with the {extra} extra"
 
 
-POLICY = "TASK[@channel|@vN]"  # how a command names a policy (policies.file.Ref)
+POLICY = "TASK[@vN]"  # how a command names a policy (policies.file.Ref)
 
 
 def positive(text: str) -> int:
@@ -456,8 +457,8 @@ def feedback_measure(a: argparse.Namespace) -> int:
 
 
 def policy_create(a: argparse.Namespace) -> int:
-    """Validate a runtime specification and save it (never overwriting a version); --check validates only.
-    With --connections, also check that it binds to a model in that file (no model is called)."""
+    """Validate a runtime specification and save it as the task's current version (never overwriting a version);
+    --check validates only. With --connections, also check that it binds to a model in that file (no model is called)."""
     from .policies import DecisionPolicy, Policies
     from .policies.file import read_file
 
@@ -469,10 +470,10 @@ def policy_create(a: argparse.Namespace) -> int:
         print(json.dumps(result) if a.json else f"valid {spec.ref}; connection {'checked' if a.connections else 'not checked'}")
         return 0
     store = Policies(a.root)
-    store.write_new(spec)
+    store.write_new(spec, current=True)
     path = store.dir(spec.task) / f"v{spec.version}.json"
-    result = {"status": "created", "policy": spec.ref, "policy_digest": spec.digest, "path": str(path)}
-    print(json.dumps(result) if a.json else f"created {spec.ref}: {path} (not evaluated)")
+    result = {"status": "created", "policy": spec.ref, "policy_digest": spec.digest, "path": str(path), "current": True}
+    print(json.dumps(result) if a.json else f"created {spec.ref}: {path} (not evaluated), now current")
     return 0
 
 
@@ -483,10 +484,10 @@ def policy_export(a: argparse.Namespace) -> int:
 
     root = _policy_root(a)
     assert root is not None
-    b = policy_set.export(root, a.tasks or None, a.channel)
+    b = policy_set.export(root, a.tasks or None)
     Path(a.out).write_text(b.dump())
     for task, e in b.policies.items():
-        print(f"{policy_id(task, e.version)} ({a.channel}) sha256:{e.digest[:12]}")
+        print(f"{policy_id(task, e.version)} (current) sha256:{e.digest[:12]}")
     print(f"wrote {a.out}: load with policies.load(<task>, path={a.out!r})")
     return 0
 
@@ -565,19 +566,19 @@ def init(a: argparse.Namespace) -> int:
 
 
 def tasks(a: argparse.Namespace) -> int:
-    """Every task and what runs in production: the policy on each channel (current, next, the project's
-    own), its candidate (model[:version][/variant]), the model id that answers, and whether that version is pinned."""
+    """Every task and what runs in production: its current policy, its candidate (model[:version][/variant]), the
+    model id that answers, and whether that version is pinned."""
     from .eval.policy import overview
 
     found = overview(project(a), a.tasks or None)
     if a.json:
         print(json.dumps([t.model_dump(mode="json") for t in found], indent=1))
         return 0
-    table = [["task", "channel", "policy", "candidate", "model version", "answered by", "pin"]]
+    table = [["task", "current", "candidate", "model version", "answered by", "pin"]]
     for t in found:
-        rows = [[t.task, c, r.policy, r.candidate or "-", r.model_version or "-", r.answered_by or "-", r.pin or "?"]
-                for c, v in t.channels.items() for r in t.policies if r.version == v]
-        table += rows or [[t.task, "-", "-", "-", "-", "-", "-"]]
+        rows = [[t.task, r.policy, r.candidate or "-", r.model_version or "-", r.answered_by or "-", r.pin or "?"]
+                for r in t.policies if r.current]
+        table += rows or [[t.task, "-", "-", "-", "-", "-"]]
     widths = [max(len(row[i]) for row in table) for i in range(len(table[0]))]
     for row in table:
         print("  ".join(x.ljust(w) for x, w in zip(row, widths)).rstrip())
@@ -789,8 +790,8 @@ def _print_weights(listed: Any) -> None:
 
 
 def adopt(a: argparse.Namespace) -> int:
-    """Write the candidate as the task's next policy, on the next channel (who adopted it: git config user.name).
-    Exit 1 when the held-out test shows it below."""
+    """Write the candidate as the task's current policy (who adopted it: git config user.name); the pull request
+    that carries it ships it when it merges. One the held-out test shows below is not written (exit 1) unless --force."""
     from .eval import adopt as adopting
     from .eval import evalset
     from .eval.task import load
@@ -802,18 +803,24 @@ def adopt(a: argparse.Namespace) -> int:
     user = git.user(task.where.root)
     if not user:
         raise S1flowError("a policy records who adopted it: set git config user.name")
-    r = adopting.adopt(task, a.candidate, user, a.reason, listed=listed, git_sha=git.sha(task.where.root))
+    previous = task.policies.current(task.id)
+    r = adopting.adopt(task, a.candidate, user, a.reason, listed=listed, git_sha=git.sha(task.where.root), force=a.force)
+    held = r.evidence.test == "below" and not a.force
     d = task.policies.dir(task.id)
-    wrote = "wrote " + ", ".join(_shown(f) for f in (d / f"v{r.spec.version}.json", d / "channels.json", evalset.path(task)))
+    wrote = ("not written: below on the held-out test (adopt again with --force to ship it anyway); wrote "
+             + _shown(evalset.path(task)) + " (the test share's use count)" if held else
+             "wrote " + ", ".join(_shown(f) for f in (d / f"v{r.spec.version}.json", d / "channels.json", evalset.path(task)))
+             + " (the policy, current, the test share's use count)")
+    check_it = None if held or previous is None else f"compare it with v{previous}: s1flow check {task.id} --against v{previous}"
     if a.json:  # stdout is the policy alone
         print(r.model_dump_json(by_alias=True, indent=1))
         print(wrote, file=sys.stderr)
-        return 1 if r.evidence.test == "below" else 0
+        return 1 if held else 0
     e = r.evidence.evaluation
     p0 = e.objective
     assert p0 is not None
     rd = r.spec.rule
-    print(f"{r.spec.ref} (next): {r.candidate.name}, answered by {r.answered_by}; adopted by {r.selection.by}"
+    print(f"{r.spec.ref}{'' if held else ' (current)'}: {r.candidate.name}, answered by {r.answered_by}; adopted by {r.selection.by}"
           + ("" if r.candidate.name == r.selection.recommended else f" (the ranking recommended {r.selection.recommended})"))
     if r.candidate.name not in r.selection.tied:
         print(f"  note: not tied with {r.selection.recommended}: measured worse on {p0.objective.label}")
@@ -821,63 +828,10 @@ def adopt(a: argparse.Namespace) -> int:
     print(f"  {p0.objective.label}: {p0.value}  interval {p0.interval}  (n {e.n})")
     if e.test:
         print(f"  held-out test: n {e.test.n}, primary {e.test.primary.value}  -> {r.evidence.test}")
-    print(wrote + " (the policy, the next channel, the test share's use count)")
-    return 1 if r.evidence.test == "below" else 0
-
-
-def promote(a: argparse.Namespace) -> int:
-    """Activate an explicit version; evaluated versions require current evidence."""
-    from .policies import DecisionPolicy, Policies
-    from .policies.file import Ref
-
-    ref = Ref.parse(a.policy)
-    if ref.version is None:
-        raise ConfigError(f"promote needs TASK@vN, not {a.policy}")
-    root = _policy_root(a)
-    assert root is not None
-    runtime_store = Policies(root)
-    record_path = runtime_store.dir(ref.task) / f"v{ref.version}.evaluation.json"
-    evaluated = record_path.exists()
-    if not evaluated and a.root is not None and a.project is not None:
-        raise ConfigError("--project does not apply to an unevaluated policy selected by --root; remove --project")
-    spec = runtime_store.read(ref.task, version=ref.version)
-    runtime = DecisionPolicy(spec, client=_policy_client(a))
-    previous = runtime_store.channels(ref.task).get(a.channel)
-    assessment: str | None = None
-    check_record: dict[str, Any] | None = None
-    if evaluated:
-        from .eval.adopt import validate_evidence
-        from .eval.policy import Store
-        from .eval.task import load
-        from .client.identity import execution_digest
-
-        task = load(project(a), ref.task)
-        evaluated_store = Store(runtime_store.root)
-        record = evaluated_store.read(ref.task, version=ref.version)
-        validate_evidence(task, record)
-        expected = execution_digest(runtime.model_spec, spec.digest)
-        if record.evidence.execution_digest != expected:
-            raise ConfigError("the supplied model connections differ from the evaluated execution conditions")
-        evaluated_store.set_channel(ref.task, ref.version, a.channel, a.force)
-        assessment = record.evidence.test
-        if previous is not None and previous != ref.version:
-            from .eval.check import checks
-
-            prior_check = checks.last(task.where.reports_dir, ref.task, checks.pair(previous, ref.version))
-            if prior_check is not None:
-                check_record = prior_check.model_dump(mode="json")
-    else:
-        runtime_store.set_channel(ref.task, ref.version, a.channel)
-    result = {"status": "promoted", "policy": spec.ref, "channel": a.channel,
-              "previous_version": previous, "evaluated": evaluated, "test_verdict": assessment,
-              "check": check_record, "force": a.force}
-    if a.json:
-        print(json.dumps(result))
-    else:
-        print(f"{a.channel} -> {spec.ref}; " + (f"evaluated; held-out test: {assessment or 'none'}" if evaluated else "not evaluated"))
-        if check_record:
-            print(f"previous check: {check_record['verdict']} on {check_record['n']} cases, {check_record['at']}")
-    return 0
+    print(wrote)
+    if check_it:
+        print(check_it)
+    return 1 if held else 0
 
 
 def check(a: argparse.Namespace) -> int:
@@ -905,7 +859,7 @@ def check(a: argparse.Namespace) -> int:
 
 
 def optimize(a: argparse.Namespace) -> int:
-    """Optimize current's question, and adopt it as next only when it is better on the test share (needs s1flow[optimize]).
+    """Optimize current's question, and adopt it as current only when it is better on the test share (needs s1flow[optimize]).
     Exit 0 either way: finding no better version is a result, not a failed gate."""
     from .eval import optimize as optimizing
     from .eval.check import comment
@@ -1020,19 +974,13 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("task")
     p.add_argument("candidate", help="the candidate, model[:version][/variant] as `s1flow report` names it")
     p.add_argument("--reason", required=True, help="why this one (kept in the policy)")
-    p.add_argument("--json", action="store_true")
-
-    p = _command(sub, "promote", promote, context=("project", "connections"))
-    p.add_argument("policy", metavar="TASK@vN", help="the policy version to point the channel at (gh-ruff-area@v3)")
-    p.add_argument("--channel", default="current", help="the channel to move: current, next, or any name (lowercase letters, digits, -)")
-    p.add_argument("--force", action="store_true", help="explicitly override a below test verdict, never stale evidence")
-    p.add_argument("--root", type=Path, help="policy store directory")
+    p.add_argument("--force", action="store_true", help="write it even when the held-out test shows it below")
     p.add_argument("--json", action="store_true")
 
     p = _command(sub, "check", check, context=("project", "connections"))
     p.add_argument("task")
-    p.add_argument("--against", default="current", help="the version to compare with: a channel or vN")
-    p.add_argument("--candidate", help="a channel, vN, or `draft` (the task's current question); default: the edited question, else the next channel")
+    p.add_argument("--against", default="current", help="the version to compare with: vN (on a pull request, the base branch's current) or current")
+    p.add_argument("--candidate", help="current, vN, or `draft` (the task's current question); default: current when --against names another version, else the edited question")
     p.add_argument("--sample", type=positive, help="check this many test cases only (a cheap PR check)")
     p.add_argument("--cached-only", action="store_true", help="make no calls (no keys, e.g. a PR from a fork); pending when some are needed")
     p.add_argument("--json", action="store_true")
@@ -1070,7 +1018,7 @@ def parser() -> argparse.ArgumentParser:
                  description="Call a model with the questions given here (--model), or decide with a task's policy (--policy).")
     which = d.add_argument_group("what answers")
     which.add_argument("--model", help="a name in s1flow.toml (jev, or jev:1.14 for a version)")
-    which.add_argument("--policy", metavar=POLICY, help="decide with this policy (policies/<task>/; the current channel when no @ is given)")
+    which.add_argument("--policy", metavar=POLICY, help="decide with this policy (policies/<task>/; the current version when no @ is given)")
     d.add_argument("--state", help="the state as JSON, or @file.json")
     d.add_argument("--image", action="append", metavar="PATH", help="add an image to the state (needs s1flow[images]); repeatable")
     asked = d.add_argument_group("the questions (--model)")
@@ -1088,7 +1036,7 @@ def parser() -> argparse.ArgumentParser:
         dest="action", required=True, parser_class=Parser)
     f = _command(group, "record", feedback_record, context=("project", "connections"), help="record the right answer for a case a policy decided",
                  description="Record the right answer for a case, joined to its answer by decision_id (what `s1flow feedback measure` measures from).")
-    f.add_argument("policy", metavar=POLICY, help="the policy that decided it (its id in the log, or the task: the current channel)")
+    f.add_argument("policy", metavar=POLICY, help="the policy that decided it (its id in the log, or the task: the current version)")
     f.add_argument("decision_id", help="the exact decision_id returned by decide")
     f.add_argument("label", help="the right answer: a class key, or true / false")
     f.add_argument("--log", required=True, help="the log to append to (JSONL)")
@@ -1109,17 +1057,16 @@ def parser() -> argparse.ArgumentParser:
     create.add_argument("--check", action="store_true", help="validate only; save nothing")
     create.add_argument("--json", action="store_true")
     ex = _command(group, "export", policy_export, context=("project",), help="write the policies an app uses into one file (policies.json)",
-                  description="One file with each task's policy on a channel and its digest, for an app in another repository or "
+                  description="One file with each task's current policy and its digest, for an app in another repository or "
                               "language to vendor and review in its own pull requests. policies.load(task, path=FILE) reads it.")
-    ex.add_argument("tasks", nargs="*", help="the tasks (default: every task with the channel)")
-    ex.add_argument("--channel", default="current")
+    ex.add_argument("tasks", nargs="*", help="the tasks (default: every task with a current version)")
     ex.add_argument("--out", default="policies.json")
 
     doc = _command(sub, "doctor", doctor, context=("project", "connections"), help="the keys and hosts the models need, and whether they are there",
                    description="For each model, the environment variables its provider reads (set or not; never a value) and the hosts "
                                "it calls (for a sandbox's allow-list). Exit 0 when everything needed is there, 1 otherwise, one line per problem.")
     doc.add_argument("--models", help="comma-separated names from s1flow.toml (default: its `default`)")
-    doc.add_argument("--policy", metavar=POLICY, help="the model of this policy (the current channel when no @ is given)")
+    doc.add_argument("--policy", metavar=POLICY, help="the model of this policy (the current version when no @ is given)")
     doc.add_argument("--reach", action="store_true", help="also send one plain HTTPS request per host, without a key (no model is called)")
     doc.add_argument("--json", action="store_true")
 
