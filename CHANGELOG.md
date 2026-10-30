@@ -69,7 +69,8 @@
   evaluation (`adopt --spec`) is checked like any other (it used to stop with "no evaluation record"). A
   candidate older than the version it is checked against that ran before it (`--history FILE`, default the
   task's `history.jsonl`; the Action passes the base commit's) gets the new verdict `rollback`: measured, shown,
-  exit 0. The Action fails a pull request that rewrites or removes a saved `vN.json` or `vN.evaluation.json`, and
+  exit 0. The Action fails a pull request that rewrites, renames or removes a saved `vN.json` or
+  `vN.evaluation.json` (or whose files it cannot list), and
   flags one that edits files under `tasks/<task>/` or `s1flow.toml`, which set the rules and the cases the check
   applies.
 
