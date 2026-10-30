@@ -115,10 +115,11 @@ def default_candidate(task: Task, against: Version) -> str | None:
 
 
 def was_current_before(history: list[Switch], version: int, against: int) -> bool:
-    """Whether `version` ran before the last switch to `against`: going back to it is a rollback."""
+    """Whether going from `against` to `version` is a rollback: an older version that ran before the last switch to
+    `against`. A newer one is not, though it ran: adopting again a version someone rolled back from is checked."""
     switches = [e for e in history if e.action != "refused"]
     last = max((i for i, e in enumerate(switches) if e.version == against), default=None)
-    return last is not None and any(e.version == version for e in switches[:last])
+    return version < against and last is not None and any(e.version == version for e in switches[:last])
 
 
 def check(

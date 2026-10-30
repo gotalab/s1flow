@@ -67,10 +67,11 @@
 - `check` never passes on stored evidence: it asks both versions again. A version adopted with `--force` fails as
   any version below does; the comment shows that it was forced, by whom and why. A version adopted without an
   evaluation (`adopt --spec`) is checked like any other (it used to stop with "no evaluation record"). A
-  candidate that ran before the version it is checked against (`--history FILE`, default the task's
-  `history.jsonl`; the Action passes the base commit's) gets the new verdict `rollback`: measured, shown, exit 0.
-  The comment flags a pull request that edits `task.py`, `split.json` or `s1flow.toml`, which set the rules the
-  check applies.
+  candidate older than the version it is checked against that ran before it (`--history FILE`, default the
+  task's `history.jsonl`; the Action passes the base commit's) gets the new verdict `rollback`: measured, shown,
+  exit 0. The Action fails a pull request that rewrites or removes a saved `vN.json` or `vN.evaluation.json`, and
+  flags one that edits files under `tasks/<task>/` or `s1flow.toml`, which set the rules and the cases the check
+  applies.
 
 Each removed command fails with one line naming what replaces it.
 

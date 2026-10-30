@@ -68,9 +68,18 @@ def test_the_base_commits_history_tells_a_rollback(tmp_path):
 
 
 def test_a_change_to_the_rules_is_flagged(tmp_path):
-    ran, temp = run(tmp_path, "no_difference", 0, changed="s1flow/tasks/toy/task.py\nREADME.md\ns1flow/tasks/other/task.py")
+    changed = "modified s1flow/tasks/toy/task.py\nmodified s1flow/tasks/toy/corrections.jsonl\nmodified README.md\nmodified s1flow/tasks/other/task.py"
+    ran, temp = run(tmp_path, "no_difference", 0, changed=changed)
     md = (temp / "summary").read_text()
-    assert ran.returncode == 0 and "This change edits `s1flow/tasks/toy/task.py`, which set the rules this check applies" in md
+    assert ran.returncode == 0 and "This change edits `s1flow/tasks/toy/task.py`, `s1flow/tasks/toy/corrections.jsonl`, which set the rules or the cases" in md
     assert "other" not in md and "::warning title=s1flow check::toy: this change edits" in ran.stdout
-    ran, temp = run(tmp_path / "again", "no_difference", 0, changed="README.md")
-    assert "WARNING" not in (temp / "summary").read_text()
+    ran, temp = run(tmp_path / "again", "no_difference", 0, changed="modified README.md\nadded s1flow/policies/toy/v3.json")
+    assert ran.returncode == 0 and "WARNING" not in (temp / "summary").read_text()  # adopt adds a version: nothing to flag
+
+
+def test_rewriting_a_saved_version_fails(tmp_path):
+    ran, temp = run(tmp_path, "rollback", 0, changed="modified s1flow/policies/toy/v1.json\nadded s1flow/policies/toy/v3.json")
+    assert ran.returncode == 1 and "this change rewrites `s1flow/policies/toy/v1.json`" in ran.stdout
+    assert "A saved version is never rewritten" in (temp / "summary").read_text()
+    ran, _ = run(tmp_path / "record", "pass", 0, changed="removed s1flow/policies/toy/v2.evaluation.json")
+    assert ran.returncode == 1
