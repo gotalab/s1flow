@@ -345,7 +345,7 @@ class Policies:
             channel_name(channel)
             version = self.current(task)
             if version is None:
-                raise NotFound(f'{task} has no current version; s1flow adopt picks one, s1flow policy create saves one')
+                raise NotFound(f'{task} has no current version; s1flow adopt picks one, s1flow adopt --spec FILE saves one')
         if isinstance(version, bool) or version < 1:
             raise ConfigError('a policy version is a positive integer')
         spec = read_file(self._file(task, f'v{version}.json'))

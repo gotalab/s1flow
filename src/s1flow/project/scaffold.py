@@ -5,7 +5,7 @@
     .gitignore                          .cache/ and .env (answers and keys, kept out of git)
     <git root>/.github/workflows/s1flow-check.yml   check on PRs that change the project, with the Action; with --ci
 
-Nothing else: the Agent Skill comes from the plugin or `s1flow skill install` (skill.py).
+With --skill, the CLI also writes the Agent Skill (skill.py); the plugin brings it too.
 """
 
 from __future__ import annotations

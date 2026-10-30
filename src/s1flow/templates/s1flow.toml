@@ -8,8 +8,8 @@
 # OpenRouter returns what each call cost, so these models take no `price`. Measured on issue-sized states
 # (about 400-800 input tokens, October 2026): about $0.02 per 1,000 calls for each of them.
 #
-# To add a model: `s1flow guide compare`. Other APIs (TypeSafe's own, Vercel AI Gateway, OpenAI,
-# Workers AI, an LLM through LiteLLM) need their own key; `s1flow doctor` names it.
+# To add a model: the s1flow Skill's setup reference (references/setup.md). Other APIs (TypeSafe's own,
+# Vercel AI Gateway, OpenAI, Workers AI, an LLM through LiteLLM) need their own key; `s1flow doctor` names it.
 
 default = ["jev@openrouter", "decider@openrouter", "d1-ultra@openrouter"]
 

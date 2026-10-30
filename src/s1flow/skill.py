@@ -1,11 +1,8 @@
 """The Agent Skill that travels with the package (`skills/s1flow/` in the repository, `s1flow/skills/s1flow/` in the wheel),
 and writing it where agents read it. Standard library only: it runs on the base install.
 
-    s1flow skill install                  <git root or cwd>/.agents/skills/s1flow/ and .claude/skills/s1flow/
-    s1flow skill install --dir PATH       PATH/s1flow/ (repeatable)
-    s1flow skill install --user           ~/.agents/skills/s1flow/ and ~/.claude/skills/s1flow/
-    s1flow skill path                     the package's own copy (to link to)
-    s1flow guide [topic]                  SKILL.md (its routing table), or references/<topic>.md
+    s1flow init --skill                   <git root or cwd>/.agents/skills/s1flow/ and .claude/skills/s1flow/
+    (the Claude Code plugin brings the same Skill)
 
 Each written copy holds MARKER: the s1flow version that wrote it and the hash of each file as written. A file whose
 content no longer matches its recorded hash was changed here and is kept unless `force`; so is a file the marker
@@ -54,15 +51,9 @@ def project_root(start: Path | None = None) -> Path:
     return Path.cwd().resolve()
 
 
-def targets(dirs: list[Path] | None = None, user: bool = False, root: Path | None = None) -> list[Path]:
-    """The skills directories to write into (each gets an s1flow/ folder): `dirs` as given, the user's with
-    `user`, else the project's."""
-    out = [Path(d).expanduser() for d in dirs or []]
-    if user:
-        out += [Path.home() / d for d in AGENT_DIRS]
-    if not out:
-        out = [(root or project_root()) / d for d in AGENT_DIRS]
-    return out
+def targets(root: Path | None = None) -> list[Path]:
+    """The skills directories to write into (each gets an s1flow/ folder): the project's."""
+    return [(root or project_root()) / d for d in AGENT_DIRS]
 
 
 def _hash(data: bytes) -> str:
@@ -174,21 +165,6 @@ def stale(root: Path | None = None) -> list[str]:
             continue
         was, now = str(m.get("s1flow_version", "?")), version()
         if _policy(was) < _policy(now):
-            out.append(f"{_show(copy)} is from s1flow {was}, this is {now}: s1flow skill install updates it")
+            out.append(f"{_show(copy)} is from s1flow {was}, this is {now}: s1flow init --skill --force updates it")
     return out
 
-
-def topics() -> list[str]:
-    return sorted(p.stem for p in (source() / "references").glob("*.md"))
-
-
-def guide(topic: str | None = None) -> str:
-    """SKILL.md without its frontmatter (the routing table), or one reference."""
-    src = source()
-    if topic is None:
-        text = (src / "SKILL.md").read_text()
-        return re.sub(r"\A---\n.*?\n---\n+", "", text, flags=re.S)
-    name = topic.removesuffix(".md")
-    if name not in topics():
-        raise ConfigError(f"no guide on {topic!r}; the topics: {', '.join(topics())}")
-    return (src / "references" / f"{name}.md").read_text()
