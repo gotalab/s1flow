@@ -337,5 +337,7 @@ def load(project: Project, task_id: str) -> Task:
             art = Optimized.read(f.read_text())
         except ValidationError as e:
             raise ConfigError(f"{f}: {invalid(e)}") from None
+        except (OSError, UnicodeDecodeError) as e:
+            raise ConfigError(f"{f}: cannot read it ({e})") from None
         task.add_optimized(art)
     return task
