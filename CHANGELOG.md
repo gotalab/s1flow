@@ -56,8 +56,7 @@
   `evaluated-policy-2.json` is now `evaluated-policy-3.json`). `selection.recommended` is gone: s1flow records who
   picked and why, not what it would have picked. `evidence.test_uses` is gone: it counted only the uses on the machine
   that ran, and CI lost them. `selection.forced` is new: `true` when `adopt --force` wrote a version below on the
-  held-out test, and `reason` says why. `@2` records still read, as `@3`, never forced: 0.1.0a1 stored a
-  version below on the held-out test without `--force`, so a `@2` record cannot say. `forced` is refused on a record
+  held-out test, and `reason` says why. `@2` records no longer read. `forced` is refused on a record
   whose held-out test is not below. `adopt --json` prints the new shape.
 - `s1flow report` with no task shows each task's current policy; its `--json` has `current` (a version) in place
   of `channels`, and each policy `current: true|false` in place of `channels: [...]`.
@@ -68,7 +67,7 @@
   never rewritten. A run with too few labelled cases to hold out a test share asks the models and writes no
   file yet; a later run does. The file is now
   `s1flow/split@2` (`schema/split-2.json`) without `uses`: it counted only the uses on the machine that ran. `@1`
-  files still read. `check --json` no longer has `test_uses`.
+  files no longer read. `check --json` no longer has `test_uses`.
 - The `s1flow check` Action fails a pending check (`on-pending: fail`, the new input's default; `warn` restores
   the warning). `s1flow init --ci` writes `on-pending: fail` into the workflow. A check that cannot measure (a
   pull request from a fork gets no keys, and some answers are not cached) no longer lets the change merge.
@@ -99,8 +98,10 @@
   `--patience` and `--max-cost` it changes GEPA's settings for one run, and is refused for another optimizer.
   `tasks/<task>/optimized/*.json` is now `s1flow/optimized@2`, one record for every optimizer: `optimizer`,
   `settings`, `model_calls`, `cost_usd` (what it spent beside the model's calls), and what only it records in
-  `detail` (GEPA's reflection LM, candidates and val scores). `@1` records still read. `optimize --json`'s
+  `detail` (GEPA's reflection LM, candidates and val scores). `@1` records no longer read. `optimize --json`'s
   `optimization` has the new shape.
+- `runs/` lines written before `s1flow/run@2` (with no `request_digest`) no longer read: `report` already ignored
+  them, and `run` again asks for what they held.
 
 ### Added
 

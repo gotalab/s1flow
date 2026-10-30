@@ -1,7 +1,6 @@
 """Evaluation records compose with, and reference, separately stored runtime specs."""
 from __future__ import annotations
 
-import json
 from pathlib import Path
 from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
@@ -12,7 +11,6 @@ from ..policies.file import CURRENT, Policies, PolicySpec, Ref, atomic_write
 from ..policies.history import Switch
 from .candidate import Candidate
 from .evaluation import Evaluation
-from . import policy_v2 as v2
 
 Pin = Literal['yes', 'no', 'alias']
 TestVerdict = Literal['kept', 'below', 'inconclusive']
@@ -99,22 +97,6 @@ class EvaluationRecord(BaseModel):
         return self.model_dump_json(by_alias=True, indent=1) + '\n'
 
 
-def read_record(text: str) -> EvaluationRecord:
-    """A stored evaluation record of either schema, as @3."""
-    data = json.loads(text)
-    if isinstance(data, dict) and data.get('schema') == 's1flow/policy-evaluation@2':
-        return upgrade(v2.EvaluationRecord.model_validate_json(text))
-    return EvaluationRecord.model_validate_json(text)
-
-
-def upgrade(old: v2.EvaluationRecord) -> EvaluationRecord:
-    # Not forced: 0.1.0a1 stored a version below on the held-out test without --force, so @2 cannot say.
-    selection = Selection(by=old.selection.by, reason=old.selection.reason, tied=old.selection.tied)
-    evidence = Evidence.model_validate(old.evidence.model_dump(exclude={'test_uses'}))
-    return EvaluationRecord(policy_digest=old.policy_digest, candidate=old.candidate, selection=selection,
-                            evidence=evidence, answered_by=old.answered_by)
-
-
 class Store:
     """Evaluated policy store. Runtime storage owns locks, publication and the current version."""
 
@@ -155,7 +137,7 @@ class Store:
         if not path.is_file():
             raise NotFound(f'{spec.ref} has no evaluation record; the runtime specification is usable explicitly')
         try:
-            return read_record(path.read_text()).attach(spec)
+            return EvaluationRecord.model_validate_json(path.read_text()).attach(spec)
         except (ValidationError, OSError, ValueError) as e:
             raise ConfigError(f'{path}: invalid evaluation record: {e}') from None
 

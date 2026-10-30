@@ -284,11 +284,8 @@
  "additionalProperties": false,
  "properties": {
   "schema": {
+   "const": "s1flow/run@2",
    "default": "s1flow/run@2",
-   "enum": [
-    "s1flow/run@1",
-    "s1flow/run@2"
-   ],
    "title": "Schema",
    "type": "string"
   },

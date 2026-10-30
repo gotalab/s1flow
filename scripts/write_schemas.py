@@ -19,10 +19,9 @@ from pydantic import BaseModel, TypeAdapter
 
 from s1flow.client.answers import Response
 from s1flow.eval.cases import Correction, FeedbackCase
-from s1flow.eval.evalset import SplitFile, SplitFileV1
+from s1flow.eval.evalset import SplitFile
 from s1flow.eval.comparison import Comparison
 from s1flow.eval.policy import EvaluatedPolicy, EvaluationRecord
-from s1flow.eval import policy_v2
 from s1flow.eval.records import PredictionRecord
 from s1flow.policies.policy_set import PolicySet
 from s1flow.policies.log import Decision, Log
@@ -66,14 +65,12 @@ def lifted(types: dict[str, type[BaseModel]]) -> dict[str, Any]:
 
 SCHEMAS: dict[str, Callable[[], dict[str, Any]]] = {
     "case-1": case,
-    "split-1": lambda: of(SplitFileV1),  # still read (as @2), no longer written
     "split-2": lambda: of(SplitFile),
     "comparison-2": lambda: of(Comparison),
     "policy-2": lambda: of(PolicySpec) | {"title": "Policy"},  # what a policy file holds
     "evaluated-policy-3": lambda: of(EvaluatedPolicy),
     "log-2": lambda: {"title": "Log", **TypeAdapter(Log).json_schema(by_alias=True)},
     "policy-evaluation-3": lambda: of(EvaluationRecord),
-    "policy-evaluation-2": lambda: of(policy_v2.EvaluationRecord),  # still read (upgraded to @3), no longer written
     "history-1": lambda: of(Switch) | {"title": "History", "description": "One line of policies/<task>/history.jsonl: " + (Switch.__doc__ or "")},
     "run-2": lambda: of(PredictionRecord),
     "response-1": lambda: of(Response),
