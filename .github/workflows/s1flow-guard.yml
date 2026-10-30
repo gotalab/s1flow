@@ -20,4 +20,5 @@ jobs:
           tasks: gh-ruff-area
           sample: "40"
           cached-only: "true"
+          on-pending: warn  # a guard of the code: answers main has not cached yet are a warning, not a failure
           comment: "false"  # the comment is the showcase's; this result is in the job summary
