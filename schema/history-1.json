@@ -1,0 +1,98 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "https://github.com/gotalab/s1flow/blob/main/schema/history-1.json",
+ "additionalProperties": false,
+ "description": "One line of policies/<task>/history.jsonl: One line of history.jsonl.",
+ "properties": {
+  "schema": {
+   "const": "s1flow/history@1",
+   "default": "s1flow/history@1",
+   "title": "Schema",
+   "type": "string"
+  },
+  "at": {
+   "title": "At",
+   "type": "string"
+  },
+  "action": {
+   "enum": [
+    "adopt",
+    "spec",
+    "rollback",
+    "refused"
+   ],
+   "title": "Action",
+   "type": "string"
+  },
+  "version": {
+   "minimum": 1,
+   "title": "Version",
+   "type": "integer"
+  },
+  "previous": {
+   "anyOf": [
+    {
+     "minimum": 1,
+     "type": "integer"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "title": "Previous"
+  },
+  "by": {
+   "minLength": 1,
+   "title": "By",
+   "type": "string"
+  },
+  "reason": {
+   "minLength": 1,
+   "title": "Reason",
+   "type": "string"
+  },
+  "candidate": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Candidate"
+  },
+  "test": {
+   "anyOf": [
+    {
+     "enum": [
+      "kept",
+      "below",
+      "inconclusive"
+     ],
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Test"
+  },
+  "forced": {
+   "default": false,
+   "title": "Forced",
+   "type": "boolean"
+  }
+ },
+ "required": [
+  "action",
+  "version",
+  "previous",
+  "by",
+  "reason"
+ ],
+ "title": "History",
+ "type": "object"
+}

@@ -279,3 +279,36 @@ def test_preloaded_lineup_is_data_and_client_alone_selects_cache(tmp_path, monke
     assert seen == [None, b / "override-cache"]
     assert supplied.models["toy"].id == "one"
 
+
+
+def test_an_app_without_a_project_adopts_and_rolls_back_with_root(tmp_path):
+    from test_runtime import policy as specification
+
+    app = tmp_path / "app"
+    config = app / "connections.toml"
+    config.parent.mkdir()
+    config.write_text('default = []\n[models.trusted]\nprovider = "toy_provider:build"\nid = "fixed-v1"\n')
+    git = {"GIT_CONFIG_COUNT": "1", "GIT_CONFIG_KEY_0": "user.name", "GIT_CONFIG_VALUE_0": "App owner"}
+    for v in (1, 2):
+        (app / f"v{v}.json").write_text(specification(version=v).dump())
+        done = cli("adopt", "--spec", f"v{v}.json", "--root", "policies", "--connections", "connections.toml", "--reason", f"rule {v}", cwd=app, env=git)
+        assert done.returncode == 0, done.stderr
+    done = cli("adopt", "ticket@v1", "--root", "policies", "--reason", "back", cwd=app, env=git)
+    assert done.returncode == 0, done.stderr
+    store = policies.Policies(app / "policies")
+    assert store.current("ticket") == 1 and [(h.action, h.version, h.by) for h in store.history("ticket")] == [
+        ("spec", 1, "App owner"), ("spec", 2, "App owner"), ("rollback", 1, "App owner")]
+    for reason in ("", "  "):
+        done = cli("adopt", "ticket@v2", "--root", "policies", "--reason", reason, cwd=app, env=git)
+        assert done.returncode == 2 and "give --reason a sentence" in done.stderr and "Traceback" not in done.stderr
+
+
+def test_a_switch_refused_for_a_stale_current_writes_nothing(tmp_path):
+    from test_runtime import policy as specification
+    from s1flow.policies.history import Switch
+
+    store = policies.Policies(tmp_path)
+    store.write_new(specification(), adopted=Switch(action="spec", version=1, previous=None, by="t", reason="t"))
+    with pytest.raises(ConfigError, match="current changed while adopting"):
+        store.write_new(specification(version=2), adopted=Switch(action="spec", version=2, previous=None, by="t", reason="t"))
+    assert store.versions("ticket") == [1] and len(store.history("ticket")) == 1  # adopting again can still save v2

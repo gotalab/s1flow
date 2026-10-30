@@ -26,14 +26,20 @@ date, and writes nothing when the candidate falls short on the test set: `--forc
 evaluation record marks it `forced`, with your reason as the why, but never mismatched identities. On the pull request, the `s1flow check` Action compares the version the base branch ships
 with the one the pull request makes current, on today's test cases, and fails when it is worse.
 
-A policy that was never evaluated, written by hand and saved with only the base runtime, is current as soon as
-`policy create` saves it; s1flow reports that there is no evidence for it.
+A policy that was never evaluated, written by hand, is saved and made current by `adopt --spec FILE --reason
+"..."` with only the base runtime; s1flow reports that there is no evidence for it.
 
-To roll back, point `current` in `channels.json` at the older version in a pull request; versions are never
-rewritten, so the older one is still there.
+To roll back, `s1flow adopt TASK@vN --reason "..."` points `current` at the older version; versions are never
+rewritten, so the older one is still there. Open the pull request with that change.
+
+Only `adopt` points `current`, and each time it does, it appends why to `policies/<task>/history.jsonl` (when,
+which version, the one before, who, why, and for a measured candidate the held-out test's verdict). A candidate it
+refuses because the held-out test shows it below gets a line too, so trying candidates on the test share until
+one passes leaves a trace.
 
 ```bash
-s1flow policy create spec.json --root policies --connections connections.toml --json
+s1flow adopt --spec spec.json --reason "hand-written first rule" --json
+s1flow adopt ticket-bug@v1 --reason "v2 misreads feature requests"
 s1flow policy export ticket-bug --out policies.json
 ```
 
@@ -47,7 +53,7 @@ remote code or install packages.
 ## Schemas
 
 The public JSON Schemas in `schema/` are generated from the types: `policy-2.json`, `policy-evaluation-3.json`,
-`policy-set-2.json`, `decision-2.json`, `log-2.json` and `run-2.json`. JSON Schema only checks structure. Use
+`policy-set-2.json`, `decision-2.json`, `log-2.json`, `history-1.json` and `run-2.json`. JSON Schema only checks structure. Use
 `s1flow policy create --check` for checks across fields, such as whether the positive option you set on a choice
 question works with a threshold, and to check the policy against a connection file. `policy-evaluation-2.json`
 stays for records earlier versions wrote: s1flow still reads them, as `@3` records.

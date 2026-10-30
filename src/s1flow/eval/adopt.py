@@ -32,6 +32,7 @@ from ..core.errors import ConfigError, NotFound, S1flowError
 from ..policies import DecisionPolicy
 from ..policies.rule import DecisionRule
 from ..policies.file import PolicySpec, asked as one_question, policy_id
+from ..policies.history import Switch
 from .candidate import Candidate
 from ..policies.state_shape import schema_of
 from . import evalset, metrics, weights
@@ -215,12 +216,12 @@ def shortlist(task: Task, only: list[str] | None = None, variants: list[str] | N
 
 def adopt(
     task: Task, pick: str, by: str, reason: str, *, only: list[str] | None = None, force: bool = False,
-    variants: list[str] | None = None, write: bool = True, listed: Shortlist | None = None, git_sha: str | None = None,
+    variants: list[str] | None = None, listed: Shortlist | None = None, git_sha: str | None = None,
 ) -> EvaluatedPolicy:
     """The policy of the picked candidate (a name from the shortlist), stored as the task's current version: the
     pull request that carries it ships it when it merges. One below on the held-out test is not stored unless
-    `force`. `write` False returns the next version without storing it (optimize stores it only when check finds
-    it better). `git_sha`: the commit it was made at (the CLI asks git, integrations/git.py)."""
+    `force`; history.jsonl records it either way (policies/history.py). `git_sha`: the commit it was made at (the
+    CLI asks git, integrations/git.py)."""
     before_data = task.data_digest
     s = listed or shortlist(task, only, variants)
     if (s.data_digest != before_data or s.input_adapter_digest != task.input_adapter_digest or
@@ -269,6 +270,10 @@ def adopt(
     )
     evalset.record_use(task, "adopt", f"{policy_id(task.id, version)}: {name}")
     validate_evidence(task, r)
-    if write and (r.evidence.test != "below" or force):
-        policies.write_new(r, current=True)
+    entry = Switch(action="adopt", version=version, previous=policies.current(task.id), by=r.selection.by, reason=r.selection.reason,
+                   candidate=name, test=r.evidence.test, forced=r.selection.forced)
+    if r.evidence.test != "below" or force:
+        policies.write_new(r, adopted=entry)
+    else:
+        policies.log(task.id, entry.model_copy(update={"action": "refused"}))
     return r

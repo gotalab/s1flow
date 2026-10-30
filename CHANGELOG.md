@@ -21,10 +21,18 @@
 - `report` no longer writes `reports/<task>/<variant>/latest.md` and `latest.json`. `--out DIR` takes a directory
   (`compare --out` took a file) and writes `DIR/comparison.json` (what `compare --out` wrote) and `DIR/questions/<variant>.md` / `.json` (what `latest.*` held) for each
   question with runs. Its `--variant` option is gone: every question variant is in one report.
-- Merging the pull request is the release. `s1flow promote` and the `next` channel are gone: `adopt` (and
-  `optimize`, when it finds a better question) saves the new version and makes it current in `channels.json`, so the
-  pull request shows the switch and its merge ships it. `policy create` makes the version it saves current too. A
-  rollback is a pull request that points `current` at an older version.
+- Merging the pull request is the release. `s1flow promote` and the `next` channel are gone: `adopt` saves the new
+  version and makes it current in `channels.json`, so the pull request shows the switch and its merge ships it.
+- Only `adopt` points `current`. `adopt TASK@vN --reason` is the rollback, and `adopt --spec FILE --reason` saves an
+  unevaluated runtime spec as the next version and makes it current; both run on the base install, and outside an
+  s1flow project with `--root` (and `--connections` for `--spec`). `policy create`
+  is `adopt --spec` with `--root`, and now needs `--reason` (`--check` does not).
+- Each switch appends a line to `policies/<task>/history.jsonl` (`schema/history-1.json`): when, the version, the one
+  before, who, why, and for a measured candidate the held-out test's verdict and whether `--force` wrote it. A
+  candidate `adopt` refuses as below on the held-out test gets a `refused` line too.
+- `optimize` no longer makes anything current, and no longer compares on the held-out test: it writes the new
+  question and runs it on every case as a candidate, `<model>/<variant>`. `report` lists it and `adopt` ships it.
+  Its `--json` has `candidate` in place of `verdict`, `reason`, `check` and `policy`.
 - `adopt` writes nothing when the held-out test shows the candidate below (exit 1); `--force`, which was on
   `promote`, now writes it anyway. `promotion-overrides.jsonl` is no longer written.
 - Named channels (`TASK@staging`) are gone: a policy is `TASK`, `TASK@current` or `TASK@vN`. A `channels.json`

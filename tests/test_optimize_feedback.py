@@ -4,7 +4,7 @@ import asyncio
 import json
 
 import pytest
-from conftest import attach, make_project
+from conftest import attach, make_project, ship
 
 from s1flow.eval.candidate import Candidate
 from s1flow.objectives import Coverage, Recall
@@ -67,7 +67,7 @@ def current(task: Task) -> EvaluatedPolicy:
         evidence=Evidence(data_sha256=task.data_digest, execution_digest=runtime.execution_digest,
                           input_adapter_digest=task.input_adapter_digest, evaluation_contract_digest=task.evaluation_contract_digest, evaluation=e, test=None, compared=["m"]),
     )
-    task.policies.write_new(r, current=True)
+    ship(task.policies, r)
     return r
 
 
@@ -90,16 +90,20 @@ def test_a_better_question_becomes_the_candidate(task, monkeypatch):
     current(task)
     stub_optimize(monkeypatch, task, "Better?")
     r = optimizing.optimize(task, 50)
-    assert r.verdict == "adopted" and r.policy == "toy@v2" and r.check and r.check.verdict == "better"
     store = task.policies
-    assert store.current("toy") == 2 and store.read("toy", version=2).candidate.variant == r.variant  # the pull request ships it
+    assert r.candidate == f"m/{r.variant}" and store.versions("toy") == [1] and store.current("toy") == 1  # it ships nothing
+    listed = adopting.shortlist(task)
+    assert r.candidate in [c[0] for c in listed.cands]  # report lists it beside the others
+    adopted = adopting.adopt(task, r.candidate, "you", "the optimized question", listed=listed)
+    assert store.current("toy") == 2 and adopted.candidate.variant == r.variant  # adopt, as for any candidate
+    assert [(h.action, h.version, h.previous) for h in store.history("toy")][-1] == ("adopt", 2, 1)
 
 
-def test_a_question_that_does_not_win_writes_nothing(task, monkeypatch):
+def test_a_question_that_does_not_win_is_still_only_a_candidate(task, monkeypatch):
     current(task)
     stub_optimize(monkeypatch, task, "Worse?")
     r = optimizing.optimize(task, 50)
-    assert r.verdict == "no_gain" and task.policies.versions("toy") == [1]
+    assert r.candidate.endswith(r.variant) and task.policies.versions("toy") == [1] and task.policies.current("toy") == 1
 
 
 def test_rank_leaves_out_a_candidate_that_skipped_cases(task):

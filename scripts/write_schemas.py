@@ -27,6 +27,7 @@ from s1flow.eval.records import PredictionRecord
 from s1flow.policies.policy_set import PolicySet
 from s1flow.policies.log import Decision, Log
 from s1flow.policies.file import PolicySpec
+from s1flow.policies.history import Switch
 
 OUT = Path(__file__).resolve().parents[1] / "schema"
 BASE = "https://github.com/gotalab/s1flow/blob/main/schema/"
@@ -72,6 +73,7 @@ SCHEMAS: dict[str, Callable[[], dict[str, Any]]] = {
     "log-2": lambda: {"title": "Log", **TypeAdapter(Log).json_schema(by_alias=True)},
     "policy-evaluation-3": lambda: of(EvaluationRecord),
     "policy-evaluation-2": lambda: of(policy_v2.EvaluationRecord),  # still read (upgraded to @3), no longer written
+    "history-1": lambda: of(Switch) | {"title": "History", "description": "One line of policies/<task>/history.jsonl: " + (Switch.__doc__ or "")},
     "run-2": lambda: of(PredictionRecord),
     "response-1": lambda: of(Response),
     "decision-2": lambda: of(Decision),
