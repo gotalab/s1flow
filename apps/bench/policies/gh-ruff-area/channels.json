@@ -1,7 +1,6 @@
 {
  "schema": "s1flow/channels@1",
  "channels": {
-  "current": 1,
-  "next": 3
+  "current": 1
  }
 }

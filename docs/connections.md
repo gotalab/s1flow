@@ -45,7 +45,7 @@ nearest Git root. Outside a Git repository, it only checks the current directory
 `--project` when you run it from deeper inside.
 
 Evaluation commands pick a connection file in this order: `--connections`, then `S1FLOW_CONNECTIONS`, then the
-selected project's `s1flow.toml`. Running a policy, `promote` and `feedback record` all require an explicit
+selected project's `s1flow.toml`. Running a policy and `feedback record` both require an explicit
 `--connections`. `S1FLOW_CONNECTIONS` is read only by the CLI, and on its own it never allows a policy to run.
 
 The CLI only loads `.env` files from the selected project or root and the directories above it, up to the

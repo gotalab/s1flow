@@ -1,12 +1,12 @@
-"""`s1flow optimize`: optimize the shipped question, and adopt the result as next only when it is better on
-the test share.
+"""`s1flow optimize`: optimize the shipped question, and adopt the result as current only when it is better on
+the test share (the pull request that carries it ships it when it merges).
 
     1. GEPA rewrites current's question for current's model, on train / val (gepa.py)
     2. the new question answers every case (train / val are cached from GEPA; test is new)
     3. adopt builds the next version from that model's runs on current's question and the new one
        (chosen and thresholded on train / val), without storing it
     4. check compares it with current on the test share; only `better` (the interval of the
-       difference above 0, or the target met where current misses it) is stored, on the `next` channel
+       difference above 0, or the target met where current misses it) is stored, as current
 
 The optimization artifact is kept either way: what was tried, and what it cost.
 """
@@ -19,7 +19,6 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-from ..policies.file import NEXT
 from . import adopt, check, gepa
 from .check import CheckResult
 from .run import run_model
@@ -36,7 +35,7 @@ class OptimizeResult(BaseModel):
     verdict: Literal["adopted", "no_gain"]
     reason: str = ""
     check: CheckResult | None = None
-    policy: str | None = None  # its id, `<task>@vN`, stored on the next channel
+    policy: str | None = None  # its id, `<task>@vN`, stored as current
 
 
 def optimize(
@@ -65,7 +64,6 @@ def optimize(
     if r.verdict != "better":
         out.reason = "not shown better than current on the test share (" + ("; ".join(r.reasons) or "the difference's interval spans 0") + ")"
         return out
-    task.policies.write_new(d)
-    task.policies.set_channel(task.id, d.spec.version, NEXT)
+    task.policies.write_new(d, current=True)
     out.verdict, out.policy = "adopted", d.spec.ref
     return out

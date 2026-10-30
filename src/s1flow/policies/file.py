@@ -29,11 +29,9 @@ from .rule import DecisionRule
 from .state_shape import JSONSchema, validate_schema
 
 SCHEMA: Literal['s1flow/policy@2'] = 's1flow/policy@2'
-CURRENT, NEXT = 'current', 'next'
+CURRENT = 'current'  # the one channel: the version that runs. Merging the change that points it is the release
 IDENTIFIER = re.compile(r'[A-Za-z0-9][A-Za-z0-9_.-]*')
-CHANNEL = re.compile(r'[a-z0-9][a-z0-9-]*')
 VERSION = re.compile(r'v([1-9]\d*)')
-RESERVED = re.compile(r'v?\d+|draft')
 
 
 def identifier(name: str, what: str = 'task') -> str:
@@ -52,8 +50,9 @@ def policy_id(task: str, version: int) -> str:
 
 
 def channel_name(name: str) -> str:
-    if not CHANNEL.fullmatch(name) or RESERVED.fullmatch(name):
-        raise ConfigError(f'channel {name!r}: lowercase letters, digits and -, and not a version (v3) or `draft`')
+    if name != CURRENT:
+        raise ConfigError(f'channel {name!r}: the one channel is `current`; name a version (TASK@v3) for another '
+                          '(`next` and named channels were removed after 0.1.0a1)')
     return name
 
 
@@ -76,7 +75,7 @@ class Ref:
     def parse(cls, text: str) -> Ref:
         task, at, which = text.partition('@')
         if (at and not which) or '@' in which:
-            raise ConfigError(f'policy {text!r}: TASK, TASK@channel or TASK@vN')
+            raise ConfigError(f'policy {text!r}: TASK, TASK@current or TASK@vN')
         identifier(task)
         if (n := version_number(which)) is not None:
             return cls(task, version=n)
@@ -204,8 +203,7 @@ class ChannelsFile(BaseModel):
 
     @model_validator(mode='after')
     def _valid(self) -> ChannelsFile:
-        for name, version in self.channels.items():
-            channel_name(name)
+        for version in self.channels.values():  # a file from 0.1.0a1 may still name `next` or others: read, never used
             if isinstance(version, bool) or version < 1:
                 raise ValueError('channel versions are positive integers')
         return self
@@ -319,13 +317,14 @@ class Policies:
     def next_version(self, task: str) -> int:
         return max(self.versions(task), default=0) + 1
 
-    def channels(self, task: str) -> dict[str, int]:
+    def current(self, task: str) -> int | None:
+        """The version that runs (channels.json's `current`), None before one is chosen."""
         path = self._file(task, 'channels.json')
         if not path.exists():
-            return {}
+            return None
         try:
-            return ChannelsFile.model_validate_json(path.read_text()).channels
-        except (ValidationError, ConfigError, OSError) as e:
+            return ChannelsFile.model_validate_json(path.read_text()).channels.get(CURRENT)
+        except (ValidationError, OSError) as e:
             raise ConfigError(f'{path}: {e}') from None
 
     def tasks(self) -> list[str]:
@@ -342,10 +341,9 @@ class Policies:
         self.known(task)
         if version is None:
             channel_name(channel)
-            channels = self.channels(task)
-            if channel not in channels:
-                raise NotFound(f'{task} has no {channel!r} channel')
-            version = channels[channel]
+            version = self.current(task)
+            if version is None:
+                raise NotFound(f'{task} has no current version; s1flow adopt picks one, s1flow policy create saves one')
         if isinstance(version, bool) or version < 1:
             raise ConfigError('a policy version is a positive integer')
         spec = read_file(self._file(task, f'v{version}.json'))
@@ -360,17 +358,18 @@ class Policies:
             raise ConfigError(f'{spec.task} already has v{latest}; a new policy is v{latest + 1}')
         atomic_write(self._file(spec.task, f'v{spec.version}.json'), spec.dump(), immutable=True)
 
-    def write_new(self, spec: PolicySpec) -> None:
+    def write_new(self, spec: PolicySpec, *, current: bool = False) -> None:
+        """Save a new version; `current` also makes it the version that runs (merging that change ships it)."""
         with self.locked(spec.task):
             self._write_new(spec)
+            if current:
+                self._set_current(spec.task, spec.version)
 
-    def _set_channel(self, task: str, version: int, channel: str = CURRENT) -> dict[str, int]:
-        channel_name(channel)
+    def _set_current(self, task: str, version: int) -> None:
         self.read(task, version=version)
-        found = dict(sorted((self.channels(task) | {channel: version}).items()))
-        atomic_write(self._file(task, 'channels.json'), ChannelsFile(channels=found).dump())
-        return found
+        atomic_write(self._file(task, 'channels.json'), ChannelsFile(channels={CURRENT: version}).dump())
 
-    def set_channel(self, task: str, version: int, channel: str = CURRENT) -> dict[str, int]:
+    def set_current(self, task: str, version: int) -> None:
+        """Point current at a saved version (a rollback is this, in a pull request)."""
         with self.locked(task):
-            return self._set_channel(task, version, channel)
+            self._set_current(task, version)

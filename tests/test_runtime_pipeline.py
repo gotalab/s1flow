@@ -139,10 +139,10 @@ print(json.dumps({"decision_id": decision.decision_id, "value": decision.value})
         report = json.loads(cli('report', 'ticket-bug', '--json').stdout)
         assert report['candidates'][0]['n'] == 28 and report['ranking'][0]['recommended']
         assert all('test' not in row for row in report['candidates'])
-        cli('adopt', 'ticket-bug', 'local', '--reason', 'local HTTP integration proof', '--json')
-        promoted = json.loads(cli('promote', 'ticket-bug@v2', '--connections', models, '--json').stdout)
-        assert promoted['evaluated'] and promoted['policy'] == 'ticket-bug@v2'
-        checked = json.loads(cli('check', 'ticket-bug', '--json').stdout)
+        adopted = cli('adopt', 'ticket-bug', 'local', '--reason', 'local HTTP integration proof', '--json')
+        assert json.loads(adopted.stdout)['spec']['version'] == 2 and 'current' in adopted.stderr
+        assert json.loads((root / 'policies/ticket-bug/channels.json').read_text())['channels'] == {'current': 2}  # merging ships it
+        checked = json.loads(cli('check', 'ticket-bug', '--json').stdout)  # v1 is unevaluated: current alone
         assert checked['n'] == 12 and checked['verdict'] in ('pass', 'no_difference')
         deployed = json.loads(cli('decide', '--policy', 'ticket-bug@v2', '--path', root / 'policies/ticket-bug/v2.json',
                                   '--connections', models, '--state', '{"text":"bug again"}', '--case-id', 'same-ticket',

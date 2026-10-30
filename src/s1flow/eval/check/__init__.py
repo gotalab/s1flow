@@ -1,9 +1,10 @@
 """`s1flow check`: before a change ships, ask both versions about the same test cases of today's data
 and compare them case by case.
 
-    candidate   the `next` channel, a version, or `draft` (current's model and rule with the
-                task's current question, for a PR that edits the question before adopting it)
-    against     the `current` channel (or a version)
+    candidate   `current`, a version, or `draft` (current's model and rule with the task's current
+                question, for a PR that edits the question before adopting it)
+    against     the version to compare with: on a pull request, the one current names on its base branch
+                (the Action reads it there and passes `--against vN`); `current` by default
 
 The two are not compared through the numbers stored in their evidence: the data grows, and the
 stored numbers were measured on other cases. Each is asked again (cached answers cost nothing,
@@ -22,22 +23,22 @@ intervals of the difference on the task's primary objective:
 
 With only one version (no candidate), current alone is checked against the target.
 
-Each verdict on stored versions is kept in reports/<task>/checks.json by pair (`v1->v2`), so `promote` can say
-whether check has run for the versions it moves between (checks.py). Here the versions are chosen and the verdict
-given; calls.py asks them, paired.py measures them, comment.py writes the PR comment.
+Here the versions are chosen and the verdict given; calls.py asks them, paired.py measures them, comment.py
+writes the PR comment. Nothing is written but the answer cache and the test share's use count.
 """
 
 from __future__ import annotations
 
 import asyncio
 import random
+from typing import Literal
 
 from pydantic import BaseModel
 
 from ...client.questions import Question
 from ...policies import DecisionPolicy
 from ...core.errors import ConfigError, DataError, S1flowError
-from ...policies.file import CURRENT, NEXT, version_number
+from ...policies.file import CURRENT, version_number
 from .. import evalset
 from ..objectives import measure
 from ..objectives.measure import bound
@@ -45,8 +46,10 @@ from ..policy import EvaluatedPolicy
 from ..shown import usd
 from ..task import Task
 from .calls import Side, ask, missing
-from .checks import Verdict, pair, record
 from .paired import Diffs, SideSummary, keeps, paired, resamples, shown, summary
+
+
+Verdict = Literal["fail", "better", "no_difference", "pass", "pending"]
 
 
 class CheckResult(BaseModel):
@@ -78,7 +81,7 @@ def _current(task: Task, r: EvaluatedPolicy) -> Question | None:
 
 
 def pick(task: Task, spec: str) -> tuple[str, EvaluatedPolicy]:
-    """`current`, `next` (any channel), `v3`, or `draft` (current with the task's current question); named as asked for."""
+    """`current`, `v3`, or `draft` (current with the task's current question); named as asked for."""
     store = task.policies
     if spec == "draft":
         base = store.read(task.id)
@@ -92,13 +95,14 @@ def pick(task: Task, spec: str) -> tuple[str, EvaluatedPolicy]:
 
 
 def default_candidate(task: Task, against: EvaluatedPolicy) -> str | None:
-    """An edit to the shipped question first (that is what a PR changes), else the next channel."""
+    """Current when against is another version (a pull request that adopted one), else an edit to the shipped
+    question (a pull request that changes it before adopting it), else none."""
+    current = task.policies.current(task.id)
+    if current is not None and current != against.spec.version:
+        return CURRENT
     q = _current(task, against)
     if q is not None and q != against.spec.question:
         return "draft"
-    channels = task.policies.channels(task.id)
-    if NEXT in channels and channels[NEXT] != against.spec.version:
-        return NEXT
     return None
 
 
@@ -111,10 +115,7 @@ def check(task: Task, against: str = CURRENT, candidate: str | None = None, samp
     if cand and cand[1].spec.ref == base_r.spec.ref and cand[1].spec.question == base_r.spec.question:
         cand = None
         notes.append(f"{cand_spec} is the same version as {base_name}, so {base_name} alone is checked")
-    r = compare([(base_name, base_r)] + ([cand] if cand else []), task, sample, cached_only, notes)
-    if "draft" not in (base_name, cand[0] if cand else None):  # a pair of stored versions
-        record(task.where.reports_dir, task.id, pair(base_r.spec.version, cand[1].spec.version if cand else None), r.verdict, r.n, r.sample)
-    return r
+    return compare([(base_name, base_r)] + ([cand] if cand else []), task, sample, cached_only, notes)
 
 
 def custom_code(task: Task, versions: list[tuple[str, EvaluatedPolicy]]) -> list[str]:

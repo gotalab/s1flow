@@ -28,9 +28,8 @@ s1flow init --task ticket-bug   # add --ci for the pull request check
 s1flow cases check ticket-bug
 s1flow run ticket-bug
 s1flow report ticket-bug
-s1flow adopt ticket-bug MODEL --reason "why this candidate" --json
-s1flow check ticket-bug --json
-s1flow promote ticket-bug@v1 --connections connections.toml --json
+s1flow adopt ticket-bug MODEL --reason "why this candidate" --json   # the new version is current
+# open a pull request: the s1flow check Action compares it with the version main ships; merging releases it
 ```
 
 `s1flow init` creates an `s1flow/` project and nothing else. With `--ci` it also writes a pull request check to
@@ -52,8 +51,8 @@ metric of each candidate with the same candidate IDs and numbers, so a person, o
 choose based on their own criteria. (It replaces `compare` and `rank`.) The
 final test-set result comes only when you adopt a candidate or run `check`.
 
-Adopting a candidate and making it live are separate steps: `adopt --reason` records the choice, and `promote`
-switches the channel (see [Policies, evidence and promotion](policies.md)).
+`adopt --reason` records the choice and makes it current in your working tree; it goes live when the pull request
+that carries it merges (see [Policies, evidence and releases](policies.md)).
 
 `s1flow report ticket-bug --out DIR` saves `DIR/comparison.json`, a full snapshot of the development results
 including the chart data, and a Markdown report per question (`DIR/questions/base.md`); it writes nothing else unless asked.
@@ -72,8 +71,8 @@ standard library:
 python <skill>/scripts/charts.py comparison.json --out comparison.html
 ```
 
-It reads only the saved snapshot, so it doesn't import the evaluation tools, call a model, rescore, adopt or
-promote anything. The page opens with the task's objective plotted against API cost. You can switch either axis
+It reads only the saved snapshot, so it doesn't import the evaluation tools, call a model, rescore or adopt
+anything. The page opens with the task's objective plotted against API cost. You can switch either axis
 to latency or another metric, and add a second chart. The table lists every candidate in model and variant
 order, with no recommendations, eligibility filters or adopt buttons. Metric definitions, units and how each was
 measured come from the same snapshot that agents read. Target lines don't hide candidates that fall short. You

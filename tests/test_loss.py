@@ -122,11 +122,10 @@ def test_a_custom_objective_goes_through_adopt_and_check(tmp_path):
     for name in ("good", "vague"):
         asyncio.run(running.run_model(t, name, limit=None, variant="base"))
     listed = adopt.shortlist(t)
-    r = adopt.adopt(t, listed.recommended, "you", "fewest costly misses", listed=listed)
+    r = adopt.adopt(t, listed.recommended, "you", "fewest costly misses", listed=listed, force=True)
     o = r.evidence.evaluation.objective
     assert o is not None and o.objective == wake_cost(miss=3).objective and o.objective.code_sha256 == wake_cost().objective.code_sha256
     assert r.spec.rule.threshold is not None  # it set the threshold, as it declares
-    t.policies.set_channel("toy", r.spec.version, force=True)
     first = check.check(t)
     assert first.verdict in ("pass", "better", "no_difference") and not any("changed after" in n for n in first.notes)
     edited = _define("def wake_cost(label, reading, *, miss: float = 5.0) -> float:\n"  # the same objective, its code edited

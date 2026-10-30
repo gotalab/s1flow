@@ -1,7 +1,7 @@
 # A new model version
 
 A policy pins the version that answered, so a provider's new version (jev 1.15, a dated snapshot) is
-used only once it is evaluated and promoted. This is the loop for it, with the commands s1flow already
+used only once it is evaluated and adopted in a merged pull request. This is the loop for it, with the commands s1flow already
 has. Who starts it is up to the agent platform (a scheduled agent run, or the user asking); s1flow
 ships no scheduler.
 
@@ -33,11 +33,10 @@ ships no scheduler.
    its own threshold fitted on train + val; `=` means the intervals overlap. Read the objectives first,
    then the calls (latency p50 / p90 / p99, `API $/10k`), which order the tied after what `tiebreak` lists.
 6. **If it is worth it, compare with current.** Show the list. If the human or authorized agent picks it,
-   `s1flow adopt <task> <model>:<version> --reason "..."` (the next channel; never `adopt` on
-   your own, see `adopt-and-run.md`), then `s1flow check <task> --candidate next` asks it and current on today's test cases.
-   Bring the user the check's verdict and a recommendation: promote, or keep current and why.
-   `s1flow promote <task>@v<N> --connections s1flow.toml` is theirs to run or approve. The file is the
-   application's explicit allow-list for the policy's connection.
+   `s1flow adopt <task> <model>:<version> --reason "..."` (it becomes current in the working tree; never
+   `adopt` on your own, see `adopt-and-run.md`), then `s1flow check <task> --against v<N>` asks it and the version
+   it replaces on today's test cases. Bring the user the check's verdict and a recommendation: open the pull
+   request, or keep the version that runs and why. Merging that pull request is theirs to do or approve.
 
 A version that loses or ties is still worth keeping in `versions`, with a comment on how it did: the next loop then sees
 it was already evaluated.

@@ -67,8 +67,7 @@ def current(task: Task) -> EvaluatedPolicy:
         evidence=Evidence(data_sha256=task.data_digest, execution_digest=runtime.execution_digest,
                           input_adapter_digest=task.input_adapter_digest, evaluation_contract_digest=task.evaluation_contract_digest, evaluation=e, test=None, test_uses=0, compared=["m"]),
     )
-    task.policies.write_new(r)
-    task.policies.set_channel("toy", 1)
+    task.policies.write_new(r, current=True)
     return r
 
 
@@ -93,7 +92,7 @@ def test_a_better_question_becomes_the_candidate(task, monkeypatch):
     r = optimizing.optimize(task, 50)
     assert r.verdict == "adopted" and r.policy == "toy@v2" and r.check and r.check.verdict == "better"
     store = task.policies
-    assert store.channels("toy") == {"next": 2, "current": 1} and store.read("toy", version=2).candidate.variant == r.variant
+    assert store.current("toy") == 2 and store.read("toy", version=2).candidate.variant == r.variant  # the pull request ships it
 
 
 def test_a_question_that_does_not_win_writes_nothing(task, monkeypatch):

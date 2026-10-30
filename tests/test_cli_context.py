@@ -59,19 +59,3 @@ def test_group_prefix_does_not_bypass_leaf_option_scope(tmp_path):
     assert done.returncode == 2 and "--project does not apply" in done.stderr
 
 
-@pytest.mark.parametrize("include_connections, corrupt_policy", [(True, False), (False, False), (True, True)])
-def test_explicit_unevaluated_store_does_not_silently_ignore_project(tmp_path, include_connections, corrupt_policy):
-    from s1flow.policies import Policies
-    from test_connections import connections
-    from test_runtime import policy as specification
-
-    config = connections(tmp_path / "connections.toml")
-    store = Policies(tmp_path / "policies")
-    store.write_new(specification(connection="toy", model_id="one"))
-    if corrupt_policy:
-        (store.dir("ticket") / "v1.json").write_text("{invalid")
-    flags = ["--connections", str(config)] if include_connections else []
-    done = cli("promote", "ticket@v1", "--root", str(store.root), "--project", str(tmp_path / "unused"),
-               *flags, cwd=tmp_path)
-    assert done.returncode == 2 and "--project does not apply" in done.stderr
-    assert store.channels("ticket") == {}
