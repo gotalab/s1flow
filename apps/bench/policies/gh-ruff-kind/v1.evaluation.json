@@ -1,5 +1,5 @@
 {
- "schema": "s1flow/policy-evaluation@2",
+ "schema": "s1flow/policy-evaluation@3",
  "policy_digest": "a1cff7a0820509297c68d33e2cc097317cb27881e73afec484d169c9c6af9ab8",
  "candidate": {
   "model": "clef-flash",
@@ -8,13 +8,14 @@
  "selection": {
   "by": "s1flow propose",
   "reason": "written before a person picked releases (2026-10-17): the rule's choice, kept as it was",
-  "recommended": "clef-flash",
-  "tied": []
+  "tied": [],
+  "forced": false
  },
  "evidence": {
   "data_sha256": "385f829878a00e5e628098ba19e9f9e460dc6ced16337ebe68207b853f6bfb45",
   "execution_digest": null,
   "input_adapter_digest": "",
+  "evaluation_contract_digest": null,
   "git_sha": "56fe7e35d48eed1bb2e9f2c70be495ca13b6a94d",
   "evaluation": {
    "candidate": {
@@ -223,7 +224,6 @@
    }
   },
   "test": "inconclusive",
-  "test_uses": 0,
   "compared": [
    "clef-flash",
    "clef",

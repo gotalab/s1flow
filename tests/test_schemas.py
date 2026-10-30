@@ -71,7 +71,7 @@ def test_every_stored_policy_fits():
 
     files = sorted(p for p in (ROOT / "apps/bench/policies").glob("*/v*.json") if re.fullmatch(r"v\d+\.json", p.name))
     assert files
-    runtime, evidence = validator("policy-2"), validator("policy-evaluation-2")
+    runtime, evidence = validator("policy-2"), validator("policy-evaluation-3")
     store = Store(ROOT / "apps/bench/policies")
     for path in files:
         spec = json.loads(path.read_text())
@@ -88,7 +88,7 @@ def task_files(pattern: str) -> list[Path]:
 
 
 def test_every_case_feedback_correction_and_split_fits():
-    row, feedback, correction, split = validator("case-1"), validator("case-1", "feedback"), validator("case-1", "correction"), validator("split-1")
+    row, feedback, correction, split = validator("case-1"), validator("case-1", "feedback"), validator("case-1", "correction"), validator("split-2")
     rows = 0
     for f in task_files("data.jsonl") + task_files("cases.json"):
         text = f.read_text()

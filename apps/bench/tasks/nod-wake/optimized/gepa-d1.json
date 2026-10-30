@@ -1,8 +1,16 @@
 {
- "schema": "s1flow/optimized@1",
+ "schema": "s1flow/optimized@2",
  "variant": "gepa-d1",
  "model": "d1",
- "method": "gepa",
+ "optimizer": "gepa",
+ "settings": {
+  "budget": 600,
+  "reflection": "vercel_ai_gateway/anthropic/claude-sonnet-5.5",
+  "patience": null,
+  "max_cost": null,
+  "merge": false,
+  "seed": 1
+ },
  "at": "2026-10-03T00:00:00Z",
  "question": {
   "type": "choice",
@@ -22,6 +30,7 @@
    "ignore": "反応不要。意味のない入力や誤入力、発言の途中で続きが来そう、あなた宛てではない。"
   }
  },
+ "start": "base",
  "split": {
   "train": [
    "nohist-urgent-room",
@@ -95,32 +104,35 @@
    "yappari-iiya-in-progress"
   ]
  },
- "seed": 1,
- "budget": 600,
- "reflection_lm": "vercel_ai_gateway/anthropic/claude-sonnet-5.5",
- "reflection_calls": 20,
- "reflection_cost_usd": null,
  "model_calls": 493,
- "candidates": 18,
- "val_scores": [
-  0.9885,
-  0.9475,
-  0.9459,
-  0.9457,
-  0.9391,
-  0.9474,
-  0.8339,
-  0.9508,
-  0.9907,
-  0.8983,
-  0.8339,
-  0.8923,
-  0.937,
-  0.9952,
-  0.8617,
-  0.9459,
-  0.9446,
-  0.9601
- ],
- "best_index": 13
+ "cost_usd": null,
+ "detail": {
+  "surrogate": "0.5 * correctness + 0.5 * (1 - per-case Brier); prompt-only search",
+  "reflection_lm": "vercel_ai_gateway/anthropic/claude-sonnet-5.5",
+  "context": null,
+  "rationales": null,
+  "reflection_calls": 20,
+  "candidates": 18,
+  "val_scores": [
+   0.9885,
+   0.9475,
+   0.9459,
+   0.9457,
+   0.9391,
+   0.9474,
+   0.8339,
+   0.9508,
+   0.9907,
+   0.8983,
+   0.8339,
+   0.8923,
+   0.937,
+   0.9952,
+   0.8617,
+   0.9459,
+   0.9446,
+   0.9601
+  ],
+  "best_index": 13
+ }
 }
