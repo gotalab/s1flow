@@ -196,3 +196,14 @@ def test_the_chart_page_draws_from_a_shared_snapshot_without_evaluation_dependen
     assert all(r["n"] == dev_n < 40 for r in data["candidates"])
     assert all(len(r["charts"]["threshold_sweep"]) >= 101 and "cases" not in r for r in data["candidates"])
     assert all(sum(b["positives"] + b["negatives"] for b in r["charts"]["distribution"]) == dev_n for r in data["candidates"])
+
+
+def test_init_inside_the_project_adds_to_it(repo, capsys):
+    assert run("init", capsys=capsys)[0] == 0
+    project = repo / "sub" / "s1flow"
+    import os
+    os.chdir(project)
+    code, out, _ = run("init", "--skill", capsys=capsys)
+    assert code == 0 and not (project / "s1flow").exists() and (repo / ".claude/skills/s1flow/SKILL.md").is_file()
+    code, _, err = run("init", "--force", capsys=capsys)
+    assert code == 2 and "--force overwrites changed Skill files: it goes with --skill" in err

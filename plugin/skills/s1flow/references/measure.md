@@ -45,7 +45,7 @@ held-out test share and never marks a pick. Text, JSON and the chart page read t
   refused, unsupported or failed cases keep their reasons. Each row keeps provider, concrete model id, declared and
   recorded concurrency, latency, and cost provenance (`billed`, `list` shown as estimated, `mixed`, unknown).
 - `ranking` orders the complete candidates by `objective`, then `tiebreak`, after `constraints`. Candidates the
-  objective cannot tell apart (overlapping intervals) are marked `=` in text and `ranking[].tied_with_best` in JSON.
+  objective cannot tell apart (overlapping intervals) are marked `=` in text and `ranking[].tied` in JSON.
 - `order` says what ordered the tied: `by` (the tiebreak entries used), `skipped` (entries that could not be
   used, such as latency measured at different concurrency) and `why`. With no tiebreak, the tied are listed by
   name, unordered.
