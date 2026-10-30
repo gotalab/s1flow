@@ -15,6 +15,7 @@ from s1flow.core.errors import Rejected
 from s1flow.eval.cases import Correction, FeedbackCase
 from s1flow.eval.evalset import SplitFile
 from s1flow.eval.comparison import Comparison
+from s1flow.eval import policy_v2
 from s1flow.eval.policy import EvaluatedPolicy, EvaluationRecord
 from s1flow.eval.records import PredictionRecord
 from s1flow.policies.policy_set import PolicySet
@@ -27,9 +28,9 @@ ROOT = Path(__file__).resolve().parents[1]
 SCHEMA = ROOT / "schema"
 TYPES: dict[str, TypeAdapter | None] = {
     "comparison-2": TypeAdapter(Comparison),
-    "policy-evaluation-2": TypeAdapter(EvaluationRecord), "run-2": TypeAdapter(PredictionRecord),
+    "policy-evaluation-3": TypeAdapter(EvaluationRecord), "policy-evaluation-2": TypeAdapter(policy_v2.EvaluationRecord), "run-2": TypeAdapter(PredictionRecord),
     "case-1": None,  # a row is the task's own: no type of s1flow's reads it whole
-    "split-1": TypeAdapter(SplitFile), "policy-2": TypeAdapter(PolicySpec), "evaluated-policy-2": TypeAdapter(EvaluatedPolicy),
+    "split-1": TypeAdapter(SplitFile), "policy-2": TypeAdapter(PolicySpec), "evaluated-policy-3": TypeAdapter(EvaluatedPolicy),
     "log-2": TypeAdapter(Log), "response-1": TypeAdapter(Response), "decision-2": TypeAdapter(Decision), "policy-set-2": TypeAdapter(PolicySet),
 }
 

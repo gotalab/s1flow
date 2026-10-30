@@ -1,6 +1,7 @@
 """Evaluation records compose with, and reference, separately stored runtime specs."""
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
@@ -10,6 +11,7 @@ from ..project import Project
 from ..policies.file import CURRENT, Policies, PolicySpec, Ref, atomic_write
 from .candidate import Candidate
 from .evaluation import Evaluation
+from . import policy_v2 as v2
 
 Pin = Literal['yes', 'no', 'alias']
 TestVerdict = Literal['kept', 'below', 'inconclusive']
@@ -30,16 +32,16 @@ class Evidence(BaseModel):
     git_sha: str | None = None
     evaluation: Evaluation
     test: TestVerdict | None
-    test_uses: int = Field(ge=0)
     compared: list[str]
 
 
 class Selection(BaseModel):
+    """Who picked the candidate and why. s1flow records the pick; it does not recommend one."""
     model_config = ConfigDict(extra='forbid')
     by: str
     reason: str
-    recommended: str
-    tied: list[str]
+    tied: list[str]  # the candidates the primary objective could not tell apart at the top when it was picked
+    forced: bool = False  # written although the held-out test showed it below (adopt --force); `reason` says why
 
 
 class EvaluatedPolicy(BaseModel):
@@ -63,7 +65,7 @@ class EvaluatedPolicy(BaseModel):
 class EvaluationRecord(BaseModel):
     """vN.evaluation.json; never embeds or redefines the runtime specification."""
     model_config = ConfigDict(extra='forbid', populate_by_name=True, serialize_by_alias=True)
-    schema_: Literal['s1flow/policy-evaluation@2'] = Field(default='s1flow/policy-evaluation@2', alias='schema')
+    schema_: Literal['s1flow/policy-evaluation@3'] = Field(default='s1flow/policy-evaluation@3', alias='schema')
     policy_digest: str
     candidate: Candidate
     selection: Selection
@@ -83,6 +85,22 @@ class EvaluationRecord(BaseModel):
 
     def dump(self) -> str:
         return self.model_dump_json(by_alias=True, indent=1) + '\n'
+
+
+def read_record(text: str) -> EvaluationRecord:
+    """A stored evaluation record of either schema, as @3."""
+    if json.loads(text).get('schema') == 's1flow/policy-evaluation@2':
+        return upgrade(v2.EvaluationRecord.model_validate_json(text))
+    return EvaluationRecord.model_validate_json(text)
+
+
+def upgrade(old: v2.EvaluationRecord) -> EvaluationRecord:
+    # A @2 record below on the held-out test was only ever written by --force.
+    selection = Selection(by=old.selection.by, reason=old.selection.reason, tied=old.selection.tied,
+                          forced=old.evidence.test == 'below')
+    evidence = Evidence.model_validate(old.evidence.model_dump(exclude={'test_uses'}))
+    return EvaluationRecord(policy_digest=old.policy_digest, candidate=old.candidate, selection=selection,
+                            evidence=evidence, answered_by=old.answered_by)
 
 
 class Store:
@@ -122,9 +140,8 @@ class Store:
         if not path.is_file():
             raise NotFound(f'{spec.ref} has no evaluation record; the runtime specification is usable explicitly')
         try:
-            record = EvaluationRecord.model_validate_json(path.read_text())
-            return record.attach(spec)
-        except (ValidationError, OSError) as e:
+            return read_record(path.read_text()).attach(spec)
+        except (ValidationError, OSError, ValueError) as e:
             raise ConfigError(f'{path}: invalid evaluation record: {e}') from None
 
     def write_new(self, policy: EvaluatedPolicy, *, current: bool = False) -> None:

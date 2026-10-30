@@ -62,8 +62,8 @@ def policy(version: int, model: str, question=QUESTION) -> EvaluatedPolicy:
         spec=PolicySpec(task="toy", version=version, connection=model, model_id=model,
                         questions={"q": asked(question, DecisionRule(min_probability=0.9))}, state_schema=schema_of([{"text": "a"}])),
         candidate=Candidate(model=model), answered_by=model,
-        selection=Selection(by="t", reason="t", recommended=model, tied=[model]),
-        evidence=Evidence(data_sha256="0", execution_digest=None, evaluation=e, test=None, test_uses=0, compared=[model]),
+        selection=Selection(by="t", reason="t", tied=[model]),
+        evidence=Evidence(data_sha256="0", execution_digest=None, evaluation=e, test=None, compared=[model]),
     )
 
 

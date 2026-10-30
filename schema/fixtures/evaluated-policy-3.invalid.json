@@ -1,0 +1,331 @@
+{
+ "spec": {
+  "schema": "s1flow/policy@2",
+  "task": "gh-ruff-area",
+  "version": 1,
+  "connection": "d1@vercel",
+  "model_id": "liquid/d1",
+  "questions": {
+   "area": {
+    "question": {
+     "type": "choice",
+     "instructions": "Which part of Ruff (a Python linter and formatter) does this issue concern?",
+     "criteria": {
+      "linter": "Lint rules, their fixes, suppression comments (noqa), import sorting, docstring checks, diagnostics or preview rules.",
+      "formatter": "The code formatter: how formatted code looks.",
+      "server": "The language server (LSP) and editor integration.",
+      "configuration": "Settings, the command-line interface, or selecting which rules are enabled."
+     }
+    },
+    "kind": {},
+    "rule": {
+     "threshold": null,
+     "min_probability": 0.8717000534493162
+    }
+   }
+  },
+  "at": "2026-10-15T21:46:14Z",
+  "s1flow_version": "0.1.0",
+  "state_schema": {
+   "type": "object",
+   "properties": {
+    "body": {
+     "type": "string"
+    },
+    "title": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "body",
+    "title"
+   ]
+  }
+ },
+ "candidate": {
+  "model": "d1@vercel",
+  "variant": "base"
+ },
+ "selection": {
+  "by": "s1flow propose",
+  "reason": "written before a person picked releases (2026-10-17): the rule's choice, kept as it was",
+  "tied": [],
+  "forced": false
+ },
+ "evidence": {
+  "data_sha256": "c6f1e1197c4c106c6200e817a5e92c37f814cc039d507b60a7a19341a02355f5",
+  "execution_digest": null,
+  "input_adapter_digest": "",
+  "git_sha": "56fe7e35d48eed1bb2e9f2c70be495ca13b6a94d",
+  "evaluation": {
+   "candidate": {
+    "model": "d1@vercel",
+    "variant": "base"
+   },
+   "answered_by": "liquid/d1",
+   "answered_by_all": [
+    "liquid/d1"
+   ],
+   "answered_ids": [],
+   "n": 520,
+   "probabilities": true,
+   "failures": {
+    "calls": 520,
+    "failed": 0,
+    "unsupported": 0,
+    "data_errors": 0,
+    "unlabeled": 0,
+    "never_asked": null,
+    "failed_cases": null,
+    "refused_cases": null
+   },
+   "split": "stratified k-fold (159 test cases held out from the fixed evaluation set)",
+   "split_method": "stratified-kfold",
+   "accuracy": {
+    "value": 0.8365384615384616,
+    "interval": [
+     0.801923076923077,
+     0.8673076923076923
+    ]
+   },
+   "measures": {
+    "macro_f1": {
+     "value": 0.8073740157124454,
+     "interval": null
+    }
+   },
+   "auroc": {
+    "value": 0.9800260485990846,
+    "interval": [
+     0.9725358572996015,
+     0.987341818883647
+    ]
+   },
+   "brier": 0.22818011874704425,
+   "ece": 0.07003419962644686,
+   "selective": [
+    {
+     "target_accuracy": 0.95,
+     "coverage": {
+      "value": 0.7340720221606648,
+      "interval": [
+       0.6842105263157895,
+       0.778393351800554
+      ]
+     },
+     "accuracy": 0.9471698113207547,
+     "n": 265,
+     "errors": 14,
+     "lower": 0.9186413241595092,
+     "labels_needed": null,
+     "min_probability": 0.8675857203443077
+    }
+   ],
+   "error_loss_threshold": null,
+   "floors": [],
+   "sweep": null,
+   "objective": {
+    "objective": {
+     "name": "coverage",
+     "params": {
+      "target_accuracy": 0.95
+     },
+     "direction": "max",
+     "sets": "min_probability",
+     "unit": "share",
+     "label": "coverage at 95% accuracy",
+     "code_sha256": null
+    },
+    "value": 0.7340720221606648,
+    "interval": [
+     0.6842105263157895,
+     0.778393351800554
+    ],
+    "rule": {
+     "threshold": null,
+     "min_probability": 0.8675857203443077
+    },
+    "constraint": 0.9471698113207547
+   },
+   "tiebreak": [],
+   "test": {
+    "n": 159,
+    "accuracy": 0.8238993710691824,
+    "coverage": 0.710691823899371,
+    "sure_accuracy": 0.9203539823008849,
+    "tuned_accuracy": null,
+    "primary": {
+     "value": 0.710691823899371,
+     "interval": [
+      0.6415094339622641,
+      0.779874213836478
+     ]
+    },
+    "constraint": null
+   },
+   "high_confidence_errors": [
+    {
+     "id": "#26450",
+     "label": "configuration",
+     "predicted": "linter",
+     "probability": 0.999351910555438
+    },
+    {
+     "id": "#27224",
+     "label": "configuration",
+     "predicted": "linter",
+     "probability": 0.9988196532700866
+    },
+    {
+     "id": "prod:#19701",
+     "label": "configuration",
+     "predicted": "linter",
+     "probability": 0.9973015380621961
+    },
+    {
+     "id": "prod:#20280",
+     "label": "configuration",
+     "predicted": "linter",
+     "probability": 0.9954272708251345
+    },
+    {
+     "id": "#23705",
+     "label": "configuration",
+     "predicted": "linter",
+     "probability": 0.9854123510076894
+    },
+    {
+     "id": "#23856",
+     "label": "formatter",
+     "predicted": "server",
+     "probability": 0.9782476570263686
+    },
+    {
+     "id": "#24955",
+     "label": "configuration",
+     "predicted": "linter",
+     "probability": 0.9737130599823868
+    },
+    {
+     "id": "#26756",
+     "label": "configuration",
+     "predicted": "linter",
+     "probability": 0.973325738636048
+    },
+    {
+     "id": "prod:#18728",
+     "label": "configuration",
+     "predicted": "linter",
+     "probability": 0.9640280079883922
+    },
+    {
+     "id": "#27602",
+     "label": "configuration",
+     "predicted": "formatter",
+     "probability": 0.9464253518705503
+    },
+    {
+     "id": "#27448",
+     "label": "configuration",
+     "predicted": "linter",
+     "probability": 0.9383613985653995
+    },
+    {
+     "id": "#23855",
+     "label": "formatter",
+     "predicted": "server",
+     "probability": 0.936680607543162
+    },
+    {
+     "id": "#26418",
+     "label": "formatter",
+     "predicted": "linter",
+     "probability": 0.918695152410202
+    },
+    {
+     "id": "#28105",
+     "label": "configuration",
+     "predicted": "linter",
+     "probability": 0.9175670470228784
+    },
+    {
+     "id": "#24845",
+     "label": "configuration",
+     "predicted": "linter",
+     "probability": 0.9129208243919369
+    },
+    {
+     "id": "#27647",
+     "label": "configuration",
+     "predicted": "linter",
+     "probability": 0.9080922433160591
+    },
+    {
+     "id": "#27213",
+     "label": "configuration",
+     "predicted": "linter",
+     "probability": 0.9075496794077482
+    },
+    {
+     "id": "prod:#16180",
+     "label": "configuration",
+     "predicted": "linter",
+     "probability": 0.9068792082181079
+    },
+    {
+     "id": "prod:#9984",
+     "label": "configuration",
+     "predicted": "formatter",
+     "probability": 0.9016764796221373
+    }
+   ],
+   "calls": {
+    "latency": {
+     "n": 520,
+     "p50_ms": 393.6,
+     "p90_ms": 533.51,
+     "p95_ms": 613.81,
+     "p99_ms": 1012.3649999999985,
+     "max_ms": 1164.9,
+     "spread": 2.572065548780484,
+     "retried": 0,
+     "unrecorded": 300,
+     "concurrency": [
+      8
+     ],
+     "concurrency_unknown": 300
+    },
+    "case_latency_p90_ms": {
+     "value": 533.51,
+     "interval": null
+    },
+    "throughput": {
+     "per_min": 1000.0000000000001,
+     "seconds": 18.0,
+     "calls": 300,
+     "concurrency": 8,
+     "measured": true
+    },
+    "cost_per_10k_usd": 0.1259973076923077,
+    "cost_total_usd": 0.0065518600000000005,
+    "cost_source": null,
+    "cost_unknown": 0,
+    "price": null
+   }
+  },
+  "test": "inconclusive",
+  "compared": [
+   "clef-flash",
+   "clef",
+   "d1@vercel",
+   "decisions",
+   "flash-lite@vercel",
+   "haiku@vercel",
+   "jev",
+   "jev@vercel",
+   "kev@openrouter"
+  ]
+ },
+ "answered_by": "liquid/d1",
+ "unexpected": true
+}

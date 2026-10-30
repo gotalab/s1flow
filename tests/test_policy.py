@@ -70,9 +70,9 @@ def policy(task="t", version=1, rule=DecisionRule(min_probability=0.8), test=Non
     )
     return EvaluatedPolicy(
         spec=spec, candidate=Candidate(model="fake"), answered_by="fake-1",
-        selection=Selection(by="t", reason="t", recommended="fake", tied=["fake"]),
+        selection=Selection(by="t", reason="t", tied=["fake"]),
         evidence=Evidence(data_sha256="0", execution_digest=execution_digest(policy_client().connections.resolved("fake"), spec.digest),
-                          evaluation=evaluation(), test=test, test_uses=1, compared=["fake"]),
+                          evaluation=evaluation(), test=test, compared=["fake"]),
     )
 
 

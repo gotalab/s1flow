@@ -63,9 +63,9 @@ def current(task: Task) -> EvaluatedPolicy:
     runtime = DecisionPolicy(spec, client=task.where.client())
     r = EvaluatedPolicy(
         spec=spec, candidate=Candidate(model="m"), answered_by="byq-1",
-        selection=Selection(by="t", reason="t", recommended="m", tied=["m"]),
+        selection=Selection(by="t", reason="t", tied=["m"]),
         evidence=Evidence(data_sha256=task.data_digest, execution_digest=runtime.execution_digest,
-                          input_adapter_digest=task.input_adapter_digest, evaluation_contract_digest=task.evaluation_contract_digest, evaluation=e, test=None, test_uses=0, compared=["m"]),
+                          input_adapter_digest=task.input_adapter_digest, evaluation_contract_digest=task.evaluation_contract_digest, evaluation=e, test=None, compared=["m"]),
     )
     task.policies.write_new(r, current=True)
     return r
@@ -163,9 +163,9 @@ def production_policy(task):
                    failures=Failures(calls=120, failed=0, unsupported=0, data_errors=0, unlabeled=0),
                    objective=ObjectiveScore(objective=task.primary, value=0.8, interval=(0.7, 0.9)))
     r = EvaluatedPolicy(spec=spec, candidate=Candidate(model="m"), answered_by="byq-1",
-                        selection=Selection(by="t", reason="t", recommended="m", tied=["m"]),
+                        selection=Selection(by="t", reason="t", tied=["m"]),
                         evidence=Evidence(data_sha256=task.data_digest, execution_digest=runtime.execution_digest,
-                                          evaluation=e, test=None, test_uses=0, compared=["m"]))
+                                          evaluation=e, test=None, compared=["m"]))
     task.policies.write_new(r)
     return r
 

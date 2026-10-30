@@ -256,17 +256,19 @@ def adopt(
         raise ConfigError(f"{task.id}: data changed during adoption; rerun the comparison")
     r = EvaluatedPolicy(
         spec=runtime, candidate=e.candidate, answered_by=answered_by,
-        selection=Selection(by=by.strip(), reason=reason.strip(), recommended=s.recommended, tied=s.tied),
+        selection=Selection(by=by.strip(), reason=reason.strip(), tied=s.tied),
         evidence=Evidence(
             data_sha256=before_data,
             execution_digest=execution_digest(spec, runtime.digest),
             input_adapter_digest=task.input_adapter_digest,
             evaluation_contract_digest=s.evaluation_contract_digest,
             evaluation=e, test=metrics.test_verdict(task, e),
-            test_uses=evalset.record_use(task, "adopt", f"{policy_id(task.id, version)}: {name}"),
             compared=[c[0] for c in s.cands], git_sha=git_sha,
         ),
     )
+    evalset.record_use(task, "adopt", f"{policy_id(task.id, version)}: {name}")
+    if r.evidence.test == "below" and force:
+        r = r.model_copy(update={"selection": r.selection.model_copy(update={"forced": True})})
     validate_evidence(task, r)
     if write and (r.evidence.test != "below" or force):
         policies.write_new(r, current=True)

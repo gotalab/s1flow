@@ -821,9 +821,9 @@ def adopt(a: argparse.Namespace) -> int:
     assert p0 is not None
     rd = r.spec.rule
     print(f"{r.spec.ref}{'' if held else ' (current)'}: {r.candidate.name}, answered by {r.answered_by}; adopted by {r.selection.by}"
-          + ("" if r.candidate.name == r.selection.recommended else f" (the ranking recommended {r.selection.recommended})"))
+          + ("" if r.candidate.name == listed.recommended else f" (the ranking recommended {listed.recommended})"))
     if r.candidate.name not in r.selection.tied:
-        print(f"  note: not tied with {r.selection.recommended}: measured worse on {p0.objective.label}")
+        print(f"  note: not tied with {listed.recommended}: measured worse on {p0.objective.label}")
     print("  rule: " + (", ".join(f"{k} {v:.3f}" for k, v in (("threshold", rd.threshold), ("min probability", rd.min_probability)) if v is not None) or "the plain argmax"))
     print(f"  {p0.objective.label}: {p0.value}  interval {p0.interval}  (n {e.n})")
     if e.test:

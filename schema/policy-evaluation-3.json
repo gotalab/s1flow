@@ -1,78 +1,7 @@
 {
  "$schema": "https://json-schema.org/draft/2020-12/schema",
- "$id": "https://github.com/gotalab/s1flow/blob/main/schema/evaluated-policy-2.json",
+ "$id": "https://github.com/gotalab/s1flow/blob/main/schema/policy-evaluation-3.json",
  "$defs": {
-  "Asked": {
-   "additionalProperties": false,
-   "properties": {
-    "question": {
-     "discriminator": {
-      "mapping": {
-       "boolean": "#/$defs/Boolean",
-       "choice": "#/$defs/Choice"
-      },
-      "propertyName": "type"
-     },
-     "oneOf": [
-      {
-       "$ref": "#/$defs/Boolean"
-      },
-      {
-       "$ref": "#/$defs/Choice"
-      }
-     ],
-     "title": "Question"
-    },
-    "kind": {
-     "$ref": "#/$defs/KindParams",
-     "default": {}
-    },
-    "rule": {
-     "$ref": "#/$defs/DecisionRule"
-    }
-   },
-   "required": [
-    "question",
-    "rule"
-   ],
-   "title": "Asked",
-   "type": "object"
-  },
-  "Boolean": {
-   "additionalProperties": false,
-   "properties": {
-    "type": {
-     "const": "boolean",
-     "default": "boolean",
-     "title": "Type",
-     "type": "string"
-    },
-    "instructions": {
-     "title": "Instructions",
-     "type": "string"
-    },
-    "criteria": {
-     "anyOf": [
-      {
-       "additionalProperties": {
-        "type": "string"
-       },
-       "type": "object"
-      },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "title": "Criteria"
-    }
-   },
-   "required": [
-    "instructions"
-   ],
-   "title": "Boolean",
-   "type": "object"
-  },
   "Calls": {
    "additionalProperties": false,
    "description": "What the calls took rather than what they answered: how long an app waits and what the model charges\n(API cost). Read from the call records alone (metrics.calls).",
@@ -188,41 +117,6 @@
     "model"
    ],
    "title": "Candidate",
-   "type": "object"
-  },
-  "Choice": {
-   "additionalProperties": false,
-   "properties": {
-    "type": {
-     "const": "choice",
-     "default": "choice",
-     "title": "Type",
-     "type": "string"
-    },
-    "instructions": {
-     "title": "Instructions",
-     "type": "string"
-    },
-    "criteria": {
-     "additionalProperties": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ]
-     },
-     "title": "Criteria",
-     "type": "object"
-    }
-   },
-   "required": [
-    "instructions",
-    "criteria"
-   ],
-   "title": "Choice",
    "type": "object"
   },
   "DecisionRule": {
@@ -631,11 +525,6 @@
      ],
      "title": "Test"
     },
-    "test_uses": {
-     "minimum": 0,
-     "title": "Test Uses",
-     "type": "integer"
-    },
     "compared": {
      "items": {
       "type": "string"
@@ -649,7 +538,6 @@
     "execution_digest",
     "evaluation",
     "test",
-    "test_uses",
     "compared"
    ],
    "title": "Evidence",
@@ -824,40 +712,6 @@
    "type": "object"
   },
   "JsonValue": {},
-  "KindParams": {
-   "additionalProperties": false,
-   "description": "What a question's type leaves open, the same in a task (`Task.kind_params`) and a policy (`kind`):\n`positive` scores a choice as binary (P(positive) against a true / false label), `iou` is a box's bar\nfor a hit (0.5 when unset). An unset one is left out of the JSON.",
-   "properties": {
-    "positive": {
-     "anyOf": [
-      {
-       "type": "string"
-      },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "title": "Positive"
-    },
-    "iou": {
-     "anyOf": [
-      {
-       "exclusiveMinimum": 0,
-       "maximum": 1,
-       "type": "number"
-      },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "title": "Iou"
-    }
-   },
-   "title": "KindParams",
-   "type": "object"
-  },
   "Latency": {
    "additionalProperties": false,
    "description": "Per answered call: the answering attempt alone (retries left out).",
@@ -1078,74 +932,6 @@
    "title": "ObjectiveScore",
    "type": "object"
   },
-  "PolicySpec": {
-   "additionalProperties": false,
-   "properties": {
-    "schema": {
-     "const": "s1flow/policy@2",
-     "default": "s1flow/policy@2",
-     "title": "Schema",
-     "type": "string"
-    },
-    "task": {
-     "title": "Task",
-     "type": "string"
-    },
-    "version": {
-     "minimum": 1,
-     "title": "Version",
-     "type": "integer"
-    },
-    "connection": {
-     "title": "Connection",
-     "type": "string"
-    },
-    "model_id": {
-     "minLength": 1,
-     "title": "Model Id",
-     "type": "string"
-    },
-    "questions": {
-     "additionalProperties": {
-      "$ref": "#/$defs/Asked"
-     },
-     "maxProperties": 1,
-     "minProperties": 1,
-     "title": "Questions",
-     "type": "object"
-    },
-    "at": {
-     "title": "At",
-     "type": "string"
-    },
-    "s1flow_version": {
-     "title": "S1Flow Version",
-     "type": "string"
-    },
-    "state_schema": {
-     "anyOf": [
-      {
-       "additionalProperties": true,
-       "type": "object"
-      },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "title": "State Schema"
-    }
-   },
-   "required": [
-    "task",
-    "version",
-    "connection",
-    "model_id",
-    "questions"
-   ],
-   "title": "PolicySpec",
-   "type": "object"
-  },
   "Price": {
    "additionalProperties": false,
    "description": "A model's list price, declared in s1flow.toml (`price.input_per_mtok = ...`) for a model that bills nothing back.\n\nWhat it costs is an estimate from the tokens the model reports (client/cost.py): a model can charge what\ntokens do not show (cached input, unseen reasoning, a minimum), so a model that returns what it billed\n(AI Gateway, OpenRouter) is never priced from here. A price these four parts cannot write is left out.",
@@ -1192,6 +978,7 @@
   },
   "Selection": {
    "additionalProperties": false,
+   "description": "Who picked the candidate and why. s1flow records the pick; it does not recommend one.",
    "properties": {
     "by": {
      "title": "By",
@@ -1201,22 +988,22 @@
      "title": "Reason",
      "type": "string"
     },
-    "recommended": {
-     "title": "Recommended",
-     "type": "string"
-    },
     "tied": {
      "items": {
       "type": "string"
      },
      "title": "Tied",
      "type": "array"
+    },
+    "forced": {
+     "default": false,
+     "title": "Forced",
+     "type": "boolean"
     }
    },
    "required": [
     "by",
     "reason",
-    "recommended",
     "tied"
    ],
    "title": "Selection",
@@ -1437,10 +1224,17 @@
   }
  },
  "additionalProperties": false,
- "description": "Explicit runtime specification and the evaluation that selected it.",
+ "description": "vN.evaluation.json; never embeds or redefines the runtime specification.",
  "properties": {
-  "spec": {
-   "$ref": "#/$defs/PolicySpec"
+  "schema": {
+   "const": "s1flow/policy-evaluation@3",
+   "default": "s1flow/policy-evaluation@3",
+   "title": "Schema",
+   "type": "string"
+  },
+  "policy_digest": {
+   "title": "Policy Digest",
+   "type": "string"
   },
   "candidate": {
    "$ref": "#/$defs/Candidate"
@@ -1457,12 +1251,12 @@
   }
  },
  "required": [
-  "spec",
+  "policy_digest",
   "candidate",
   "selection",
   "evidence",
   "answered_by"
  ],
- "title": "EvaluatedPolicy",
+ "title": "EvaluationRecord",
  "type": "object"
 }
