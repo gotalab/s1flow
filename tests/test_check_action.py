@@ -20,7 +20,7 @@ def step() -> str:
 
 
 def run(tmp_path: Path, verdict: str, code: int, *, on_pending: str = "fail", changed: str | list[dict[str, str]] | None = "",
-        workdir: str = "s1flow", base: str = "echo '{\"channels\": {\"current\": 1}}'") -> tuple[subprocess.CompletedProcess[str], Path]:
+        workdir: str = "s1flow", base: str = "echo '{\"channels\": {\"current\": 1}}'", **env_: str) -> tuple[subprocess.CompletedProcess[str], Path]:
     """`changed`: the pull request's files as "status filename" lines, or as GitHub lists them (put through the
     Action's own --jq); None: listing them fails. `base`: what `gh` does for the base commit's channels.json."""
     work, stubs, temp = tmp_path / workdir, tmp_path / "bin", tmp_path / "temp"
@@ -31,6 +31,8 @@ def run(tmp_path: Path, verdict: str, code: int, *, on_pending: str = "fail", ch
     (stubs / "gh").write_text(f"""#!/usr/bin/env bash
 case "$*" in
   *channels.json*) {base};;
+  *issues/7/comments*--paginate*) echo 41;;
+  *issues/comments/*|*issues/7/comments*) echo "$*" >> "{tmp_path}/comments"; for a in "$@"; do case "$a" in body=@*) cat "${{a#body=@}}" >> "{tmp_path}/comments";; esac; done;;
   *pulls/7/files*) {"echo 'HTTP 502' >&2; exit 1" if changed is None else
                      "printf '%s\\n' " + shlex.quote(changed) if isinstance(changed, str) else
                      'q=""; prev=""; for a in "$@"; do [ "$prev" = --jq ] && q="$a"; prev="$a"; done; printf %s '
@@ -51,7 +53,7 @@ exit {code}
     env = {**os.environ, "PATH": f"{stubs}:{os.environ['PATH']}", "RUNNER_TEMP": str(temp), "GITHUB_STEP_SUMMARY": str(temp / "summary"),
            "GITHUB_REPOSITORY": "o/r", "TASKS": "", "AGAINST": "", "CANDIDATE": "", "SAMPLE": "", "CACHED_ONLY": "true",
            "ON_PENDING": on_pending, "COMMENT": "false", "FORK": "true", "PR": "7", "BASE": "a" * 40, "WORKDIR": workdir,
-           "PACKAGE": "s1flow[eval]", "ACTION_PATH": str(ROOT), "GH_TOKEN": "x"}
+           "PACKAGE": "s1flow[eval]", "ACTION_PATH": str(ROOT), "GH_TOKEN": "x", **env_}
     return subprocess.run(["bash", "-c", step()], cwd=work, env=env, capture_output=True, text=True), temp
 
 
@@ -80,7 +82,18 @@ def test_a_base_that_cannot_be_read_fails_and_says_so(tmp_path, base):
     assert ran.returncode == 1 and "::error title=s1flow check::toy: could not read the base commit's channels.json" in ran.stdout
     assert not (tmp_path / "args").exists()  # nothing was checked
     summary = (temp / "summary").read_text()
-    assert summary.startswith("<!-- s1flow-check:toy -->") and "The check fails" in summary  # and the comment says so
+    assert summary.startswith("<!-- s1flow-check:toy -->") and "The check fails" in summary
+
+
+def test_the_pull_requests_comment_is_updated_even_when_the_base_cannot_be_read(tmp_path):
+    ran, _ = run(tmp_path, "pass", 0, base="echo 'HTTP 502' >&2; exit 1", COMMENT="true")
+    comments = (tmp_path / "comments").read_text()
+    assert ran.returncode == 1 and "-X PATCH repos/o/r/issues/comments/41" in comments and "Could not read the base commit" in comments
+
+
+def test_an_against_given_does_not_read_the_base_commit(tmp_path):
+    ran, _ = run(tmp_path, "pass", 0, base="echo 'HTTP 502' >&2; exit 1", AGAINST="v1")
+    assert ran.returncode == 0 and "check toy --against v1 " in (tmp_path / "args").read_text()
 
 def test_a_change_to_the_rules_is_flagged(tmp_path):
     changed = "modified s1flow/tasks/toy/task.py\nmodified s1flow/tasks/toy/corrections.jsonl\nmodified README.md\nmodified s1flow/tasks/other/task.py"

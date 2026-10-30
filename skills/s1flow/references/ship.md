@@ -25,6 +25,8 @@ s1flow adopt --spec spec.json --check             # validate only; save nothing
   evaluation evidence. Add `--connections FILE` to check its binding to trusted connections.
 - Outside an s1flow project (an app's repository), add `--root policies`, and `--connections FILE` with `--spec`.
 - A saved `vN.json` is never overwritten. `channels.json` names the one `current` version.
+- To go back to an older version, adopt it again (`adopt <task> <its candidate>`, or `adopt --spec` with its spec
+  renumbered to the next version). Never revert the adopt pull request: removing a saved version fails `check`.
 - Who adopted comes from `git config user.name`.
 
 ### The reason

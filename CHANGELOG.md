@@ -35,7 +35,7 @@
   version and makes it current in `channels.json`, so the pull request shows the switch and its merge ships it.
 - Only `adopt` points `current`. `adopt --spec FILE --reason` saves an unevaluated runtime spec as the next version
   and makes it current; it runs on the base install, and outside an s1flow project with `--root` and
-  `--connections`. To go back to the version that ran before, revert the pull request that adopted the newer one.
+  `--connections`. To go back to an older version, adopt it again as the next one.
 - Each switch appends a line to `policies/<task>/history.jsonl` (`schema/history-1.json`): when, the version, the one
   before, who, why, and for a measured candidate the held-out test's verdict and whether `--force` wrote it. A
   candidate `adopt` refuses as below on the held-out test gets a `refused` line too.
@@ -59,8 +59,8 @@
   held-out test, and `reason` says why. `@2` records still read, as `@3`, never forced: 0.1.0a1 stored a
   version below on the held-out test without `--force`, so a `@2` record cannot say. `forced` is refused on a record
   whose held-out test is not below. `adopt --json` prints the new shape.
-- `s1flow tasks` shows each task's current policy; its `--json` has `current` (a version) in place of
-  `channels`, and each policy `current: true|false` in place of `channels: [...]`.
+- `s1flow report` with no task shows each task's current policy; its `--json` has `current` (a version) in place
+  of `channels`, and each policy `current: true|false` in place of `channels: [...]`.
 - Only `s1flow run` writes `tasks/<task>/split.json`, the first time it runs on a task. `report` no longer writes
   it, and `adopt`, `optimize` and `check` refuse with "the first `s1flow run TASK` fixes the held-out test share"
   when it is missing, instead of drawing one of their own (a CI checkout would draw it again on every run). Cases

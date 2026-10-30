@@ -40,8 +40,10 @@ edited files, so review that diff.
 A policy that was never evaluated, written by hand, is saved and made current by `adopt --spec FILE --reason
 "..."` with only the base runtime; s1flow reports that there is no evidence for it.
 
-To go back to the version that ran before, revert the pull request that adopted the newer one: merging the revert
-is the release, as merging the adopt was.
+To go back to a version that ran before, adopt it again: `s1flow adopt TASK CANDIDATE` with its candidate
+saves it as the next version, measured like any other, and `adopt --spec` with its spec (renumbered) saves it
+unevaluated. Versions are only added, so the pull request is checked as any adopt is; reverting the one that
+adopted the newer version would remove a saved version, which the check refuses.
 
 Only `adopt` points `current`, and each time it does, it appends why to `policies/<task>/history.jsonl` (when,
 which version, the one before, who, why, and for a measured candidate the held-out test's verdict). A candidate it

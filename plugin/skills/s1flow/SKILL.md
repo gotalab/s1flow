@@ -31,7 +31,7 @@ Read the one reference for the stage at hand:
 |---|---|
 | Start a project, agree on the decision, collect cases, write `task.py`, review labels | `references/collect.md` |
 | Run models and question variants, optimize, read `report`, charts, a new model version | `references/measure.md` |
-| Adopt a candidate, write the reason and the PR body, read `check`, go back (revert the pull request) | `references/ship.md` |
+| Adopt a candidate, write the reason and the PR body, read `check`, go back (adopt the older one again) | `references/ship.md` |
 | Call a policy from an app, a workflow or another language; decision logs; `export` | `references/app.md` |
 | Record the right answers, measure production, add cases, improve the question | `references/learn.md` |
 | Keys and hosts in a sandbox or CI, `doctor`, `models`, exit codes, `--json`, names | `references/setup.md` |
