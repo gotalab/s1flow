@@ -81,18 +81,33 @@ def ship(task: Task, *rs: EvaluatedPolicy, current: int = 1, candidate: int | No
         r.evidence.data_sha256 = task.data_digest
         store.write_new(r)
     point(store, "toy", candidate or current)
+    evalset.fix(task)  # the task's first run fixed the held-out test share
 
 
 def test_the_split_is_made_once_and_never_moves(task, tmp_path):
-    sf, notes = evalset.ensure(task)
-    assert "fixed the evaluation set" in notes[0] and set(sf.assign.values()) == {"train", "val", "test"} and 30 <= len(sf.ids("test")) <= 50
-    before = dict(sf.assign)
+    with pytest.raises(DataError, match="the first `s1flow run toy` fixes the held-out test share"):
+        evalset.fixed(task)  # adopt, check and optimize refuse to draw one of their own
+    planned = evalset.current(task)
+    assert not evalset.path(task).exists()  # reading writes nothing
+    assert "fixed the evaluation set" in (evalset.fix(task) or "") and evalset.fix(task) is None  # the first run writes it, once
+    sf = evalset.fixed(task)
+    assert sf.assign == planned.assign and set(sf.assign.values()) == {"train", "val", "test"} and 30 <= len(sf.ids("test")) <= 50
+    assert sf.test_share == task.split.test  # later cases are held out at the task's share, whatever rounding made of the first
+    written = evalset.path(task).read_text()
     with (tmp_path / "data.jsonl").open("a") as f:
         f.writelines(json.dumps({"id": f"n{i}", "text": "a"}) + "\n" for i in range(40))
     task.load_cases().forget()
-    sf2, notes2 = evalset.ensure(task)
-    assert {k: sf2.assign[k] for k in before} == before and "assigned 40 new cases" in notes2[0]
-    assert evalset.ensure(task)[1] == []  # nothing new: the file is left as it is
+    sf2 = evalset.current(task)
+    assert {k: sf2.assign[k] for k in sf.assign} == sf.assign and all(f"n{i}" in sf2.assign for i in range(40))
+    assert evalset.path(task).read_text() == written  # new cases are placed by their id's hash, never written
+    assert 0 < sum(sf2.assign[f"n{i}"] == "test" for i in range(40)) < 40
+
+
+def test_a_split_from_before_reads_without_its_uses(task):
+    evalset.fix(task)
+    old = json.loads(evalset.path(task).read_text())
+    evalset.path(task).write_text(json.dumps({**old, "schema": "s1flow/split@1", "uses": [{"at": "t", "by": "check", "what": "v1"}]}))
+    assert evalset.read(task).assign == old["assign"] and evalset.current(task).assign == evalset.current(task).assign
 
 
 @pytest.mark.parametrize("labels", [list("aabbcc"), [c for c in "abcde" for _ in range(2)], list("aab")])
@@ -120,7 +135,8 @@ def test_the_split_starts_from_an_optimization_split(task):
         split={"train": ["0", "1"], "val": ["2"], "test": ["3", "4"]}, seed=1, budget=10, reflection_lm="r", reflection_calls=1,
         reflection_cost_usd=0.0, model_calls=1, candidates=1, val_scores=[0.5], best_index=0,
     )}
-    sf, _ = evalset.ensure(task)
+    evalset.fix(task)
+    sf = evalset.fixed(task)
     assert sf.source == "optimized/gepa-x" and {"3", "4"} <= set(sf.ids("test")) and sf.assign["0"] == "train"
 
 
@@ -144,7 +160,7 @@ def test_the_same_answers_pass_and_are_cached(task):
     r = check.check(task, against="v1", sample=20)
     assert (r.verdict, r.exit, r.n) == ("no_difference", 0, 20)
     again = check.check(task, against="v1", sample=20)
-    assert again.sides[0].calls == 0 and again.sides[0].cached == 20 and again.test_uses == 2
+    assert again.sides[0].calls == 0 and again.sides[0].cached == 20
 
 
 def test_a_policy_is_asked_and_cached_under_runs_key(task):

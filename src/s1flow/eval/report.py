@@ -436,8 +436,7 @@ def chart_summary(task: Task, evaluations: list[Evaluation], data: dict[str, Cha
 
 def write(task: Task, variant: str, out: Path) -> str:
     """<out>/<variant>.md and <variant>.json from every run on the variant's question; the Markdown is returned.
-    The first report fixes the task's evaluation set (evalset.py)."""
-    evalset.ensure(task)
+    """
     data_digest = task.data_digest
     contract_digest = task.evaluation_contract_digest
     adapter_digest = task.input_adapter_digest

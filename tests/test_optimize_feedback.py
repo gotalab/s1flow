@@ -74,7 +74,7 @@ def current(task: Task) -> EvaluatedPolicy:
 
 def stub_optimize(monkeypatch, task: Task, text: str) -> None:
     def optimize(t, model, *, budget, reflection, start, name, **kw):
-        sf, _ = evalset.ensure(t)  # as gepa.optimize does: train and val from the fixed split
+        sf = evalset.fixed(t)  # as gepa.optimize does: train and val from the fixed split
         art = Optimized(
             variant=name, model=model, method="gepa", at="2026-10-16T00:00:00Z", question=q(text), seed_question=task.question, start=start,
             split={r: sf.ids(r) for r in ("train", "val", "test")}, seed=1, budget=budget, reflection_lm=reflection or "r", reflection_calls=1,
@@ -204,14 +204,14 @@ def test_scarce_feedback_gives_no_interval(task, tmp_path):
 
 
 def test_answered_cases_become_labelled_cases(task, tmp_path):
-    evalset.ensure(task)
+    evalset.fix(task)
     cs = feedback.cases(task, feedback.read([logs(tmp_path, task)]))
     out = feedback.add(task, cs)
     assert (out.added, out.no_state, out.no_label, out.invalid_label, out.already) == (8, 1, 0, 1, 0)
     assert "keep the state in the log: `s1flow decide --log FILE --keep-state`, the decide Action's `keep-state: true`" in feedback.markdown(task, [], out)
     by = task.load_cases().by_id()
     assert by["prod:d0"].state == {"text": "a"} and by["prod:d1"].label == "a" and by["prod:d1"].source == "feedback" and by["0"].label == "a"
-    assert "prod:d0" in evalset.read(task).assign
+    assert "prod:d0" not in evalset.read(task).assign and "prod:d0" in evalset.current(task).assign  # placed by its id's hash, never written
     assert feedback.add(task, cs).already == 8
 
 

@@ -31,7 +31,7 @@ from ..client.identity import digest, execution_digest, require_provider_revisio
 from ..core.errors import ConfigError, NotFound, S1flowError
 from ..policies import DecisionPolicy
 from ..policies.rule import DecisionRule
-from ..policies.file import PolicySpec, asked as one_question, policy_id
+from ..policies.file import PolicySpec, asked as one_question
 from ..policies.history import Switch
 from .candidate import Candidate
 from ..policies.state_shape import schema_of
@@ -242,7 +242,7 @@ def adopt(
     answered_by = pr.version or spec.id
     policies = task.policies
     version = policies.next_version(task.id)
-    evalset.ensure(task)  # the test share it was confirmed on stays the task's
+    evalset.fixed(task)  # the test share it is confirmed on: the one the first run fixed
     # Ordinary ranking never reads test. Adoption explicitly confirms this selected candidate.
     pr = metrics.load(task, variant, model, include_test=True)
     if pr.never_asked or pr.failed_cases:
@@ -268,7 +268,6 @@ def adopt(
             compared=[c[0] for c in s.cands], git_sha=git_sha,
         ),
     )
-    evalset.record_use(task, "adopt", f"{policy_id(task.id, version)}: {name}")
     validate_evidence(task, r)
     entry = Switch(action="adopt", version=version, previous=policies.current(task.id), by=r.selection.by, reason=r.selection.reason,
                    candidate=name, test=r.evidence.test, forced=r.selection.forced)

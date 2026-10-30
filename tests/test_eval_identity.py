@@ -143,9 +143,6 @@ def test_defaults_exclude_test_values_errors_review_and_charts(task, monkeypatch
     saved = json.loads((task.where.root / 'out' / 'base.json').read_text())
     chart = saved['charts']['fake']
     assert chart['scope'] == 'dev' and chart['n'] == 8 and chart['cv_value'] == e.objective.value
-    monkeypatch.setenv('CI', 'true')
-    assert evalset.record_use(task, 'check', 'fake') == 1
-    assert len(evalset.read(task).uses) == 1
 
 
 def test_unknown_constraints_and_different_populations_refuse_recommendation(task):

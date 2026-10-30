@@ -1,0 +1,11 @@
+{
+ "schema": "s1flow/split@2",
+ "seed": 1,
+ "test_share": 0.3,
+ "at": "2026-10-15T21:54:13Z",
+ "source": "initial",
+ "assign": {
+  "#1": "train"
+ },
+ "uses": []
+}

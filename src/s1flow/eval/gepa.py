@@ -269,7 +269,7 @@ class ReflectionLM:
 
 def splits(task: Task, cases: list[Case]) -> dict[evalset.Role, list[str]]:
     """test (kept from GEPA) / train / val: the task's fixed evaluation set (evalset.py), over these cases."""
-    sf, _ = evalset.ensure(task)
+    sf = evalset.fixed(task)
     have = {c.id for c in cases}
     roles: tuple[evalset.Role, ...] = ("train", "val", "test")
     return {role: [i for i in sf.ids(role) if i in have] for role in roles}
