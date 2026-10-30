@@ -83,6 +83,7 @@ def exercise_runtime(root: Path, python: str = sys.executable, *, evaluate: bool
         policy_path = Path(created['path'])
         cli('adopt', '--spec', source, '--root', root / 'policies', '--connections', models, '--check', expected=2)  # v1 is saved, as the write says
         cli('adopt', 'ticket-bug', '--spec', source, '--connections', models, '--check', expected=2)  # a spec names its task
+        cli('adopt', '--spec', source, '--connections', models, '--check', expected=2)  # in the project: its policies/ has v1
         second = root / 'bug-v2.json'
         second.write_text(json.dumps({**json.loads(source.read_text()), 'version': 2}))
         adopted = json.loads(cli('adopt', '--spec', second, '--reason', 'try v2', '--json').stdout)  # the base install switches
