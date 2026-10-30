@@ -35,7 +35,7 @@ jobs:
             echo 'S1FLOW_EOF'
           } >> "$GITHUB_OUTPUT"
       - id: s1
-        uses: gotalab/s1flow/decide@main
+        uses: gotalab/s1flow/decide@v0.1.0a1
         continue-on-error: true
         with:
           working-directory: s1flow

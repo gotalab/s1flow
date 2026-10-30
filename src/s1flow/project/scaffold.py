@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import os
 import shutil
+from importlib import metadata
 from pathlib import Path
 
 from ..core import place
@@ -19,7 +20,18 @@ from ..core.errors import ConfigError
 from ..client.lineup import BUILTIN_LINEUP
 
 TEMPLATES = Path(__file__).resolve().parents[1] / "templates"
-ACTION = "gotalab/s1flow@main"
+
+
+def _action() -> str:
+    """The check Action at the release this s1flow came from (tag vX = version X), so a user's CI keeps running
+    the version they installed; a source checkout with no installed version follows main."""
+    try:
+        return f"gotalab/s1flow@v{metadata.version('s1flow')}"
+    except metadata.PackageNotFoundError:
+        return "gotalab/s1flow@main"
+
+
+ACTION = _action()
 
 
 def _git_root(d: Path) -> Path | None:
