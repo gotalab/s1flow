@@ -95,6 +95,7 @@ def test_an_against_given_does_not_read_the_base_commit(tmp_path):
     ran, _ = run(tmp_path, "pass", 0, base="echo 'HTTP 502' >&2; exit 1", AGAINST="v1")
     assert ran.returncode == 0 and "check toy --against v1 " in (tmp_path / "args").read_text()
 
+
 def test_a_change_to_the_rules_is_flagged(tmp_path):
     changed = "modified s1flow/tasks/toy/task.py\nmodified s1flow/tasks/toy/corrections.jsonl\nmodified README.md\nmodified s1flow/tasks/other/task.py"
     ran, temp = run(tmp_path, "no_difference", 0, changed=changed)
