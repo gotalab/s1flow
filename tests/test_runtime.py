@@ -1,6 +1,6 @@
 """Runtime-only boundaries: no evaluation imports or external provider calls."""
 from __future__ import annotations
-from conftest import ship, point
+from conftest import ship
 
 import json
 from concurrent.futures import ThreadPoolExecutor
@@ -17,6 +17,7 @@ from s1flow.client.models import Capabilities, ModelSpec, Version
 from s1flow.client.state import Image
 from s1flow.policies import DecisionPolicy, DecisionRule, Policies, PolicySpec, asked, load
 from s1flow.policies.file import Ref
+from s1flow.policies.history import Switch
 from s1flow.policies.log import AnsweredLog, FeedbackLog, from_span, span
 from s1flow.policies.policy_set import export
 from s1flow.policies.state_shape import schema_of
@@ -159,30 +160,28 @@ def test_invalid_answer_never_becomes_decision(monkeypatch: pytest.MonkeyPatch) 
         DecisionPolicy(policy(), client=c).decide('input')
 
 
-def test_immutable_publish_and_concurrent_current_writes(tmp_path: Path) -> None:
+def test_immutable_publish_and_concurrent_adopts(tmp_path: Path) -> None:
     root = tmp_path / 'policies'
     stores = [Policies(root), Policies(root)]
     with ThreadPoolExecutor(max_workers=2) as pool:
         results = list(pool.map(lambda store: _publish(store, policy()), stores))
     assert sorted(results) == ['conflict', 'saved']
     assert stores[0].read('ticket', version=1).digest == policy().digest
-    stores[0].write_new(policy().model_copy(update={'version': 2}))
-    def switch(version: int) -> str:
-        try:
-            point(Policies(root), 'ticket', version)
-        except ConfigError:  # the other switched first: current is not what this one read
-            return 'conflict'
-        return 'switched'
-    with ThreadPoolExecutor(max_workers=2) as pool:
-        switched = list(pool.map(switch, [1, 2]))
-    assert stores[0].current('ticket') in (1, 2) and 'switched' in switched
-    assert len(stores[0].history('ticket')) == switched.count('switched')
     assert not list((root / 'ticket').glob('.v1.json.*'))
+    # two adopts from v1 at once: one makes its version current, the other finds current changed and writes nothing
+    stores[0].write_new(policy(version=2), adopted=Switch(action='spec', version=2, previous=None, by='a', reason='r'))
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        results = list(pool.map(lambda sv: _publish(sv[0], policy(version=sv[1]), Switch(action='spec', version=sv[1], previous=2, by='a', reason='r')),
+                                [(stores[0], 3), (stores[1], 4)]))
+    assert sorted(results) == ['conflict', 'saved']
+    current = stores[0].current('ticket')
+    assert current in (3, 4) and len(stores[0].versions('ticket')) == 3  # v1, v2 and the winner
+    assert [line['version'] for line in map(json.loads, (root / 'ticket' / 'history.jsonl').read_text().splitlines())] == [2, current]
 
 
-def _publish(store: Policies, spec: PolicySpec) -> str:
+def _publish(store: Policies, spec: PolicySpec, adopted: Switch | None = None) -> str:
     try:
-        store.write_new(spec)
+        store.write_new(spec, adopted=adopted)
     except ConfigError:
         return 'conflict'
     return 'saved'

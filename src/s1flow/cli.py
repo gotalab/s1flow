@@ -1,7 +1,7 @@
 """The `s1flow` console script: every command, in the standard library's argparse.
 
 Each command imports what it needs when it runs, so the base install (pydantic and httpx) runs init, decide,
-feedback record, export, doctor, and adopt TASK@vN and adopt --spec: an app or a workflow decides and
+feedback record, export, doctor and adopt --spec: an app or a workflow decides and
 records feedback, and an agent makes a project and gets the Skill, without the evaluation stack. The other commands need s1flow[eval]; on the base
 install they end in one line saying what to install, not a traceback. `s1flow --help` lists every command in one
 table (HELP), and a command that does not exist is one line naming the closest.
@@ -56,7 +56,7 @@ if TYPE_CHECKING:
     from .project import Project
 
 EXITS = "Exit codes: 0 done; 1 a gate failed or something was found (check fails, doctor or models --verify finds a problem); 2 usage, configuration, could not run, or check pending."
-BASE = ("init", "decide", "feedback", "export", "doctor")  # what the base install runs (feedback record; adopt TASK@vN and --spec)
+BASE = ("init", "decide", "feedback", "export", "doctor")  # what the base install runs (feedback record; adopt --spec)
 # Every command, as `s1flow --help` lists it.
 TABLE = (
     ("init", "make a project in ./s1flow: s1flow.toml, a task with --task, the CI workflow with --ci, the Agent Skill with --skill"),
@@ -77,31 +77,11 @@ HELP = "\n".join([
     "--project PATH selects a project without changing cwd; --connections PATH selects one trusted connection file.",
     "Use these options only where listed by COMMAND --help; they also work before the command. SDK calls do not discover projects.", "", "Commands:",
     *(f"  {name:<16} {what}" for name, what in TABLE), "",
-    "init, decide, feedback record, export, doctor, adopt TASK@vN and adopt --spec run on the base install; "
+    "init, decide, feedback record, export, doctor and adopt --spec run on the base install; "
     "the others need the eval extra: install s1flow[eval].",
     EXITS,
 ])
 
-
-GITHUB_SCRIPT = "the Skill's script, python .agents/skills/s1flow/scripts/github.py (s1flow init --skill writes it)"
-SKILL_FILES = "`init --skill` (it writes the Skill; agents read SKILL.md and references/ there)"
-RENAMED = {  # commands renamed or removed: none runs under its old name, the error names what replaces it
-    "propose": "`report` (the list) or `adopt` (write the one picked)", "improve": "`optimize TASK`", "gh": GITHUB_SCRIPT,
-    "github": GITHUB_SCRIPT, "compare": "`report`", "rank": "`report`",
-    "promote": "`adopt` (it makes the version current; merging that change ships it)",
-    "data": "`cases`", "release": "`adopt --spec FILE` or `export`", "record-feedback": "`feedback record`",
-    "tasks": "`report` with no task (every task's current version, and why)",
-    "policy": "`adopt --spec FILE` (save a spec as the current version; --check validates only) or `export`",
-    "skill": SKILL_FILES, "guide": SKILL_FILES,
-}
-
-REMOVED_ACTIONS = {  # subcommands removed after 0.1.0a1, by what replaces them
-    ("policy", "validate"): "`s1flow adopt --spec FILE --check` (with --connections to check the binding)",
-    ("policy", "create"): "`s1flow adopt --spec FILE --reason \"...\"` (--check validates only)",
-    ("policy", "export"): "`s1flow export`",
-    ("skill", "install"): SKILL_FILES, ("skill", "path"): SKILL_FILES,
-    ("optimize", "prompt"): "`s1flow optimize TASK`",
-}
 
 T = TypeVar("T")
 
@@ -110,9 +90,7 @@ T = TypeVar("T")
 
 
 def unknown_command(name: str) -> NoReturn:
-    """`s1flow polciy`: one line naming the closest command, exit 2 (a renamed one: its new name, never a near spelling)."""
-    if name in RENAMED:
-        usage_error(f"no command {name!r}: it is now {RENAMED[name]}", "s1flow")
+    """`s1flow polciy`: one line naming the closest command, exit 2."""
     close = difflib.get_close_matches(name, [n for n, _ in TABLE], n=1)
     usage_error(f"no command {name!r}" + (f"; did you mean {close[0]!r}?" if close else ""), "s1flow")
 
@@ -154,8 +132,6 @@ class Parser(argparse.ArgumentParser):
 
     def parse_args(self, args: Any = None, namespace: Any = None) -> Any:
         a, extra = self.parse_known_args(args, namespace)
-        if any(value == "--models-file" or value.startswith("--models-file=") for value in extra):
-            usage_error("--models-file was renamed to --connections PATH", a.prog_)
         for name in ("project", "connections"):
             option = f"--{name}"
             supplied = hasattr(a, name) or any(value == option or value.startswith(option + "=") for value in extra)
@@ -189,24 +165,17 @@ def positive(text: str) -> int:
     return n
 
 
-def _command_words(args: list[str]) -> list[str]:
-    """The command, its subcommand and the next word as typed, past the options that may come before them
-    (--project, --connections)."""
-    words: list[str] = []
+def _command_name(args: list[str]) -> str | None:
+    """The command as typed, past the options that may come before it (--project, --connections)."""
     i = 0
-    while i < len(args) and len(words) < 3:
-        x = args[i]
-        if x in ("--project", "--connections"):
+    while i < len(args):
+        if args[i] in ("--project", "--connections"):
             i += 2
-            continue
-        if x.startswith("-"):
-            if words:  # an option of the command itself: what follows is its value or its arguments
-                break
+        elif args[i].startswith("-"):
             i += 1
-            continue
-        words.append(x)
-        i += 1
-    return words
+        else:
+            return args[i]
+    return None
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -216,13 +185,9 @@ def main(argv: list[str] | None = None) -> None:
         print(HELP)
         sys.exit(0 if first else 2)
     assert first is not None
-    words = _command_words(args)
-    # `optimize prompt` alone optimizes a task named prompt; only `optimize prompt TASK` is the removed form
-    removed = len(words) == 3 if words[:2] == ["optimize", "prompt"] else True
-    if removed and (gone := REMOVED_ACTIONS.get(tuple(words[:2]))) is not None:  # type: ignore[arg-type]
-        usage_error(f"no command {' '.join(words[:2])}: it is now {gone}", "s1flow" if words[0] in RENAMED else f"s1flow {words[0]}")
-    if words and words[0] not in {name for name, _ in TABLE}:
-        unknown_command(words[0])
+    command = _command_name(args)
+    if command is not None and command not in {name for name, _ in TABLE}:
+        unknown_command(command)
     notices()
     a = parser().parse_args(args)
     try:
@@ -277,11 +242,7 @@ def _project_root(a: argparse.Namespace, *, required: bool = False) -> Path | No
 
 def _connections_path(a: argparse.Namespace) -> Path | None:
     value = getattr(a, "connections", None)
-    if value is not None:
-        return place.absolute(value, "connections")
-    if value := os.environ.get("S1FLOW_CONNECTIONS"):
-        return place.absolute(value, "S1FLOW_CONNECTIONS")
-    return None
+    return place.absolute(value, "connections") if value is not None else None
 
 
 def _client(a: argparse.Namespace, root: Path | None) -> Client:
@@ -291,7 +252,7 @@ def _client(a: argparse.Namespace, root: Path | None) -> Client:
     if config is None and root is not None:
         config = root / place.CONFIG
     if config is None:
-        raise ConfigError(f"no connections configured in {Path.cwd()}; use --connections PATH, S1FLOW_CONNECTIONS, "
+        raise ConfigError(f"no connections configured in {Path.cwd()}; use --connections PATH "
                           "or --project PATH; run s1flow init to create a project")
     return Client(connections=config)
 
@@ -301,8 +262,7 @@ def _policy_client(a: argparse.Namespace) -> Client:
     from .client import Client
 
     if not getattr(a, "connections", None):
-        raise ConfigError("policy execution needs --connections PATH: a trusted file listing only the allowed connections; "
-                          "S1FLOW_CONNECTIONS does not grant policy execution")
+        raise ConfigError("policy execution needs --connections PATH: a trusted file listing only the allowed connections")
     return Client(connections=a.connections)
 
 
@@ -449,8 +409,6 @@ def feedback_measure(a: argparse.Namespace) -> int:
     from .eval import feedback as fb  # s1flow[eval]: the task, its cases and objectives
     from .eval.task import load
 
-    if a.dry_run:
-        raise ConfigError("--dry-run is gone: feedback measure now only measures; --add also adds the cases")
     task = load(project(a), a.task)
     found = fb.read([Path(x) for x in a.logs])
     cs = fb.cases(task, found)
@@ -779,81 +737,57 @@ def _print_weights(listed: Any) -> None:
           else "Halving or doubling the weights leaves the candidates tied at the top as they are.")
 
 
-def _adopt_spec(store: Policies, spec: PolicySpec, by: str, reason: str) -> int | None:
-    """Save a runtime spec as its task's next version, unevaluated, and make it current (adopt --spec, policy
-    create); returns the version current pointed at before."""
-    from .policies.history import Switch
-
-    previous = store.current(spec.task)
-    store.write_new(spec, adopted=Switch(action="spec", version=spec.version, previous=previous, by=by, reason=reason))
-    return previous
-
-
-def _adopt_without_evaluation(a: argparse.Namespace) -> int:
-    """adopt TASK@vN (point current at a saved version) or adopt --spec FILE (save a runtime spec as the next
-    version, unevaluated, and point current at it): no model is called and nothing is measured."""
+def _adopt_spec(a: argparse.Namespace) -> int:
+    """adopt --spec FILE: save a runtime spec as its task's next version, unevaluated, and make it current (with
+    --check, validate it only). No model is called and nothing is measured. In an s1flow project, its policies/ and
+    s1flow.toml; in an app's repository, --root and --connections."""
     from .integrations import git
     from .policies import DecisionPolicy, Policies
-    from .policies.file import Ref, read_file
+    from .policies.file import read_file
     from .policies.history import Switch
 
-    if a.candidate or a.force:
-        raise S1flowError("adopt TASK@vN and adopt --spec take no candidate and no --force: nothing is measured")
-    if a.spec and a.task:
-        raise S1flowError("adopt --spec FILE takes no TASK: the spec names its task and version")
-    if a.check:  # validate only: what the write would refuse, it refuses too; writes nothing
-        spec = read_file(a.spec)
-        # where the write would save (the project's policies/, or --root); with --connections alone, outside a project,
-        # the binding only
-        found = None if a.root else _project_root(a, required=not a.connections)
-        proj = project(a) if found else None
-        DecisionPolicy(spec, client=proj.client() if proj else _policy_client(a))  # it binds to an allowed model, as the write does
-        if a.root or proj:  # a policies directory to save into: the next version there
-            latest = max(Policies(place.absolute(a.root, "policy root") if a.root else proj.policies_dir).versions(spec.task), default=0)  # type: ignore[union-attr]
-            if spec.version <= latest:
-                raise ConfigError(f"{spec.task} already has v{latest}; a new policy is v{latest + 1}")
+    if a.task or a.candidate or a.force:
+        raise S1flowError("adopt --spec FILE takes no TASK, candidate or --force: the spec names its task and version, and nothing is measured")
+    spec = read_file(a.spec)
+    # --check with --connections alone, outside a project: the binding only
+    found = None if a.root else _project_root(a, required=not (a.check and a.connections))
+    proj = project(a) if found else None
+    DecisionPolicy(spec, client=proj.client() if proj else _policy_client(a))  # it binds to an allowed model
+    where = place.absolute(a.root, "policy root") if a.root else proj.policies_dir if proj else None
+    store = Policies(where) if where else None
+    if a.check:
+        if store is not None and spec.version <= (latest := max(store.versions(spec.task), default=0)):
+            raise ConfigError(f"{spec.task} already has v{latest}; a new policy is v{latest + 1}")
         print(json.dumps({"policy": spec.ref, "valid": True}) if a.json else f"{spec.ref}: valid (binds to {spec.connection}); nothing written")
         return 0
-    # In an s1flow project its policies/ and s1flow.toml; in an app's repository, --root and --connections.
-    proj = None if a.root else project(a)
-    store = Policies(place.absolute(a.root, "policy root") if a.root else proj.policies_dir)  # type: ignore[union-attr]
+    assert store is not None
     user = git.user(proj.root if proj else Path.cwd())
     if not user:
         raise S1flowError("adopt records who switched current: set git config user.name")
-    if a.spec:
-        spec = read_file(a.spec)
-        DecisionPolicy(spec, client=proj.client() if proj else _policy_client(a))  # it binds to an allowed model
-        previous = _adopt_spec(store, spec, user, a.reason)
-        path = store.dir(spec.task) / f"v{spec.version}.json"
-        out = {"policy": spec.ref, "previous": previous, "evaluated": False, "path": str(path)}
-        print(json.dumps(out) if a.json else f"{spec.ref} (current, not evaluated): wrote {_shown(path)}, channels.json, history.jsonl")
-        return 0
-    ref = Ref.parse(a.task)
-    if ref.version is None:
-        raise S1flowError(f"a rollback names the version: adopt {ref.task}@vN --reason \"...\"")
-    previous = store.current(ref.task)
-    if previous == ref.version:
-        raise S1flowError(f"{ref.task}@v{ref.version} is already current")
-    store.switch(ref.task, Switch(action="rollback", version=ref.version, previous=previous, by=user, reason=a.reason))
-    out = {"policy": f"{ref.task}@v{ref.version}", "previous": previous, "evaluated": None, "path": None}
-    print(json.dumps(out) if a.json else f"{ref.task}@v{ref.version} (current, from v{previous}): wrote channels.json, history.jsonl")
+    previous = store.current(spec.task)
+    store.write_new(spec, adopted=Switch(action="spec", version=spec.version, previous=previous, by=user, reason=a.reason))
+    path = store.dir(spec.task) / f"v{spec.version}.json"
+    out = {"policy": spec.ref, "previous": previous, "evaluated": False, "path": str(path)}
+    print(json.dumps(out) if a.json else f"{spec.ref} (current, not evaluated): wrote {_shown(path)}, channels.json, history.jsonl")
     return 0
 
 
 def adopt(a: argparse.Namespace) -> int:
     """Switch the task's current policy, with why (who: git config user.name; history.jsonl keeps each switch): to a
-    measured candidate (TASK CANDIDATE), to an older version (TASK@vN, a rollback), or to a runtime spec saved
-    unevaluated (--spec FILE; these two need only the base install). The pull request that carries it ships it when
+    measured candidate (TASK CANDIDATE), or to a runtime spec saved unevaluated (--spec FILE; the base install runs
+    it). The pull request that carries it ships it when
     it merges. A candidate the held-out test shows below is not written (exit 1) unless --force."""
     a.reason = (a.reason or "").strip()
     if a.check and not a.spec:
         raise S1flowError("adopt --check validates a spec: adopt --spec FILE --check")
     if not a.reason and not a.check:
         raise S1flowError("adopt records why: give --reason a sentence")
-    if a.spec or "@" in (a.task or "") or a.root:
-        return _adopt_without_evaluation(a)
+    if a.spec:
+        return _adopt_spec(a)
+    if a.root:
+        raise S1flowError("--root is where adopt --spec FILE saves, outside an s1flow project")
     if not a.task or not a.candidate:
-        raise S1flowError("adopt takes TASK CANDIDATE, TASK@vN (a rollback) or --spec FILE")
+        raise S1flowError("adopt takes TASK CANDIDATE or --spec FILE")
     from .eval import adopt as adopting
     from .eval.task import load
     from .integrations import git
@@ -896,7 +830,7 @@ def adopt(a: argparse.Namespace) -> int:
 
 
 def check(a: argparse.Namespace) -> int:
-    """Ask both versions about today's test cases and compare them case by case. Exit 0 pass (or a rollback), 1 worse, 2 could not run or pending."""
+    """Ask both versions about today's test cases and compare them case by case. Exit 0 pass, 1 worse, 2 could not run or pending."""
     from .eval import check as checking
     from .eval.check import comment
     from .eval.task import load
@@ -912,10 +846,7 @@ def check(a: argparse.Namespace) -> int:
         write(comment.error_markdown(task_id, message))
 
     task = _guard(lambda: load(project(a), task_id), failed)
-    from .policies import history
-
-    r = _guard(lambda: checking.check(task, a.against, a.candidate, a.sample, a.cached_only,
-                                      history=None if a.history is None else history.read(a.history)), failed)
+    r = _guard(lambda: checking.check(task, a.against, a.candidate, a.sample, a.cached_only), failed)
     md = comment.markdown(task, r)
     write(md)
     print(r.model_dump_json(indent=1) if a.json else md)
@@ -1027,7 +958,7 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--from", dest="from_path", type=Path, metavar="PATH", help="read a saved comparison.json offline")
 
     p = _command(sub, "adopt", adopt, context=("project", "connections"))
-    p.add_argument("task", nargs="?", help="the task, or TASK@vN to roll back to a saved version")
+    p.add_argument("task", nargs="?", help="the task")
     p.add_argument("candidate", nargs="?", help="the candidate, model[:version][/variant] as `s1flow report` names it")
     p.add_argument("--spec", type=Path, metavar="FILE", help="save this runtime spec as the next version, unevaluated, and make it current")
     p.add_argument("--root", type=Path, help="the policies directory, outside an s1flow project (an app's repository; with --connections for --spec)")
@@ -1042,7 +973,6 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--candidate", help="current, vN, or `draft` (the task's current question); default: current when --against names another version, else the edited question")
     p.add_argument("--sample", type=positive, help="check this many test cases only (a cheap PR check)")
     p.add_argument("--cached-only", action="store_true", help="make no calls (no keys, e.g. a PR from a fork); pending when some are needed")
-    p.add_argument("--history", type=Path, help="the history.jsonl that tells a rollback (default the task's; the Action passes the base commit's)")
     p.add_argument("--json", action="store_true")
     p.add_argument("--markdown", type=Path, help="also write the PR comment here")
 
@@ -1108,7 +1038,6 @@ def parser() -> argparse.ArgumentParser:
     m.add_argument("task")
     m.add_argument("logs", nargs="+", help="SDK logs (JSONL) or OpenTelemetry JSON exports")
     m.add_argument("--add", action="store_true", help="also add the cases with a kept state and a valid label to tasks/<task>/feedback.jsonl")
-    m.add_argument("--dry-run", action="store_true", help=argparse.SUPPRESS)  # gone: measuring alone is the default
     m.add_argument("--json", action="store_true")
 
     ex = _command(sub, "export", export, context=("project",), help="write the policies an app uses into one file (policies.json)",

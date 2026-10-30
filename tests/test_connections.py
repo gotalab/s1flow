@@ -46,8 +46,7 @@ def test_sdk_does_not_discover_connections_or_read_env_files(tmp_path, monkeypat
     monkeypatch.chdir(tmp_path)
     monkeypatch.syspath_prepend(str(HERE))
     connections(tmp_path / "s1flow.toml")
-    monkeypatch.setenv("S1FLOW_CONNECTIONS", str(tmp_path / "s1flow.toml"))
-    (tmp_path / ".env").write_text("S1FLOW_CONNECTIONS=unrelated.toml\n")
+    (tmp_path / ".env").write_text("OPENROUTER_API_KEY=unrelated\n")
     monkeypatch.setattr(place, "find", lambda *args, **kwargs: pytest.fail("SDK searched for a project"))
     for client in [Client(), AsyncClient()]:
         with pytest.raises(ConfigError, match="connections="):
@@ -161,19 +160,6 @@ def test_missing_project_error_has_search_location_and_next_step(tmp_path):
     assert str(tmp_path) in done.stderr and "--project" in done.stderr and "s1flow init" in done.stderr
 
 
-def test_cli_connections_environment_is_supported_but_explicit_path_wins(tmp_path):
-    first = connections(tmp_path / "first.toml", "first")
-    second = connections(tmp_path / "second.toml", "second")
-    command = ["decide", "--model", "toy", "--boolean", "Is this a bug?", "--state", '"bug"', "--json"]
-    env = {"S1FLOW_CONNECTIONS": str(first)}
-    done = cli(*command, cwd=tmp_path, env=env)
-    assert done.returncode == 0, done.stderr
-    assert json.loads(done.stdout)["answered_by"] == "toy:first-1"
-    done = cli(*command, "--connections", str(second), cwd=tmp_path, env=env)
-    assert done.returncode == 0, done.stderr
-    assert json.loads(done.stdout)["answered_by"] == "toy:second-1"
-
-
 def test_nested_cli_options_and_missing_policy_authorization(tmp_path):
     from test_runtime import policy as specification
 
@@ -185,7 +171,7 @@ def test_nested_cli_options_and_missing_policy_authorization(tmp_path):
     assert done.returncode == 2 and "unknown connection 'trusted'" in done.stderr
     assert "toy" in done.stderr and str(config) in done.stderr and "Traceback" not in done.stderr
     done = cli("decide", "--policy", "ticket@v1", "--path", str(source), "--state", '"bug"',
-               cwd=tmp_path, env={"S1FLOW_CONNECTIONS": str(config)})
+               cwd=tmp_path)
     assert done.returncode == 2 and "needs --connections PATH" in done.stderr
 
 
@@ -194,11 +180,6 @@ def test_explicit_missing_project_never_falls_back(tmp_path):
     missing = tmp_path / "wrong"
     done = cli("report", "--project", str(missing), cwd=tmp_path)
     assert done.returncode == 2 and str(missing) in done.stderr and "--project" in done.stderr
-
-
-def test_old_cli_names_explain_the_replacement(tmp_path):
-    done = cli("decide", "--models-file", "connections.toml", cwd=tmp_path)
-    assert done.returncode == 2 and "--connections" in done.stderr
 
 
 def test_adoption_identity_comes_from_selected_repository(tmp_path, monkeypatch):
@@ -281,7 +262,7 @@ def test_preloaded_lineup_is_data_and_client_alone_selects_cache(tmp_path, monke
 
 
 
-def test_an_app_without_a_project_adopts_and_rolls_back_with_root(tmp_path):
+def test_an_app_without_a_project_adopts_with_root(tmp_path):
     from test_runtime import policy as specification
 
     app = tmp_path / "app"
@@ -293,13 +274,12 @@ def test_an_app_without_a_project_adopts_and_rolls_back_with_root(tmp_path):
         (app / f"v{v}.json").write_text(specification(version=v).dump())
         done = cli("adopt", "--spec", f"v{v}.json", "--root", "policies", "--connections", "connections.toml", "--reason", f"rule {v}", cwd=app, env=git)
         assert done.returncode == 0, done.stderr
-    done = cli("adopt", "ticket@v1", "--root", "policies", "--reason", "back", cwd=app, env=git)
-    assert done.returncode == 0, done.stderr
     store = policies.Policies(app / "policies")
-    assert store.current("ticket") == 1 and [(h.action, h.version, h.by) for h in store.history("ticket")] == [
-        ("spec", 1, "App owner"), ("spec", 2, "App owner"), ("rollback", 1, "App owner")]
+    assert store.current("ticket") == 2 and [(h.action, h.version, h.by) for h in store.history("ticket")] == [
+        ("spec", 1, "App owner"), ("spec", 2, "App owner")]
+    (app / "v3.json").write_text(specification(version=3).dump())
     for reason in ("", "  "):
-        done = cli("adopt", "ticket@v2", "--root", "policies", "--reason", reason, cwd=app, env=git)
+        done = cli("adopt", "--spec", "v3.json", "--root", "policies", "--connections", "connections.toml", "--reason", reason, cwd=app, env=git)
         assert done.returncode == 2 and "give --reason a sentence" in done.stderr and "Traceback" not in done.stderr
 
 

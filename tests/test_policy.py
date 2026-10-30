@@ -5,10 +5,11 @@ import json
 import sys
 
 import pytest
-from conftest import attach, make_project, ship, point
+from conftest import attach, make_project, ship
 
 from s1flow import policies
 from s1flow.core.errors import ConfigError, DataError, NotFound, ProviderError, S1flowError
+from s1flow.core import place
 from s1flow.eval.evaluation import Evaluation, Failures
 from s1flow.eval.policy import EvaluatedPolicy, Evidence, Selection, Store
 from s1flow.project import Project
@@ -89,23 +90,17 @@ def test_versions_are_never_rewritten_and_current_moves(store, tmp_path):
     assert store.current("t") is None
     ship(store, policy(version=2))
     assert store.current("t") == 2 and store.read("t").spec.version == 2
-    point(store, "t", 1)  # a rollback
-    assert store.read("t").spec.version == 1
-    with pytest.raises(NotFound):
-        point(store, "t", 3)
     raw = json.loads((tmp_path / "policies" / "t" / "v1.json").read_text())
     assert raw["schema"] == "s1flow/policy@2" and "api_key" not in json.dumps(raw)
 
 
-def test_a_file_from_0_1_0a1_with_next_and_named_channels_reads_its_current(store, tmp_path):
+def test_current_is_the_one_channel(store, tmp_path):
     store.write_new(policy())
-    store.write_new(policy(version=2))
-    (tmp_path / "policies" / "t" / "channels.json").write_text('{"schema": "s1flow/channels@1", "channels": {"current": 1, "next": 2, "staging": 2}}')
-    assert store.current("t") == 1
+    (tmp_path / "policies" / "t" / "channels.json").write_text('{"schema": "s1flow/channels@1", "channels": {"current": 1, "next": 1}}')
+    with pytest.raises(ConfigError, match="the one channel is `current`"):
+        store.current("t")
     with pytest.raises(ConfigError, match="the one channel is `current`"):
         runtime_load("t@next", root=tmp_path / "policies")
-    point(store, "t", 2)
-    assert json.loads((tmp_path / "policies" / "t" / "channels.json").read_text())["channels"] == {"current": 2}
 
 
 def test_a_broken_policy_file_is_a_config_error(store, tmp_path):
@@ -198,18 +193,15 @@ def test_development_discovery_and_explicit_runtime_store(tmp_path, monkeypatch)
     assert runtime_load("t", root=store.root).spec.ref == "t@v1"
     with pytest.raises(ConfigError, match="next"):
         runtime_load("t@next", root=store.root)
-    assert Project.discover().root == tmp_path / "s1flow"
+    assert place.project(None) == tmp_path / "s1flow"
 
 
 def test_project_configuration_is_explicit_not_environment_owned(tmp_path, monkeypatch):
-    from s1flow.core import place
-
     home = tmp_path / "app"
     home.mkdir()
     (home / "s1flow.toml").write_text("default = []\n[models]\n")
     monkeypatch.chdir(home)
-    monkeypatch.setenv("S1FLOW_CONNECTIONS", str(tmp_path / "unrelated.toml"))
-    project = Project.discover()
+    project = Project(place.project(None, required=True))
     assert place.root() == project.root == home.resolve()
     assert project.config == home / "s1flow.toml"
     assert project.policies_dir == home / "policies"
@@ -222,7 +214,7 @@ def test_without_an_s1flow_toml_there_is_no_project(tmp_path, monkeypatch):
     (tmp_path / "policies").mkdir()
     monkeypatch.chdir(tmp_path)
     with pytest.raises(ConfigError, match="no s1flow project.*--project.*s1flow init"):
-        Project.discover()
+        place.project(None, required=True)
 
 
 def test_feedback_and_spans(store, tmp_path):
@@ -517,12 +509,11 @@ def test_a_name_that_is_not_there_lists_the_ones_that_are(store, tmp_path):
     store.write_new(policy())
     with pytest.raises(NotFound, match=r"t has no current version"):
         store.read("t")
-    store.write_new(policy(version=2))
-    point(store, "t", 1)
+    ship(store, policy(version=2))
     with pytest.raises(NotFound, match=r"no policy of 'x'; tasks with policies: t"):
         store.read("x")
     with pytest.raises(NotFound, match="no policy .*v9.json"):
-        point(store, "t", 9)
+        store.read("t", version=9)
     log = tmp_path / "log.jsonl"
     d = policies.DecisionPolicy(policy().spec, client=policy_client(), log=log)
     with pytest.raises(ConfigError, match="label 'kind/nope' is not an answer to its question"):

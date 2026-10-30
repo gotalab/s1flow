@@ -1,1 +1,1 @@
-{"schema": "s1flow/history@1", "at": "2026-10-30T12:00:00Z", "action": "rollback", "version": 1, "previous": 2, "by": "Gota", "reason": "v2 misreads feature requests"}
+{"schema": "s1flow/history@1", "at": "2026-10-30T12:00:00Z", "action": "spec", "version": 3, "previous": 2, "by": "Gota", "reason": "hand-written rule for the new label"}

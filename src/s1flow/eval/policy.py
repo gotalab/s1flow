@@ -134,9 +134,6 @@ class Store:
     def current(self, task: str) -> int | None:
         return self.runtime.current(task)
 
-    def switch(self, task: str, entry: Switch) -> None:
-        self.runtime.switch(task, entry)
-
     def log(self, task: str, entry: Switch) -> None:
         self.runtime.log(task, entry)
 

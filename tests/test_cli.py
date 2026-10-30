@@ -21,18 +21,12 @@ def s1flow(*args: str, cwd: Path | None = None) -> subprocess.CompletedProcess[s
 
 @pytest.mark.parametrize("args, said", [
     (("repot",), "error: no command 'repot'; did you mean 'report'? (see s1flow --help)"),
-    (("tasks",), "error: no command 'tasks': it is now `report` with no task"),
-    (("skill", "install"), "error: no command skill install: it is now `init --skill`"),
-    (("propose", "t"), "error: no command 'propose': it is now `report` (the list) or `adopt` (write the one picked) (see s1flow --help)"),
+    (("--project", ".", "repot"), "error: no command 'repot'; did you mean 'report'?"),
+    (("--connections", "c.toml", "skill", "install"), "error: no command 'skill'"),
     (("run",), "error: the following arguments are required: task (see s1flow run --help)"),
     (("run", "t", "--bogus"), "error: unrecognized arguments: --bogus (see s1flow run --help)"),
     (("check", "t", "--sample", "0"), "error: argument --sample: 0 is not 1 or more (see s1flow check --help)"),
-    (("github", "fetch", "o/r"), "error: no command 'github': it is now the Skill's script, python .agents/skills/s1flow/scripts/github.py"),
-    (("policy", "validate", "p.json"), "error: no command policy validate: it is now `s1flow adopt --spec FILE --check`"),
-    (("policy", "create", "p.json"), "error: no command policy create: it is now `s1flow adopt --spec FILE --reason"),
-    (("optimize", "prompt", "t"), "error: no command optimize prompt: it is now `s1flow optimize TASK` (see s1flow optimize --help)"),
     (("decide", "--bogus"), "error: unrecognized arguments: --bogus (see s1flow decide --help)"),
-    (("policy", "export", "--bogus"), "error: no command policy export: it is now `s1flow export`"),
     (("export", "--bogus"), "error: unrecognized arguments: --bogus (see s1flow export --help)"),
     (("adopt", "t@v1"), "error: adopt records why: give --reason a sentence"),
     (("adopt", "t@v1", "--check", "--reason", "x"), "error: adopt --check validates a spec: adopt --spec FILE --check"),
@@ -118,7 +112,7 @@ def test_report_with_no_task_is_the_overview_of_what_runs(tmp_path):
 
     (tmp_path / "s1flow.toml").write_text((BENCH / "s1flow.toml").read_text())
     shutil.copytree(BENCH / "policies", tmp_path / "policies")
-    (tmp_path / "policies" / "gh-ruff-area" / "channels.json").write_text('{"schema": "s1flow/channels@1", "channels": {"current": 1, "next": 3, "staging": 2}}\n')  # 0.1.0a1's
+    (tmp_path / "policies" / "gh-ruff-area" / "channels.json").write_text('{"schema": "s1flow/channels@1", "channels": {"current": 1}}\n')
     done = s1flow("report", "--json", cwd=tmp_path)
     assert done.returncode == 0, done.stderr
     area = next(t for t in json.loads(done.stdout) if t["task"] == "gh-ruff-area")
@@ -132,23 +126,10 @@ def test_report_with_no_task_is_the_overview_of_what_runs(tmp_path):
     assert ["gh-ruff-area", "gh-ruff-area@v1", "d1@vercel", "-", "liquid/d1", "no"] in [t.split() for t in text]
     # why current is what it is: the last switch in history.jsonl
     (tmp_path / "policies" / "gh-ruff-area" / "history.jsonl").write_text(json.dumps(
-        {"schema": "s1flow/history@1", "at": "2026-10-30T09:00:00Z", "action": "rollback", "version": 1, "previous": 3, "by": "ana", "reason": "v3 times out"}) + "\n")
+        {"schema": "s1flow/history@1", "at": "2026-10-30T09:00:00Z", "action": "spec", "version": 1, "previous": 3, "by": "ana", "reason": "v3 times out"}) + "\n")
     shown = s1flow("report", cwd=tmp_path)
-    assert shown.returncode == 0 and "gh-ruff-area: v1 by ana, 2026-10-30 (rollback from v3): v3 times out" in shown.stdout
+    assert shown.returncode == 0 and "gh-ruff-area: v1 by ana, 2026-10-30 (spec from v3): v3 times out" in shown.stdout
     area = next(t for t in json.loads(s1flow("report", "--json", cwd=tmp_path).stdout) if t["task"] == "gh-ruff-area")
     assert area["why"]["reason"] == "v3 times out" and area["current"] == 1
 
 
-@pytest.mark.parametrize("args, said", [
-    (("--connections", "c.toml", "policy", "validate", "p.json"), "it is now `s1flow adopt --spec FILE --check`"),
-    (("--project", ".", "github", "fetch", "o/r"), "no command 'github': it is now the Skill's script"),
-    (("--project", ".", "optimize", "prompt", "t"), "it is now `s1flow optimize TASK`"),
-])
-def test_a_removed_command_is_named_after_the_options_that_come_first(tmp_path, args, said):
-    done = s1flow(*args, cwd=tmp_path)
-    assert done.returncode == 2 and said in done.stderr and "Traceback" not in done.stderr
-
-
-def test_a_task_named_prompt_is_optimized_not_taken_for_the_removed_form(tmp_path):
-    done = s1flow("optimize", "prompt", "--json", cwd=tmp_path)
-    assert "it is now" not in done.stderr and "Traceback" not in done.stderr

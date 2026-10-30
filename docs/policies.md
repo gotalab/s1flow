@@ -29,10 +29,7 @@ with the one the pull request makes current, on today's test cases, and fails wh
 The check asks both versions again rather than trusting what their evidence says, because the pull request could
 have written that evidence. So a version adopted with `--force` fails the check like any other version below; the
 comment shows that it was forced, by whom and why, and merging it anyway is a person's call. A version adopted with
-`adopt --spec` has no evidence and is asked like any other. Going back to an older version that ran before the base
-branch's current (the base commit's `history.jsonl` says so) is a rollback: the check measures it and shows the
-numbers, but passes, even where it breaks a constraint (a rollback restores what ran; the person decides it).
-Adopting again a newer version that was rolled back from is checked as usual. A pull request that rewrites, renames or
+`adopt --spec` has no evidence and is asked like any other. A pull request that rewrites, renames or
 removes a saved `vN.json` or `vN.evaluation.json` fails (and so does one whose files cannot be listed): versions are never rewritten, so both versions the check
 reads are the ones that shipped. A check that cannot measure (a pull request from a fork gets no keys, and some answers are not
 cached) is pending; the workflow `s1flow init --ci` writes fails on it (`on-pending: fail`; `warn` lets it pass).
@@ -43,8 +40,11 @@ edited files, so review that diff.
 A policy that was never evaluated, written by hand, is saved and made current by `adopt --spec FILE --reason
 "..."` with only the base runtime; s1flow reports that there is no evidence for it.
 
-To roll back, `s1flow adopt TASK@vN --reason "..."` points `current` at the older version; versions are never
-rewritten, so the older one is still there. Open the pull request with that change.
+To go back to a version that ran before, save it again as the next version: `adopt --spec` with its `vN.json`
+renumbered brings back exactly that spec, unevaluated; `s1flow adopt TASK CANDIDATE` with its candidate measures
+that candidate again on today's task, question and cases. Versions are only added, so the pull request is checked
+as any adopt is; reverting the one that adopted the newer version would remove a saved version, which the check
+Action refuses.
 
 Only `adopt` points `current`, and each time it does, it appends why to `policies/<task>/history.jsonl` (when,
 which version, the one before, who, why, and for a measured candidate the held-out test's verdict). A candidate it
@@ -53,7 +53,7 @@ one passes leaves a trace.
 
 ```bash
 s1flow adopt --spec spec.json --reason "hand-written first rule" --json
-s1flow adopt ticket-bug@v1 --reason "v2 misreads feature requests"
+s1flow adopt ticket-bug d1@vercel/short --reason "v2 misreads feature requests"
 s1flow export ticket-bug --out policies.json
 ```
 

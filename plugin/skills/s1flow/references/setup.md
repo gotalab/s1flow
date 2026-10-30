@@ -11,7 +11,7 @@ s1flow init --skill                    # also write this Skill where agents read
 
 `init` writes nothing outside the project unless asked. Ask the person before `--ci` (a PR check that calls
 models on every PR that changes a task, a policy or `s1flow.toml`, with `on-pending: fail`) and before `--skill`.
-The base install runs `init`, `decide`, `feedback record`, `adopt` (rollback and `--spec`), `export` and
+The base install runs `init`, `decide`, `feedback record`, `adopt --spec`, `export` and
 `doctor`; the rest need `s1flow[eval]`. The SDK never installs packages at runtime.
 
 ## Keys and hosts: doctor
@@ -51,9 +51,8 @@ does not change cwd, so `--connections`, `--log` and other relative paths start 
 the CLI searches upward from cwd to the nearest Git boundary; outside Git, only cwd and cwd/`s1flow`. The error
 for a missing project names where it searched and which option to pass.
 
-Connections, in order: `--connections`, then `S1FLOW_CONNECTIONS`, then the project's `s1flow.toml`; never
-merged. `decide --policy`, `feedback record` and `doctor --policy` need explicit `--connections`, so
-`S1FLOW_CONNECTIONS` alone cannot grant runtime access. `report --from` takes neither option.
+Connections: `--connections` when given, else the project's `s1flow.toml`; never merged. `decide --policy`,
+`feedback record` and `doctor --policy` need explicit `--connections`. `report --from` takes neither option.
 
 ## Names
 
@@ -72,8 +71,7 @@ merged. `decide --policy`, `feedback record` and `doctor --policy` need explicit
 | 2 | usage, configuration, could not run, or a pending check | read the `error:` line and fix the named input |
 
 A usage error is one `error: ... (see s1flow <command> --help)` line. A `notice:` line on stderr is a warning.
-`check --cached-only` returns 2 when an answer is needed but not cached. A removed command
-prints its replacement and exits 2.
+`check --cached-only` returns 2 when an answer is needed but not cached.
 
 `--json` gives machine-readable output for `report`, `adopt`, `check`, `optimize`, `cases review`,
 `feedback measure`, `decide`, `doctor` and `models`. Other commands print their verdict and name the files they

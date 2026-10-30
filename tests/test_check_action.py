@@ -20,18 +20,19 @@ def step() -> str:
 
 
 def run(tmp_path: Path, verdict: str, code: int, *, on_pending: str = "fail", changed: str | list[dict[str, str]] | None = "",
-        base_history: str = "", workdir: str = "s1flow") -> tuple[subprocess.CompletedProcess[str], Path]:
+        workdir: str = "s1flow", base: str = "echo '{\"channels\": {\"current\": 1}}'", **env_: str) -> tuple[subprocess.CompletedProcess[str], Path]:
     """`changed`: the pull request's files as "status filename" lines, or as GitHub lists them (put through the
-    Action's own --jq); None: listing them fails."""
+    Action's own --jq); None: listing them fails. `base`: what `gh` does for the base commit's channels.json."""
     work, stubs, temp = tmp_path / workdir, tmp_path / "bin", tmp_path / "temp"
     for d in (work / "policies" / "toy", stubs, temp):
         d.mkdir(parents=True, exist_ok=True)
     (work / "policies" / "toy" / "channels.json").write_text(json.dumps({"channels": {"current": 2}}))
-    # gh: the base commit's channels.json and history.jsonl, and the pull request's files
+    # gh: the base commit's channels.json, and the pull request's files
     (stubs / "gh").write_text(f"""#!/usr/bin/env bash
 case "$*" in
-  *channels.json*) echo '{{"channels": {{"current": 1}}}}';;
-  *history.jsonl*) printf '%s' {shlex.quote(base_history)};;
+  *channels.json*) {base};;
+  *issues/7/comments*--paginate*) echo 41;;
+  *issues/comments/*|*issues/7/comments*) echo "$*" >> "{tmp_path}/comments"; for a in "$@"; do case "$a" in body=@*) cat "${{a#body=@}}" >> "{tmp_path}/comments";; esac; done;;
   *pulls/7/files*) {"echo 'HTTP 502' >&2; exit 1" if changed is None else
                      "printf '%s\\n' " + shlex.quote(changed) if isinstance(changed, str) else
                      'q=""; prev=""; for a in "$@"; do [ "$prev" = --jq ] && q="$a"; prev="$a"; done; printf %s '
@@ -52,7 +53,7 @@ exit {code}
     env = {**os.environ, "PATH": f"{stubs}:{os.environ['PATH']}", "RUNNER_TEMP": str(temp), "GITHUB_STEP_SUMMARY": str(temp / "summary"),
            "GITHUB_REPOSITORY": "o/r", "TASKS": "", "AGAINST": "", "CANDIDATE": "", "SAMPLE": "", "CACHED_ONLY": "true",
            "ON_PENDING": on_pending, "COMMENT": "false", "FORK": "true", "PR": "7", "BASE": "a" * 40, "WORKDIR": workdir,
-           "PACKAGE": "s1flow[eval]", "ACTION_PATH": str(ROOT), "GH_TOKEN": "x"}
+           "PACKAGE": "s1flow[eval]", "ACTION_PATH": str(ROOT), "GH_TOKEN": "x", **env_}
     return subprocess.run(["bash", "-c", step()], cwd=work, env=env, capture_output=True, text=True), temp
 
 
@@ -65,12 +66,34 @@ def test_a_pending_check_fails_unless_the_workflow_says_warn(tmp_path):
     assert ran.returncode == 1 and "on-pending is fail or warn" in ran.stdout
 
 
-def test_the_base_commits_history_tells_a_rollback(tmp_path):
-    entry = '{"schema": "s1flow/history@1"}\n'
-    ran, temp = run(tmp_path, "rollback", 0, base_history=entry)
-    args = (tmp_path / "args").read_text()
-    assert ran.returncode == 0 and "check toy --against v1 --history " in args
-    assert (temp / "s1flow-toy-history.jsonl").read_text() == entry  # the base commit's, not the change's own
+def test_the_base_commits_version_is_what_it_is_checked_against(tmp_path):
+    ran, _ = run(tmp_path, "pass", 0)
+    assert ran.returncode == 0 and "check toy --against v1 " in (tmp_path / "args").read_text()
+
+
+def test_a_base_with_no_channels_json_is_checked_against_current(tmp_path):
+    ran, _ = run(tmp_path, "pass", 0, base="echo 'gh: Not Found (HTTP 404)' >&2; exit 1")
+    assert ran.returncode == 0 and "check toy --against current " in (tmp_path / "args").read_text()
+
+
+@pytest.mark.parametrize("base", ["echo 'HTTP 502' >&2; exit 1", "echo 'not json'"])
+def test_a_base_that_cannot_be_read_fails_and_says_so(tmp_path, base):
+    ran, temp = run(tmp_path, "pass", 0, base=base)
+    assert ran.returncode == 1 and "::error title=s1flow check::toy: could not read the base commit's channels.json" in ran.stdout
+    assert not (tmp_path / "args").exists()  # nothing was checked
+    summary = (temp / "summary").read_text()
+    assert summary.startswith("<!-- s1flow-check:toy -->") and "The check fails" in summary
+
+
+def test_the_pull_requests_comment_is_updated_even_when_the_base_cannot_be_read(tmp_path):
+    ran, _ = run(tmp_path, "pass", 0, base="echo 'HTTP 502' >&2; exit 1", COMMENT="true")
+    comments = (tmp_path / "comments").read_text()
+    assert ran.returncode == 1 and "-X PATCH repos/o/r/issues/comments/41" in comments and "Could not read the base commit" in comments
+
+
+def test_an_against_given_does_not_read_the_base_commit(tmp_path):
+    ran, _ = run(tmp_path, "pass", 0, base="echo 'HTTP 502' >&2; exit 1", AGAINST="v1")
+    assert ran.returncode == 0 and "check toy --against v1 " in (tmp_path / "args").read_text()
 
 
 def test_a_change_to_the_rules_is_flagged(tmp_path):
@@ -84,7 +107,7 @@ def test_a_change_to_the_rules_is_flagged(tmp_path):
 
 
 def test_rewriting_a_saved_version_fails(tmp_path):
-    ran, temp = run(tmp_path, "rollback", 0, changed="modified s1flow/policies/toy/v1.json\nadded s1flow/policies/toy/v3.json")
+    ran, temp = run(tmp_path, "pass", 0, changed="modified s1flow/policies/toy/v1.json\nadded s1flow/policies/toy/v3.json")
     assert ran.returncode == 1 and "this change rewrites `s1flow/policies/toy/v1.json`" in ran.stdout
     assert "A saved version is never rewritten" in (temp / "summary").read_text()
     ran, _ = run(tmp_path / "record", "pass", 0, changed="removed s1flow/policies/toy/v2.evaluation.json")

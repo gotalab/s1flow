@@ -75,12 +75,6 @@ def test_out_must_be_a_directory(ran):
     assert got.exit_code == 2 and "--out takes a directory" in got.err and "Traceback" not in got.err
 
 
-@pytest.mark.parametrize("old", ["compare", "rank"])
-def test_the_old_names_say_report(ran, old):
-    got = cli(old, "truth")
-    assert got.exit_code == 2 and "it is now `report`" in got.err
-
-
 def test_reading_saved_runs_builds_no_provider(ran, monkeypatch):
     from s1flow.client.providers import llm
     from s1flow.core.errors import ConfigError
