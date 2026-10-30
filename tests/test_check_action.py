@@ -19,8 +19,10 @@ def step() -> str:
     return next(s["run"] for s in yaml.safe_load((ROOT / "action.yml").read_text())["runs"]["steps"] if s.get("name") == "Check")
 
 
-def run(tmp_path: Path, verdict: str, code: int, *, on_pending: str = "fail", changed: str = "", base_history: str = "") -> tuple[subprocess.CompletedProcess[str], Path]:
-    work, stubs, temp = tmp_path / "s1flow", tmp_path / "bin", tmp_path / "temp"
+def run(tmp_path: Path, verdict: str, code: int, *, on_pending: str = "fail", changed: str | None = "", base_history: str = "",
+        workdir: str = "s1flow") -> tuple[subprocess.CompletedProcess[str], Path]:
+    """`changed`: the pull request's files as "status filename" lines (None: listing them fails)."""
+    work, stubs, temp = tmp_path / workdir, tmp_path / "bin", tmp_path / "temp"
     for d in (work / "policies" / "toy", stubs, temp):
         d.mkdir(parents=True, exist_ok=True)
     (work / "policies" / "toy" / "channels.json").write_text(json.dumps({"channels": {"current": 2}}))
@@ -29,7 +31,7 @@ def run(tmp_path: Path, verdict: str, code: int, *, on_pending: str = "fail", ch
 case "$*" in
   *channels.json*) echo '{{"channels": {{"current": 1}}}}';;
   *history.jsonl*) printf '%s' {shlex.quote(base_history)};;
-  *pulls/7/files*) printf '%s\\n' {shlex.quote(changed)};;
+  *pulls/7/files*) {"echo 'HTTP 502' >&2; exit 1" if changed is None else "printf '%s\\n' " + shlex.quote(changed)};;
   *) echo "unexpected gh $*" >&2; exit 1;;
 esac
 """)
@@ -45,7 +47,7 @@ exit {code}
         f.chmod(0o755)
     env = {**os.environ, "PATH": f"{stubs}:{os.environ['PATH']}", "RUNNER_TEMP": str(temp), "GITHUB_STEP_SUMMARY": str(temp / "summary"),
            "GITHUB_REPOSITORY": "o/r", "TASKS": "", "AGAINST": "", "CANDIDATE": "", "SAMPLE": "", "CACHED_ONLY": "true",
-           "ON_PENDING": on_pending, "COMMENT": "false", "FORK": "true", "PR": "7", "BASE": "a" * 40, "WORKDIR": "s1flow",
+           "ON_PENDING": on_pending, "COMMENT": "false", "FORK": "true", "PR": "7", "BASE": "a" * 40, "WORKDIR": workdir,
            "PACKAGE": "s1flow[eval]", "ACTION_PATH": str(ROOT), "GH_TOKEN": "x"}
     return subprocess.run(["bash", "-c", step()], cwd=work, env=env, capture_output=True, text=True), temp
 
@@ -83,3 +85,10 @@ def test_rewriting_a_saved_version_fails(tmp_path):
     assert "A saved version is never rewritten" in (temp / "summary").read_text()
     ran, _ = run(tmp_path / "record", "pass", 0, changed="removed s1flow/policies/toy/v2.evaluation.json")
     assert ran.returncode == 1
+    # renamed away: GitHub lists it under both names
+    ran, _ = run(tmp_path / "moved", "pass", 0, changed="renamed s1flow/policies/toy/old/v2.json\nrenamed s1flow/policies/toy/v2.json")
+    assert ran.returncode == 1 and "rewrites `s1flow/policies/toy/v2.json`" in ran.stdout
+    ran, _ = run(tmp_path / "unlisted", "pass", 0, changed=None)  # not knowing the files, a rewrite cannot be ruled out
+    assert ran.returncode == 1 and "could not list the pull request's files" in ran.stdout
+    ran, _ = run(tmp_path / "plus", "pass", 0, changed="modified a+b/policies/toy/v1.json", workdir="a+b")  # the directory is taken literally
+    assert ran.returncode == 1 and "rewrites `a+b/policies/toy/v1.json`" in ran.stdout
