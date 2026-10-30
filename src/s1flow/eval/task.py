@@ -26,6 +26,7 @@ from .cases import Case, Cases, Row
 from .objectives.declare import CallKey, Constraints, Objective, check, default_for, fitted
 from .objectives.measure import Measure
 from .objectives.custom import Custom
+from .optimizers import Gepa, Optimizer
 
 if TYPE_CHECKING:
     from ..project import Project
@@ -43,7 +44,37 @@ EVALUATION_IMPLEMENTATION_REVISION = _evaluation_revision()
 
 
 class Optimized(BaseModel):
-    """tasks/<id>/optimized/<variant>.json: a question GEPA wrote (eval/gepa.py), what it tried and what it cost."""
+    """tasks/<id>/optimized/<variant>.json: a question an optimizer wrote (eval/optimizers.py), the same for every
+    optimizer: what it was given and set to, what it cost; what only it records is in `detail`."""
+
+    model_config = ConfigDict(extra="forbid", populate_by_name=True, serialize_by_alias=True)
+    schema_: Literal["s1flow/optimized@2"] = Field(default="s1flow/optimized@2", alias="schema")
+    variant: str
+    model: str  # the model it was optimized for
+    optimizer: str  # its name: gepa, or an entry point's
+    settings: dict[str, Any]  # what it was set to
+    at: str
+    question: Question
+    seed_question: Question
+    start: str = "base"  # the question it began from
+    split: dict[Literal["train", "val", "test"], list[str]]  # the cases it read from, selected on, never saw
+    model_calls: int
+    cost_usd: float | None  # what it spent beside the model's calls (a reflection LM); None: not priced
+    detail: dict[str, Any] = {}  # what only this optimizer records
+
+    @classmethod
+    def read(cls, text: str) -> Optimized:
+        """A record of either schema, as @2."""
+        import json
+
+        data = json.loads(text)
+        if isinstance(data, dict) and data.get("schema") == "s1flow/optimized@1":
+            return OptimizedV1.model_validate_json(text).upgrade()
+        return cls.model_validate_json(text)
+
+
+class OptimizedV1(BaseModel):
+    """tasks/<id>/optimized/<variant>.json before optimizers were pluggable: GEPA's alone. Read only."""
 
     model_config = ConfigDict(extra="forbid", populate_by_name=True, serialize_by_alias=True)
     schema_: Literal["s1flow/optimized@1"] = Field(default="s1flow/optimized@1", alias="schema")
@@ -70,6 +101,18 @@ class Optimized(BaseModel):
     candidates: int
     val_scores: list[float]
     best_index: int
+
+    def upgrade(self) -> Optimized:
+        return Optimized(
+            variant=self.variant, model=self.model, optimizer="gepa", at=self.at, question=self.question,
+            seed_question=self.seed_question, start=self.start, split=self.split, model_calls=self.model_calls,
+            cost_usd=self.reflection_cost_usd,
+            settings={"budget": self.budget, "reflection": self.reflection_lm, "patience": self.patience,
+                      "max_cost": self.max_cost, "merge": self.merge, "seed": self.seed},
+            detail={"surrogate": self.surrogate, "context": self.context, "rationales": self.rationales,
+                    "reflection_calls": self.reflection_calls, "candidates": self.candidates,
+                    "val_scores": self.val_scores, "best_index": self.best_index},
+        )
 
 
 @dataclass
@@ -107,6 +150,9 @@ class Task:
     objective: Objective | Custom | None = None
     tiebreak: list[Objective | Custom | CallKey] = field(default_factory=list)
     constraints: Constraints = field(default_factory=Constraints)  # what a model may not exceed
+    # What `s1flow optimize` runs (eval/optimizers.py): Gepa(...) with its settings, an optimizer object, or the
+    # name of one (an entry point in the s1flow.optimizers group).
+    optimizer: Optimizer | str = field(default_factory=Gepa)
     variants: dict[str, Question] = field(default_factory=dict)
     source: str = ""  # where the data comes from, with its license
     show: Callable[[Row], str] | None = None  # one line per case in reports
@@ -252,7 +298,7 @@ class Task:
         return {self.question_id: q}
 
     def add_optimized(self, art: Optimized) -> None:
-        """A question GEPA wrote, as one more variant."""
+        """A question an optimizer wrote, as one more variant."""
         variant_name(art.variant)
         self.optimized[art.variant] = art
         self.variants[art.variant] = art.question
@@ -287,7 +333,7 @@ def load(project: Project, task_id: str) -> Task:
     task.project = project
     for f in sorted((task.dir / "optimized").glob("*.json")):
         try:
-            art = Optimized.model_validate_json(f.read_text())
+            art = Optimized.read(f.read_text())
         except ValidationError as e:
             raise ConfigError(f"{f}: {invalid(e)}") from None
         task.add_optimized(art)

@@ -8,7 +8,7 @@ Cases: tasks/{task_id}/data.jsonl, one labelled case per line, for example
 
 from s1flow.objectives import Accuracy, Constraints
 from s1flow.questions import Boolean
-from s1flow.eval import Split, Task
+from s1flow.eval import Gepa, Split, Task
 
 task = Task(
     id={task_id_repr},
@@ -30,4 +30,8 @@ task = Task(
     # What a model may not exceed to be chosen at all: latency_p99_ms=, cost_per_10k_usd=, min_labels=, and on a
     # binary question min_precision= and min_recall=.
     constraints=Constraints(),
+    # What `s1flow optimize` runs to write a new question: GEPA, `budget` model calls on train and val, its reflection
+    # LM an `llm` model of s1flow.toml (None: gpt-6.1-sol on OpenAI's API, OPENAI_API_KEY). Another optimizer: an
+    # object with name, settings() and run(problem), or the name of an s1flow.optimizers entry point.
+    optimizer=Gepa(budget=300, reflection=None),
 )

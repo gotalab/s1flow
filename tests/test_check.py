@@ -131,9 +131,8 @@ def test_a_test_share_outside_0_and_1_is_refused(share):
 
 def test_the_split_starts_from_an_optimization_split(task):
     task.optimized = {"gepa-x": Optimized(
-        variant="gepa-x", model="m", method="gepa", at="2026-10-16T00:00:00Z", question=QUESTION, seed_question=QUESTION,
-        split={"train": ["0", "1"], "val": ["2"], "test": ["3", "4"]}, seed=1, budget=10, reflection_lm="r", reflection_calls=1,
-        reflection_cost_usd=0.0, model_calls=1, candidates=1, val_scores=[0.5], best_index=0,
+        variant="gepa-x", model="m", optimizer="gepa", settings={}, at="2026-10-16T00:00:00Z", question=QUESTION, seed_question=QUESTION,
+        split={"train": ["0", "1"], "val": ["2"], "test": ["3", "4"]}, model_calls=1, cost_usd=0.0,
     )}
     evalset.fix(task)
     sf = evalset.fixed(task)
