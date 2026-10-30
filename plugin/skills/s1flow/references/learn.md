@@ -41,7 +41,8 @@ When production is below, or the labels show a pattern the question misses:
 
 1. Read the labelled production cases with the person (`collect.md`, review the labels). A wrong label or a state
    missing what decides the case is fixed there, not by a new question.
-2. With the cases added, `s1flow run <task>` on the current candidate, then `s1flow optimize <task>` for a changed
+2. With the cases added, `s1flow run <task> --models <current's candidate>` (with no `--models`, `run` asks
+   `s1flow.toml`'s `default` on the task's own question), then `s1flow optimize <task>` for a changed
    question (`measure.md`). Optimize ships nothing.
 3. `s1flow report <task>`: show the candidates, the tied ones as tied.
 4. If the person picks one, `ship.md`: adopt with a reason, a pull request, `check`, and their merge.

@@ -525,7 +525,12 @@ def init(a: argparse.Namespace) -> int:
     from . import skill
     from .project import scaffold
 
-    for line in scaffold.init(Path.cwd() / a.dir, a.task, workflow=a.ci):
+    if a.force and not a.skill:
+        raise ConfigError("--force overwrites changed Skill files: it goes with --skill")
+    here = Path.cwd()
+    # run inside the project (s1flow.toml here), `init` adds to it instead of making s1flow/s1flow/
+    target = here if a.dir == "s1flow" and (here / "s1flow.toml").is_file() else here / a.dir
+    for line in scaffold.init(target, a.task, workflow=a.ci):
         print(line)
     if a.skill:
         for target in skill.targets():
@@ -794,9 +799,16 @@ def _adopt_without_evaluation(a: argparse.Namespace) -> int:
 
     if a.candidate or a.force:
         raise S1flowError("adopt TASK@vN and adopt --spec take no candidate and no --force: nothing is measured")
-    if a.check:  # validate only: it binds to an allowed model (--connections, else the project's s1flow.toml)
+    if a.spec and a.task:
+        raise S1flowError("adopt --spec FILE takes no TASK: the spec names its task and version")
+    if a.check:  # validate only: what the write would refuse, it refuses too; writes nothing
         spec = read_file(a.spec)
-        DecisionPolicy(spec, client=_policy_client(a) if a.connections or a.root else project(a).client())
+        proj = None if a.connections or a.root else project(a)
+        DecisionPolicy(spec, client=proj.client() if proj else _policy_client(a))  # it binds to an allowed model
+        if a.root or proj:  # a policies directory to save into: the next version there
+            latest = max(Policies(place.absolute(a.root, "policy root") if a.root else proj.policies_dir).versions(spec.task), default=0)  # type: ignore[union-attr]
+            if spec.version <= latest:
+                raise ConfigError(f"{spec.task} already has v{latest}; a new policy is v{latest + 1}")
         print(json.dumps({"policy": spec.ref, "valid": True}) if a.json else f"{spec.ref}: valid (binds to {spec.connection}); nothing written")
         return 0
     # In an s1flow project its policies/ and s1flow.toml; in an app's repository, --root and --connections.
@@ -806,8 +818,6 @@ def _adopt_without_evaluation(a: argparse.Namespace) -> int:
     if not user:
         raise S1flowError("adopt records who switched current: set git config user.name")
     if a.spec:
-        if a.task:
-            raise S1flowError("adopt --spec FILE takes no TASK: the spec names its task and version")
         spec = read_file(a.spec)
         DecisionPolicy(spec, client=proj.client() if proj else _policy_client(a))  # it binds to an allowed model
         previous = _adopt_spec(store, spec, user, a.reason)
@@ -988,7 +998,7 @@ def parser() -> argparse.ArgumentParser:
 
     p = _command(sub, "init", init)
     p.add_argument("--task", help="also write tasks/<id>/task.py to fill in")
-    p.add_argument("dir", nargs="?", default="s1flow", help="the project directory, made here; everything s1flow writes goes in it (default: s1flow)")
+    p.add_argument("dir", nargs="?", default="s1flow", help="the project directory, made here; everything s1flow writes goes in it (default: s1flow, or this directory when it holds s1flow.toml)")
     p.add_argument("--ci", action="store_true", help="also write .github/workflows/s1flow-check.yml at the git root")
     p.add_argument("--skill", action="store_true", help="also write the Agent Skill into <git root>/.agents/skills/s1flow/ and .claude/skills/s1flow/")
     p.add_argument("--force", action="store_true", help="with --skill: overwrite Skill files changed there since s1flow wrote them")
