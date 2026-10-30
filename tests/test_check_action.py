@@ -20,7 +20,7 @@ def step() -> str:
 
 
 def run(tmp_path: Path, verdict: str, code: int, *, on_pending: str = "fail", changed: str | list[dict[str, str]] | None = "",
-        base_history: str = "", workdir: str = "s1flow") -> tuple[subprocess.CompletedProcess[str], Path]:
+        workdir: str = "s1flow") -> tuple[subprocess.CompletedProcess[str], Path]:
     """`changed`: the pull request's files as "status filename" lines, or as GitHub lists them (put through the
     Action's own --jq); None: listing them fails."""
     work, stubs, temp = tmp_path / workdir, tmp_path / "bin", tmp_path / "temp"
@@ -31,7 +31,6 @@ def run(tmp_path: Path, verdict: str, code: int, *, on_pending: str = "fail", ch
     (stubs / "gh").write_text(f"""#!/usr/bin/env bash
 case "$*" in
   *channels.json*) echo '{{"channels": {{"current": 1}}}}';;
-  *history.jsonl*) printf '%s' {shlex.quote(base_history)};;
   *pulls/7/files*) {"echo 'HTTP 502' >&2; exit 1" if changed is None else
                      "printf '%s\\n' " + shlex.quote(changed) if isinstance(changed, str) else
                      'q=""; prev=""; for a in "$@"; do [ "$prev" = --jq ] && q="$a"; prev="$a"; done; printf %s '
@@ -65,13 +64,9 @@ def test_a_pending_check_fails_unless_the_workflow_says_warn(tmp_path):
     assert ran.returncode == 1 and "on-pending is fail or warn" in ran.stdout
 
 
-def test_the_base_commits_history_tells_a_rollback(tmp_path):
-    entry = '{"schema": "s1flow/history@1"}\n'
-    ran, temp = run(tmp_path, "rollback", 0, base_history=entry)
-    args = (tmp_path / "args").read_text()
-    assert ran.returncode == 0 and "check toy --against v1 --history " in args
-    assert (temp / "s1flow-toy-history.jsonl").read_text() == entry  # the base commit's, not the change's own
-
+def test_the_base_commits_version_is_what_it_is_checked_against(tmp_path):
+    ran, _ = run(tmp_path, "pass", 0)
+    assert ran.returncode == 0 and "check toy --against v1 " in (tmp_path / "args").read_text()
 
 def test_a_change_to_the_rules_is_flagged(tmp_path):
     changed = "modified s1flow/tasks/toy/task.py\nmodified s1flow/tasks/toy/corrections.jsonl\nmodified README.md\nmodified s1flow/tasks/other/task.py"
@@ -84,7 +79,7 @@ def test_a_change_to_the_rules_is_flagged(tmp_path):
 
 
 def test_rewriting_a_saved_version_fails(tmp_path):
-    ran, temp = run(tmp_path, "rollback", 0, changed="modified s1flow/policies/toy/v1.json\nadded s1flow/policies/toy/v3.json")
+    ran, temp = run(tmp_path, "pass", 0, changed="modified s1flow/policies/toy/v1.json\nadded s1flow/policies/toy/v3.json")
     assert ran.returncode == 1 and "this change rewrites `s1flow/policies/toy/v1.json`" in ran.stdout
     assert "A saved version is never rewritten" in (temp / "summary").read_text()
     ran, _ = run(tmp_path / "record", "pass", 0, changed="removed s1flow/policies/toy/v2.evaluation.json")

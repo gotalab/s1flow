@@ -280,6 +280,7 @@
    "type": "string"
   },
   "channel": {
+   "const": "current",
    "title": "Channel",
    "type": "string"
   },

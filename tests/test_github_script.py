@@ -91,8 +91,3 @@ def test_the_project_is_found_as_the_cli_finds_it(tmp_path, monkeypatch):
     assert got.returncode == 2 and "no s1flow project" in got.stderr and "Traceback" not in got.stderr
 
 
-def test_the_cli_no_longer_has_a_github_command():
-    from conftest import cli
-
-    got = cli("github", "fetch", "o/r")
-    assert got.exit_code == 2 and "skills/s1flow/scripts/github.py" in got.err

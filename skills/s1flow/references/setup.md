@@ -11,7 +11,7 @@ s1flow init --skill                    # also write this Skill where agents read
 
 `init` writes nothing outside the project unless asked. Ask the person before `--ci` (a PR check that calls
 models on every PR that changes a task, a policy or `s1flow.toml`, with `on-pending: fail`) and before `--skill`.
-The base install runs `init`, `decide`, `feedback record`, `adopt` (rollback and `--spec`), `export` and
+The base install runs `init`, `decide`, `feedback record`, `adopt --spec`, `export` and
 `doctor`; the rest need `s1flow[eval]`. The SDK never installs packages at runtime.
 
 ## Keys and hosts: doctor
@@ -51,9 +51,8 @@ does not change cwd, so `--connections`, `--log` and other relative paths start 
 the CLI searches upward from cwd to the nearest Git boundary; outside Git, only cwd and cwd/`s1flow`. The error
 for a missing project names where it searched and which option to pass.
 
-Connections, in order: `--connections`, then `S1FLOW_CONNECTIONS`, then the project's `s1flow.toml`; never
-merged. `decide --policy`, `feedback record` and `doctor --policy` need explicit `--connections`, so
-`S1FLOW_CONNECTIONS` alone cannot grant runtime access. `report --from` takes neither option.
+Connections: `--connections` when given, else the project's `s1flow.toml`; never merged. `decide --policy`,
+`feedback record` and `doctor --policy` need explicit `--connections`. `report --from` takes neither option.
 
 ## Names
 

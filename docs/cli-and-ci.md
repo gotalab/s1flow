@@ -28,8 +28,7 @@ and `report`, and leaves the choice of candidate to you.
 whether the answer cleared the threshold. Evaluation uses `action.yml` with the `eval` extra (`s1flow init --ci` writes a workflow for it): on a pull request
 that adopts a policy, it tests the version the pull request makes current against the one the base branch ships, on the
 test cases, and posts the result as a comment. Merging the pull request is the release. A check that cannot
-measure fails unless the workflow sets `on-pending: warn`; a rollback to an older version the base commit's
-`history.jsonl` shows running before passes, with its numbers shown; a pull request that rewrites a saved version
+measure fails unless the workflow sets `on-pending: warn`; a pull request that rewrites a saved version
 fails; one that edits files under `tasks/<task>/` or `s1flow.toml` gets a warning that the check used the edited
 rules and cases.
 

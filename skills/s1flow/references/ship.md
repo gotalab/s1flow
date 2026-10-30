@@ -13,7 +13,6 @@ Never run `adopt` or merge on your own judgement, and never pass `--force` unles
 
 ```bash
 s1flow adopt <task> <candidate> --reason "..."    # write vN, make it current, append to history.jsonl
-s1flow adopt <task>@v<N> --reason "..."           # a rollback to a saved version
 s1flow adopt --spec spec.json --reason "..."      # a runtime spec, saved unevaluated, made current
 s1flow adopt --spec spec.json --check             # validate only; save nothing
 ```
@@ -21,7 +20,7 @@ s1flow adopt --spec spec.json --check             # validate only; save nothing
 - `adopt TASK CANDIDATE` scores the chosen candidate on the held-out test and records the result. If the test
   shows it below the version it replaces, nothing is written, exit 1, and `history.jsonl` gets a `refused` line.
   `--force` writes it anyway, marked `forced`; the reason must say why. Stale evidence is refused.
-- A rollback and `--spec` need only the base install. `--spec` takes a v2 `PolicySpec` (task/version, a trusted
+- `--spec` needs only the base install. `--spec` takes a v2 `PolicySpec` (task/version, a trusted
   `connection` and exact `model_id`, one boolean or choice question, a rule, an optional input shape). It has no
   evaluation evidence. Add `--connections FILE` to check its binding to trusted connections.
 - Outside an s1flow project (an app's repository), add `--root policies`, and `--connections FILE` with `--spec`.
@@ -36,7 +35,7 @@ reads it a year later:
 - who chose, and by what: "Picked by <person>" or "by criteria.md: <the rule>";
 - what it was chosen over, with the numbers that decided it (the objective, and latency or cost if a tie was
   broken by them);
-- for a rollback or a forced version, what went wrong or why the test result is accepted.
+- for a forced version, why the test result is accepted.
 
 Example: `"Picked by Ana: tied with gpt-x on ExpectedLoss(fn=3); half the p90 latency (410 vs 820 ms)."`
 
@@ -49,7 +48,7 @@ s1flow check <task> --against v<N>      # current against the version it replace
 Open a pull request with the change to `policies/<task>/` (and `tasks/<task>/` if `task.py` or `split.json`
 changed). The body says:
 
-- the task and the switch (`v3 -> v4`, or a rollback, or an unevaluated `--spec`);
+- the task and the switch (`v3 -> v4`, or an unevaluated `--spec`);
 - the reason, as recorded;
 - the report lines for the adopted candidate and what it was chosen over, below-target ones included;
 - the `check` verdict and its numbers;
@@ -63,7 +62,6 @@ compares them case by case; stored evidence never passes it. Exit 0 pass, 1 wors
 - **Worse** (exit 1): the new current loses on the test cases. Bring the numbers to the person.
 - **Forced**: a version adopted with `--force` fails; the comment shows its reason. The person decides whether to
   merge anyway.
-- **Rollback**: switching back to an older version that ran before passes, with its numbers shown.
 - **Pending** (exit 2): answers are needed that only a run with keys can get (`--cached-only`, a fork). The
   workflow `init --ci` writes sets `on-pending: fail`, so the check fails until it runs with keys.
 - **A rewritten `vN.json`** fails: saved versions are immutable. Adopt a new version instead.

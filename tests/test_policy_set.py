@@ -78,15 +78,6 @@ def test_a_policy_loads_from_the_policy_set_as_from_policies(shipped, tmp_path):
         runtime_load("gh-ruff-kind", path=out)
 
 
-def test_a_policy_set_0_1_0a1_exported_from_next_still_loads(shipped, tmp_path):
-    out = tmp_path / "policies.json"
-    data = json.loads(policy_set.export(shipped / "policies", ["gh-ruff-area"]).dump())
-    out.write_text(json.dumps(data | {"channel": "next"}))
-    assert runtime_load("gh-ruff-area", path=out).spec.version == 3 and runtime_load("gh-ruff-area@v3", path=out).spec.version == 3
-    with pytest.raises(NotFound, match="from next, not gh-ruff-area@current"):
-        runtime_load("gh-ruff-area@current", path=out)
-
-
 def test_a_policy_set_edited_by_hand_is_refused(shipped, tmp_path):
     out = tmp_path / "policies.json"
     data = json.loads(policy_set.export(shipped / "policies", ["nod-wake"]).dump())

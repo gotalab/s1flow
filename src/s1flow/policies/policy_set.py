@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 from ..core.errors import ConfigError, NotFound, invalid
-from .file import CURRENT, Policies, PolicySpec, Ref, policy_id
+from .file import Policies, PolicySpec, Ref, policy_id
 
 SCHEMA: Literal['s1flow/policy-set@2'] = 's1flow/policy-set@2'
 
@@ -26,7 +26,7 @@ class Entry(BaseModel):
 class PolicySet(BaseModel):
     model_config = ConfigDict(extra='forbid', populate_by_name=True, serialize_by_alias=True)
     schema_: Literal['s1flow/policy-set@2'] = Field(default=SCHEMA, alias='schema')
-    channel: str  # `current`; a set 0.1.0a1 exported from `next` or a named channel still loads by TASK or TASK@vN
+    channel: Literal['current']
     policies: dict[str, Entry]
 
     @model_validator(mode='after')
@@ -49,7 +49,7 @@ def export(root: Path, tasks: list[str] | None = None) -> PolicySet:
     for task in names:
         spec = store.read(task)
         entries[task] = Entry(version=spec.version, digest=spec.digest, policy=spec)
-    return PolicySet(channel=CURRENT, policies=entries)
+    return PolicySet(channel='current', policies=entries)
 
 
 def is_policy_set(data: Any) -> bool:

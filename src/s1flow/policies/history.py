@@ -1,7 +1,6 @@
 """policies/<task>/history.jsonl: why current points where it does. `s1flow adopt` appends one line each time it
-switches current (a measured candidate, an unmeasured spec, a rollback) and each time it refuses a candidate the
-held-out test shows below, so a choice made by trying candidates on the test share leaves a trace. Nothing else
-writes it; a rollback makes no new version, so this is the one place its reason is kept outside git.
+switches current (a measured candidate, an unmeasured spec) and each time it refuses a candidate the held-out test
+shows below, so a choice made by trying candidates on the test share leaves a trace. Nothing else writes it.
 """
 from __future__ import annotations
 
@@ -13,7 +12,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from ..core import clock
 from ..core.errors import ConfigError, invalid
 
-Action = Literal['adopt', 'spec', 'rollback', 'refused']
+Action = Literal['adopt', 'spec', 'refused']
 
 
 class Switch(BaseModel):
@@ -21,7 +20,7 @@ class Switch(BaseModel):
     model_config = ConfigDict(extra='forbid', populate_by_name=True, serialize_by_alias=True)
     schema_: Literal['s1flow/history@1'] = Field(default='s1flow/history@1', alias='schema')
     at: str = Field(default_factory=clock.now)
-    action: Action  # adopt: a measured candidate; spec: a version saved without evaluation; rollback: an older version
+    action: Action  # adopt: a measured candidate; spec: a version saved without evaluation
     version: int = Field(ge=1)  # what current points at after it (refused: the version it would have been)
     previous: int | None = Field(ge=1)  # what current pointed at before
     by: str = Field(min_length=1)

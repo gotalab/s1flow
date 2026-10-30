@@ -53,8 +53,7 @@ def policy_id(task: str, version: int) -> str:
 
 def channel_name(name: str) -> str:
     if name != CURRENT:
-        raise ConfigError(f'channel {name!r}: the one channel is `current`; name a version (TASK@v3) for another '
-                          '(`next` and named channels were removed after 0.1.0a1)')
+        raise ConfigError(f'channel {name!r}: the one channel is `current`; name a version (TASK@v3) for another')
     return name
 
 
@@ -205,7 +204,9 @@ class ChannelsFile(BaseModel):
 
     @model_validator(mode='after')
     def _valid(self) -> ChannelsFile:
-        for version in self.channels.values():  # a file from 0.1.0a1 may still name `next` or others: read, never used
+        if set(self.channels) - {CURRENT}:
+            raise ValueError('the one channel is `current`')
+        for version in self.channels.values():
             if isinstance(version, bool) or version < 1:
                 raise ValueError('channel versions are positive integers')
         return self
@@ -388,11 +389,6 @@ class Policies:
     def _log(self, task: str, entry: Switch) -> None:
         with self._file(task, 'history.jsonl').open('a', encoding='utf-8') as f:
             f.write(entry.line())
-
-    def switch(self, task: str, entry: Switch) -> None:
-        """Point current at a saved version, as s1flow adopt does for a rollback (TASK@vN)."""
-        with self.locked(task):
-            self._switch(task, entry)
 
     def log(self, task: str, entry: Switch) -> None:
         """Record a candidate adopt refused; current is left as it is."""

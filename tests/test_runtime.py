@@ -1,6 +1,6 @@
 """Runtime-only boundaries: no evaluation imports or external provider calls."""
 from __future__ import annotations
-from conftest import ship, point
+from conftest import ship
 
 import json
 from concurrent.futures import ThreadPoolExecutor
@@ -166,17 +166,6 @@ def test_immutable_publish_and_concurrent_current_writes(tmp_path: Path) -> None
         results = list(pool.map(lambda store: _publish(store, policy()), stores))
     assert sorted(results) == ['conflict', 'saved']
     assert stores[0].read('ticket', version=1).digest == policy().digest
-    stores[0].write_new(policy().model_copy(update={'version': 2}))
-    def switch(version: int) -> str:
-        try:
-            point(Policies(root), 'ticket', version)
-        except ConfigError:  # the other switched first: current is not what this one read
-            return 'conflict'
-        return 'switched'
-    with ThreadPoolExecutor(max_workers=2) as pool:
-        switched = list(pool.map(switch, [1, 2]))
-    assert stores[0].current('ticket') in (1, 2) and 'switched' in switched
-    assert len(stores[0].history('ticket')) == switched.count('switched')
     assert not list((root / 'ticket').glob('.v1.json.*'))
 
 

@@ -88,11 +88,9 @@ def exercise_runtime(root: Path, python: str = sys.executable, *, evaluate: bool
         second.write_text(json.dumps({**json.loads(source.read_text()), 'version': 2}))
         adopted = json.loads(cli('adopt', '--spec', second, '--reason', 'try v2', '--json').stdout)  # the base install switches
         assert adopted == {'policy': 'ticket-bug@v2', 'previous': 1, 'evaluated': False, 'path': str(root / 'policies/ticket-bug/v2.json')}
-        back = json.loads(cli('adopt', 'ticket-bug@v1', '--reason', 'v2 misread', '--json').stdout)
-        assert back['policy'] == 'ticket-bug@v1' and back['previous'] == 2
         history = [json.loads(x) for x in (root / 'policies/ticket-bug/history.jsonl').read_text().splitlines()]
         assert [(h['action'], h['version'], h['previous'], h['reason']) for h in history] == [
-            ('spec', 1, None, 'the first'), ('spec', 2, 1, 'try v2'), ('rollback', 1, 2, 'v2 misread')]
+            ('spec', 1, None, 'the first'), ('spec', 2, 1, 'try v2')]
         assert history[1]['by'] == 'Runtime integration test'
         log = root / 'decisions.jsonl'
         common = ['--policy', 'ticket-bug@v1', '--path', policy_path, '--connections', models]

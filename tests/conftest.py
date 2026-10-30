@@ -114,8 +114,8 @@ def ship(store, item, reason: str = "t"):
     store.write_new(item, adopted=Switch(action="spec", version=spec.version, previous=store.current(spec.task), by="t", reason=reason))
 
 
-def point(store, task: str, version: int, reason: str = "t"):
-    """Point current at a saved version, as adopt TASK@vN does."""
-    from s1flow.policies.history import Switch
+def point(store, task: str, version: int):
+    """Point current at a saved version, as a base branch's channels.json does."""
+    from s1flow.policies.file import ChannelsFile
 
-    store.switch(task, Switch(action="rollback", version=version, previous=store.current(task), by="t", reason=reason))
+    (store.dir(task) / "channels.json").write_text(ChannelsFile(channels={"current": version}).dump())

@@ -15,7 +15,7 @@ name or value, and s1flow never merges a project catalog into your app's file.
 
 ## The SDK
 
-`Client()` and `AsyncClient()` don't look for a project or config file, `S1FLOW_CONNECTIONS`, `.env`, or a
+`Client()` and `AsyncClient()` don't look for a project or config file, `.env`, or a
 built-in catalog. Providers still read their own API key variables when a configured model needs them.
 
 Pass `connections=` when a direct call names a model by an alias such as `"triage"`. A `ModelSpec` or
@@ -44,9 +44,8 @@ resolved from where you ran it. Without `--project`, the CLI searches upward fro
 nearest Git root. Outside a Git repository, it only checks the current directory and `./s1flow`, so use
 `--project` when you run it from deeper inside.
 
-Evaluation commands pick a connection file in this order: `--connections`, then `S1FLOW_CONNECTIONS`, then the
-selected project's `s1flow.toml`. Running a policy and `feedback record` both require an explicit
-`--connections`. `S1FLOW_CONNECTIONS` is read only by the CLI, and on its own it never allows a policy to run.
+Evaluation commands use `--connections` when given, else the selected project's `s1flow.toml`. Running a policy
+and `feedback record` both require an explicit `--connections`.
 
 The CLI only loads `.env` files from the selected project or root and the directories above it, up to the
 nearest Git root. When it can't find a

@@ -70,24 +70,20 @@ runs:
           fi
         fi
         # base_version: the version the base commit ships (empty when it has none); merging this change makes the
-        # working tree's current the one that runs. base_history: the base commit's history.jsonl, which tells a
-        # rollback (the change's own copy could say anything). A lookup that fails for another reason than a missing
-        # file warns.
+        # working tree's current the one that runs. A lookup that fails for another reason than a missing file fails
+        # the check: what it would be compared with is not known.
         lookup="$RUNNER_TEMP/s1flow-base.err"
         dir="${WORKDIR#./}"; dir="${dir%/}"; [ "$dir" = . ] && dir=""
         re_dir=$(printf '%s' "$dir" | sed 's/[][\.*^$+?(){}|]/\\&/g')  # the directory as a regular expression
         shipped() {
-          base_version=""; base_history="$RUNNER_TEMP/s1flow-$1-history.jsonl"; : > "$base_history"
+          base_version=""
           local body
           [ -n "$BASE" ] && [ "$BASE" != 0000000000000000000000000000000000000000 ] || return 0
           if body=$(gh api -H "Accept: application/vnd.github.raw" "repos/$GITHUB_REPOSITORY/contents/${dir:+$dir/}policies/$1/channels.json?ref=$BASE" 2>"$lookup"); then
-            base_version=$(jq -r '.channels.current // empty' <<<"$body" 2>/dev/null)
+            base_version=$(jq -r '.channels.current // empty' <<<"$body")
           elif ! grep -q "HTTP 404" "$lookup"; then
-            echo "::warning title=s1flow check::$1: could not read the base commit's channels.json ($(head -c 200 "$lookup" | tr '\n' ' ')); checking current alone"
-          fi
-          if ! gh api -H "Accept: application/vnd.github.raw" "repos/$GITHUB_REPOSITORY/contents/${dir:+$dir/}policies/$1/history.jsonl?ref=$BASE" >"$base_history" 2>"$lookup"; then
-            : > "$base_history"
-            grep -q "HTTP 404" "$lookup" || echo "::warning title=s1flow check::$1: could not read the base commit's history.jsonl; no rollback is recognised"
+            echo "::error title=s1flow check::$1: could not read the base commit's channels.json ($(head -c 200 "$lookup" | tr '\n' ' '))"
+            return 1
           fi
         }
         # the files this change touches, as "status filename" (a renamed file's old name as "renamed-from"): the check reads
@@ -118,9 +114,9 @@ runs:
         failed=0
         for t in $TASKS; do
           against="$AGAINST"
-          shipped "$t"
+          if ! shipped "$t"; then failed=1; continue; fi
           if [ -z "$against" ]; then against=${base_version:+v$base_version}; against=${against:-current}; fi
-          "${jf[@]}" check "$t" --against "$against" --history "$base_history" "${args[@]}" --json --markdown "$out/$t.md" > "$out/$t.json"
+          "${jf[@]}" check "$t" --against "$against" "${args[@]}" --json --markdown "$out/$t.md" > "$out/$t.json"
           code=$?
           verdict=$(jq -r '.verdict // "error"' "$out/$t.json" 2>/dev/null || echo error)
           echo "$t: $verdict (exit $code)"

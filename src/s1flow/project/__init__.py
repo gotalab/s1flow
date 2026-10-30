@@ -1,10 +1,9 @@
 """A project: one directory with s1flow.toml, tasks/, runs/, reports/, policies/ and .cache/.
 
-    project = Project.discover()          # bounded CLI/development discovery
+    project = Project(place.project(None, required=True))  # the CLI finds the directory (core/place.py)
     project.client().connections.build("jev")  # the line-up (s1flow.toml) is the model-calling layer's (s1flow.client)
 
-Tasks are loaded by `s1flow.eval.task.load(project, id)`. Nothing happens on import: the place is found, s1flow.toml is read and .env files are loaded only
-when asked (`load_env` is the CLI's to call).
+Tasks are loaded by `s1flow.eval.task.load(project, id)`. Nothing happens on import: s1flow.toml is read only when asked.
 """
 
 from __future__ import annotations
@@ -15,7 +14,7 @@ from typing import TYPE_CHECKING
 
 from ..client import AsyncClient
 from ..client.lineup import Lineup
-from ..core import envfile, place
+from ..core import place
 from ..core.errors import NotFound
 
 if TYPE_CHECKING:
@@ -34,12 +33,6 @@ class Project:
         if self.connections is not None:
             object.__setattr__(self, "connections", place.absolute(self.connections, "connections"))
 
-    @classmethod
-    def discover(cls, start: Path | None = None) -> Project:
-        found = place.project(start)
-        assert found is not None
-        return cls(found)
-
     @property
     def tasks_dir(self) -> Path:
         return self.root / "tasks"
@@ -47,10 +40,6 @@ class Project:
     @property
     def runs_dir(self) -> Path:
         return self.root / "runs"
-
-    @property
-    def reports_dir(self) -> Path:
-        return self.root / "reports"
 
     @property
     def policies_dir(self) -> Path:
@@ -95,7 +84,3 @@ class Project:
         if not (d / "task.py").is_file():
             raise NotFound(f"no task {task_id!r}; the tasks: {', '.join(self.task_ids()) or 'none'} (in {self.tasks_dir})")
         return d
-
-    def load_env(self) -> None:
-        """Keys from the .env files of the project and its parents up to the git root (core/envfile.py)."""
-        envfile.load(self.root)

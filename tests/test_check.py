@@ -287,23 +287,6 @@ def test_a_version_adopted_without_an_evaluation_is_checked_like_any_other(task)
         check.check(task, candidate="draft")
 
 
-def test_going_back_to_a_version_that_ran_before_is_a_rollback(task):
-    from s1flow.policies.history import read
-
-    ship(task, policy(1, "bad"), policy(2, "good"), current=1)
-    point(task.policies, "toy", 2)  # base: v1, then v2
-    base = read(task.policies.dir("toy") / "history.jsonl")
-    point(task.policies, "toy", 1, reason="v2 times out in production")  # the pull request rolls back
-    r = check.check(task, against="v2", history=base)
-    assert (r.verdict, r.exit) == ("rollback", 0) and r.reasons == [] and r.diff is not None
-    assert any(n.startswith("would fail otherwise: ") for n in r.notes) and "✅ pass (rollback)" in comment.markdown(task, r)
-    assert check.check(task, against="v2").verdict == "rollback"  # the task's own history says the same
-    assert check.check(task, against="v2", history=[]).verdict == "fail"  # a base with no history: no rollback
-    assert not check.was_current_before(base, 2, 1)  # v2 never ran before v1
-    back = read(task.policies.dir("toy") / "history.jsonl")  # v1, v2, then back to v1
-    assert not check.was_current_before(back, 2, 1)  # adopting v2 again, the version rolled back from, is checked
-
-
 def test_every_call_failing_is_not_a_pass(task, monkeypatch):
     ship(task, policy(1, "good"))
 
@@ -346,11 +329,8 @@ def test_a_task_with_no_current_version_checks_the_one_asked_for(task):
     assert [s.name for s in r.sides] == ["v1"] and r.exit == 0
 
 
-def test_check_writes_no_record_and_promote_is_gone(task, monkeypatch):
+def test_check_writes_no_record(task):
     ship(task, policy(1, "good"), policy(2, "good"), candidate=2)
     assert check.check(task, against="v1").verdict == "no_difference"
-    assert not (task.where.reports_dir / "toy").exists()  # the pull request's check is the record
-    monkeypatch.chdir(task.where.root)
-    gone = cli("promote", "toy@v2")
-    assert gone.exit_code == 2 and "it is now `adopt`" in gone.err
+    assert not (task.where.root / "reports").exists()  # the pull request's check is the record
 

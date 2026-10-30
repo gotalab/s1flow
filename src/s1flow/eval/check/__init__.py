@@ -19,8 +19,6 @@ intervals of the difference on the task's primary objective:
                    (min_precision, min_recall) is shown broken the same way; or it breaks a cost constraint
     pass (exit 0)  otherwise; "better" when the interval is above 0, or when only the candidate keeps the
                    constraint; "no difference shown" when it spans 0
-    rollback       the candidate was current before `against` (history.jsonl; on a pull request the base commit's,
-                   which the Action passes as --history): measured and shown, never failed (exit 0)
     pending        no calls allowed and some answers are not cached (exit 2)
 
 With only one version (no candidate), current alone is checked against the target.
@@ -45,7 +43,6 @@ from ...client.questions import Question
 from ...policies import DecisionPolicy
 from ...core.errors import ConfigError, DataError, S1flowError
 from ...policies.file import CURRENT, version_number
-from ...policies.history import Switch
 from .. import evalset
 from ..objectives import measure
 from ..objectives.measure import bound
@@ -55,7 +52,7 @@ from .calls import Side, Version, ask, missing
 from .paired import Diffs, SideSummary, keeps, paired, resamples, shown, summary
 
 
-Verdict = Literal["fail", "better", "no_difference", "pass", "rollback", "pending"]
+Verdict = Literal["fail", "better", "no_difference", "pass", "pending"]
 
 
 class CheckResult(BaseModel):
@@ -114,20 +111,10 @@ def default_candidate(task: Task, against: Version) -> str | None:
     return None
 
 
-def was_current_before(history: list[Switch], version: int, against: int) -> bool:
-    """Whether going from `against` to `version` is a rollback: an older version that ran before the last switch to
-    `against`. A newer one is not, though it ran: adopting again a version someone rolled back from is checked."""
-    switches = [e for e in history if e.action != "refused"]
-    last = max((i for i, e in enumerate(switches) if e.version == against), default=None)
-    return version < against and last is not None and any(e.version == version for e in switches[:last])
-
-
 def check(
     task: Task, against: str = CURRENT, candidate: str | None = None, sample: int | None = None, cached_only: bool = False,
-    history: list[Switch] | None = None,
 ) -> CheckResult:
-    """`cached_only`: make no calls (a PR from a fork has no keys); when some are needed, the verdict is `pending`.
-    `history`: the switches that tell a rollback (default the task's history.jsonl; on a pull request, the base commit's)."""
+    """`cached_only`: make no calls (a PR from a fork has no keys); when some are needed, the verdict is `pending`."""
     base_name, base_r = pick(task, against)
     cand_spec = candidate or default_candidate(task, base_r)
     cand = pick(task, cand_spec) if cand_spec else None
@@ -135,14 +122,7 @@ def check(
     if cand and cand[1].spec.ref == base_r.spec.ref and cand[1].spec.question == base_r.spec.question:
         cand = None
         notes.append(f"{cand_spec} is the same version as {base_name}, so {base_name} alone is checked")
-    rollback = False
-    if cand and cand[0] != "draft":
-        history = task.policies.history(task.id) if history is None else history
-        rollback = was_current_before(history, cand[1].spec.version, base_r.spec.version)
-        if rollback:
-            notes.append(f"{cand[0]} ({cand[1].spec.ref}) ran before {base_name} ({base_r.spec.ref}) (history.jsonl), so this is a rollback: "
-                         f"it is measured and shown, not held to {base_name}")
-    return compare([(base_name, base_r)] + ([cand] if cand else []), task, sample, cached_only, notes, rollback=rollback)
+    return compare([(base_name, base_r)] + ([cand] if cand else []), task, sample, cached_only, notes)
 
 
 def custom_code(task: Task, versions: list[tuple[str, Version]]) -> list[str]:
@@ -168,7 +148,6 @@ def custom_code(task: Task, versions: list[tuple[str, Version]]) -> list[str]:
 
 def compare(
     versions: list[tuple[str, Version]], task: Task, sample: int | None = None, cached_only: bool = False, notes: list[str] | None = None,
-    rollback: bool = False,
 ) -> CheckResult:
     """The base version alone, or the base and a candidate."""
     # Bind before test exposure. Stale conditions can be measured again, never silently certified.
@@ -260,9 +239,6 @@ def compare(
             if hi_c < 0 if c.at_least else lo_c > 0:
                 reasons.append(f"the {c.what} is {'lower' if c.at_least else 'higher'} than {base.name}'s (the difference's 95% interval is {'below' if c.at_least else 'above'} 0)")
         verdict = "better" if better else "no_difference"
-    if rollback:  # it ran before: what it measures is for the person who rolled back, not a reason to keep the newer one
-        notes += [f"would fail otherwise: {x}" for x in reasons]
-        reasons, verdict = [], "rollback"
     return CheckResult(
         task=task.id, n=len(cases), sample=sample, verdict="fail" if reasons else verdict, primary_label=o0.label,
         target_accuracy=task.coverage_target, data_sha256=sha, sides=summaries, diff=diffs, reasons=reasons, notes=notes,
