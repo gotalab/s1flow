@@ -803,8 +803,11 @@ def _adopt_without_evaluation(a: argparse.Namespace) -> int:
         raise S1flowError("adopt --spec FILE takes no TASK: the spec names its task and version")
     if a.check:  # validate only: what the write would refuse, it refuses too; writes nothing
         spec = read_file(a.spec)
-        proj = None if a.connections or a.root else project(a)
-        DecisionPolicy(spec, client=proj.client() if proj else _policy_client(a))  # it binds to an allowed model
+        # where the write would save (the project's policies/, or --root); with --connections alone, outside a project,
+        # the binding only
+        found = None if a.root else _project_root(a, required=not a.connections)
+        proj = project(a) if found else None
+        DecisionPolicy(spec, client=proj.client() if proj else _policy_client(a))  # it binds to an allowed model, as the write does
         if a.root or proj:  # a policies directory to save into: the next version there
             latest = max(Policies(place.absolute(a.root, "policy root") if a.root else proj.policies_dir).versions(spec.task), default=0)  # type: ignore[union-attr]
             if spec.version <= latest:
