@@ -17,7 +17,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: gotalab/s1flow@main
+      - uses: gotalab/s1flow@v0.1.0a1
         with:
           working-directory: s1flow
           sample: "40"

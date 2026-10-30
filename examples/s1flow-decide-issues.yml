@@ -31,7 +31,7 @@ jobs:
             echo 'S1FLOW_EOF'
           } >> "$GITHUB_OUTPUT"
       - id: s1
-        uses: gotalab/s1flow/decide@main
+        uses: gotalab/s1flow/decide@v0.1.0a1
         continue-on-error: true  # a failed call leaves the issue as it is
         with:
           working-directory: s1flow
@@ -86,7 +86,7 @@ jobs:
             echo 'S1FLOW_EOF'
           } >> "$GITHUB_OUTPUT"
       - id: s1
-        uses: gotalab/s1flow/decide@main
+        uses: gotalab/s1flow/decide@v0.1.0a1
         continue-on-error: true
         with:
           working-directory: s1flow
@@ -108,7 +108,7 @@ jobs:
           DECISION_ID: ${{ steps.s1.outputs.decision_id }}
         run: |
           label="${LABEL#area:}"
-          uvx --from "s1flow @ git+https://github.com/gotalab/s1flow" s1flow feedback record gh-ruff-area "$DECISION_ID" "$label" \
+          uvx --from "s1flow==0.1.0a1" s1flow feedback record gh-ruff-area "$DECISION_ID" "$label" \
             --connections s1flow.toml --log "$RUNNER_TEMP/s1flow-log.jsonl"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
