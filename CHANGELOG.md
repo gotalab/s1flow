@@ -67,10 +67,11 @@
 - `check` never passes on stored evidence: it asks both versions again. A version adopted with `--force` fails as
   any version below does; the comment shows that it was forced, by whom and why. A version adopted without an
   evaluation (`adopt --spec`) is checked like any other (it used to stop with "no evaluation record"). A
-  candidate that ran before the version it is checked against (`--history FILE`, default the task's
-  `history.jsonl`; the Action passes the base commit's) gets the new verdict `rollback`: measured, shown, exit 0.
-  The comment flags a pull request that edits `task.py`, `split.json` or `s1flow.toml`, which set the rules the
-  check applies.
+  candidate older than the version it is checked against that ran before it (`--history FILE`, default the
+  task's `history.jsonl`; the Action passes the base commit's) gets the new verdict `rollback`: measured, shown,
+  exit 0. The Action fails a pull request that rewrites or removes a saved `vN.json` or `vN.evaluation.json`, and
+  flags one that edits files under `tasks/<task>/` or `s1flow.toml`, which set the rules and the cases the check
+  applies.
 - `report` marks no pick: the `*` mark and `ranking[].recommended` are gone, and `=` marks the candidates the
   objective cannot tell apart at the top (`ranking[].tied`). The Markdown report's headline says which candidate
   the tiebreak puts first instead of which is "chosen", and its `◎` is now `=`. The weights table shows the
@@ -89,8 +90,7 @@ Each removed command fails with one line naming what replaces it.
 ### Added
 
 - `tiebreak` takes `"latency"` and `"cost"` beside objectives, in the order that ranks the tied candidates
-  (`tiebreak=["cost", "latency"]` puts API cost first). A tiebreak naming neither still has latency and then API
-  cost after it, as before.
+  (`tiebreak=["cost", "latency"]` puts API cost first).
 - `s1flow init --task` writes every default into task.py: `split=Split(test=0.3, k=5, seed=1)`,
-  `objective=Accuracy()`, `tiebreak=["latency", "cost"]`, `constraints=Constraints()`. The task measures and ranks
-  as it did with them left out.
+  `objective=Accuracy()`, `tiebreak=["latency", "cost"]`, `constraints=Constraints()`. The task measures as it
+  did with them left out, and orders tied candidates as 0.1.0a1 did.

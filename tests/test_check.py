@@ -301,6 +301,8 @@ def test_going_back_to_a_version_that_ran_before_is_a_rollback(task):
     assert check.check(task, against="v2").verdict == "rollback"  # the task's own history says the same
     assert check.check(task, against="v2", history=[]).verdict == "fail"  # a base with no history: no rollback
     assert not check.was_current_before(base, 2, 1)  # v2 never ran before v1
+    back = read(task.policies.dir("toy") / "history.jsonl")  # v1, v2, then back to v1
+    assert not check.was_current_before(back, 2, 1)  # adopting v2 again, the version rolled back from, is checked
 
 
 def test_every_call_failing_is_not_a_pass(task, monkeypatch):
