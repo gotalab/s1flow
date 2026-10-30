@@ -167,7 +167,7 @@ async def run_model(
     run on a task fixes its held-out test share (evalset.fix)."""
     spec = task.where.lineup().resolved(model_name)
     require_provider_revision(spec)
-    evalset.fix(task)
+    evalset.fix(task)  # the CLI shows what it did
     client = task.where.client()
     model = client.connections.build(spec, name=model_name)
     cache_dir = task.where.cache_dir

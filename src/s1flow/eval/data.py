@@ -28,7 +28,7 @@ class DataCheck(BaseModel):
     errors: list[str] = []  # cases that cannot be scored as they are
     warnings: list[str] = []  # usable, but likely to mislead
     test: int | None = None  # cases held out in the evaluation set, when it exists
-    unassigned: int = 0  # labelled cases the evaluation set has not seen yet (assigned on the next report, adopt or check)
+    unassigned: int = 0  # labelled after split.json was written: placed by their ID's hash when it is read
     corrected: dict[str, int] = {}  # corrections.jsonl: verdict -> cases
 
 
@@ -83,7 +83,7 @@ def check(task: Task) -> DataCheck:
     sf = evalset.read(task)
     return DataCheck(
         cases=len(cases), labelled=len(labelled), labels=dict(labels.most_common()), errors=errors, warnings=warnings,
-        test=None if sf is None else len(sf.ids("test")), unassigned=0 if sf is None else sum(c.id not in sf.assign for c in labelled),
+        test=None if sf is None else len(evalset.current(task).ids("test")), unassigned=0 if sf is None else sum(c.id not in sf.assign for c in labelled),
         corrected=dict(Counter(f.verdict for f in fixes.values()).most_common()),
     )
 
@@ -93,7 +93,7 @@ def markdown(task: Task, r: DataCheck) -> str:
     if r.corrected:
         L.append("corrected: " + ", ".join(f"{k} {v}" for k, v in r.corrected.items()))
     if r.test is not None:
-        L.append(f"evaluation set: test {r.test}" + (f", {r.unassigned} new cases to assign" if r.unassigned else ""))
+        L.append(f"evaluation set: test {r.test}" + (f" ({r.unassigned} cases labelled since split.json, placed by their ID's hash)" if r.unassigned else ""))
     L += [""] + [f"- ✗ {e}" for e in r.errors[:50]] + [f"- ⚠ {w}" for w in r.warnings[:50]]
     if not r.errors and not r.warnings:
         L.append("- ok")

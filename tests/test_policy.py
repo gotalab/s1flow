@@ -363,6 +363,9 @@ def test_the_first_run_fixes_the_test_share_and_rank_and_report_write_nothing(tm
     (tmp_path / "one" / "data.jsonl").write_text(json.dumps(rows[0]) + "\n")
     with pytest.raises(DataError, match="one: 1 labelled cases; holding out a test share and cross-validating the rest needs 3 or more"):
         evalset.current(one)
+    assert "not fixed yet" in (evalset.fix(one) or "") and not evalset.path(one).exists()  # run still asks the models
+    asyncio.run(running.run_model(one, "good", limit=None, variant="base"))
+    assert not evalset.path(one).exists()
 
 
 def test_adopt_chooses_from_the_runs_and_names_the_version(tmp_path):

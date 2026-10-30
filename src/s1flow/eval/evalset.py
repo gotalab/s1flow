@@ -136,10 +136,15 @@ def fixed(task: Task) -> SplitFile:
 
 
 def fix(task: Task) -> str | None:
-    """Write the split if the task has none (s1flow run, the one writer); what it wrote, to show, or None."""
+    """Write the split if the task has none (s1flow run, the one writer); what it did, to show, or None.
+    Too few labelled cases to hold out a test share writes nothing: run still asks the models (to review the
+    answers before labelling), and a later run fixes it."""
     if path(task).exists():
         return None
-    sf = _initial(task)
+    try:
+        sf = _initial(task)
+    except DataError as e:
+        return f"the held-out test share is not fixed yet ({e}); a run after labelling more cases fixes it"
     path(task).write_text(sf.model_dump_json(by_alias=True, indent=1) + "\n")
     return f"fixed the evaluation set ({path(task).name}: {len(sf.ids('test'))} test cases, from {sf.source}); commit it with the task"
 
@@ -148,5 +153,6 @@ def _initial(task: Task) -> SplitFile:
     art = next(iter(task.optimized.values()), None)
     sp = art.split if art else initial(task, task.load_cases().labelled(), task.split.seed)
     assign: dict[str, Role] = {i: role for role in ("train", "val", "test") for i in sp[role]}
-    return SplitFile(seed=task.split.seed, test_share=round(len(sp["test"]) / max(1, len(assign)), 3), at=clock.now(),
+    # the share cases labelled later are held out at: the task's, not what rounding made of the first few cases
+    return SplitFile(seed=task.split.seed, test_share=task.split.test, at=clock.now(),
                      source=f"optimized/{art.variant}" if art else "initial", assign=assign)

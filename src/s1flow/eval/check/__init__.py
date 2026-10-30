@@ -147,7 +147,7 @@ def compare(
         if (runtime.execution_digest != policy.evidence.execution_digest or
                 task.input_adapter_digest != policy.evidence.input_adapter_digest):
             fresh_notes.append(f"{name}: execution conditions changed; measured again with the current binding and input adapter")
-    changed = custom_code(task, versions)  # before the split is made: a missing function leaves nothing behind
+    changed = custom_code(task, versions)  # before any call: a missing function fails without spending
     sf = evalset.fixed(task)  # the test share the first run fixed (committed with the task)
     notes = (notes or []) + changed + fresh_notes
     by_id = task.load_cases().by_id()

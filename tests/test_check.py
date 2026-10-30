@@ -92,6 +92,7 @@ def test_the_split_is_made_once_and_never_moves(task, tmp_path):
     assert "fixed the evaluation set" in (evalset.fix(task) or "") and evalset.fix(task) is None  # the first run writes it, once
     sf = evalset.fixed(task)
     assert sf.assign == planned.assign and set(sf.assign.values()) == {"train", "val", "test"} and 30 <= len(sf.ids("test")) <= 50
+    assert sf.test_share == task.split.test  # later cases are held out at the task's share, whatever rounding made of the first
     written = evalset.path(task).read_text()
     with (tmp_path / "data.jsonl").open("a") as f:
         f.writelines(json.dumps({"id": f"n{i}", "text": "a"}) + "\n" for i in range(40))
