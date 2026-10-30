@@ -108,7 +108,7 @@ question plus every task variant (it replaces `compare` and `rank`):
 s1flow report <task>                          # the candidates by the task's objective
 s1flow report <task> --json --limit 20 --offset 12
 s1flow report <task> --candidate model:version/variant
-s1flow report <task> --out DIR                # DIR/comparison.json (with chart arrays) and DIR/<variant>.md
+s1flow report <task> --out DIR                # DIR/comparison.json (with chart arrays) and DIR/questions/<variant>.md
 s1flow report --from DIR/comparison.json --json  # offline; no rescoring or live certification
 ```
 

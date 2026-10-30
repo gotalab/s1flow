@@ -74,7 +74,7 @@ def _run_digest(task: Task, model: str, variant: str) -> str:
 
 def candidates(task: Task, only: list[str] | None = None, variants: list[str] | None = None) -> list[Listed]:
     """Every run on a question the task still has, by a model (or a version of one) still in the line-up."""
-    known: set[str] = set(task.where.client().connections.names(versions=True))
+    known: set[str] = set(task.where.declared_connections().names(versions=True))
     out = []
     for variant in variants or ["base", *task.variants]:
         d = task.where.runs_dir / task.id / variant
@@ -160,7 +160,7 @@ class Shortlist:
         return picked
 
     def rows(self) -> list[Row]:
-        models = self.task.where.client().connections
+        models = self.task.where.declared_connections()
         fits = {x.candidate for x in self.fits}
         out = []
         for x in self.ranked:
@@ -210,7 +210,7 @@ def shortlist(task: Task, only: list[str] | None = None, variants: list[str] | N
         raise ConfigError(f"{task.id}: run evidence changed during ranking; rescore before adoption")
     return Shortlist(task=task, run_digests={name: run_digests[name] for name, _, _ in cands}, data_digest=data_digest, input_adapter_digest=input_adapter_digest,
                      evaluation_contract_digest=evaluation_contract_digest,
-                     execution_digests={model: execution_digest(task.where.client().connections.resolved(model), "") for _, model, _ in cands}, ranked=ranked, evaluations=evaluations, preds=preds, cands=cands, reweighted=moved)
+                     execution_digests={model: execution_digest(task.where.declared_connections().resolved(model), "") for _, model, _ in cands}, ranked=ranked, evaluations=evaluations, preds=preds, cands=cands, reweighted=moved)
 
 
 def adopt(

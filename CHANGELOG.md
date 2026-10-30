@@ -19,7 +19,7 @@
   as on `compare`; `--limit` and `--offset` now page the ranking too. The text names each candidate it does not
   rank (no runs, or not every case answered). With no runs, `report` exits 0 and says so, where `rank` exited 2.
 - `report` no longer writes `reports/<task>/<variant>/latest.md` and `latest.json`. `--out DIR` takes a directory
-  (`compare --out` took a file) and writes `DIR/comparison.json` (what `compare --out` wrote) and `DIR/<variant>.md` / `.json` (what `latest.*` held) for each
+  (`compare --out` took a file) and writes `DIR/comparison.json` (what `compare --out` wrote) and `DIR/questions/<variant>.md` / `.json` (what `latest.*` held) for each
   question with runs. Its `--variant` option is gone: every question variant is in one report.
 
 Each removed command fails with one line naming what replaces it.

@@ -56,7 +56,7 @@ Adopting a candidate and making it live are separate steps: `adopt --reason` rec
 switches the channel (see [Policies, evidence and promotion](policies.md)).
 
 `s1flow report ticket-bug --out DIR` saves `DIR/comparison.json`, a full snapshot of the development results
-including the chart data, and a Markdown report per question (`DIR/base.md`); it writes nothing else unless asked.
+including the chart data, and a Markdown report per question (`DIR/questions/base.md`); it writes nothing else unless asked.
 `s1flow report --from DIR/comparison.json` reads that
 snapshot offline, without rescoring or rechecking anything. The snapshot keeps the source and date, provider and
 model, the declared and recorded concurrency, and where latency and cost figures came from: billed, list price,

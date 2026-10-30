@@ -14,7 +14,7 @@ s1flow report <task>                         # the candidates by the task's obje
 s1flow report <task> --json                  # every metric of each candidate, and the ranking, for an agent
 s1flow report <task> --json --limit 20 --offset 12
 s1flow report <task> --candidate jev:1.14/policy  # exact candidate detail
-s1flow report <task> --out DIR               # DIR/comparison.json (with chart arrays) and DIR/<variant>.md
+s1flow report <task> --out DIR               # DIR/comparison.json (with chart arrays) and DIR/questions/<variant>.md
 s1flow report --from DIR/comparison.json --json  # read the snapshot offline
 ```
 

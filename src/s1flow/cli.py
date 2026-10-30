@@ -687,8 +687,8 @@ def report(a: argparse.Namespace) -> int:
         wrote = [out / "comparison.json"]
         for variant in ["base", *task.variants]:
             if reporting.available_models(task, variant):
-                reporting.write(task, variant, out)
-                wrote += [out / f"{variant}.md", out / f"{variant}.json"]
+                reporting.write(task, variant, out / "questions")  # apart from comparison.json, whatever a variant is named
+                wrote += [out / "questions" / f"{variant}.md", out / "questions" / f"{variant}.json"]
         print("wrote " + ", ".join(_shown(p) for p in wrote), file=sys.stderr)
 
     if a.candidate:
@@ -1013,7 +1013,7 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--limit", type=positive, default=12, help="candidates shown, in the ranking and the list (default: 12)")
     p.add_argument("--offset", type=int, default=0, help="candidates to skip (default: 0)")
     p.add_argument("--candidate", help="one candidate in full: model[:version][/variant]")
-    p.add_argument("--out", type=Path, metavar="DIR", help="write comparison.json (with the chart series) and <variant>.md / .json for each question")
+    p.add_argument("--out", type=Path, metavar="DIR", help="write comparison.json (with the chart series) and questions/<variant>.md / .json for each question")
     p.add_argument("--from", dest="from_path", type=Path, metavar="PATH", help="read a saved comparison.json offline")
 
     p = _command(sub, "adopt", adopt, context=("project", "connections"))
