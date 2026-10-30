@@ -1,49 +1,37 @@
 ---
 name: s1flow
-description: Call typed decision models directly, run saved policies, or compare and improve model and instruction variants with s1flow. Use for yes/no and one-of-N decisions in apps or CI, labelled-case evaluation, human or authorized-agent candidate selection, visual comparisons, and production feedback. Not for reading code or judging whether work is complete.
+description: Build, measure, ship and improve typed yes/no and one-of-N decisions with s1flow. Use to collect and label cases, compare models and question variants, adopt and roll back a policy in a pull request, call a policy from an app or CI, and measure it in production. Not for reading code or judging whether work is complete.
 ---
 
 # s1flow
 
-s1flow asks typed questions about an input; a runtime policy owns one question. This Skill routes each job to the
-relevant reference; the CLI runs it (if absent: `uv tool install "s1flow[eval]"`). `s1flow init` makes a project in
-`s1flow/` and nothing else; ask before passing `--ci` (a PR check workflow). The CLI discovers the selected project; the SDK never discovers configuration.
+s1flow asks a model one typed question about an input (`state`): yes/no, or one of up to 20 options. A task holds
+the labelled cases and the question (`tasks/<id>/task.py`); a policy is the version an app runs
+(`policies/<task>/vN.json`). If the CLI is absent: `uv tool install "s1flow[eval]"`.
 
-For evaluation, `s1flow report TASK` is the one view across model and question variants. It reads saved development
-runs only: no model call, held-out test score, or activation. It orders candidates by the task's declared objective and
-marks the ranking's pick; `--json` adds every metric. Keep below-target results visible. The person owns the
-criteria. An agent chooses only with delegated criteria and authority, without inventing weights or strict cutoffs.
+Three principles:
 
-The base install creates, validates and runs a v2 policy: task/version, trusted `connection` and exact `model_id`,
-one boolean or choice question, rule and optional input shape. Bind runtime code to an explicit `Client`; CLI
-policy execution requires `--connections PATH`. The SDK never installs from policy/input; evaluation commands
-remain development work and `run`, `report`, `adopt` need `s1flow[eval]`.
+- **The CLI measures, records and switches. It decides nothing.** `run`, `report`, `check` and `feedback measure`
+  measure; `adopt` records why in `history.jsonl` and is the only command that changes which version is current.
+  Which candidate to adopt, whether to merge, the objective, the labels, and whether to add production cases are
+  decided by the person, or by you when the person has written down how.
+- **Rules live in files.** `task.py` and `s1flow.toml` hold every rule the CLI follows. `init` writes the defaults
+  out so they can be read and changed.
+- **One command per purpose.** Flow: `cases`, `run`, `optimize`, `report`, `adopt`, `check`, `decide`, `feedback`.
+  Setup and distribution: `init`, `doctor`, `models`, `export`.
 
-The direct `Client` supports provider-supported boolean, choice, score and box questions. Evaluation comparison
-supports boolean, choice and box; score is explicitly unsupported. A v2 policy supports one boolean or choice.
-Box has common metrics and confidence curves; Boolean adds precision/recall, threshold curves and calibration;
-Choice has a selected-answer probability curve. Omit curves without genuine probability or box confidence; vendor
-confidence is not selected-answer probability.
+**`criteria.md`.** Before any of those decisions, read `tasks/<id>/criteria.md` if it exists: the person's written
+decision criteria. Follow it when it covers the decision; otherwise ask the person. Copy any number in it (for
+example "a false negative costs 3x a false positive") into `task.py`'s objective, because the CLI reads only
+`task.py`. Never invent weights, cutoffs or a pick, and never adopt or merge on your own.
 
-Read the one reference for the job at hand (`s1flow guide <topic>` prints it too):
+Read the one reference for the stage at hand:
 
-| The job | Read |
+| Stage | Read |
 |---|---|
-| Agree on the decision and its objective; collect labelled cases (GitHub, logs, existing labels) | `references/collect.md` |
-| Write `task.py` and check the cases (`cases check`) | `references/task.md` |
-| Compare model × question variants; inspect or paginate the compact result | `references/compare.md` |
-| Review the labels with the user (`cases review`, `cases correct`, the random sample) | `references/review.md` |
-| Render a report with multiple metrics and exportable figures from a saved snapshot | `references/charts.md` |
-| Pick a policy with the user, release it with a pull request, call it from the app | `references/adopt-and-run.md` |
-| A provider offers a new version of a model: notice it, ask, run, compare with current | `references/new-version.md` |
-| Call it from a GitHub workflow or another language (an example to copy) | `references/workflow.md` |
-| What a decision log line looks like, and its JSON Schema | `references/logs.md` |
-| Record the right answers, measure in production, improve the question | `references/fix.md` |
-| A cloud agent or CI: keys, allow-listed hosts (`s1flow doctor`) | `references/sandbox.md` |
-| Configure connections and projects; script the CLI: exit codes, `--json`, names | `references/cli.md` |
-
-The runtime returns `decision_id`; store it when a later label may arrive. Feedback uses it, while `case_id` is
-only a log annotation. `below_min_probability` is `null` when unset, otherwise `true` or `false`.
-Comparison evidence is dev-scoped: unknowns stay unknown; source/date, provider/model, measured concurrency,
-billed/list (displayed as estimated)/mixed/unknown cost remain visible; `adopt` records the selected candidate and reason and
-reads its held-out result, and makes it current: merging the pull request that carries it is the release.
+| Start a project, agree on the decision, collect cases, write `task.py`, review labels | `references/collect.md` |
+| Run models and question variants, optimize, read `report`, charts, a new model version | `references/measure.md` |
+| Adopt a candidate, write the reason and the PR body, read `check`, roll back | `references/ship.md` |
+| Call a policy from an app, a workflow or another language; decision logs; `export` | `references/app.md` |
+| Record the right answers, measure production, add cases, improve the question | `references/learn.md` |
+| Keys and hosts in a sandbox or CI, `doctor`, `models`, exit codes, `--json`, names | `references/setup.md` |
