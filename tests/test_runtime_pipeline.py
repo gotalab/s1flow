@@ -78,8 +78,19 @@ def exercise_runtime(root: Path, python: str = sys.executable, *, evaluate: bool
         }))
         checked = json.loads(cli('policy', 'create', source, '--connections', models, '--check', '--json').stdout)
         assert checked['binding_checked'] and not calls
-        created = json.loads(cli('policy', 'create', source, '--root', root / 'policies', '--json').stdout)
+        cli('policy', 'create', source, '--root', root / 'policies', expected=2)  # it makes v1 current: why?
+        created = json.loads(cli('policy', 'create', source, '--root', root / 'policies', '--reason', 'the first', '--json').stdout)
         policy_path = Path(created['path'])
+        second = root / 'bug-v2.json'
+        second.write_text(json.dumps({**json.loads(source.read_text()), 'version': 2}))
+        adopted = json.loads(cli('adopt', '--spec', second, '--reason', 'try v2', '--json').stdout)  # the base install switches
+        assert adopted == {'policy': 'ticket-bug@v2', 'previous': 1, 'evaluated': False, 'path': str(root / 'policies/ticket-bug/v2.json')}
+        back = json.loads(cli('adopt', 'ticket-bug@v1', '--reason', 'v2 misread', '--json').stdout)
+        assert back['policy'] == 'ticket-bug@v1' and back['previous'] == 2
+        history = [json.loads(x) for x in (root / 'policies/ticket-bug/history.jsonl').read_text().splitlines()]
+        assert [(h['action'], h['version'], h['previous'], h['reason']) for h in history] == [
+            ('spec', 1, None, 'the first'), ('spec', 2, 1, 'try v2'), ('rollback', 1, 2, 'v2 misread')]
+        assert history[1]['by'] == 'Runtime integration test'
         log = root / 'decisions.jsonl'
         common = ['--policy', 'ticket-bug@v1', '--path', policy_path, '--connections', models]
         decisions = []
@@ -140,17 +151,17 @@ print(json.dumps({"decision_id": decision.decision_id, "value": decision.value})
         assert report['candidates'][0]['n'] == 28 and report['ranking'][0]['recommended']
         assert all('test' not in row for row in report['candidates'])
         adopted = cli('adopt', 'ticket-bug', 'local', '--reason', 'local HTTP integration proof', '--json')
-        assert json.loads(adopted.stdout)['spec']['version'] == 2 and 'current' in adopted.stderr
-        assert json.loads((root / 'policies/ticket-bug/channels.json').read_text())['channels'] == {'current': 2}  # merging ships it
-        checked = json.loads(cli('check', 'ticket-bug', '--json').stdout)  # v1 is unevaluated: current alone
+        assert json.loads(adopted.stdout)['spec']['version'] == 3 and 'current' in adopted.stderr
+        assert json.loads((root / 'policies/ticket-bug/channels.json').read_text())['channels'] == {'current': 3}  # merging ships it
+        checked = json.loads(cli('check', 'ticket-bug', '--json').stdout)  # v1 and v2 are unevaluated: current alone
         assert checked['n'] == 12 and checked['verdict'] in ('pass', 'no_difference')
-        deployed = json.loads(cli('decide', '--policy', 'ticket-bug@v2', '--path', root / 'policies/ticket-bug/v2.json',
+        deployed = json.loads(cli('decide', '--policy', 'ticket-bug@v3', '--path', root / 'policies/ticket-bug/v3.json',
                                   '--connections', models, '--state', '{"text":"bug again"}', '--case-id', 'same-ticket',
                                   '--log', log, '--keep-state', '--json', cwd=other).stdout)
-        cli('feedback', 'record', 'ticket-bug@v2', deployed['decision_id'], 'true', '--connections', models,
-            '--path', root / 'policies/ticket-bug/v2.json', '--log', log)
+        cli('feedback', 'record', 'ticket-bug@v3', deployed['decision_id'], 'true', '--connections', models,
+            '--path', root / 'policies/ticket-bug/v3.json', '--log', log)
         measured = json.loads(cli('feedback', 'measure', 'ticket-bug', log, '--dry-run', '--json').stdout)
-        current = next(r for r in measured['production'] if r['policy'] == 'ticket-bug@v2')
+        current = next(r for r in measured['production'] if r['policy'] == 'ticket-bug@v3')
         assert current['objective']['value'] == 1 and current['comparison_reason'] is None
         return {'runtime_calls': len(calls), 'dev': 28, 'test': 12, 'primary': current['objective']['value']}
 

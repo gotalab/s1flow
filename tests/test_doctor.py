@@ -1,6 +1,7 @@
 """What each provider declares it needs (keys, hosts), and `s1flow doctor`, which checks it on the base install."""
 
 import json
+from conftest import ship
 import os
 import subprocess
 import sys
@@ -185,7 +186,7 @@ def test_doctor_on_a_policy(project):
 
     store = Store(project / "policies")
     r = policy(task="t")
-    store.write_new(r.model_copy(update={"spec": r.spec.model_copy(update={"model_id": "jaredpalmer/kev-4b"})}), current=True)
+    ship(store, r.model_copy(update={"spec": r.spec.model_copy(update={"model_id": "jaredpalmer/kev-4b"})}))
     with (project / "s1flow.toml").open("a") as f:
         f.write('\n[models.fake]\nprovider = "openrouter"\nid = "jaredpalmer/kev-4b"\n')
     done = s1flow("doctor", "--policy", "t", "--connections", str(project / "s1flow.toml"), cwd=project)

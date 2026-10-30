@@ -28,6 +28,7 @@ collected without bias.
 
 ## Optimize the prompt
 
-GEPA searches for better prompts using a stand-in score (half correctness, half 1 − Brier score), then checks the
-best one against the task's real objective. It doesn't train model weights, and it never quietly makes the new
-prompt live.
+GEPA searches for better prompts using a stand-in score (half correctness, half 1 − Brier score) on the train and
+validation cases, then runs the best one on every case as a new candidate. It doesn't train model weights, and it
+never makes the new prompt live: `s1flow report` compares it with the others, and `s1flow adopt` makes it current
+when you pick it.

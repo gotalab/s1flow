@@ -5,7 +5,7 @@ import json
 import sys
 
 import pytest
-from conftest import attach, make_project
+from conftest import attach, make_project, ship, point
 
 from s1flow import policies
 from s1flow.core.errors import ConfigError, DataError, NotFound, ProviderError, S1flowError
@@ -87,12 +87,12 @@ def test_versions_are_never_rewritten_and_current_moves(store, tmp_path):
     with pytest.raises(ConfigError, match="already has v1"):
         store.write_new(policy())
     assert store.current("t") is None
-    store.write_new(policy(version=2), current=True)
+    ship(store, policy(version=2))
     assert store.current("t") == 2 and store.read("t").spec.version == 2
-    store.set_current("t", 1)  # a rollback
+    point(store, "t", 1)  # a rollback
     assert store.read("t").spec.version == 1
     with pytest.raises(NotFound):
-        store.set_current("t", 3)
+        point(store, "t", 3)
     raw = json.loads((tmp_path / "policies" / "t" / "v1.json").read_text())
     assert raw["schema"] == "s1flow/policy@2" and "api_key" not in json.dumps(raw)
 
@@ -104,7 +104,7 @@ def test_a_file_from_0_1_0a1_with_next_and_named_channels_reads_its_current(stor
     assert store.current("t") == 1
     with pytest.raises(ConfigError, match="the one channel is `current`"):
         runtime_load("t@next", root=tmp_path / "policies")
-    store.set_current("t", 2)
+    point(store, "t", 2)
     assert json.loads((tmp_path / "policies" / "t" / "channels.json").read_text())["channels"] == {"current": 2}
 
 
@@ -190,7 +190,7 @@ def test_development_discovery_and_explicit_runtime_store(tmp_path, monkeypatch)
     (tmp_path / "s1flow").mkdir()
     (tmp_path / "s1flow" / "s1flow.toml").write_text("default = []\n[models]\n")
     store = Store(tmp_path / "s1flow" / "policies")
-    store.write_new(policy(), current=True)
+    ship(store, policy())
     (tmp_path / "app" / "src").mkdir(parents=True)
     monkeypatch.chdir(tmp_path / "app" / "src")
     with pytest.raises(ConfigError, match="path=.*root="):
@@ -435,7 +435,7 @@ def test_a_policy_dumps_the_same_bytes_whatever_the_hash_seed(tmp_path):
 
 
 def test_a_decision_names_the_content_that_made_it(store, tmp_path):
-    store.write_new(policy(), current=True)
+    ship(store, policy())
     path = tmp_path / "policies" / "t" / "v1.json"
     raw = json.loads(path.read_text())
     want = policies.file.policy_digest(raw)
@@ -515,11 +515,11 @@ def test_a_name_that_is_not_there_lists_the_ones_that_are(store, tmp_path):
     with pytest.raises(NotFound, match=r"t has no current version"):
         store.read("t")
     store.write_new(policy(version=2))
-    store.set_current("t", 1)
+    point(store, "t", 1)
     with pytest.raises(NotFound, match=r"no policy of 'x'; tasks with policies: t"):
         store.read("x")
     with pytest.raises(NotFound, match="no policy .*v9.json"):
-        store.set_current("t", 9)
+        point(store, "t", 9)
     log = tmp_path / "log.jsonl"
     d = policies.DecisionPolicy(policy().spec, client=policy_client(), log=log)
     with pytest.raises(ConfigError, match="label 'kind/nope' is not an answer to its question"):
@@ -548,3 +548,18 @@ def test_one_candidate_grammar():
         variant_name("a b")
     with pytest.raises(ValueError, match="no whitespace, ':', '/' or ','"):
         ModelSpec(provider="x", id="m", versions={"a/b": {"id": "m"}})
+
+
+def test_only_adopt_switches_current():
+    """channels.json has one writer (Policies._switch), reached only from what `s1flow adopt` runs."""
+    import re
+    from pathlib import Path
+
+    src = Path(__file__).resolve().parents[1] / "src" / "s1flow"
+    callers = sorted(f"{p.relative_to(src)}" for p in src.rglob("*.py")
+                     if re.search(r"adopted=|\.switch\(|\._switch\(", p.read_text()) and p.name != "history.py")
+    assert callers == ["cli.py", "eval/adopt.py", "eval/policy.py", "policies/file.py"]
+    cli = (src / "cli.py").read_text()
+    assert [m.start() for m in re.finditer(r"adopted=|\.switch\(", cli)] and all(
+        cli.rfind("\ndef ", 0, m.start()) in (cli.find("\ndef _adopt_spec"), cli.find("\ndef _adopt_without_evaluation"))
+        for m in re.finditer(r"adopted=|\.switch\(", cli))

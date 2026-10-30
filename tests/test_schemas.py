@@ -22,6 +22,7 @@ from s1flow.policies.policy_set import PolicySet
 from s1flow.policies.policy import DecisionPolicy
 from s1flow.policies.log import Decision, Log
 from s1flow.policies.file import PolicySpec, read_file
+from s1flow.policies.history import Switch
 from s1flow.questions import Choice
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -31,7 +32,7 @@ TYPES: dict[str, TypeAdapter | None] = {
     "policy-evaluation-3": TypeAdapter(EvaluationRecord), "policy-evaluation-2": TypeAdapter(policy_v2.EvaluationRecord), "run-2": TypeAdapter(PredictionRecord),
     "case-1": None,  # a row is the task's own: no type of s1flow's reads it whole
     "split-1": TypeAdapter(SplitFile), "policy-2": TypeAdapter(PolicySpec), "evaluated-policy-3": TypeAdapter(EvaluatedPolicy),
-    "log-2": TypeAdapter(Log), "response-1": TypeAdapter(Response), "decision-2": TypeAdapter(Decision), "policy-set-2": TypeAdapter(PolicySet),
+    "log-2": TypeAdapter(Log), "response-1": TypeAdapter(Response), "decision-2": TypeAdapter(Decision), "policy-set-2": TypeAdapter(PolicySet), "history-1": TypeAdapter(Switch),
 }
 
 

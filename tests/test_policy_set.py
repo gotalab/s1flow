@@ -1,6 +1,7 @@
 """policies.json (`s1flow policy export`): the policies an app uses, in one file it vendors and loads from."""
 
 import json
+from conftest import ship, point
 import shutil
 import subprocess
 import sys
@@ -30,7 +31,7 @@ def ship(project: Path) -> Path:
     """Each task with a current version, as pull requests that adopted them would leave it."""
     store = Policies(project / "policies")
     for task, version in {"gh-ruff-area": 3, "gh-ruff-kind": 1, "nod-wake": 1}.items():
-        store.set_current(task, version)
+        point(store, task, version)
     return project
 
 

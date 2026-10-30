@@ -6,12 +6,14 @@ the evaluation extra:
 
 ```bash
 s1flow policy create spec.json --connections s1flow.toml --check
-s1flow policy create spec.json --root policies --connections s1flow.toml
+s1flow adopt --spec spec.json --reason "..."
+s1flow adopt <task>@v<N> --reason "..."     # a rollback
 ```
 
-`policy create` only accepts a v2 `PolicySpec`, never overwrites a saved version, and makes the version it saves
-current. With `--check` it only validates the file; adding `--connections` also binds its `connection` and
-`model_id` to the trusted connections in that file. Such a version has no evaluation evidence.
+`adopt --spec` only accepts a v2 `PolicySpec`, never overwrites a saved version, and makes the version it saves
+current. `policy create --check` only validates the file; adding `--connections` also binds its `connection` and
+`model_id` to the trusted connections in that file. Such a version has no evaluation evidence. Every switch,
+and every candidate refused as below on the held-out test, appends a line to `policies/<task>/history.jsonl`.
 
 The evaluation loop is:
 

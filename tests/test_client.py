@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 import pytest
-from conftest import BENCH
+from conftest import BENCH, ship
 
 from s1flow import AsyncClient, Client
 from s1flow.client import ModelSpec, Refusal
@@ -235,7 +235,7 @@ def test_decide_with_a_policy_and_record_feedback(tmp_path, monkeypatch):
     spec = PolicySpec(task="gh-ruff-area", version=1, connection="toy", model_id="t1", questions=questions,
                       state_schema={"type": "object", "properties": {"title": {"type": "string"}, "body": {"type": "string"}}, "required": ["title", "body"]})
     store = Policies(tmp_path / "policies")
-    store.write_new(spec, current=True)
+    ship(store, spec)
     (tmp_path / "s1flow.toml").write_text(TOML)
     models = str(tmp_path / "s1flow.toml")
     out, log = tmp_path / "out.txt", tmp_path / "log.jsonl"

@@ -4,7 +4,7 @@ import json
 import math
 
 import pytest
-from conftest import attach, cli, labelled, make_project
+from conftest import attach, cli, labelled, make_project, point
 
 from s1flow.core.errors import ConfigError, DataError, NotFound, ProviderError
 from s1flow.eval.candidate import Candidate
@@ -80,7 +80,7 @@ def ship(task: Task, *rs: EvaluatedPolicy, current: int = 1, candidate: int | No
         r.evidence.evaluation_contract_digest = task.evaluation_contract_digest
         r.evidence.data_sha256 = task.data_digest
         store.write_new(r)
-    store.set_current("toy", candidate or current)
+    point(store, "toy", candidate or current)
 
 
 def test_the_split_is_made_once_and_never_moves(task, tmp_path):
@@ -279,7 +279,7 @@ def test_a_cost_not_known_is_not_free_and_a_list_price_estimates_it(task):
     task.policies.write_new(priced)
     path = task.where.root / "s1flow.toml"
     path.write_text(path.read_text() + '\n[models.tokens.price]\ninput_per_mtok = 1.0\nas_of = "2026-10-19"\nsource = "t"\n')
-    task.policies.set_current("toy", 2)
+    point(task.policies, "toy", 2)
     task.project = type(task.where)(task.where.root)  # reload the application-owned connection price
     r = check.check(task, sample=20)  # cached answers priced from the current binding
     s = r.sides[0]

@@ -1,7 +1,7 @@
 """The `s1flow` console script: every command, in the standard library's argparse.
 
 Each command imports what it needs when it runs, so the base install (pydantic and httpx) runs init, decide,
-feedback record, policy, doctor, skill and guide: an app or a workflow decides and
+feedback record, policy, doctor, skill, guide, and adopt TASK@vN and adopt --spec: an app or a workflow decides and
 records feedback, and an agent makes a project and gets the Skill, without the evaluation stack. The other commands need s1flow[eval]; on the base
 install they end in one line saying what to install, not a traceback. `s1flow --help` lists every command in one
 table (HELP), and a command that does not exist is one line naming the closest.
@@ -11,7 +11,7 @@ table (HELP), and a command that does not exist is one line naming the closest.
     s1flow decide --policy gh-ruff-area[@v3] --state @issue.json [--path policies.json] [--case-id] [--log [--keep-state]] [--github-output]
     s1flow feedback record gh-ruff-area@v3 DECISION_ID formatter --log log.jsonl   the right answer, once known
     s1flow feedback measure gh-ruff-area log.jsonl [--dry-run]               production from the logs (s1flow[eval])
-    s1flow policy create spec.json [--root policies] [--connections PATH] [--check]   a runtime spec, unevaluated, made current (--check: validate only)
+    s1flow policy create spec.json --reason "..." [--root policies] [--connections PATH] [--check]   adopt --spec, with --root (--check: validate only)
     s1flow policy export [gh-ruff-area ...] --out policies.json        each task's current policy in one file, for an app to vendor
     s1flow doctor [--models jev,d1@vercel | --policy gh-ruff-area[@…]] [--reach] [--json]   the keys and hosts they need
     s1flow skill install [--dir PATH ...] [--user] [--force]    write the Agent Skill where agents read it (skill.py)
@@ -20,7 +20,7 @@ table (HELP), and a command that does not exist is one line naming the closest.
 
 A policy is named TASK[@vN] wherever a command takes one (the current version when none is given), so its id
 in a log (`gh-ruff-area@v3`) is input as it is. channels.json names the current version; the pull request that
-changes it ships it when it merges (adopt, optimize and policy create point it at the version they save).
+changes it ships it when it merges. Only adopt points it (history.jsonl says why, each time).
 
 Exit codes, the same for every command (EXITS), shown in every --help:
 
@@ -52,6 +52,8 @@ if TYPE_CHECKING:
     from .client import Client, Response
     from .client.answers import Answer
     from .client.state import State
+    from .policies import Policies
+    from .policies.file import PolicySpec
     from .project import Project
 
 EXITS = "Exit codes: 0 done; 1 a gate failed or something was found (check fails, doctor or models --verify finds a problem); 2 usage, configuration, could not run, or check pending."
@@ -65,7 +67,7 @@ TABLE = (
     ("report", "every model and question variant on the saved runs, best first by the task's objective; --out DIR writes it"),
     ("adopt", "write a candidate as the task's current policy, with why (merging the change ships it)"),
     ("check", "compare two versions on today's test cases, case by case (the CI gate)"),
-    ("optimize", "optimize the current policy's question; adopt it as current when better (s1flow[optimize])"),
+    ("optimize", "optimize the current policy's question into a new candidate; it ships nothing (s1flow[optimize])"),
     ("cases", "check a task's cases; review and correct their labels"),
     ("decide", "call a model (--model), or decide with a task's policy (--policy)"),
     ("feedback", "record the right answer for a case a policy decided (record); measure policies in production (measure, s1flow[eval])"),
@@ -459,6 +461,7 @@ def feedback_measure(a: argparse.Namespace) -> int:
 def policy_create(a: argparse.Namespace) -> int:
     """Validate a runtime specification and save it as the task's current version (never overwriting a version);
     --check validates only. With --connections, also check that it binds to a model in that file (no model is called)."""
+    from .integrations import git
     from .policies import DecisionPolicy, Policies
     from .policies.file import read_file
 
@@ -469,8 +472,10 @@ def policy_create(a: argparse.Namespace) -> int:
         result = {"status": "valid", "policy": spec.ref, "policy_digest": spec.digest, "binding_checked": bool(a.connections)}
         print(json.dumps(result) if a.json else f"valid {spec.ref}; connection {'checked' if a.connections else 'not checked'}")
         return 0
+    if not a.reason:
+        raise S1flowError("policy create makes the version current: give --reason (it is adopt --spec FILE --reason)")
     store = Policies(a.root)
-    store.write_new(spec, current=True)
+    _adopt_spec(store, spec, git.user(Path.cwd()) or "s1flow policy create", a.reason)
     path = store.dir(spec.task) / f"v{spec.version}.json"
     result = {"status": "created", "policy": spec.ref, "policy_digest": spec.digest, "path": str(path), "current": True}
     print(json.dumps(result) if a.json else f"created {spec.ref}: {path} (not evaluated), now current")
@@ -789,9 +794,62 @@ def _print_weights(listed: Any) -> None:
           else "Halving or doubling the weights leaves the pick as it is.")
 
 
+def _adopt_spec(store: Policies, spec: PolicySpec, by: str, reason: str) -> int | None:
+    """Save a runtime spec as its task's next version, unevaluated, and make it current (adopt --spec, policy
+    create); returns the version current pointed at before."""
+    from .policies.history import Switch
+
+    previous = store.current(spec.task)
+    store.write_new(spec, adopted=Switch(action="spec", version=spec.version, previous=previous, by=by, reason=reason))
+    return previous
+
+
+def _adopt_without_evaluation(a: argparse.Namespace) -> int:
+    """adopt TASK@vN (point current at a saved version) or adopt --spec FILE (save a runtime spec as the next
+    version, unevaluated, and point current at it): no model is called and nothing is measured."""
+    from .integrations import git
+    from .policies import DecisionPolicy, Policies
+    from .policies.file import Ref, read_file
+    from .policies.history import Switch
+
+    if a.candidate or a.force:
+        raise S1flowError("adopt TASK@vN and adopt --spec take no candidate and no --force: nothing is measured")
+    proj = project(a)
+    store = Policies(proj.policies_dir)
+    user = git.user(proj.root)
+    if not user:
+        raise S1flowError("adopt records who switched current: set git config user.name")
+    if a.spec:
+        if a.task:
+            raise S1flowError("adopt --spec FILE takes no TASK: the spec names its task and version")
+        spec = read_file(a.spec)
+        DecisionPolicy(spec, client=proj.client())  # it binds to a model of s1flow.toml
+        previous = _adopt_spec(store, spec, user, a.reason)
+        path = store.dir(spec.task) / f"v{spec.version}.json"
+        out = {"policy": spec.ref, "previous": previous, "evaluated": False, "path": str(path)}
+        print(json.dumps(out) if a.json else f"{spec.ref} (current, not evaluated): wrote {_shown(path)}, channels.json, history.jsonl")
+        return 0
+    ref = Ref.parse(a.task)
+    if ref.version is None:
+        raise S1flowError(f"a rollback names the version: adopt {ref.task}@vN --reason \"...\"")
+    previous = store.current(ref.task)
+    if previous == ref.version:
+        raise S1flowError(f"{ref.task}@v{ref.version} is already current")
+    store.switch(ref.task, Switch(action="rollback", version=ref.version, previous=previous, by=user, reason=a.reason))
+    out = {"policy": f"{ref.task}@v{ref.version}", "previous": previous, "evaluated": None, "path": None}
+    print(json.dumps(out) if a.json else f"{ref.task}@v{ref.version} (current, from v{previous}): wrote channels.json, history.jsonl")
+    return 0
+
+
 def adopt(a: argparse.Namespace) -> int:
-    """Write the candidate as the task's current policy (who adopted it: git config user.name); the pull request
-    that carries it ships it when it merges. One the held-out test shows below is not written (exit 1) unless --force."""
+    """Switch the task's current policy, with why (who: git config user.name; history.jsonl keeps each switch): to a
+    measured candidate (TASK CANDIDATE), to an older version (TASK@vN, a rollback), or to a runtime spec saved
+    unevaluated (--spec FILE; these two need only the base install). The pull request that carries it ships it when
+    it merges. A candidate the held-out test shows below is not written (exit 1) unless --force."""
+    if a.spec or "@" in (a.task or ""):
+        return _adopt_without_evaluation(a)
+    if not a.task or not a.candidate:
+        raise S1flowError("adopt takes TASK CANDIDATE, TASK@vN (a rollback) or --spec FILE")
     from .eval import adopt as adopting
     from .eval import evalset
     from .eval.task import load
@@ -808,9 +866,9 @@ def adopt(a: argparse.Namespace) -> int:
     held = r.evidence.test == "below" and not a.force
     d = task.policies.dir(task.id)
     wrote = ("not written: below on the held-out test (adopt again with --force to ship it anyway); wrote "
-             + _shown(evalset.path(task)) + " (the test share's use count)" if held else
-             "wrote " + ", ".join(_shown(f) for f in (d / f"v{r.spec.version}.json", d / "channels.json", evalset.path(task)))
-             + " (the policy, current, the test share's use count)")
+             + ", ".join(_shown(f) for f in (d / "history.jsonl", evalset.path(task))) + " (the refusal, the test share's use count)" if held else
+             "wrote " + ", ".join(_shown(f) for f in (d / f"v{r.spec.version}.json", d / "channels.json", d / "history.jsonl", evalset.path(task)))
+             + " (the policy, current, why, the test share's use count)")
     check_it = None if held or previous is None else f"compare it with v{previous}: s1flow check {task.id} --against v{previous}"
     if a.json:  # stdout is the policy alone
         print(r.model_dump_json(by_alias=True, indent=1))
@@ -860,26 +918,20 @@ def check(a: argparse.Namespace) -> int:
 
 
 def optimize(a: argparse.Namespace) -> int:
-    """Optimize current's question, and adopt it as current only when it is better on the test share (needs s1flow[optimize]).
-    Exit 0 either way: finding no better version is a result, not a failed gate."""
+    """Optimize current's question for a model into a new candidate (needs s1flow[optimize]); it ships nothing:
+    report compares it with the others, adopt makes it current when a person picks it."""
     from .eval import optimize as optimizing
-    from .eval.check import comment
     from .eval.task import load
-    from .integrations import git
 
     task = load(project(a), a.task)
-    r = optimizing.optimize(task, a.budget, model=a.model, reflection=a.reflection, patience=a.patience, max_cost=a.max_cost,
-                            git_sha=git.sha(task.where.root))
+    r = optimizing.optimize(task, a.budget, model=a.model, reflection=a.reflection, patience=a.patience, max_cost=a.max_cost)
     if a.json:
         print(r.model_dump_json(indent=1))
         return 0
     o = r.optimization
-    print(f"{r.task}: {r.verdict}  ({r.variant}, from {r.start}; {o.candidates} candidates, reflection ${o.reflection_cost_usd}, val {o.val_scores[0]} -> {o.val_scores[o.best_index]})")
-    if r.reason:
-        print(f"  {r.reason}")
-    if r.check:
-        print(comment.markdown(task, r.check))
-    return 0  # its verdict is the first line: adopted, or why not
+    print(f"{r.task}: candidate {r.candidate}  (from {r.start}; {o.candidates} questions tried, reflection ${o.reflection_cost_usd}, val {o.val_scores[0]} -> {o.val_scores[o.best_index]})")
+    print(f"compare it: s1flow report {r.task}; adopt it: s1flow adopt {r.task} {r.candidate} --reason \"...\"")
+    return 0
 
 
 def cases_check(a: argparse.Namespace) -> int:
@@ -972,9 +1024,10 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--from", dest="from_path", type=Path, metavar="PATH", help="read a saved comparison.json offline")
 
     p = _command(sub, "adopt", adopt, context=("project", "connections"))
-    p.add_argument("task")
-    p.add_argument("candidate", help="the candidate, model[:version][/variant] as `s1flow report` names it")
-    p.add_argument("--reason", required=True, help="why this one (kept in the policy)")
+    p.add_argument("task", nargs="?", help="the task, or TASK@vN to roll back to a saved version")
+    p.add_argument("candidate", nargs="?", help="the candidate, model[:version][/variant] as `s1flow report` names it")
+    p.add_argument("--spec", type=Path, metavar="FILE", help="save this runtime spec as the next version, unevaluated, and make it current")
+    p.add_argument("--reason", required=True, help="why (kept in the policy and in history.jsonl)")
     p.add_argument("--force", action="store_true", help="write it even when the held-out test shows it below")
     p.add_argument("--json", action="store_true")
 
@@ -1056,6 +1109,7 @@ def parser() -> argparse.ArgumentParser:
     create.add_argument("file", type=Path, help="PolicySpec JSON file")
     create.add_argument("--root", type=Path, default=Path("policies"), help="directory for immutable policy versions")
     create.add_argument("--check", action="store_true", help="validate only; save nothing")
+    create.add_argument("--reason", help="why it becomes current (needed unless --check); the same as adopt --spec FILE --reason")
     create.add_argument("--json", action="store_true")
     ex = _command(group, "export", policy_export, context=("project",), help="write the policies an app uses into one file (policies.json)",
                   description="One file with each task's current policy and its digest, for an app in another repository or "

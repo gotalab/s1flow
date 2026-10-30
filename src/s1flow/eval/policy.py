@@ -9,6 +9,7 @@ from ..client.models import ModelSpec
 from ..core.errors import ConfigError, NotFound
 from ..project import Project
 from ..policies.file import CURRENT, Policies, PolicySpec, Ref, atomic_write
+from ..policies.history import Switch
 from .candidate import Candidate
 from .evaluation import Evaluation
 from . import policy_v2 as v2
@@ -123,8 +124,14 @@ class Store:
     def current(self, task: str) -> int | None:
         return self.runtime.current(task)
 
-    def set_current(self, task: str, version: int) -> None:
-        self.runtime.set_current(task, version)
+    def switch(self, task: str, entry: Switch) -> None:
+        self.runtime.switch(task, entry)
+
+    def log(self, task: str, entry: Switch) -> None:
+        self.runtime.log(task, entry)
+
+    def history(self, task: str) -> list[Switch]:
+        return self.runtime.history(task)
 
     def tasks(self) -> list[str]:
         return self.runtime.tasks()
@@ -145,16 +152,16 @@ class Store:
         except (ValidationError, OSError, ValueError) as e:
             raise ConfigError(f'{path}: invalid evaluation record: {e}') from None
 
-    def write_new(self, policy: EvaluatedPolicy, *, current: bool = False) -> None:
-        """Save the policy and its evaluation record; `current` also makes it the version that runs."""
+    def write_new(self, policy: EvaluatedPolicy, *, adopted: Switch | None = None) -> None:
+        """Save the policy and its evaluation record; `adopted` (s1flow adopt's) also makes it the version that runs."""
         # Validate before any write, including values copied with model_copy(update=...).
         policy = EvaluatedPolicy.model_validate_json(policy.model_dump_json())
         record = EvaluationRecord.from_policy(policy)
         with self.runtime.locked(policy.spec.task):
             self.runtime._write_new(policy.spec)
             atomic_write(self._record_path(policy.spec), record.dump(), immutable=True)
-            if current:
-                self.runtime._set_current(policy.spec.task, policy.spec.version)
+            if adopted is not None:
+                self.runtime._switch(policy.spec.task, adopted)
 
 
 def store(project: Project) -> Store:

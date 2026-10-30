@@ -23,15 +23,16 @@ s1flow decide --policy ticket-kind --state @state.json \
   --connections s1flow.toml --log "$RUNNER_TEMP/s1flow-log.jsonl" --json
 s1flow feedback record ticket-kind DECISION_ID true \
   --connections s1flow.toml --log "$RUNNER_TEMP/s1flow-log.jsonl"
-s1flow policy create spec.json --root policies --connections s1flow.toml   # saved and made current
+s1flow adopt --spec spec.json --reason "..."                       # saved, unevaluated, and made current
 s1flow policy create spec.json --connections s1flow.toml --check
 ```
 
 The file passed to `--connections` is the complete allow-list for that invocation. Keep a dedicated
 application file there; do not let an incoming policy choose a provider, import code, or discover a
 connection beside itself. `decide --policy`, `feedback record` and `doctor --policy` all
-require this explicit binding. `policy create` saves a new version and makes it current; `--check` validates
-the portable file without saving it; with `--connections` it also checks the binding.
+require this explicit binding. `adopt --spec` saves a new version and makes it current (`policy create` is the
+same, with `--root`); `policy create --check` validates the portable file without saving it; with `--connections`
+it also checks the binding.
 
 `decide --policy --json` returns a `Decision`, including `decision_id` and
 `below_min_probability`. The latter is `null` when the policy has no lower bound, `true` when the
@@ -39,9 +40,9 @@ chosen value is below it, and `false` otherwise. The same names are written by `
 an Action. Record feedback with the exact `decision_id`; `case_id` is only a context field on a log
 entry and is allowed to repeat.
 
-`channels.json` names the one `current` version. `adopt`, `optimize` and `policy create` point it at the version
-they save, so the pull request that carries the change is the review and its merge is the release; nothing is
-switched after the merge. A rollback is a pull request that points `current` at an older version.
+`channels.json` names the one `current` version. Only `adopt` points it, and appends why to
+`history.jsonl`, so the pull request that carries the change is the review and its merge is the release; nothing
+is switched after the merge. A rollback is `adopt TASK@vN --reason "..."` in a pull request.
 
 ## Project and connection discovery
 
@@ -94,7 +95,7 @@ clear what changes:
 uv tool install 's1flow[eval,optimize]'
 s1flow run <task> --models <model>:<version>
 s1flow report <task>                         # the candidates by the objective, the ranking's pick marked
-s1flow optimize <task>                       # propose a changed question
+s1flow optimize <task>                       # a changed question, as a new candidate
 s1flow check <task> --against v<N>           # final test comparison: current against the version it replaces
 ```
 
