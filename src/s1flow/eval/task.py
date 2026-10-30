@@ -110,9 +110,10 @@ class OptimizedV1(BaseModel):
             variant=self.variant, model=self.model, optimizer="gepa", at=self.at, question=self.question,
             seed_question=self.seed_question, start=self.start, split=self.split, model_calls=self.model_calls,
             cost_usd=self.reflection_cost_usd,
+            # @1 kept the reflection LM only as resolved: the closest it has to what it was set to; minibatch went unrecorded
             settings={"budget": self.budget, "reflection": self.reflection_lm, "patience": self.patience,
                       "max_cost": self.max_cost, "merge": self.merge, "seed": self.seed},
-            detail={"surrogate": self.surrogate, "context": self.context, "rationales": self.rationales,
+            detail={"surrogate": self.surrogate, "reflection_lm": self.reflection_lm, "context": self.context, "rationales": self.rationales,
                     "reflection_calls": self.reflection_calls, "candidates": self.candidates,
                     "val_scores": self.val_scores, "best_index": self.best_index},
         )

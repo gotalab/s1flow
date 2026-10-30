@@ -19,9 +19,10 @@ def step() -> str:
     return next(s["run"] for s in yaml.safe_load((ROOT / "action.yml").read_text())["runs"]["steps"] if s.get("name") == "Check")
 
 
-def run(tmp_path: Path, verdict: str, code: int, *, on_pending: str = "fail", changed: str | None = "", base_history: str = "",
-        workdir: str = "s1flow") -> tuple[subprocess.CompletedProcess[str], Path]:
-    """`changed`: the pull request's files as "status filename" lines (None: listing them fails)."""
+def run(tmp_path: Path, verdict: str, code: int, *, on_pending: str = "fail", changed: str | list[dict[str, str]] | None = "",
+        base_history: str = "", workdir: str = "s1flow") -> tuple[subprocess.CompletedProcess[str], Path]:
+    """`changed`: the pull request's files as "status filename" lines, or as GitHub lists them (put through the
+    Action's own --jq); None: listing them fails."""
     work, stubs, temp = tmp_path / workdir, tmp_path / "bin", tmp_path / "temp"
     for d in (work / "policies" / "toy", stubs, temp):
         d.mkdir(parents=True, exist_ok=True)
@@ -31,7 +32,10 @@ def run(tmp_path: Path, verdict: str, code: int, *, on_pending: str = "fail", ch
 case "$*" in
   *channels.json*) echo '{{"channels": {{"current": 1}}}}';;
   *history.jsonl*) printf '%s' {shlex.quote(base_history)};;
-  *pulls/7/files*) {"echo 'HTTP 502' >&2; exit 1" if changed is None else "printf '%s\\n' " + shlex.quote(changed)};;
+  *pulls/7/files*) {"echo 'HTTP 502' >&2; exit 1" if changed is None else
+                     "printf '%s\\n' " + shlex.quote(changed) if isinstance(changed, str) else
+                     'q=""; prev=""; for a in "$@"; do [ "$prev" = --jq ] && q="$a"; prev="$a"; done; printf %s '
+                     + shlex.quote(json.dumps(changed)) + ' | jq -r "$q"'};;
   *) echo "unexpected gh $*" >&2; exit 1;;
 esac
 """)
@@ -85,9 +89,16 @@ def test_rewriting_a_saved_version_fails(tmp_path):
     assert "A saved version is never rewritten" in (temp / "summary").read_text()
     ran, _ = run(tmp_path / "record", "pass", 0, changed="removed s1flow/policies/toy/v2.evaluation.json")
     assert ran.returncode == 1
-    # renamed away: GitHub lists it under both names
-    ran, _ = run(tmp_path / "moved", "pass", 0, changed="renamed s1flow/policies/toy/old/v2.json\nrenamed s1flow/policies/toy/v2.json")
+    # renamed away fails; renamed into a new version's name does not (no saved version changed)
+    away = [{"status": "renamed", "filename": "s1flow/policies/toy/old/v2.json", "previous_filename": "s1flow/policies/toy/v2.json"}]
+    ran, _ = run(tmp_path / "moved", "pass", 0, changed=away)
     assert ran.returncode == 1 and "rewrites `s1flow/policies/toy/v2.json`" in ran.stdout
+    into = [{"status": "renamed", "filename": "s1flow/policies/toy/v3.json", "previous_filename": "draft.json"}]
+    ran, _ = run(tmp_path / "into", "pass", 0, changed=into)
+    assert ran.returncode == 0, ran.stdout
+    many = "\n".join(f"added s1flow/x/{i}.txt" for i in range(3000))  # GitHub lists no more: the rest is unknown
+    ran, _ = run(tmp_path / "many", "pass", 0, changed=many)
+    assert ran.returncode == 1 and "3000 files or more" in ran.stdout
     ran, _ = run(tmp_path / "unlisted", "pass", 0, changed=None)  # not knowing the files, a rewrite cannot be ruled out
     assert ran.returncode == 1 and "could not list the pull request's files" in ran.stdout
     ran, _ = run(tmp_path / "plus", "pass", 0, changed="modified a+b/policies/toy/v1.json", workdir="a+b")  # the directory is taken literally

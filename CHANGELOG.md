@@ -19,6 +19,7 @@
 - The Agent Skill is one `SKILL.md` and six references by stage: `collect`, `measure`, `ship`, `app`, `learn` and
   `setup`. It says what the agent decides, what it asks the person, and to follow `tasks/<task>/criteria.md` when
   the person has written down how to decide. Copies an older s1flow wrote are updated by `init --skill --force`.
+- `s1flow init` run inside a project (a directory with `s1flow.toml`) adds to it instead of making `s1flow/s1flow/`.
 - `s1flow optimize prompt TASK` is now `s1flow optimize TASK`. Its `--pr` and `--dry-run` options are gone: open
   the pull request with your agent or `gh pr create`; its `--json` result no longer has `branch`.
 - `s1flow compare` and `s1flow rank` merge into `s1flow report`, which now prints the candidates ordered by the
@@ -78,7 +79,8 @@
   candidate older than the version it is checked against that ran before it (`--history FILE`, default the
   task's `history.jsonl`; the Action passes the base commit's) gets the new verdict `rollback`: measured, shown,
   exit 0. The Action fails a pull request that rewrites, renames or removes a saved `vN.json` or
-  `vN.evaluation.json` (or whose files it cannot list), and
+  `vN.evaluation.json` (a file renamed into a new version's name is fine), or whose files it cannot list (GitHub
+  lists at most 3000), and
   flags one that edits files under `tasks/<task>/` or `s1flow.toml`, which set the rules and the cases the check
   applies.
 - `report` marks no pick: the `*` mark and `ranking[].recommended` are gone, and `=` marks the candidates the
