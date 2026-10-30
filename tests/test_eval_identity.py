@@ -138,9 +138,9 @@ def test_defaults_exclude_test_values_errors_review_and_charts(task, monkeypatch
     assert final.calls.cost_total_usd == pytest.approx(.08)
     reviewed = review(task, sample=99)
     assert {x.id for x in reviewed.listed + reviewed.sample} <= set(pr.ids)
-    md = report.write(task)
+    md = report.write(task, "base", task.where.root / "out")
     assert 'Test (read once' not in md and 'labelled dev cases' in md
-    saved = json.loads((task.where.reports_dir / task.id / 'base/latest.json').read_text())
+    saved = json.loads((task.where.root / 'out' / 'base.json').read_text())
     chart = saved['charts']['fake']
     assert chart['scope'] == 'dev' and chart['n'] == 8 and chart['cv_value'] == e.objective.value
     monkeypatch.setenv('CI', 'true')
@@ -263,8 +263,8 @@ def test_comparison_identity_tracks_held_out_data_without_exposing_test_scores(t
 
 def test_chart_summary_and_cost_quality_frontier_are_owned_by_report(task):
     go(task)
-    report.write(task)
-    saved = json.loads((task.where.reports_dir / task.id / 'base/latest.json').read_text())
+    report.write(task, "base", task.where.root / "out")
+    saved = json.loads((task.where.root / 'out' / 'base.json').read_text())
     assert saved['chart_summary']['candidate_count'] == 1
     assert saved['chart_summary']['cost_quality_frontier'] == ['fake']
     script = (Path(__file__).resolve().parents[1] / 'skills/s1flow/scripts/charts.py').read_text()

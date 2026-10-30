@@ -285,7 +285,7 @@ function renderContext() {
   }
 }
 try {
-  if(D.schema!=='s1flow/comparison@2')throw new Error('Generate a new comparison snapshot with s1flow compare TASK --out comparison.json.');
+  if(D.schema!=='s1flow/comparison@2')throw new Error('Generate a new comparison snapshot with s1flow report TASK --out DIR.');
   txt('report-context',`${D.task} · ${D.n} labelled dev examples · ${new Set(rows.map(r=>r.model)).size} models · ${new Set(rows.map(r=>r.variant)).size} instruction variants`);
   const base=rows.find(r=>r.variant==='base')||rows[0];txt('question',base?.question?.instructions||'');txt('source',D.source||'');
   const params=D.objective.params||{};

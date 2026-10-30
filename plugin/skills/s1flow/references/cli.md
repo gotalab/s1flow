@@ -57,7 +57,7 @@ s1flow decide --policy ticket-kind --state @state.json --project ./repo --connec
 
 `init`, `guide` and `skill` accept neither option. `policy create` accepts only
 `--connections`; `policy export`, `cases check` and `cases correct` accept only `--project`.
-An unsupported command option fails before the command runs. Offline `compare --from` rejects both options.
+An unsupported command option fails before the command runs. Offline `report --from` rejects both options.
 An unevaluated `promote --root` rejects `--project`, since `--root` already selects its store.
 
 `--project` selects the exact directory containing `s1flow.toml`, or a repository directory containing
@@ -96,20 +96,20 @@ clear what changes:
 ```bash
 uv tool install 's1flow[eval,optimize]'
 s1flow run <task> --models <model>:<version>
-s1flow report <task>                         # development report
+s1flow report <task>                         # the candidates by the objective, the ranking's pick marked
 s1flow optimize <task>                       # propose a changed question
 s1flow check <task> --candidate next         # final test comparison
 ```
 
-`compare` is the compact overview for agents and terminal readers. It uses saved development runs and includes
-the base question plus every task variant:
+`report` is the one view of the saved development runs, for terminal readers and agents; it includes the base
+question plus every task variant (it replaces `compare` and `rank`):
 
 ```bash
-s1flow compare <task>                         # text, 12 candidates by default
-s1flow compare <task> --json --limit 20 --offset 12
-s1flow compare <task> --candidate model:version/variant
-s1flow compare <task> --out comparison.json   # full snapshot, including chart arrays
-s1flow compare --from comparison.json --json  # offline; no rescoring or live certification
+s1flow report <task>                          # the candidates by the task's objective
+s1flow report <task> --json --limit 20 --offset 12
+s1flow report <task> --candidate model:version/variant
+s1flow report <task> --out DIR                # DIR/comparison.json (with chart arrays) and DIR/questions/<variant>.md
+s1flow report --from DIR/comparison.json --json  # offline; no rescoring or live certification
 ```
 
 `--json` and text are bounded views of the same candidate IDs and numerical evidence. `--out` keeps stdout
@@ -121,7 +121,7 @@ or activate a policy. Use `references/charts.md` to render it for human inspecti
 runtime `PolicySpec`; a saved runtime specification names only its registered `connection`, exact
 `model_id`, question and rule.
 
-Commands with `--json` emit machine-readable results for `tasks`, `models`, `doctor`, `compare`, `rank`, `adopt`,
+Commands with `--json` emit machine-readable results for `tasks`, `models`, `doctor`, `adopt`,
 `promote`, `check`, `report`, `cases review`, `feedback measure`, `optimize` and `decide`, and for
 `policy create`. Other commands
 print their verdict and use the exit code; commands that write files name the files they wrote.

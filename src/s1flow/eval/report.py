@@ -1,10 +1,11 @@
-"""Reports: reports/<task>/<variant>/latest.md and latest.json, from the evaluations alone. What was measured
+"""Reports: <out>/<variant>.md and <variant>.json (`s1flow report --out DIR` writes them to DIR/questions/), from the evaluations alone. What was measured
 on the answers (the comparison, the objectives) and what the calls took (latency, API cost) are separate sections."""
 
 from __future__ import annotations
 
 import datetime as dt
 import json
+from pathlib import Path
 from collections import Counter
 
 from ..core import clock
@@ -395,7 +396,7 @@ def time_table(evs: list[Evaluation]) -> list[str]:
     return L
 
 
-REPORT = "s1flow/report@1"  # reports/<task>/<variant>/latest.json
+REPORT = "s1flow/report@1"  # <out>/<variant>.json
 
 
 def chart_summary(task: Task, evaluations: list[Evaluation], data: dict[str, ChartData]) -> ChartSummary:
@@ -432,8 +433,8 @@ def chart_summary(task: Task, evaluations: list[Evaluation], data: dict[str, Cha
                         cost_quality_frontier=frontier)
 
 
-def write(task: Task, variant: str = "base") -> str:
-    """reports/<task>/<variant>/latest.{md,json} from every run on the variant's question; the Markdown is returned.
+def write(task: Task, variant: str, out: Path) -> str:
+    """<out>/<variant>.md and <variant>.json from every run on the variant's question; the Markdown is returned.
     The first report fixes the task's evaluation set (evalset.py)."""
     evalset.ensure(task)
     data_digest = task.data_digest
@@ -443,7 +444,6 @@ def write(task: Task, variant: str = "base") -> str:
     preds = {m: metrics.load(task, variant, m) for m in names}
     evs = [metrics.evaluate(task, preds[m], variant=variant) for m in names]
     md = render(task, variant, evs, preds)
-    out = task.where.reports_dir / task.id / variant
     out.mkdir(parents=True, exist_ok=True)
     charts = {e.candidate.name: metrics.chart_data(task, preds[e.candidate.model], e) for e in evs}
     saved = {"schema": REPORT, "task": task.id, "variant": variant, "at": clock.now(),
@@ -452,6 +452,6 @@ def write(task: Task, variant: str = "base") -> str:
              "charts": {name: values.model_dump(mode="json") for name, values in charts.items()},
              "chart_summary": chart_summary(task, evs, charts).model_dump(mode="json")}
 
-    (out / "latest.md").write_text(md)
-    (out / "latest.json").write_text(json.dumps(saved, ensure_ascii=False, indent=1))
+    (out / f"{variant}.md").write_text(md)
+    (out / f"{variant}.json").write_text(json.dumps(saved, ensure_ascii=False, indent=1))
     return md

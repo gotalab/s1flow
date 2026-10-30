@@ -25,7 +25,7 @@ task = Task(
 A boolean question with a choice-like label uses `Boolean(...)`; a choice scored as one option
 against the rest sets `kind_params=KindParams(positive="bug")` (`from s1flow.eval import KindParams`). When some mistakes cost more than others, `objective=Loss(default=1,
 losses={"server": {"formatter": 3}})` (a loss table: right answer -> answer given -> loss; "true" / "false" for a boolean),
-or `ExpectedLoss(fn=, fp=)`; the weights are the user's to set, never yours: ask, and show them rank's
+or `ExpectedLoss(fn=, fp=)`; the weights are the user's to set, never yours: ask, and show them report's
 lines for the weights halved and doubled. A measure s1flow lacks is a function in task.py:
 `@per_case(direction="min", sets="threshold") def wake_loss(label, reading, *, miss: float = 20.0) -> float`,
 then `objective=wake_loss(miss=20)`. `objective=` is the one objective that decides how the policy
@@ -33,7 +33,7 @@ reads its answers; `tiebreak=[...]` lists more objectives, in order, for the can
 each measured at the rule `objective=` chose. Latency and API cost are not objectives and never go in
 `tiebreak`: they are measured on the calls, limit candidates through `constraints=Constraints(latency_p99_ms=...,
 cost_per_10k_usd=...)`, and order what `tiebreak` still leaves tied, latency first, then API cost. Latency counts
-only between candidates run at one concurrency with retries recorded; otherwise rank says so and how to run
+only between candidates run at one concurrency with retries recorded; otherwise report says so and how to run
 them again (`s1flow run <id> --fresh --concurrency N`, one N for all). Re-running asks every candidate again:
 say what it will spend before suggesting it. When the decision is only useful above some precision and recall
 (an alert nobody ignores, a gate that catches enough), set them as floors on a binary task:

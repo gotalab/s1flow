@@ -11,10 +11,15 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import TYPE_CHECKING
+
 from ..client import AsyncClient
 from ..client.lineup import Lineup
 from ..core import envfile, place
 from ..core.errors import NotFound
+
+if TYPE_CHECKING:
+    from ..client._client import Connections
 
 
 @dataclass(frozen=True)
@@ -67,6 +72,12 @@ class Project:
             c.connections.check()
             self._client.append(c)
         return self._client[0]
+
+    def declared_connections(self) -> Connections:
+        """The line-up's names and specs, nothing built: what reading and ranking saved runs needs (no provider's extra)."""
+        if self._client:
+            return self._client[0].connections
+        return AsyncClient(self.lineup(), cache_dir=self.cache_dir).connections  # unlike client(), no check()
 
     def lineup(self) -> Lineup:
         """s1flow.toml, read once and nothing built: what a report reads the models' prices from."""

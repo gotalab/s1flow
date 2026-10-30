@@ -4,8 +4,8 @@ Use this when a human wants a report or figures for an article. An agent can rea
 snapshot as compact text or JSON without rendering it.
 
 ```bash
-s1flow compare <task> --out comparison.json
-python <skill>/scripts/charts.py comparison.json --out comparison.html
+s1flow report <task> --out report
+python <skill>/scripts/charts.py report/comparison.json --out comparison.html
 ```
 
 The renderer is standard-library Python. It reads a saved v2 snapshot, without evaluation imports, model calls,

@@ -169,7 +169,7 @@ def test_snapshot_read_is_offline_and_rejects_bad_files(tmp_path, monkeypatch):
     loaded = comparison.read(snapshot)
     result = comparison.summary(loaded, snapshot=str(snapshot))
     assert result["snapshot"] == str(snapshot) and result["current_certified"] is False
-    cli_result = cli("compare", "--from", str(snapshot), "--json")
+    cli_result = cli("report", "--from", str(snapshot), "--json")
     assert cli_result.exit_code == 0 and json.loads(cli_result.output)["provenance"] == "saved snapshot"
     bad = tmp_path / "bad.json"
     bad.write_text("{}")

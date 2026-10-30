@@ -9,15 +9,15 @@ s1flow asks typed questions about an input; a runtime policy owns one question. 
 relevant reference; the CLI runs it (if absent: `uv tool install "s1flow[eval]"`). `s1flow init` makes a project in
 `s1flow/` and nothing else; ask before passing `--ci` (a PR check workflow). The CLI discovers the selected project; the SDK never discovers configuration.
 
-For evaluation, `s1flow compare TASK` is the preferred overview across model and question variants. It reads saved
-development runs only: no model call, held-out test score, or activation. Terminal and JSON use the same IDs and
-numbers and multiple metrics. No overall ranking or recommendation; keep below-target results visible. The person owns
-the criteria. An agent chooses only with delegated criteria and authority, without inventing weights or strict cutoffs.
+For evaluation, `s1flow report TASK` is the one view across model and question variants. It reads saved development
+runs only: no model call, held-out test score, or activation. It orders candidates by the task's declared objective and
+marks the ranking's pick; `--json` adds every metric. Keep below-target results visible. The person owns the
+criteria. An agent chooses only with delegated criteria and authority, without inventing weights or strict cutoffs.
 
 The base install creates, validates and runs a v2 policy: task/version, trusted `connection` and exact `model_id`,
 one boolean or choice question, rule and optional input shape. Bind runtime code to an explicit `Client`; CLI
 policy execution requires `--connections PATH`. The SDK never installs from policy/input; evaluation commands
-remain development work and `compare`, `run`, `report`, `rank`, `adopt` need `s1flow[eval]`.
+remain development work and `run`, `report`, `adopt` need `s1flow[eval]`.
 
 The direct `Client` supports provider-supported boolean, choice, score and box questions. Evaluation comparison
 supports boolean, choice and box; score is explicitly unsupported. A v2 policy supports one boolean or choice.

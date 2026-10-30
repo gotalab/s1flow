@@ -350,7 +350,7 @@ def test_rank_writes_nothing_and_scores_as_the_first_report_fixes_the_test_share
         asyncio.run(running.run_model(task, name, limit=None, variant="base"))
     ranked = adopt.shortlist(task).evaluations
     assert evalset.read(task) is None and ranked["good"].test is None
-    report.write(task)
+    report.write(task, "base", task.where.root / "out")
     assert len(evalset.read(task).ids("test")) == 18
     assert adopt.shortlist(task).evaluations == ranked  # the numbers rank gave are the ones report fixed
     one = attach(Task(id="one", cases="data.jsonl", dir=tmp_path / "one", state=lambda r: {"y": r["y"]}, question=Boolean(instructions="?"),

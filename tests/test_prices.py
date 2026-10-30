@@ -101,7 +101,7 @@ def test_a_report_prices_the_recorded_tokens_with_todays_price(tmp_path):
     asyncio.run(running.run(load(p, "nod-wake"), ["tok"], limit=20))
     e = metrics.evaluate(t := load(p, "nod-wake"), metrics.load(t, "base", "tok"))
     assert e.calls.cost_per_10k_usd is None and e.calls.cost_unknown == e.failures.calls  # no price: not known, not free
-    assert "calls whose API cost is not known" in report.write(t, "base")
+    assert "calls whose API cost is not known" in report.write(t, "base", t.where.root / "out")
     toml = tmp_path / "s1flow.toml"
     toml.write_text(toml.read_text().replace('id = "tok"', 'id = "tok"\nprice = { input_per_mtok = 2.0, as_of = "2026-10-19", source = "t" }'))
     p2 = type(p)(p.root)  # s1flow.toml read again; the runs are the same

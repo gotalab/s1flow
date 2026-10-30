@@ -148,7 +148,7 @@ def test_rank_leaves_out_a_candidate_whose_calls_failed_on_some_cases(tmp_path, 
     assert [c[0] for c in listed.cands] == ["m", "picky"]  # a refusal is the model's limit: it stays, scored on what it answered
     rows_ = {r.candidate: r for r in listed.rows()}
     assert (rows_["m"].n, rows_["m"].refused) == (84, 0) and (rows_["picky"].n, rows_["picky"].refused) == (56, 28)
-    md = report.write(task)
+    md = report.write(task, "base", task.where.root / "out")
     assert "flaky ✕ | 56 |" in md and "Not compared: flaky (28 cases whose every call failed)" in md and "`s1flow run toy --models flaky`" in md
     assert "**flaky**" not in md.split("## Comparison")[0]  # not the report's pick either
 

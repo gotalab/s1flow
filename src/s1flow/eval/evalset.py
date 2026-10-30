@@ -7,8 +7,7 @@ cases GEPA never saw stay test), else from the labelled cases: `task.split.test`
 stratified by label, then train / val within the rest. A case added later is assigned by a hash of
 its id, so no case ever moves. Every evaluation holds out its test cases (metrics.evaluate) and
 `check` compares on them. Until the file is written, `current` computes the same assignment without
-writing it (so `rank` writes nothing and gives the numbers `report` will); the first `report` writes
-it (or `adopt`, `check`, `optimize`, whichever comes first).
+writing it; the first `report` writes it (or `adopt`, `check`, `optimize`, whichever comes first).
 
 `uses` counts the times the test share was looked at to choose or check something: a test share
 looked at often stops being held out (choices drift toward it), so `check` asks for new cases then.

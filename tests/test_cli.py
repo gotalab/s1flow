@@ -21,7 +21,7 @@ def s1flow(*args: str, cwd: Path | None = None) -> subprocess.CompletedProcess[s
 
 @pytest.mark.parametrize("args, said", [
     (("polciy",), "error: no command 'polciy'; did you mean 'policy'? (see s1flow --help)"),
-    (("propose", "t"), "error: no command 'propose': it is now `rank` (the list) or `adopt` (write the one picked) (see s1flow --help)"),
+    (("propose", "t"), "error: no command 'propose': it is now `report` (the list) or `adopt` (write the one picked) (see s1flow --help)"),
     (("run",), "error: the following arguments are required: task (see s1flow run --help)"),
     (("run", "t", "--bogus"), "error: unrecognized arguments: --bogus (see s1flow run --help)"),
     (("check", "t", "--sample", "0"), "error: argument --sample: 0 is not 1 or more (see s1flow check --help)"),
@@ -64,7 +64,7 @@ def test_every_command_takes_h_and_its_help_ends_with_the_exit_codes():
     from s1flow.cli import parser
 
     found = list(_commands(parser()))
-    assert ("cases", "review") in found and ("policy", "export") in found and ("policy", "create") in found and ("optimize",) in found and ("compare",) in found and len(found) == 23
+    assert ("cases", "review") in found and ("policy", "export") in found and ("policy", "create") in found and ("optimize",) in found and ("report",) in found and len(found) == 21
     for words in found + [("cases",), ("feedback",), ("policy",), ("skill",)]:
         done = cli(*words, "-h")
         assert done.exit_code == 0 and " ".join(EXITS.split()) in " ".join(done.output.split()), words
