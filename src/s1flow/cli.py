@@ -1082,7 +1082,7 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--model", help="model whose question is optimized (default: current's)")
     # GEPA's settings, for this run: task.py's `optimizer=Gepa(...)` sets them
     p.add_argument("--budget", type=positive, help="GEPA: model calls on train/val (task.py's Gepa(budget=...), 300 when not set)")
-    p.add_argument("--reflection", help="GEPA: the reflection LM, an `llm` model of s1flow.toml (default: gpt-6.1-sol on OpenAI's API, OPENAI_API_KEY)")
+    p.add_argument("--reflection", help="GEPA: the reflection LM, an `llm` model of s1flow.toml (default: task.py's Gepa(reflection=...), else gpt-6.1-sol on OpenAI's API, OPENAI_API_KEY)")
     p.add_argument("--patience", type=int, help="GEPA: stop after this many proposals without a new best on val")
     p.add_argument("--max-cost", type=float, help="GEPA: stop once the reflection LM has cost this much (USD)")
 

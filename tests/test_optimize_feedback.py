@@ -129,6 +129,12 @@ def test_an_optimizer_is_named_by_an_entry_point(task, monkeypatch):
     with pytest.raises(ConfigError, match="--budget set GEPA's settings; toy optimizes with rewrite"):
         optimizing.optimize(task, budget=10)
     assert optimizers.resolve("gepa") == Gepa() and Gepa(budget=10).settings()["budget"] == 10
+    # a factory that fails, or the class named instead of an object, is the user's to fix, not s1flow's bug
+    found.append(EntryPoint(name="broken", value="json:loads", group=optimizers.GROUP))
+    with pytest.raises(ConfigError, match="'broken' optimizer .* failed to load: TypeError"):
+        optimizers.resolve("broken")
+    with pytest.raises(ConfigError, match="an optimizer has `name`"):
+        optimizers.resolve(Gepa)  # type: ignore[arg-type]
 
 
 def _made_factory():
@@ -307,3 +313,11 @@ def test_a_log_line_in_an_older_shape_names_its_file_and_line(tmp_path):
     log.write_text('{"type": "answered", "policy": "t@1", "observed_at": "2026-10-20T00:00:00+00:00"}\n')
     with pytest.raises(DataError, match=r"log.jsonl:1: invalid log record"):
         feedback.read([log])
+
+
+
+def test_a_malformed_record_is_a_validation_error():
+    from pydantic import ValidationError
+
+    with pytest.raises(ValidationError):  # what load() turns into a ConfigError naming the file
+        Optimized.read("{not json")

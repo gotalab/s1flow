@@ -6,7 +6,8 @@
                                    `s1flow.optimizers` group, a factory called with no arguments
 
 s1flow gives it the problem (eval/optimize.py): the task, the model, the question to start from, and the train
-and val cases of the task's fixed split. The test share is never in it. It returns what it found: the question,
+and val cases of the task's fixed split. The test share is not in the problem's cases (the task object can still
+read every case: an optimizer installed from a package runs with the access task.py itself has). It returns what it found: the question,
 the model calls it made, what it spent beside them, and what only it records (`detail`). s1flow writes the record
 (task.Optimized) the same way for every optimizer, then asks the new question about every case.
 """
@@ -88,7 +89,7 @@ class Gepa:
 def resolve(optimizer: Optimizer | str) -> Optimizer:
     """task.py's `optimizer`: an object as it is; a name, the built-in or an entry point's factory."""
     if not isinstance(optimizer, str):
-        if not isinstance(optimizer, Optimizer):
+        if isinstance(optimizer, type) or not isinstance(optimizer, Optimizer):  # Gepa, not Gepa(): the class itself
             raise ConfigError(f"optimizer={optimizer!r}: an optimizer has `name`, `settings()` and `run(problem)`")
         return optimizer
     if optimizer == "gepa":
@@ -97,7 +98,10 @@ def resolve(optimizer: Optimizer | str) -> Optimizer:
     if not found:
         known = sorted({"gepa", *(e.name for e in entry_points(group=GROUP))})
         raise ConfigError(f"no optimizer {optimizer!r}; known: {', '.join(known)} (a package adds one under the {GROUP} entry point group)")
-    made = next(iter(found)).load()()
+    try:
+        made = next(iter(found)).load()()
+    except Exception as e:  # a third-party factory: whatever it raises (an import, a bad target) is its package's
+        raise ConfigError(f"the {optimizer!r} optimizer ({GROUP} entry point) failed to load: {type(e).__name__}: {e}") from None
     if not isinstance(made, Optimizer):
         raise ConfigError(f"the {optimizer!r} entry point made {made!r}, which has no `name`, `settings()` and `run(problem)`")
     return made

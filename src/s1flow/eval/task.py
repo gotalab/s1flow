@@ -67,7 +67,10 @@ class Optimized(BaseModel):
         """A record of either schema, as @2."""
         import json
 
-        data = json.loads(text)
+        try:
+            data = json.loads(text)
+        except ValueError:
+            return cls.model_validate_json(text)  # malformed: pydantic says where, as a ValidationError
         if isinstance(data, dict) and data.get("schema") == "s1flow/optimized@1":
             return OptimizedV1.model_validate_json(text).upgrade()
         return cls.model_validate_json(text)
