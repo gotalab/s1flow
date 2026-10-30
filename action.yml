@@ -1,7 +1,8 @@
 name: s1flow check
 description: >
   Ask the policy the base branch ships and the one this change ships about today's test cases, compare them
-  case by case, and keep one comment on the pull request up to date. Fails when the change is worse.
+  case by case, and keep one comment on the pull request up to date. Fails when the change is worse, and, unless
+  on-pending is `warn`, when it cannot tell (a pull request from a fork has no keys for answers not cached).
 inputs:
   tasks:
     description: Task ids, space-separated. Default every task with a current policy.
@@ -18,6 +19,9 @@ inputs:
   cached-only:
     description: "`auto` (no calls on a pull request from a fork, which gets no secrets), `true` or `false`."
     default: auto
+  on-pending:
+    description: "`fail` (a check with no verdict fails: nothing unmeasured merges) or `warn` (it warns and passes)."
+    default: fail
   working-directory:
     description: The project directory, with s1flow.toml (`s1flow init` makes s1flow/).
     default: s1flow
@@ -46,6 +50,7 @@ runs:
         CANDIDATE: ${{ inputs.candidate }}
         SAMPLE: ${{ inputs.sample }}
         CACHED_ONLY: ${{ inputs.cached-only }}
+        ON_PENDING: ${{ inputs.on-pending }}
         COMMENT: ${{ inputs.comment }}
         FORK: ${{ github.event.pull_request.head.repo.fork }}
         PR: ${{ github.event.pull_request.number }}
@@ -56,6 +61,7 @@ runs:
         GH_TOKEN: ${{ github.token }}
       run: |
         set +e -uo pipefail  # the runner starts bash with -e; an exit code here is a result, not a crash
+        case "$ON_PENDING" in fail|warn) ;; *) echo "::error::on-pending is fail or warn, not '$ON_PENDING'"; exit 1;; esac
         out="$RUNNER_TEMP/s1flow"; mkdir -p "$out"
         if [ -z "$TASKS" ]; then
           TASKS=$(for f in policies/*/channels.json; do jq -e '.channels.current' "$f" >/dev/null && basename "$(dirname "$f")"; done | tr '\n' ' ')
@@ -64,18 +70,38 @@ runs:
           fi
         fi
         # base_version: the version the base commit ships (empty when it has none); merging this change makes the
-        # working tree's current the one that runs. A lookup that fails for another reason than a missing file warns.
+        # working tree's current the one that runs. base_history: the base commit's history.jsonl, which tells a
+        # rollback (the change's own copy could say anything). A lookup that fails for another reason than a missing
+        # file warns.
         lookup="$RUNNER_TEMP/s1flow-base.err"
+        dir="${WORKDIR#./}"; dir="${dir%/}"; [ "$dir" = . ] && dir=""
+        re_dir=$(printf '%s' "$dir" | sed 's/[][\.*^$+?(){}|]/\\&/g')  # the directory as a regular expression
         shipped() {
-          base_version=""
-          local dir="${WORKDIR#./}" body; dir="${dir%/}"; [ "$dir" = . ] && dir=""
+          base_version=""; base_history="$RUNNER_TEMP/s1flow-$1-history.jsonl"; : > "$base_history"
+          local body
           [ -n "$BASE" ] && [ "$BASE" != 0000000000000000000000000000000000000000 ] || return 0
           if body=$(gh api -H "Accept: application/vnd.github.raw" "repos/$GITHUB_REPOSITORY/contents/${dir:+$dir/}policies/$1/channels.json?ref=$BASE" 2>"$lookup"); then
             base_version=$(jq -r '.channels.current // empty' <<<"$body" 2>/dev/null)
           elif ! grep -q "HTTP 404" "$lookup"; then
             echo "::warning title=s1flow check::$1: could not read the base commit's channels.json ($(head -c 200 "$lookup" | tr '\n' ' ')); checking current alone"
           fi
+          if ! gh api -H "Accept: application/vnd.github.raw" "repos/$GITHUB_REPOSITORY/contents/${dir:+$dir/}policies/$1/history.jsonl?ref=$BASE" >"$base_history" 2>"$lookup"; then
+            : > "$base_history"
+            grep -q "HTTP 404" "$lookup" || echo "::warning title=s1flow check::$1: could not read the base commit's history.jsonl; no rollback is recognised"
+          fi
         }
+        # the files this change touches, as "status filename" (a renamed file under its old name too): the check reads
+        # both versions, the rules and the cases from the change itself, so an edit to a saved version fails and an
+        # edit to the rules or the cases is flagged. Not knowing the files fails: a rewritten version could pass.
+        changed=""; listed=0
+        if [ -n "$PR" ]; then
+          if changed=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR/files" --paginate \
+              --jq '.[] | "\(.status) \(.filename)", (select(.previous_filename) | "\(.status) \(.previous_filename)")' 2>"$lookup"); then
+            listed=1
+          else
+            echo "::error title=s1flow check::could not list the pull request's files ($(head -c 200 "$lookup" | tr '\n' ' ')), so an edit to a saved version cannot be ruled out"
+          fi
+        fi
         args=()
         [ -n "$CANDIDATE" ] && args+=(--candidate "$CANDIDATE")
         [ -n "$SAMPLE" ] && [ -n "$PR" ] && args+=(--sample "$SAMPLE")   # outside a PR, every case
@@ -89,14 +115,28 @@ runs:
         failed=0
         for t in $TASKS; do
           against="$AGAINST"
-          if [ -z "$against" ]; then shipped "$t"; against=${base_version:+v$base_version}; against=${against:-current}; fi
-          "${jf[@]}" check "$t" --against "$against" "${args[@]}" --json --markdown "$out/$t.md" > "$out/$t.json"
+          shipped "$t"
+          if [ -z "$against" ]; then against=${base_version:+v$base_version}; against=${against:-current}; fi
+          "${jf[@]}" check "$t" --against "$against" --history "$base_history" "${args[@]}" --json --markdown "$out/$t.md" > "$out/$t.json"
           code=$?
           verdict=$(jq -r '.verdict // "error"' "$out/$t.json" 2>/dev/null || echo error)
           echo "$t: $verdict (exit $code)"
+          # a saved version is never rewritten (adopt only adds one): an edited one would be checked as what it now says
+          [ -n "$PR" ] && [ "$listed" = 0 ] && failed=1
+          rewritten=$(grep -E "^(modified|removed|renamed|changed) ${re_dir:+$re_dir/}policies/$t/v[0-9]+(\.evaluation)?\.json$" <<<"$changed" | cut -d' ' -f2- | sed 's/^/`/; s/$/`/' | paste -sd, - | sed 's/,/, /g')
+          if [ -n "$rewritten" ]; then
+            failed=1; echo "::error title=s1flow check::$t: this change rewrites $rewritten; a saved version is never rewritten (adopt saves a new one)"
+            [ -f "$out/$t.md" ] && printf '\n> [!CAUTION]\n> This change rewrites %s. A saved version is never rewritten: `s1flow adopt` saves a new one. The check fails.\n' "$rewritten" >> "$out/$t.md"
+          fi
+          rules=$(cut -d' ' -f2- <<<"$changed" | grep -E -e "^${re_dir:+$re_dir/}tasks/$t/" -e "^${re_dir:+$re_dir/}s1flow\.toml$" | sed 's/^/`/; s/$/`/' | paste -sd, - | sed 's/,/, /g')
+          if [ -n "$rules" ]; then
+            echo "::warning title=s1flow check::$t: this change edits $rules, which set the rules or the cases this check applies"
+            [ -f "$out/$t.md" ] && printf '\n> [!WARNING]\n> This change edits %s, which set the rules or the cases this check applies (objective, constraints, the held-out test share, labels and corrections, prices). The check above used the edited files: review that diff.\n' "$rules" >> "$out/$t.md"
+          fi
           [ -f "$out/$t.md" ] && cat "$out/$t.md" >> "$GITHUB_STEP_SUMMARY"
           if [ "$code" = 1 ]; then failed=1; echo "::error title=s1flow check::$t is worse than $against";
-          elif [ "$code" = 2 ] && [ "$verdict" = pending ]; then echo "::warning title=s1flow check::$t is pending: answers needed that only a run with keys can get";
+          elif [ "$code" = 2 ] && [ "$verdict" = pending ] && [ "$ON_PENDING" = warn ]; then echo "::warning title=s1flow check::$t is pending: answers needed that only a run with keys can get";
+          elif [ "$code" = 2 ] && [ "$verdict" = pending ]; then failed=1; echo "::error title=s1flow check::$t is pending: answers needed that only a run with keys can get (on-pending: fail)";
           elif [ "$code" != 0 ]; then failed=1; echo "::error title=s1flow check::$t could not be checked (exit $code)"; fi
           if [ "$COMMENT" = true ] && [ -n "$PR" ] && [ -f "$out/$t.md" ]; then
             marker="<!-- s1flow-check:$t -->"

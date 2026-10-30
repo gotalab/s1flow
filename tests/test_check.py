@@ -6,7 +6,7 @@ import math
 import pytest
 from conftest import attach, cli, labelled, make_project, point
 
-from s1flow.core.errors import ConfigError, DataError, NotFound, ProviderError
+from s1flow.core.errors import ConfigError, DataError, NotFound, ProviderError, S1flowError
 from s1flow.eval.candidate import Candidate
 from s1flow.eval.evaluation import Evaluation, Failures
 from s1flow.client.identity import execution_digest
@@ -168,7 +168,7 @@ def test_a_policy_is_asked_and_cached_under_runs_key(task):
     ship(task, policy(1, "good"))
     first = check.check(task, sample=10)
     assert (first.sides[0].calls, first.sides[0].cached) == (3, 7)  # 3 distinct states; the rest are the same calls
-    r = task.policies.read("toy")
+    _, r = check.pick(task, "current")
     assert calls.missing(task, r, [task.load_cases().by_id()[i] for i in evalset.read(task).ids("test")][:10]) == 0
     again = check.check(task, sample=10, cached_only=True)
     assert (again.verdict, again.sides[0].calls, again.sides[0].cached) == (first.verdict, 0, 10)
@@ -263,8 +263,46 @@ def test_init_makes_a_project(tmp_path):
 
 def test_an_adopted_version_wins_over_an_edit(task):
     ship(task, policy(1, "good", Choice(instructions="Old wording?", criteria={c: None for c in CLASSES})), policy(2, "good"), candidate=2)
-    assert check.default_candidate(task, task.policies.read("toy", version=1)) == "current"  # the pull request adopted v2
-    assert check.default_candidate(task, task.policies.read("toy")) is None  # current, its question as shipped: itself
+    assert check.default_candidate(task, check.pick(task, "v1")[1]) == "current"  # the pull request adopted v2
+    assert check.default_candidate(task, check.pick(task, "current")[1]) is None  # current, its question as shipped: itself
+
+
+def test_a_forced_version_fails_like_any_below_and_says_why(task):
+    forced = policy(2, "bad")
+    forced.evidence.test = "below"
+    forced.selection = Selection(by="ana", reason="the old model is retired on Friday", tied=["bad"], forced=True)
+    ship(task, policy(1, "good"), forced, candidate=2)
+    r = check.check(task, against="v1")
+    assert r.verdict == "fail"  # what the evidence says, the pull request could have written: it is asked again
+    assert "current (toy@v2) was adopted with --force although the held-out test showed it below, by ana: the old model is retired on Friday" in r.notes
+    assert "the old model is retired on Friday" in comment.markdown(task, r)
+
+
+def test_a_version_adopted_without_an_evaluation_is_checked_like_any_other(task):
+    ship(task, policy(1, "good"), policy(2, "bad"), candidate=2)
+    (task.policies.dir("toy") / "v2.evaluation.json").unlink()  # what adopt --spec writes: the spec alone
+    r = check.check(task, against="v1")
+    assert r.verdict == "fail" and r.sides[1].variant is None
+    assert "current (toy@v2) was adopted without an evaluation (adopt --spec): this check is its first measurement" in r.notes
+    with pytest.raises(S1flowError, match="adopted without an evaluation"):
+        check.check(task, candidate="draft")
+
+
+def test_going_back_to_a_version_that_ran_before_is_a_rollback(task):
+    from s1flow.policies.history import read
+
+    ship(task, policy(1, "bad"), policy(2, "good"), current=1)
+    point(task.policies, "toy", 2)  # base: v1, then v2
+    base = read(task.policies.dir("toy") / "history.jsonl")
+    point(task.policies, "toy", 1, reason="v2 times out in production")  # the pull request rolls back
+    r = check.check(task, against="v2", history=base)
+    assert (r.verdict, r.exit) == ("rollback", 0) and r.reasons == [] and r.diff is not None
+    assert any(n.startswith("would fail otherwise: ") for n in r.notes) and "✅ pass (rollback)" in comment.markdown(task, r)
+    assert check.check(task, against="v2").verdict == "rollback"  # the task's own history says the same
+    assert check.check(task, against="v2", history=[]).verdict == "fail"  # a base with no history: no rollback
+    assert not check.was_current_before(base, 2, 1)  # v2 never ran before v1
+    back = read(task.policies.dir("toy") / "history.jsonl")  # v1, v2, then back to v1
+    assert not check.was_current_before(back, 2, 1)  # adopting v2 again, the version rolled back from, is checked
 
 
 def test_every_call_failing_is_not_a_pass(task, monkeypatch):

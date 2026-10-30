@@ -12,7 +12,9 @@ Every command repeats these codes in `--help`:
 
 Usage errors are one `error: ... (see s1flow <command> --help)` line. A `notice:` line on stderr is a
 warning and does not change the result. `check --cached-only` returns 2 when an answer is needed but
-is not cached.
+is not cached (the Action fails on it unless `on-pending: warn`). `check` returns 0 with the verdict
+`rollback` when the candidate ran before the version it is checked against (`--history FILE`, default the
+task's `history.jsonl`).
 
 ## Runtime commands
 

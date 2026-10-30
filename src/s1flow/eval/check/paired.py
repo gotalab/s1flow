@@ -18,7 +18,7 @@ class SideSummary(BaseModel):
     name: str
     policy: str
     model: str
-    variant: str
+    variant: str | None  # None: adopted without an evaluation (adopt --spec)
     objectives: list[float | None]  # in the task's order
     coverage: float  # share sure
     sure_accuracy: float | None
@@ -65,7 +65,7 @@ def summary(task: Task, s: Side) -> SideSummary:
     assert cov.constraint is not None
     lat = np.array(s.latency_ms)
     return SideSummary(
-        name=s.name, policy=s.policy.spec.ref, model=s.policy.spec.model_id, variant=s.policy.candidate.variant,
+        name=s.name, policy=s.policy.spec.ref, model=s.policy.spec.model_id, variant=s.policy.variant,
         objectives=[finite(_nan(bound(o, task.kind, task.custom_measures).value(p))) for o in task.objectives],
         coverage=_nan(cov.value(p)), sure_accuracy=finite(_nan(cov.constraint.rate(p))), accuracy=_nan(acc.value(p)),
         sure=int(p.sure.sum()), sure_errors=int((p.sure & ~p.correct).sum()), failed=int((~p.ok).sum()),

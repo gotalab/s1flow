@@ -162,6 +162,10 @@ class Store:
         except (ValidationError, OSError, ValueError) as e:
             raise ConfigError(f'{path}: invalid evaluation record: {e}') from None
 
+    def record(self, spec: PolicySpec) -> EvaluatedPolicy | None:
+        """The evaluation `spec` was adopted on; None for a version adopted without one (adopt --spec)."""
+        return self.read(spec.task, version=spec.version) if self._record_path(spec).exists() else None
+
     def write_new(self, policy: EvaluatedPolicy, *, adopted: Switch | None = None) -> None:
         """Save the policy and its evaluation record; `adopted` (s1flow adopt's) also makes it the version that runs."""
         # Validate before any write, including values copied with model_copy(update=...).
@@ -212,7 +216,7 @@ def overview(project: Project, tasks: list[str] | None = None) -> list[TaskPolic
         shipped = []
         for version in reversed(saved.versions(task)):
             spec = saved.runtime.read(task, version=version)
-            record = saved.read(task, version=version) if saved._record_path(spec).exists() else None
+            record = saved.record(spec)
             model, _, requested = spec.connection.partition(':')
             configured = lineup.models.get(model)
             declared = next((name for name, item in (configured.versions or {}).items() if item.id == spec.model_id), None) if configured else None

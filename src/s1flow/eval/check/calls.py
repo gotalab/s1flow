@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 from ... import policies
 from ...client import AsyncClient, cost
 from ...core.errors import ProviderError
+from ...policies.file import PolicySpec
 from ..cases import Case
 from ..objectives import measure
 from ..objectives.measure import Pairs
@@ -16,12 +17,24 @@ from ..run import CachedClient, cached
 from ..task import Task
 
 
+@dataclass(frozen=True)
+class Version:
+    """A version check asks: what runs, and the evaluation it was adopted on (none for one adopted with adopt --spec)."""
+
+    spec: PolicySpec
+    record: EvaluatedPolicy | None = None
+
+    @property
+    def variant(self) -> str | None:
+        return self.record.candidate.variant if self.record else None
+
+
 @dataclass
 class Side:
     """One version's answers to the test cases, read as the SDK reads them."""
 
     name: str  # how it was asked for: current, next, v2, draft
-    policy: EvaluatedPolicy
+    policy: Version
     pairs: Pairs  # each test case's label and the policy's reading (none when the call failed)
     spend: cost.Spend = field(default_factory=cost.Spend)
     latency_ms: list[float] = field(default_factory=list)
@@ -35,7 +48,7 @@ def _client(task: Task) -> AsyncClient:
     return task.where.client()
 
 
-async def ask(task: Task, name: str, r: EvaluatedPolicy, cases: list[Case]) -> Side:
+async def ask(task: Task, name: str, r: Version, cases: list[Case]) -> Side:
     """Each case decided by the policy as in production (policies.Policy), through the evaluation's cache."""
     client = CachedClient(_client(task), task.where.cache_dir)
     policy = policies.DecisionPolicy(r.spec, client=client)
@@ -72,7 +85,7 @@ async def ask(task: Task, name: str, r: EvaluatedPolicy, cases: list[Case]) -> S
     return side
 
 
-def missing(task: Task, r: EvaluatedPolicy, cases: list[Case]) -> int:
+def missing(task: Task, r: Version, cases: list[Case]) -> int:
     """Calls this version would have to make: answers not in the cache."""
     policy = policies.DecisionPolicy(r.spec, client=_client(task))
     qs = {r.spec.question_id: r.spec.question}
