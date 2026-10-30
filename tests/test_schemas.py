@@ -139,3 +139,16 @@ def test_an_old_evaluation_record_reads_as_the_new_one():
         assert new.schema_ == "s1flow/policy-evaluation@3" and new.selection.forced is forced
         assert new.selection.reason == old["selection"]["reason"] and new.selection.tied == old["selection"]["tied"]
         assert errors(validator("policy-evaluation-3"), json.loads(new.dump())) == []
+
+
+@pytest.mark.parametrize("text", ["[]", "null", "{"])
+def test_a_record_that_is_no_object_is_an_invalid_record(tmp_path, text):
+    from s1flow.core.errors import ConfigError
+    from s1flow.eval.policy import Store
+
+    src = ROOT / "apps/bench/policies/nod-wake"
+    (tmp_path / "nod-wake").mkdir()
+    (tmp_path / "nod-wake" / "v1.json").write_text((src / "v1.json").read_text())
+    (tmp_path / "nod-wake" / "v1.evaluation.json").write_text(text)
+    with pytest.raises(ConfigError, match="invalid evaluation record"):
+        Store(tmp_path).read("nod-wake", version=1)

@@ -89,7 +89,8 @@ class EvaluationRecord(BaseModel):
 
 def read_record(text: str) -> EvaluationRecord:
     """A stored evaluation record of either schema, as @3."""
-    if json.loads(text).get('schema') == 's1flow/policy-evaluation@2':
+    data = json.loads(text)
+    if isinstance(data, dict) and data.get('schema') == 's1flow/policy-evaluation@2':
         return upgrade(v2.EvaluationRecord.model_validate_json(text))
     return EvaluationRecord.model_validate_json(text)
 
