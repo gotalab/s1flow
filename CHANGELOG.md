@@ -69,7 +69,8 @@
   evaluation (`adopt --spec`) is checked like any other (it used to stop with "no evaluation record"). A
   candidate older than the version it is checked against that ran before it (`--history FILE`, default the
   task's `history.jsonl`; the Action passes the base commit's) gets the new verdict `rollback`: measured, shown,
-  exit 0. The Action fails a pull request that rewrites or removes a saved `vN.json` or `vN.evaluation.json`, and
+  exit 0. The Action fails a pull request that rewrites, renames or removes a saved `vN.json` or
+  `vN.evaluation.json` (or whose files it cannot list), and
   flags one that edits files under `tasks/<task>/` or `s1flow.toml`, which set the rules and the cases the check
   applies.
 - `report` marks no pick: the `*` mark and `ranking[].recommended` are gone, and `=` marks the candidates the
@@ -83,7 +84,9 @@
   (it used to add them unless `--dry-run`). `--dry-run` fails, naming the replacement. Its `--json` `added` has
   `written`.
 - `s1flow report` with no task lists every task's current version, as `s1flow tasks` does, with the last switch
-  from `history.jsonl` (who, when, why); its `--json` has `why`.
+  from `history.jsonl` (who, when, why); its `--json` has `why`. `s1flow tasks` shows the same lines.
+- `report --json` has `order`: what orders the `tied` rows (`by`, task.py's tiebreak as applied; `skipped`, and
+  `why`). With nothing in `by`, the order of the tied rows says nothing.
 - `s1flow optimize` runs the optimizer task.py names: `optimizer=Gepa(budget=300, reflection=None)` (the template
   writes it; it is also the default), another object with `name`, `settings()` and `run(problem)`, or the name of
   an `s1flow.optimizers` entry point. `--budget` no longer has a default of its own: with `--reflection`,

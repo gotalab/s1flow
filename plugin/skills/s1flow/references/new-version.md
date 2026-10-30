@@ -35,7 +35,7 @@ ships no scheduler.
 6. **If it is worth it, compare with current.** Show the list. If the human or authorized agent picks it,
    `s1flow adopt <task> <model>:<version> --reason "..."` (it becomes current in the working tree; never
    `adopt` on your own, see `adopt-and-run.md`), then `s1flow check <task> --against v<N>` asks it and the version
-   it replaces on today's test cases. Bring the user the check's verdict and a recommendation: open the pull
+   it replaces on today's test cases. Bring the user the check's verdict and the two ways on: open the pull
    request, or keep the version that runs and why. Merging that pull request is theirs to do or approve.
 
 A version that loses or ties is still worth keeping in `versions`, with a comment on how it did: the next loop then sees

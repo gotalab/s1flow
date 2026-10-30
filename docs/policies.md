@@ -32,8 +32,8 @@ comment shows that it was forced, by whom and why, and merging it anyway is a pe
 `adopt --spec` has no evidence and is asked like any other. Going back to an older version that ran before the base
 branch's current (the base commit's `history.jsonl` says so) is a rollback: the check measures it and shows the
 numbers, but passes, even where it breaks a constraint (a rollback restores what ran; the person decides it).
-Adopting again a newer version that was rolled back from is checked as usual. A pull request that rewrites or
-removes a saved `vN.json` or `vN.evaluation.json` fails: versions are never rewritten, so both versions the check
+Adopting again a newer version that was rolled back from is checked as usual. A pull request that rewrites, renames or
+removes a saved `vN.json` or `vN.evaluation.json` fails (and so does one whose files cannot be listed): versions are never rewritten, so both versions the check
 reads are the ones that shipped. A check that cannot measure (a pull request from a fork gets no keys, and some answers are not
 cached) is pending; the workflow `s1flow init --ci` writes fails on it (`on-pending: fail`; `warn` lets it pass).
 When the pull request edits a file under `tasks/<task>/` (`task.py`, `split.json`, the cases, their corrections)

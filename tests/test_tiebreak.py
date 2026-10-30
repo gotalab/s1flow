@@ -1,5 +1,5 @@
 """`tiebreak`: objectives, read at the primary objective's rule, and "latency" (only when measured alike) and "cost",
-in the order it lists them; one naming neither has latency and then API cost after it."""
+in the order it lists them; with no tiebreak the tied candidates are listed by name."""
 
 import asyncio
 import json
@@ -98,6 +98,20 @@ def test_without_a_tiebreak_the_tied_are_listed_by_name():
     assert order([first, second]) == ["aa-close", "zz-best"]  # nothing orders them: not by value, latency or cost
     said = report.headline(task([Coverage()]), [first, second])
     assert "task.py names no tiebreak, so they are listed by name, unordered" in said and "comes first" not in said
+
+
+def test_the_list_says_what_ordered_the_tied_candidates():
+    from s1flow.eval.adopt import Shortlist
+
+    def order(tiebreak, evs):
+        t = task([Coverage(), *tiebreak])
+        return Shortlist(t, "", "", "", {}, {}, rank(Coverage(), t.ties, Constraints(), evs), {e.candidate.name: e for e in evs}, {}, []).order()
+
+    alike = [timed("a", 0.80, 300), timed("b", 0.79, 100)]
+    assert order([], alike).by == [] and order(["latency", "cost"], alike).by == ["latency", "cost"]
+    unalike = [timed("a", 0.80, 300, concurrency=8), timed("b", 0.79, 100)]
+    o = order(["latency", "cost"], unalike)
+    assert (o.by, o.skipped) == (["cost"], ["latency"]) and o.why and "--concurrency N" in o.why
 
 
 def test_latency_measured_unalike_is_skipped_and_says_how_to_measure_again():

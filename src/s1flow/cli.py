@@ -730,6 +730,8 @@ def report(a: argparse.Namespace) -> int:
         payload = comparison.summary(result, offset=a.offset, limit=a.limit, snapshot=shown)
         if task is not None:  # the ranking: the candidates ordered by the task's objectives and constraints
             payload["ranking"] = None if listed is None else [r.model_dump(mode="json") for r in listed.rows()[a.offset:a.offset + a.limit]]
+            if listed is not None:  # what orders the `tied` rows; with nothing in `by` their order says nothing
+                payload["order"] = listed.order().model_dump(mode="json")
             if unranked:
                 payload["unranked"] = unranked
         print(json.dumps(payload, ensure_ascii=False, indent=1))
@@ -737,7 +739,7 @@ def report(a: argparse.Namespace) -> int:
     if listed is not None:
         assert task is not None and result is not None
         rows = listed.rows()
-        _print_shortlist(task.id, rows[a.offset:a.offset + a.limit], ordered=bool(task.ties))
+        _print_shortlist(task.id, rows[a.offset:a.offset + a.limit], listed.order())
         if len(rows) > a.offset + a.limit:
             print(f"  … {len(rows) - a.offset - a.limit} more: --offset {a.offset + a.limit}")
         ranked = {r.candidate for r in rows}
@@ -756,7 +758,7 @@ def report(a: argparse.Namespace) -> int:
     return 0
 
 
-def _print_shortlist(task_id: str, rows: list[Any], *, ordered: bool) -> None:
+def _print_shortlist(task_id: str, rows: list[Any], order: Any) -> None:
     from .eval.shown import ms, pct, usd
 
     def score(s: Any) -> str:
@@ -785,7 +787,10 @@ def _print_shortlist(task_id: str, rows: list[Any], *, ordered: bool) -> None:
 
     widths = [max(width(row[i]) for row in table) for i in range(len(head))]
     print(f"{task_id}: {len(table) - 1} candidates within the constraints, {len(tied)} the primary objective cannot tell apart at the top (=), "
-          + ("ordered by the task's tiebreak" if ordered else "listed by name: task.py's tiebreak would order them"))
+          + (f"ordered by task.py's tiebreak: {', then '.join(order.by)}" if order.by else
+             "listed by name, unordered: task.py's tiebreak would order them" if not order.skipped else
+             "in the primary objective's order: task.py's tiebreak was skipped")
+          + (f" ({order.why})" if order.why else ""))
     for row in table:
         print("  " + "  ".join(c + " " * (w - width(c)) for c, w in zip(row, widths)).rstrip())
     for r in rows:
@@ -1114,7 +1119,7 @@ def parser() -> argparse.ArgumentParser:
     rel.add_argument("--path", help="a policy file, or a policy set from `policy export` (policies.json), instead of policies/")
     rel.add_argument("--case-id", help="the case's id in your app, kept in the log for context (it may repeat; feedback record joins by decision_id)")
     rel.add_argument("--log", help="append the log here (JSONL)")
-    rel.add_argument("--keep-state", action="store_true", help="keep the state in the log, so `feedback measure` can add the case as a labelled one")
+    rel.add_argument("--keep-state", action="store_true", help="keep the state in the log, so `feedback measure --add` can add the case as a labelled one")
     rel.add_argument("--github-output", action="store_true", help="also write answer, probability, below_min_probability, decision_id, policy to $GITHUB_OUTPUT")
     d.add_argument("--json", action="store_true", help="print the Response (with --policy, the Decision) as JSON")
 
