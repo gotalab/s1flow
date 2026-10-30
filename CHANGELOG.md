@@ -73,14 +73,27 @@
   `vN.evaluation.json` (or whose files it cannot list), and
   flags one that edits files under `tasks/<task>/` or `s1flow.toml`, which set the rules and the cases the check
   applies.
+- `report` marks no pick: the `*` mark and `ranking[].recommended` are gone, and `=` marks the candidates the
+  objective cannot tell apart at the top (`ranking[].tied`). The Markdown report's headline says which candidate
+  the tiebreak puts first instead of which is "chosen", and its `◎` is now `=`. The weights table shows the
+  candidates tied at the top with the weights halved and doubled, in place of a recommended one.
+- A `tiebreak` with neither `"latency"` nor `"cost"` no longer has them added after it: with no tiebreak, the
+  candidates the objective cannot tell apart are listed by name, unordered. The template keeps
+  `tiebreak=["latency", "cost"]`; write it into an older task.py to keep the old order.
+- `feedback measure` only measures by default; `--add` also adds the cases to `tasks/<task>/feedback.jsonl`
+  (it used to add them unless `--dry-run`). `--dry-run` fails, naming the replacement. Its `--json` `added` has
+  `written`.
+- `s1flow report` with no task lists every task's current version, as `s1flow tasks` does, with the last switch
+  from `history.jsonl` (who, when, why); its `--json` has `why`. `s1flow tasks` shows the same lines.
+- `report --json` has `order`: what orders the `tied` rows (`by`, task.py's tiebreak as applied; `skipped`, and
+  `why`). With nothing in `by`, the order of the tied rows says nothing.
 
 Each removed command fails with one line naming what replaces it.
 
 ### Added
 
 - `tiebreak` takes `"latency"` and `"cost"` beside objectives, in the order that ranks the tied candidates
-  (`tiebreak=["cost", "latency"]` puts API cost first). A tiebreak naming neither still has latency and then API
-  cost after it, as before.
+  (`tiebreak=["cost", "latency"]` puts API cost first).
 - `s1flow init --task` writes every default into task.py: `split=Split(test=0.3, k=5, seed=1)`,
-  `objective=Accuracy()`, `tiebreak=["latency", "cost"]`, `constraints=Constraints()`. The task measures and ranks
-  as it did with them left out.
+  `objective=Accuracy()`, `tiebreak=["latency", "cost"]`, `constraints=Constraints()`. The task measures as it
+  did with them left out, and orders tied candidates as 0.1.0a1 did.

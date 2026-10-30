@@ -191,7 +191,8 @@ def test_the_task_init_writes_spells_out_the_defaults(tmp_path):
         tasks.append(load(p, name))
     spelled, default = tasks
     assert spelled.split == default.split and spelled.constraints == default.constraints
-    assert spelled.objectives == default.objectives and spelled.ties == default.ties == [*default.objectives[1:], "latency", "cost"]
-    assert spelled.evaluation_contract_digest == default.evaluation_contract_digest  # what was measured is measured alike
+    assert spelled.objectives == default.objectives and spelled.ties == ["latency", "cost"] and default.ties == []  # unordered without one
+    ordered = default.copy(tiebreak=["latency", "cost"])
+    assert spelled.evaluation_contract_digest == ordered.evaluation_contract_digest  # what was measured is measured alike
     moved = {default.copy(tiebreak=t).evaluation_contract_digest for t in (["cost", "latency"], ["cost"], ["latency"])}
-    assert len(moved) == 3 and default.evaluation_contract_digest not in moved  # another order is another selection rule
+    assert len(moved) == 3 and ordered.evaluation_contract_digest not in moved  # another order is another selection rule

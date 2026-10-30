@@ -41,7 +41,7 @@ The user or an agent with authority chooses the candidate and records why. `adop
 selected candidate on the held-out test and records the result. The choice may differ from the
 explicit objective-based ranking when the candidate is eligible. `report` and the optional HTML
 page describe development data; they do not activate a runtime policy. `check` is the final test comparison
-before the merge. The ranking's pick and the adoption remain separate; an ordinary `report` does not read the
+before the merge. The list's order and the adoption remain separate; an ordinary `report` does not read the
 held-out share.
 Historical benchmark files are reference material only and are not proof that a current model works;
 run the current task when a claim matters.

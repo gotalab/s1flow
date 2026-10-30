@@ -100,10 +100,10 @@ class Task:
     # What the task optimizes: `objective` (it alone decides how a policy reads its answers; None: the kind's
     # default, Accuracy for a boolean, choice or box question), and `tiebreak`, what orders the candidates it cannot
     # tell apart, in order: more objectives (eval/objectives/declare.py), "latency" (p90 per case) and "cost" (API
-    # cost per 10,000 cases) (eval/select.py). A tiebreak naming neither "latency" nor "cost" still has them after
-    # it, latency first. A custom objective (@per_case / @on_set, called with its params) goes in either.
-    # Both are kept as declared; `objectives` holds the objectives they resolve to, `ties` the tiebreak resolved
-    # (with "latency" and "cost" where they go), and `custom` the custom ones' functions.
+    # cost per 10,000 cases) (eval/select.py). With no tiebreak, the candidates it cannot tell apart are listed
+    # unordered. A custom objective (@per_case / @on_set, called with its params) goes in either.
+    # Both are kept as declared; `objectives` holds the objectives they resolve to, `ties` the tiebreak resolved,
+    # and `custom` the custom ones' functions.
     objective: Objective | Custom | None = None
     tiebreak: list[Objective | Custom | CallKey] = field(default_factory=list)
     constraints: Constraints = field(default_factory=Constraints)  # what a model may not exceed
@@ -140,8 +140,6 @@ class Task:
         primary = declared(self.objective or default)
         self.ties = [x if isinstance(x, str) else declared(x) for x in self.tiebreak]
         check(primary, self.ties, self.kind, self.id, frozenset(self.custom))
-        if not any(isinstance(x, str) for x in self.ties):
-            self.ties += ["latency", "cost"]
         self.objectives = [primary, *(x for x in self.ties if isinstance(x, Objective))]
         if self.constraints.floors and not (self.kind.binary and self.primary.sets == "threshold"):
             raise ConfigError(f"{self.id}: min_precision and min_recall limit the P(positive) threshold, so they need a binary question "
@@ -168,9 +166,7 @@ class Task:
             "constraints": self.constraints, "declared_prices": prices,
             "split_config": {"test": self.split.test, "k": self.split.k, "seed": self.split.seed},
             "split": {"seed": split.seed, "test_share": split.test_share, "assign": split.assign},
-            # where "latency" and "cost" go: left out when they follow the objectives, so earlier digests still match
-            **({"ties": [x if isinstance(x, str) else x.key for x in self.ties]}
-               if self.ties != [*self.objectives[1:], "latency", "cost"] else {}),
+            "ties": [x if isinstance(x, str) else x.key for x in self.ties],  # the tiebreak, in order
         })
 
     @property

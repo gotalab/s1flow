@@ -1,5 +1,5 @@
 """`tiebreak`: objectives, read at the primary objective's rule, and "latency" (only when measured alike) and "cost",
-in the order it lists them; one naming neither has latency and then API cost after it."""
+in the order it lists them; with no tiebreak the tied candidates are listed by name."""
 
 import asyncio
 import json
@@ -85,12 +85,33 @@ def order(evs, tiebreak=()):
 
 def test_the_faster_of_the_tied_comes_first_when_measured_alike():
     cheap_slow, dear_fast = timed("cheap-slow", 0.80, 300, cost=0.1), timed("dear-fast", 0.79, 100, cost=5.0)
-    assert order([cheap_slow, dear_fast]) == ["dear-fast", "cheap-slow"]  # latency before API cost
+    assert order([cheap_slow, dear_fast], ["latency", "cost"]) == ["dear-fast", "cheap-slow"]  # latency before API cost
     sharp = [timed("cheap-slow", 0.80, 300, cost=0.1, auroc=0.9), timed("dear-fast", 0.79, 100, cost=5.0, auroc=0.7)]
-    assert order(sharp, [AUROC()]) == ["cheap-slow", "dear-fast"]  # tiebreak objectives before either
+    assert order(sharp, [AUROC(), "latency", "cost"]) == ["cheap-slow", "dear-fast"]  # tiebreak objectives before either
     close = timed("dear-close", 0.79, 290, half=20, cost=5.0)  # its interval reaches the fastest's: latency does not tell them apart
-    assert order([cheap_slow, close]) == ["cheap-slow", "dear-close"]
+    assert order([cheap_slow, close], ["latency", "cost"]) == ["cheap-slow", "dear-close"]
     assert unlike([cheap_slow, dear_fast]) is None
+
+
+def test_without_a_tiebreak_the_tied_are_listed_by_name():
+    first, second = timed("zz-best", 0.80, 100, cost=0.1), timed("aa-close", 0.79, 300, cost=5.0)
+    assert order([first, second]) == ["aa-close", "zz-best"]  # nothing orders them: not by value, latency or cost
+    said = report.headline(task([Coverage()]), [first, second])
+    assert "task.py names no tiebreak, so they are listed by name, unordered" in said and "comes first" not in said
+
+
+def test_the_list_says_what_ordered_the_tied_candidates():
+    from s1flow.eval.adopt import Shortlist
+
+    def order(tiebreak, evs):
+        t = task([Coverage(), *tiebreak])
+        return Shortlist(t, "", "", "", {}, {}, rank(Coverage(), t.ties, Constraints(), evs), {e.candidate.name: e for e in evs}, {}, []).order()
+
+    alike = [timed("a", 0.80, 300), timed("b", 0.79, 100)]
+    assert order([], alike).by == [] and order(["latency", "cost"], alike).by == ["latency", "cost"]
+    unalike = [timed("a", 0.80, 300, concurrency=8), timed("b", 0.79, 100)]
+    o = order(["latency", "cost"], unalike)
+    assert (o.by, o.skipped) == (["cost"], ["latency"]) and o.why and "--concurrency N" in o.why
 
 
 def test_latency_measured_unalike_is_skipped_and_says_how_to_measure_again():
@@ -101,17 +122,18 @@ def test_latency_measured_unalike_is_skipped_and_says_how_to_measure_again():
     assert why is not None and why.concurrencies == [1, 8]
     assert "concurrency 1, 8" in why.en("t") and "--concurrency N" in why.en("t") and "same N for all" in why.en("t")
     old = timed("old", 0.79, 100, cost=5.0, unrecorded=3)  # saved before retries were recorded
-    assert order([timed("a", 0.80, 300, cost=0.1), old]) == ["a", "old"] and unlike([a, old]).unrecorded == ["old"]  # type: ignore[union-attr]
+    assert order([timed("a", 0.80, 300, cost=0.1), old], ["latency", "cost"]) == ["a", "old"] and unlike([a, old]).unrecorded == ["old"]  # type: ignore[union-attr]
 
 
 def test_the_report_names_what_ordered_the_tie_and_what_was_skipped():
-    t = task([Coverage()])
+    t = task([Coverage(), "latency", "cost"])
     a, b = timed("a", 0.80, 300, cost=5.0), timed("b", 0.79, 100, cost=0.1)
     alike = report.headline(t, [a, b])
-    assert "compared by p90 latency, then API cost, **b** is chosen" in alike and "latency not compared" not in alike
+    assert "Ordered by task.py's tiebreak (p90 latency, then API cost), **b** comes first" in alike and "latency not compared" not in alike
     a8 = timed("a", 0.80, 300, cost=5.0, concurrency=8)
     unalike = report.headline(t, [a8, b])
-    assert "the lowest API cost is chosen: **b**" in unalike and "Latency not compared (concurrency 4, 8)" in unalike
+    assert "Ordered by task.py's tiebreak (API cost), **b** comes first" in unalike and "Latency not compared (concurrency 4, 8)" in unalike
+    assert "chosen" not in alike + unalike and "recommend" not in alike + unalike  # it shows the order; a person picks
 
 
 def test_tiebreak_says_where_latency_and_cost_go():
@@ -122,10 +144,10 @@ def test_tiebreak_says_where_latency_and_cost_go():
     sharp = [timed("cheap-slow", 0.80, 300, cost=0.1, auroc=0.7), timed("dear-fast", 0.79, 100, cost=5.0, auroc=0.9)]
     assert order(sharp, ["latency", AUROC()]) == ["dear-fast", "cheap-slow"]  # latency before the objective, as listed
     t = task([Coverage(), AUROC()])
-    assert t.ties == [AUROC(), "latency", "cost"] and t.objectives == [Coverage(), AUROC()]  # the default after it
+    assert t.ties == [AUROC()] and t.objectives == [Coverage(), AUROC()]  # nothing added after it
     unalike = [timed("a", 0.80, 300, cost=5.0, concurrency=8), timed("b", 0.79, 100, cost=0.1)]
     assert "latency not compared" not in report.headline(task([Coverage(), "cost"]), unalike)  # not asked for: not warned of
-    assert "compared by API cost, then p90 latency" in report.headline(task([Coverage(), "cost", "latency"]),
+    assert "Ordered by task.py's tiebreak (API cost, then p90 latency)" in report.headline(task([Coverage(), "cost", "latency"]),
                                                                        [timed("a", 0.80, 300, cost=5.0), timed("b", 0.79, 100, cost=0.1)])
 
 

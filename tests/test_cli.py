@@ -126,6 +126,13 @@ def test_tasks_is_the_overview_of_what_runs(tmp_path):
     assert text[1].split() == ["gh-ruff-area", "gh-ruff-area@v1", "d1@vercel", "-", "liquid/d1", "no"]
     done = s1flow("tasks", "ruff-area", cwd=tmp_path)
     assert done.returncode == 2 and done.stderr.startswith("error: no task 'ruff-area'; tasks: gh-ruff-area")
+    # report with no task: the same overview, with why current is what it is
+    (tmp_path / "policies" / "gh-ruff-area" / "history.jsonl").write_text(json.dumps(
+        {"schema": "s1flow/history@1", "at": "2026-10-30T09:00:00Z", "action": "rollback", "version": 1, "previous": 3, "by": "ana", "reason": "v3 times out"}) + "\n")
+    shown = s1flow("report", cwd=tmp_path)
+    assert shown.returncode == 0 and "gh-ruff-area: v1 by ana, 2026-10-30 (rollback from v3): v3 times out" in shown.stdout
+    area = next(t for t in json.loads(s1flow("report", "--json", cwd=tmp_path).stdout) if t["task"] == "gh-ruff-area")
+    assert area["why"]["reason"] == "v3 times out" and area["current"] == 1
 
 
 @pytest.mark.parametrize("args, said", [

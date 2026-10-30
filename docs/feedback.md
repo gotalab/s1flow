@@ -12,7 +12,7 @@ get a new ID.
 ```bash
 s1flow feedback record ticket-bug@v1 DECISION_ID true --log decisions.jsonl \
   --path policies/ticket-bug/v1.json --connections connections.toml
-s1flow feedback measure ticket-bug decisions.jsonl --dry-run --json
+s1flow feedback measure ticket-bug decisions.jsonl --json         # measures; --add also adds the cases
 s1flow optimize ticket-bug --budget 300 --json     # a new candidate; report and adopt as for any other
 ```
 
@@ -20,7 +20,8 @@ s1flow optimize ticket-bug --budget 300 --json     # a new candidate; report and
 
 Measurement skips unknown IDs, conflicting answers, mismatched policy digests and feedback that can't be tied
 to a valid input, and reports each one it skipped. Duplicate events are counted once, and later corrections stay in
-the history of the same decision. A decision's input becomes a new case only if that input was logged.
+the history of the same decision. `measure` only measures and counts the cases it could add; `--add` adds them
+to `tasks/<task>/feedback.jsonl`. A decision's input becomes a new case only if that input was logged.
 
 Production measurement uses the objective and decision rule you adopted. It describes only the decisions that
 have feedback, and reports what share of decisions that is. Having lots of labels doesn't mean they were

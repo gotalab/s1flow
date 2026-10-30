@@ -11,7 +11,7 @@ relevant reference; the CLI runs it (if absent: `uv tool install "s1flow[eval]"`
 
 For evaluation, `s1flow report TASK` is the one view across model and question variants. It reads saved development
 runs only: no model call, held-out test score, or activation. It orders candidates by the task's declared objective and
-marks the ranking's pick; `--json` adds every metric. Keep below-target results visible. The person owns the
+marks no pick; `--json` adds every metric. Keep below-target results visible. The person owns the
 criteria. An agent chooses only with delegated criteria and authority, without inventing weights or strict cutoffs.
 
 The base install creates, validates and runs a v2 policy: task/version, trusted `connection` and exact `model_id`,

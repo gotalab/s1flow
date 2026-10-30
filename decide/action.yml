@@ -24,7 +24,7 @@ inputs:
     description: Append the answer to this JSONL file (keep it, e.g. as an artifact, for `s1flow feedback`).
     default: ""
   keep-state:
-    description: "`true` keeps the state in the log, so `s1flow feedback measure` can add the case as a labelled one once its right answer is known. Needs `log`."
+    description: "`true` keeps the state in the log, so `s1flow feedback measure --add` can add the case as a labelled one once its right answer is known. Needs `log`."
     default: "false"
   working-directory:
     description: The project directory, with s1flow.toml and policies/ (`s1flow init` makes s1flow/).

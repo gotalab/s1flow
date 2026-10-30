@@ -51,7 +51,8 @@ validation and decision rules; metrics and optimization live only in `s1flow.eva
 ## Compare candidates
 
 `s1flow report` shows every model and question variant side by side, using only the development cases. The
-terminal shows the candidates ordered by the task's objective, with the ranking's pick marked; `--json` adds every
+terminal shows the candidates ordered by the task's objective, with the ones it cannot tell apart at the top marked
+`=` (ordered by `tiebreak` in task.py, or by name without one); it marks no pick. `--json` adds every
 metric of each candidate with the same candidate IDs and numbers, so a person, or an agent acting for them, can
 choose based on their own criteria. (It replaces `compare` and `rank`.) The
 final test-set result comes only when you adopt a candidate or run `check`.

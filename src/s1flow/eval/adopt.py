@@ -1,8 +1,9 @@
 """`s1flow report` lists the candidates by the task's objectives and constraints; `s1flow adopt` writes the one a
 person picks as the next policy. Nothing is called: the runs are already scored.
 
-The ranking (select.rank) only recommends: the primary objective, then among the candidates it cannot
-tell apart the next objectives (`tiebreak`), then latency and API cost. A person picks from the list,
+The list (select.rank) orders by the primary objective, then, among the candidates it cannot tell apart, by
+the task's `tiebreak` (objectives, latency, API cost), and leaves them unordered without one. It marks no pick.
+A person or an agent picks from the list,
 since a free tier's rate limit, how long a model is served and whether its version can be pinned
 count too, and the policy reaches production. The policy records who picked and why. The list
 shows the objectives and what the calls took (latency, API cost) as two groups.
@@ -111,13 +112,21 @@ class Row(BaseModel):
     candidate: str  # Candidate.name
     n: int  # labelled train + val cases it answered; refusals remain visible in their own count
     refused: int  # labelled cases it refused or does not support: the model's limit, left out of its denominator
-    recommended: bool
-    tied: bool  # the primary objective cannot tell it from the recommended
+    tied: bool  # the primary objective cannot tell it from the best on it
     excluded: list[str]  # constraints it breaks; it cannot be picked
     scores: list[ObjectiveScore]  # one per objective, the primary first: measured on the answers
     calls: Calls  # what its calls took: latency, API cost (0: free; None: not known) and where that cost came from
     pin: Pin  # whether a policy of it names the version that answers
     per_minute: int | None  # the model's rate limit, when s1flow.toml declares one (Capabilities.per_minute)
+
+
+class Order(BaseModel):
+    """What orders the candidates the primary objective cannot tell apart (`tied`): `by`, task.py's tiebreak as
+    applied; none: they are listed by name, and their order says nothing."""
+
+    by: list[str]  # objective keys, "latency", "cost", in the order applied
+    skipped: list[str]  # named by the tiebreak but not applied ("latency": measured unalike)
+    why: str | None = None  # why one was skipped, and how to measure again
 
 
 @dataclass
@@ -142,14 +151,15 @@ class Shortlist:
         return [x for x in self.ranked if not x.excluded and x.scores[0].value is not None]
 
     @property
-    def recommended(self) -> str:
-        if not self.fits:
-            raise S1flowError("no candidate meets the constraints: " + "; ".join(f"{x.candidate}: {', '.join(x.excluded)}" for x in self.ranked))
-        return self.fits[0].candidate
-
-    @property
     def tied(self) -> list[str]:
         return [x.candidate for x in self.ranked if x.tied_with_best]
+
+    def order(self) -> Order:
+        ties = self.task.ties
+        unlike = unlike_among_tied(self.ranked, list(self.evaluations.values())) if "latency" in ties else None
+        keys = [t if isinstance(t, str) else t.key for t in ties]
+        skipped = ["latency"] if unlike else []
+        return Order(by=[k for k in keys if k not in skipped], skipped=skipped, why=unlike.en(self.task.id) if unlike else None)
 
     def pickable(self, pick: str) -> Ranked:
         """The candidate named `pick` (model[:version][/variant]), or an error listing the ones that can be picked."""
@@ -168,7 +178,7 @@ class Shortlist:
             e, model = self.evaluations[x.candidate], next(c[1] for c in self.cands if c[0] == x.candidate)
             spec = models.retrieve(model).spec
             out.append(Row(
-                candidate=x.candidate, n=e.n, refused=e.failures.refused_cases or 0, recommended=bool(fits) and x.candidate == self.recommended, tied=x.tied_with_best,
+                candidate=x.candidate, n=e.n, refused=e.failures.refused_cases or 0, tied=x.tied_with_best,
                 excluded=x.excluded if x.excluded or x.candidate in fits else ["no value on the primary objective"],
                 scores=x.scores, calls=e.calls,
                 pin=pin(spec, model), per_minute=models.resolved(model).capabilities.per_minute,

@@ -31,8 +31,8 @@ lines for the weights halved and doubled. A measure s1flow lacks is a function i
 then `objective=wake_loss(miss=20)`. `objective=` is the one objective that decides how the policy
 reads its answers; `tiebreak=[...]` lists, in order, what orders the candidates it cannot tell apart: more
 objectives, each measured at the rule `objective=` chose, and `"latency"` and `"cost"`, measured on the calls
-(the template writes `tiebreak=["latency", "cost"]`; a tiebreak naming neither still has them after it, and one
-naming only one of them leaves the other out). Latency
+(the template writes `tiebreak=["latency", "cost"]`; a tiebreak leaving one out does not use it, and with no
+tiebreak the candidates the objective cannot tell apart are listed unordered). Latency
 and API cost also limit candidates through `constraints=Constraints(latency_p99_ms=..., cost_per_10k_usd=...)`. Latency counts
 only between candidates run at one concurrency with retries recorded; otherwise report says so and how to run
 them again (`s1flow run <id> --fresh --concurrency N`, one N for all). Re-running asks every candidate again:

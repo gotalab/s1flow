@@ -69,12 +69,13 @@ def left_out(task: Task, evs: list[Evaluation]) -> list[str]:
                                              f"{f.failed_cases} cases whose every call failed" if f.failed_cases else "") if x)
     return ["", "Not compared: " + "; ".join(f"{e.candidate.name} ({why(e.failures)})" for e in gaps)
             + ". With cases it has no answer to, a candidate is measured on the rest only, not on the cases the others answered,"
-            + " so it is neither ranked nor chosen. Ask them again: "
+            + " so it is not ranked. Ask them again: "
             + f"`{ask_again(task, [(e.candidate.model, e.candidate.variant) for e in gaps])}`"]
 
 
 def headline(task: Task, evs: list[Evaluation]) -> str:
-    """The candidate the task's objectives and constraints choose (select.rank), and why."""
+    """What the task's objectives and constraints show (select.rank): the best on the primary, those it cannot tell
+    from it, and what orders them. It picks none: a person or an agent does."""
     scored = compared(evs)
     if not scored:
         return "No candidate has an answer to every case." if any(e.n for e in evs) else "No results."
@@ -86,7 +87,7 @@ def headline(task: Task, evs: list[Evaluation]) -> str:
     excluded = [x for x in ranked if x.excluded]
     if not fits:
         return "No model meets the constraints (" + "; ".join(f"{x.candidate}: {', '.join(x.excluded)}" for x in excluded) + ")."
-    chosen = fits[0]
+    first = fits[0]
     sign = -1.0 if o0.maximize else 1.0
     leader = min(fits, key=lambda x: sign * (x.scores[0].value or 0.0))  # fits all have a value
     tied = [x for x in fits if x.tied_with_best]
@@ -102,15 +103,14 @@ def headline(task: Task, evs: list[Evaluation]) -> str:
     parts = [f"{pre}**{leader.candidate}** has the {'highest' if o0.maximize else 'lowest'} {o0.label}, {fmt(task.kind, o0, leader.scores[0])}{tail(leader)}."]
     others = [x.candidate for x in tied if x is not leader]
     if others:
-        parts.append(f"Its interval overlaps with {', '.join(others)}: the selection heuristic groups them for tiebreaking; interval overlap does not establish equivalence.")
+        parts.append(f"Its interval overlaps with {', '.join(others)}: the objective cannot tell them apart; interval overlap does not establish equivalence.")
         unlike = unlike_among_tied(ranked, scored) if "latency" in task.ties else None
-        if chosen is not leader:
-            words = [t.label if not isinstance(t, str) else "API cost" if t == "cost" else "p90 latency"
-                     for t in task.ties if not (t == "latency" and unlike)]
-            if words == ["API cost"]:
-                parts.append(f"Of those, the lowest API cost is chosen: **{chosen.candidate}**{tail(chosen)}.")
-            else:
-                parts.append(f"Of those, compared by {', then '.join(words)}, **{chosen.candidate}** is chosen{tail(chosen)}.")
+        words = [t.label if not isinstance(t, str) else "API cost" if t == "cost" else "p90 latency"
+                 for t in task.ties if not (t == "latency" and unlike)]
+        if not task.ties:
+            parts.append("task.py names no tiebreak, so they are listed by name, unordered.")
+        elif first is not leader:
+            parts.append(f"Ordered by task.py's tiebreak ({', then '.join(words)}), **{first.candidate}** comes first{tail(first)}.")
         if unlike:
             said = unlike.en(task.id)
             parts.append(said[0].upper() + said[1:] + ".")
@@ -119,7 +119,7 @@ def headline(task: Task, evs: list[Evaluation]) -> str:
     top_acc = max(scored, key=lambda e: (e.accuracy.value or 0.0) if e.accuracy else 0.0)
     if top_acc.accuracy:
         parts.append(f"The highest raw accuracy (dev) is {top_acc.candidate.name}'s, {pct(top_acc.accuracy.value)}{band(top_acc.accuracy.interval)}.")
-    sel = next((s for s in by[chosen.candidate].selective if s.target_accuracy == o0.params.get("target_accuracy")), None)
+    sel = next((s for s in by[leader.candidate].selective if s.target_accuracy == o0.params.get("target_accuracy")), None)
     if sel is not None:  # the primary keeps an accuracy on what it answers
         target, need = sel.target_accuracy, sel.labels_needed
         if need and need > 5000:
@@ -142,13 +142,12 @@ def objectives_table(task: Task, evs: list[Evaluation]) -> list[str]:
     for x in ranked:
         thr = x.scores[0].chosen
         L.append(
-            f"| {x.candidate}{' ◎' if x is ranked[0] and not x.excluded else ''} | " + " | ".join(fmt(task.kind, o, sc) for o, sc in zip(objs, x.scores))
+            f"| {x.candidate}{' =' if x.tied_with_best else ''} | " + " | ".join(fmt(task.kind, o, sc) for o, sc in zip(objs, x.scores))
             + f" | {num(thr) if thr is not None else '—'} | {', '.join(x.excluded) or 'met'}{_floors(floors.get(x.candidate, []))} |"
         )
-    L += ["", "◎ is the model the objectives and constraints choose. Every objective is measured on the answers. The models whose "
-          "interval on the primary objective (leftmost) overlaps the best one's are compared by the next objectives (read the way "
-          "the primary sets); those still tied, by the calls' latency (p90, only when all were measured alike), then API cost "
-          "(the Calls section). The threshold is the min probability (Coverage) or P(positive) cut (on a yes/no question, every objective but Coverage and AUROC) the primary objective sets, among those that keep the task's floors (min_precision, "
+    L += ["", "= marks the models whose interval on the primary objective (leftmost) overlaps the best one's; task.py's tiebreak "
+          "orders them (its objectives read the way the primary sets; latency is p90, compared only when all were measured alike; "
+          "API cost per 10k, the Calls section), and without one they are listed by name. Every objective is measured on the answers. The threshold is the min probability (Coverage) or P(positive) cut (on a yes/no question, every objective but Coverage and AUROC) the primary objective sets, among those that keep the task's floors (min_precision, "
           "min_recall) where it sets any; their shares are out of fold, so they can pass a floor a little."]
     return L
 
@@ -159,20 +158,19 @@ def _floors(fs: list[Floor]) -> str:
 
 
 def weights_table(task: Task, evs: list[Evaluation], preds: dict[str, metrics.Preds]) -> list[str]:
-    """With ExpectedLoss or a loss table as the objective: the recommendation with its weights halved and doubled."""
-    from .weights import decides, sensitivity
+    """With ExpectedLoss or a loss table as the objective: the candidates tied at the top with its weights halved and doubled."""
+    from .weights import decides, sensitivity, top
 
     scored = compared(evs)
     moved = sensitivity(task, {e.candidate.name: preds[e.candidate.name] for e in scored if e.candidate.name in preds})
     if not moved:
         return []
-    ranked = rank(task.primary, task.ties, task.constraints, scored)
-    fits = [x for x in ranked if not x.excluded and x.scores[0].value is not None]
-    now = fits[0].candidate if fits else None
-    L = ["", "## With other weights", "", "| weights | recommended | tied |", "|---|---|---|",
-         f"| as set: {task.primary.label} | {now or '—'} | {', '.join(x.candidate for x in ranked if x.tied_with_best)} |"]
-    L += [f"| {'halved' if r.factor < 1 else 'doubled'}: {r.objective.label} | {r.recommended or '—'} | {', '.join(r.tied)} |" for r in moved]
-    L += ["", ("**The recommendation moves: these weights decide it.** " if decides(now, moved) else "Halving or doubling the weights leaves the recommendation as it is. ")
+    now = top(rank(task.primary, task.ties, task.constraints, scored))
+    L = ["", "## With other weights", "", "| weights | tied at the top |", "|---|---|",
+         f"| as set: {task.primary.label} | {', '.join(now) or '—'} |"]
+    L += [f"| {'halved' if r.factor < 1 else 'doubled'}: {r.objective.label} | {', '.join(r.tied) or '—'} |" for r in moved]
+    L += ["", ("**The candidates tied at the top change: these weights decide the choice.** " if decides(now, moved)
+           else "Halving or doubling the weights leaves the candidates tied at the top as they are. ")
           + "The weights are the task owner's to set; s1flow has no default. Re-ranked from the recorded answers, nothing asked again."]
     return L
 
