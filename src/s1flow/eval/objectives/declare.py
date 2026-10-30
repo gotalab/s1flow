@@ -10,9 +10,9 @@ is no basis for the weights): a model is chosen on the objective among those tha
 only models whose intervals overlap the best are compared on `tiebreak`, in its order. `tiebreak`'s objectives are
 measured at the rule the objective sets, the one a policy reads with; they choose none of their own.
 
-Everything here is measured on the answers. What the calls took (latency, API cost) is never an objective and
-never in `tiebreak`: it is read from the call records (Evaluation.calls) in two places only, the limits a model
-must stay within (`Constraints`) and the fixed order after `tiebreak` among the still tied (eval/select.py).
+Everything here is measured on the answers. What the calls took (latency, API cost) is never an objective: it is
+read from the call records (Evaluation.calls) in two places only, the limits a model must stay within
+(`Constraints`) and `tiebreak`'s "latency" and "cost", where it lists them (eval/select.py).
 
 | objective                   | value                                                    | kind     | sets            | direction | constraint                         |
 |-----------------------------|----------------------------------------------------------|----------|-----------------|-----------|------------------------------------|

@@ -3,7 +3,7 @@ checks read. `eval.metrics.evaluate` makes it from the runs; nothing else comput
 
 Two groups that never share a field: what was measured on the answers (`objective`, `tiebreak`, accuracy, ...) and
 what the calls took (`calls`: latency, API cost, throughput). The calls limit candidates (Constraints) and
-order the ones still tied after `tiebreak` (select.py); they are never an objective.
+order the tied ones where `tiebreak` lists "latency" and "cost" (select.py); they are never an objective.
 
 Every value is measured out of fold on the cases outside the held-out test share (a threshold is
 chosen on the fit side and applied to the other), with a 95% bootstrap interval where one is
@@ -160,7 +160,7 @@ class Calls(_Frozen):
 
     latency: Latency | None = None  # per answered call
     # Per dev case, its answered call's latency, at p90, with an interval from the
-    # evaluation's resample of the dev cases: what orders the candidates still tied after `tiebreak` (select.py)
+    # evaluation's resample of the dev cases: what `tiebreak`'s "latency" orders the tied candidates by (select.py)
     case_latency_p90_ms: Estimate | None = None
     throughput: Throughput | None = None
     # API cost, over the calls whose cost is known (`cost_unknown` are not, and count as nothing, not as free).

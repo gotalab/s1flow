@@ -168,6 +168,9 @@ class Task:
             "constraints": self.constraints, "declared_prices": prices,
             "split_config": {"test": self.split.test, "k": self.split.k, "seed": self.split.seed},
             "split": {"seed": split.seed, "test_share": split.test_share, "assign": split.assign},
+            # where "latency" and "cost" go: left out when they follow the objectives, so earlier digests still match
+            **({"ties": [x if isinstance(x, str) else x.key for x in self.ties]}
+               if self.ties != [*self.objectives[1:], "latency", "cost"] else {}),
         })
 
     @property
