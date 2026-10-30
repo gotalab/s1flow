@@ -201,6 +201,7 @@ class Shipped(BaseModel):
 class TaskPolicies(BaseModel):
     task: str
     current: int | None
+    why: Switch | None  # the last switch history.jsonl records: who made current what it is, and why
     policies: list[Shipped]
 
 
@@ -226,5 +227,6 @@ def overview(project: Project, tasks: list[str] | None = None) -> list[TaskPolic
                                    answered_by=record.answered_by if record else None,
                                    pin='yes' if model_version else None if configured is None else 'alias' if configured.versions else 'no',
                                    at=spec.at, digest=spec.digest, evaluated=record is not None))
-        out.append(TaskPolicies(task=task, current=current, policies=shipped))
+        why = next((e for e in reversed(saved.history(task)) if e.action != 'refused'), None)
+        out.append(TaskPolicies(task=task, current=current, why=why, policies=shipped))
     return out

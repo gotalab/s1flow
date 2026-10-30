@@ -1,8 +1,9 @@
 """`s1flow report` lists the candidates by the task's objectives and constraints; `s1flow adopt` writes the one a
 person picks as the next policy. Nothing is called: the runs are already scored.
 
-The ranking (select.rank) only recommends: the primary objective, then among the candidates it cannot
-tell apart the next objectives (`tiebreak`), then latency and API cost. A person picks from the list,
+The list (select.rank) orders by the primary objective, then, among the candidates it cannot tell apart, by
+the task's `tiebreak` (objectives, latency, API cost), and leaves them unordered without one. It marks no pick.
+A person or an agent picks from the list,
 since a free tier's rate limit, how long a model is served and whether its version can be pinned
 count too, and the policy reaches production. The policy records who picked and why. The list
 shows the objectives and what the calls took (latency, API cost) as two groups.
@@ -111,8 +112,7 @@ class Row(BaseModel):
     candidate: str  # Candidate.name
     n: int  # labelled train + val cases it answered; refusals remain visible in their own count
     refused: int  # labelled cases it refused or does not support: the model's limit, left out of its denominator
-    recommended: bool
-    tied: bool  # the primary objective cannot tell it from the recommended
+    tied: bool  # the primary objective cannot tell it from the best on it
     excluded: list[str]  # constraints it breaks; it cannot be picked
     scores: list[ObjectiveScore]  # one per objective, the primary first: measured on the answers
     calls: Calls  # what its calls took: latency, API cost (0: free; None: not known) and where that cost came from
@@ -142,12 +142,6 @@ class Shortlist:
         return [x for x in self.ranked if not x.excluded and x.scores[0].value is not None]
 
     @property
-    def recommended(self) -> str:
-        if not self.fits:
-            raise S1flowError("no candidate meets the constraints: " + "; ".join(f"{x.candidate}: {', '.join(x.excluded)}" for x in self.ranked))
-        return self.fits[0].candidate
-
-    @property
     def tied(self) -> list[str]:
         return [x.candidate for x in self.ranked if x.tied_with_best]
 
@@ -168,7 +162,7 @@ class Shortlist:
             e, model = self.evaluations[x.candidate], next(c[1] for c in self.cands if c[0] == x.candidate)
             spec = models.retrieve(model).spec
             out.append(Row(
-                candidate=x.candidate, n=e.n, refused=e.failures.refused_cases or 0, recommended=bool(fits) and x.candidate == self.recommended, tied=x.tied_with_best,
+                candidate=x.candidate, n=e.n, refused=e.failures.refused_cases or 0, tied=x.tied_with_best,
                 excluded=x.excluded if x.excluded or x.candidate in fits else ["no value on the primary objective"],
                 scores=x.scores, calls=e.calls,
                 pin=pin(spec, model), per_minute=models.resolved(model).capabilities.per_minute,

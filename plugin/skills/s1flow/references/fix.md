@@ -17,8 +17,9 @@ s1flow feedback record <task> <decision_id> <label> \
 `case_id` is useful for searching logs but cannot identify a unique call. A repeated case can have
 several decision ids.
 
-`s1flow feedback measure <task> logs/*.jsonl` measures production from v2 decision and feedback logs.
-It adds only decisions whose state was deliberately kept (`keep_state=True` or `decide
+`s1flow feedback measure <task> logs/*.jsonl` measures production from v2 decision and feedback logs, and
+says how many cases it could add. Adding them changes the task's data, so ask the user first (or follow
+`criteria.md`); then `--add` adds the decisions whose state was deliberately kept (`keep_state=True` or `decide
 --keep-state`) to the task. Run `s1flow check <task>` when the policy needs a fresh test comparison.
 
 To improve the question, use the explicit development command:

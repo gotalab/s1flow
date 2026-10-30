@@ -148,7 +148,7 @@ print(json.dumps({"decision_id": decision.decision_id, "value": decision.value})
         cli('run', 'ticket-bug')
         assert len(calls) == count  # measured identical requests are reused
         report = json.loads(cli('report', 'ticket-bug', '--json').stdout)
-        assert report['candidates'][0]['n'] == 28 and report['ranking'][0]['recommended']
+        assert report['candidates'][0]['n'] == 28 and report['ranking'][0]['tied']
         assert all('test' not in row for row in report['candidates'])
         adopted = cli('adopt', 'ticket-bug', 'local', '--reason', 'local HTTP integration proof', '--json')
         assert json.loads(adopted.stdout)['spec']['version'] == 3 and 'current' in adopted.stderr
@@ -160,7 +160,7 @@ print(json.dumps({"decision_id": decision.decision_id, "value": decision.value})
                                   '--log', log, '--keep-state', '--json', cwd=other).stdout)
         cli('feedback', 'record', 'ticket-bug@v3', deployed['decision_id'], 'true', '--connections', models,
             '--path', root / 'policies/ticket-bug/v3.json', '--log', log)
-        measured = json.loads(cli('feedback', 'measure', 'ticket-bug', log, '--dry-run', '--json').stdout)
+        measured = json.loads(cli('feedback', 'measure', 'ticket-bug', log, '--json').stdout)
         current = next(r for r in measured['production'] if r['policy'] == 'ticket-bug@v3')
         assert current['objective']['value'] == 1 and current['comparison_reason'] is None
         return {'runtime_calls': len(calls), 'dev': 28, 'test': 12, 'primary': current['objective']['value']}

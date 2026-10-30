@@ -96,7 +96,7 @@ clear what changes:
 ```bash
 uv tool install 's1flow[eval,optimize]'
 s1flow run <task> --models <model>:<version>
-s1flow report <task>                         # the candidates by the objective, the ranking's pick marked
+s1flow report <task>                         # the candidates by the objective; no pick marked
 s1flow optimize <task>                       # a changed question, as a new candidate
 s1flow check <task> --against v<N>           # final test comparison: current against the version it replaces
 ```

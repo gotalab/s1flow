@@ -71,6 +71,18 @@
   `history.jsonl`; the Action passes the base commit's) gets the new verdict `rollback`: measured, shown, exit 0.
   The comment flags a pull request that edits `task.py`, `split.json` or `s1flow.toml`, which set the rules the
   check applies.
+- `report` marks no pick: the `*` mark and `ranking[].recommended` are gone, and `=` marks the candidates the
+  objective cannot tell apart at the top (`ranking[].tied`). The Markdown report's headline says which candidate
+  the tiebreak puts first instead of which is "chosen", and its `◎` is now `=`. The weights table shows the
+  candidates tied at the top with the weights halved and doubled, in place of a recommended one.
+- A `tiebreak` with neither `"latency"` nor `"cost"` no longer has them added after it: with no tiebreak, the
+  candidates the objective cannot tell apart are listed by name, unordered. The template keeps
+  `tiebreak=["latency", "cost"]`; write it into an older task.py to keep the old order.
+- `feedback measure` only measures by default; `--add` also adds the cases to `tasks/<task>/feedback.jsonl`
+  (it used to add them unless `--dry-run`). `--dry-run` fails, naming the replacement. Its `--json` `added` has
+  `written`.
+- `s1flow report` with no task lists every task's current version, as `s1flow tasks` does, with the last switch
+  from `history.jsonl` (who, when, why); its `--json` has `why`.
 
 Each removed command fails with one line naming what replaces it.
 

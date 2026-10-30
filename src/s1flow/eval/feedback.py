@@ -296,11 +296,12 @@ class Added(BaseModel):
     no_label: int
     invalid_label: int
     already: int
+    written: bool  # False: counted, not written (feedback measure without --add)
     notes: list[str] = []
 
 
-def add(task: Task, cs: list[Answered], dry_run: bool = False) -> Added:
-    """Append verified decision/input/label pairs (each decision_id once)."""
+def add(task: Task, cs: list[Answered], *, write: bool = True) -> Added:
+    """Append verified decision/input/label pairs (each decision_id once); `write=False` only counts them."""
     path = task.dir / FEEDBACK
     have = {FeedbackCase.model_validate_json(l).id for l in path.read_text().splitlines() if l.strip()} if path.exists() else set()
     rows: list[FeedbackCase] = []
@@ -320,14 +321,14 @@ def add(task: Task, cs: list[Answered], dry_run: bool = False) -> Added:
             rows.append(FeedbackCase(id=cid, state=c.state, label=c.label, at=clock.stamp(dt.datetime.fromisoformat(c.label_at or c.at)),
                                      policy=c.policy))
     notes: list[str] = []
-    if rows and not dry_run:
+    if rows and write:
         with path.open("a") as f:
             f.writelines(r.model_dump_json() + "\n" for r in rows)
         task.load_cases().forget()
         if evalset.read(task):  # new cases get their share of test by the hash of their id (evalset.current)
             sf = evalset.current(task)
             notes = [f"{sum(sf.assign.get(r.id) == 'test' for r in rows)} of the {len(rows)} added cases are in the test share"]
-    return Added(added=len(rows), notes=notes, **counts)
+    return Added(added=len(rows), written=write, notes=notes, **counts)
 
 
 def markdown(task: Task, prod: list[InProduction], added: Added, *, issues: JoinIssues | None = None) -> str:
@@ -348,7 +349,9 @@ def markdown(task: Task, prod: list[InProduction], added: Added, *, issues: Join
             constraint = bound(row.primary, task.kind, task.custom_measures).constraint if row.primary else None
             why = f" ({constraint.shown_broken})" if constraint is not None else ""
             lines.append(f"- **{row.policy} is below its adopted objective in the observed feedback subset**{why}. Revisit the question or model.")
-    lines += ["", f"- Added {added.added} new cases. Not added: no input {added.no_state}, no feedback {added.no_label}, "
+    lines += ["", (f"- Added {added.added} new cases." if added.written else
+                   f"- {added.added} new cases could be added: `s1flow feedback measure {task.id} LOGS --add` adds them.")
+              + f" Not added: no input {added.no_state}, no feedback {added.no_label}, "
               f"invalid label {added.invalid_label}, added before {added.already}", *[f"- {x}" for x in added.notes]]
     if added.no_state:
         lines.append("- To add those, keep the state in the log: `s1flow decide --log FILE --keep-state`, the decide Action's `keep-state: true`, or `DecisionPolicy(..., log=FILE, keep_state=True)`")

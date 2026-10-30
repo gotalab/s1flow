@@ -10,7 +10,8 @@ explicit-construction rules.
 
 ```bash
 s1flow run <task> --models <model[:version][/variant]>   # the first run also writes tasks/<task>/split.json: commit it
-s1flow report <task>                         # the candidates by the task's objective, the ranking's pick marked
+s1flow report <task>                         # the candidates by the task's objective; = the ones it cannot tell apart
+s1flow report                                # every task: its current version, who switched it and why
 s1flow report <task> --json                  # every metric of each candidate, and the ranking, for an agent
 s1flow report <task> --json --limit 20 --offset 12
 s1flow report <task> --candidate jev:1.14/policy  # exact candidate detail
@@ -43,16 +44,19 @@ distribution or box confidence, the corresponding probability curve is absent. A
 own signal; do not describe it as the probability of the selected answer.
 
 The JSON `candidates` stay in model/variant order, including below-target results; `ranking` orders the
-complete ones by the task's declared objective, `tiebreak` and constraints, and marks the pick. The v2
+complete ones by the task's declared objective, `tiebreak` and constraints, and marks `tied` the ones the
+objective cannot tell apart at the top; it marks no pick. The v2
 snapshot contains metric definitions (unit and measurement basis) and each candidate's values and intervals.
 Plain-answer metrics, configured objective scores at a fitted rule, and selective coverage/accuracy pairs are
-kept distinct. Read all relevant metrics. The ranking's pick follows the task's declared objective; among candidates
-it cannot tell apart it follows `tiebreak`, which the template sets to lower latency, then lower API cost: a
-preference written in task.py, not a measured difference. Missing or stale evidence remains unknown.
+kept distinct. Read all relevant metrics. The order follows the task's declared objective; among candidates it
+cannot tell apart it follows `tiebreak`, which the template sets to lower latency, then lower API cost: a
+preference written in task.py, not a measured difference. With no `tiebreak` they are listed by name, unordered.
+Missing or stale evidence remains unknown.
 
 The person owns the decision criteria, including concerns not represented by a metric. An agent may explain
 trade-offs, but must not invent weights, priorities or a strict cutoff, or select a candidate unless authorized
-with a selection rule; the ranking's pick is a suggestion under the declared objective, not a decision.
+with a selection rule; the order is the declared objective's, not a decision. Show the tied candidates as
+equals and ask which to adopt (follow `criteria.md` in the task's directory if it says).
 Policy adoption remains a separate action:
 
 ```bash

@@ -112,7 +112,7 @@ def test_rank_leaves_out_a_candidate_that_skipped_cases(task):
     asyncio.run(running.run_model(task, "m", limit=60, variant="v"))
     with pytest.warns(UserWarning, match="never asked"):
         listed = adopting.shortlist(task)
-    assert listed.recommended == "m" and [c[0] for c in listed.cands] == ["m"]
+    assert listed.tied == ["m"] and [c[0] for c in listed.cands] == ["m"]
 
 
 class FailsOnC(ByQuestion):
@@ -250,7 +250,7 @@ def test_production_measures_the_primarys_own_constraint(task, tmp_path):
     found = feedback.read([tmp_path / "recall.jsonl"])
     prod = feedback.production(t, feedback.cases(t, found), found.failed)[0]
     assert prod.correct == 28 and prod.below is True
-    md = feedback.markdown(t, [prod], feedback.Added(added=0, no_state=0, no_label=0, invalid_label=0, already=0))
+    md = feedback.markdown(t, [prod], feedback.Added(added=0, no_state=0, no_label=0, invalid_label=0, already=0, written=True))
     assert "(its lower bound is over the cap)" in md
 
 

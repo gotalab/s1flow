@@ -10,7 +10,7 @@ table (HELP), and a command that does not exist is one line naming the closest.
     s1flow decide --model jev --state @issue.json --boolean "Is it a bug report?"   one yes / no question
     s1flow decide --policy gh-ruff-area[@v3] --state @issue.json [--path policies.json] [--case-id] [--log [--keep-state]] [--github-output]
     s1flow feedback record gh-ruff-area@v3 DECISION_ID formatter --log log.jsonl   the right answer, once known
-    s1flow feedback measure gh-ruff-area log.jsonl [--dry-run]               production from the logs (s1flow[eval])
+    s1flow feedback measure gh-ruff-area log.jsonl [--add]                   production from the logs (s1flow[eval])
     s1flow policy create spec.json --reason "..." [--root policies] [--connections PATH] [--check]   adopt --spec, with --root (--check: validate only)
     s1flow policy export [gh-ruff-area ...] --out policies.json        each task's current policy in one file, for an app to vendor
     s1flow doctor [--models jev,d1@vercel | --policy gh-ruff-area[@…]] [--reach] [--json]   the keys and hosts they need
@@ -64,7 +64,7 @@ TABLE = (
     ("tasks", "every task: its current policy, its candidate, the model id that answers, pinned or not"),
     ("models", "the line-up in s1flow.toml, and what --verify found each model takes"),
     ("run", "ask the models about a task's cases (cached): runs/<task>/"),
-    ("report", "every model and question variant on the saved runs, best first by the task's objective; --out DIR writes it"),
+    ("report", "every model and question variant on the saved runs by the task's objective (--out DIR writes it); no TASK: every task's current version and why"),
     ("adopt", "write a candidate as the task's current policy, with why (merging the change ships it)"),
     ("check", "compare two versions on today's test cases, case by case (the CI gate)"),
     ("optimize", "optimize the current policy's question into a new candidate; it ships nothing (s1flow[optimize])"),
@@ -441,15 +441,18 @@ def feedback_record(a: argparse.Namespace) -> int:
 
 
 def feedback_measure(a: argparse.Namespace) -> int:
-    """Each policy in production, from the feedback in its logs; the cases with a kept state added as labelled cases."""
+    """Each policy in production, from the feedback in its logs; with --add, the cases with a kept state added as
+    labelled cases."""
     from .eval import feedback as fb  # s1flow[eval]: the task, its cases and objectives
     from .eval.task import load
 
+    if a.dry_run:
+        raise ConfigError("--dry-run is gone: feedback measure now only measures; --add also adds the cases")
     task = load(project(a), a.task)
     found = fb.read([Path(x) for x in a.logs])
     cs = fb.cases(task, found)
     prod = fb.production(task, cs, found.failed)
-    added = fb.add(task, cs, a.dry_run)
+    added = fb.add(task, cs, write=a.add)
     if a.json:
         print(json.dumps({"production": [x.model_dump(mode="json") for x in prod], "added": added.model_dump(mode="json"), "issues": found.issues.model_dump(mode="json")}))
     else:
@@ -575,8 +578,11 @@ def tasks(a: argparse.Namespace) -> int:
     model id that answers, and whether that version is pinned."""
     from .eval.policy import overview
 
-    found = overview(project(a), a.tasks or None)
-    if a.json:
+    return _print_tasks(overview(project(a), a.tasks or None), a.json)
+
+
+def _print_tasks(found: list[Any], as_json: bool) -> int:
+    if as_json:
         print(json.dumps([t.model_dump(mode="json") for t in found], indent=1))
         return 0
     table = [["task", "current", "candidate", "model version", "answered by", "pin"]]
@@ -587,8 +593,14 @@ def tasks(a: argparse.Namespace) -> int:
     widths = [max(len(row[i]) for row in table) for i in range(len(table[0]))]
     for row in table:
         print("  ".join(x.ljust(w) for x, w in zip(row, widths)).rstrip())
+    for t in found:
+        if t.why is not None:
+            w = t.why
+            print(f"{t.task}: v{w.version} by {w.by}, {w.at[:10]} ({w.action}"
+                  + (f" from v{w.previous}" if w.previous else "") + f"): {w.reason}")
     print("pin: yes the policy sends a version by its name; no its model serves one version; alias the model's version "
-          "can change; ? s1flow.toml no longer has the model. Every version, its date and digest: s1flow tasks --json.")
+          "can change; ? s1flow.toml no longer has the model. Every version, its date and digest, and why current is what it "
+          "is: --json; every switch: policies/<task>/history.jsonl.")
     return 0
 
 
@@ -648,9 +660,10 @@ def run(a: argparse.Namespace) -> int:
 
 
 def report(a: argparse.Namespace) -> int:
-    """Read the saved runs by the task's objective: every candidate on every question variant, best first, the
-    ranking's pick marked. No model is called and nothing is written but, with --out DIR, the comparison snapshot and a
-    Markdown report per question. --from reads a saved snapshot offline."""
+    """Read the saved runs by the task's objective: every candidate on every question variant, best first, those the
+    objective cannot tell apart marked (no pick: a person or an agent picks). No model is called and nothing is written
+    but, with --out DIR, the comparison snapshot and a Markdown report per question. --from reads a saved snapshot
+    offline. With no TASK, every task: its current version and why."""
     from .eval import adopt as adopting
     from .eval import comparison
     from .eval import report as reporting
@@ -669,8 +682,12 @@ def report(a: argparse.Namespace) -> int:
         if a.out:
             raise ConfigError("--out writes a report of the current runs; with --from the snapshot is already saved")
     else:
-        if not a.task:
-            raise ConfigError("report needs TASK, or --from PATH")
+        if not a.task:  # every task: what runs, and why
+            from .eval.policy import overview
+
+            if a.candidate or a.out:
+                raise ConfigError("--candidate and --out take a TASK")
+            return _print_tasks(overview(project(a)), a.json)
         task = load(project(a), a.task)
         if a.candidate is None:
             try:
@@ -720,7 +737,7 @@ def report(a: argparse.Namespace) -> int:
     if listed is not None:
         assert task is not None and result is not None
         rows = listed.rows()
-        _print_shortlist(task.id, rows[a.offset:a.offset + a.limit])
+        _print_shortlist(task.id, rows[a.offset:a.offset + a.limit], ordered=bool(task.ties))
         if len(rows) > a.offset + a.limit:
             print(f"  … {len(rows) - a.offset - a.limit} more: --offset {a.offset + a.limit}")
         ranked = {r.candidate for r in rows}
@@ -739,7 +756,7 @@ def report(a: argparse.Namespace) -> int:
     return 0
 
 
-def _print_shortlist(task_id: str, rows: list[Any]) -> None:
+def _print_shortlist(task_id: str, rows: list[Any], *, ordered: bool) -> None:
     from .eval.shown import ms, pct, usd
 
     def score(s: Any) -> str:
@@ -760,14 +777,15 @@ def _print_shortlist(task_id: str, rows: list[Any]) -> None:
         if r.excluded:
             continue
         lat = r.calls.latency
-        table.append(["*" if r.recommended else "=" if r.tied else "", r.candidate, str(r.n), *(score(s) for s in r.scores), "|",
+        table.append(["=" if r.tied else "", r.candidate, str(r.n), *(score(s) for s in r.scores), "|",
                       ms(lat and lat.p50_ms), ms(lat and lat.p90_ms), ms(lat and lat.p99_ms), cost(r.calls.cost_per_10k_usd, r.calls.cost_source), "|",
                       r.pin, "" if r.per_minute is None else f"{r.per_minute}/min"])
     def width(c: str) -> int:  # a CJK character takes two columns
         return sum(2 if unicodedata.east_asian_width(ch) in "WF" else 1 for ch in c)
 
     widths = [max(width(row[i]) for row in table) for i in range(len(head))]
-    print(f"{task_id}: {len(table) - 1} candidates within the constraints, {len(tied)} tied on the primary objective (=), the ranking's pick (*)")
+    print(f"{task_id}: {len(table) - 1} candidates within the constraints, {len(tied)} the primary objective cannot tell apart at the top (=), "
+          + ("ordered by the task's tiebreak" if ordered else "listed by name: task.py's tiebreak would order them"))
     for row in table:
         print("  " + "  ".join(c + " " * (w - width(c)) for c, w in zip(row, widths)).rstrip())
     for r in rows:
@@ -786,16 +804,16 @@ def _print_shortlist(task_id: str, rows: list[Any]) -> None:
 
 
 def _print_weights(listed: Any) -> None:
-    """ExpectedLoss or a loss table as the objective: the pick with its weights halved and doubled."""
+    """ExpectedLoss or a loss table as the objective: the candidates tied at the top with its weights halved and doubled."""
     from .eval.weights import decides
 
     if not listed.reweighted:
         return
-    now = listed.recommended if listed.fits else None
+    now = sorted(listed.tied)
     for r in listed.reweighted:
-        print(f"weights x{r.factor:g} ({r.objective.label}): the ranking's pick {r.recommended or '-'}, tied {', '.join(r.tied) or '-'}")
-    print("The pick moves with the weights: they decide it, and they are yours to set." if decides(now, listed.reweighted)
-          else "Halving or doubling the weights leaves the pick as it is.")
+        print(f"weights x{r.factor:g} ({r.objective.label}): tied at the top {', '.join(r.tied) or '-'}")
+    print("The candidates tied at the top change with the weights: they decide the choice, and they are yours to set." if decides(now, listed.reweighted)
+          else "Halving or doubling the weights leaves the candidates tied at the top as they are.")
 
 
 def _adopt_spec(store: Policies, spec: PolicySpec, by: str, reason: str) -> int | None:
@@ -885,10 +903,9 @@ def adopt(a: argparse.Namespace) -> int:
     p0 = e.objective
     assert p0 is not None
     rd = r.spec.rule
-    print(f"{r.spec.ref}{'' if held else ' (current)'}: {r.candidate.name}, answered by {r.answered_by}; adopted by {r.selection.by}"
-          + ("" if r.candidate.name == listed.recommended else f" (the ranking recommended {listed.recommended})"))
+    print(f"{r.spec.ref}{'' if held else ' (current)'}: {r.candidate.name}, answered by {r.answered_by}; adopted by {r.selection.by}")
     if r.candidate.name not in r.selection.tied:
-        print(f"  note: not tied with {listed.recommended}: measured worse on {p0.objective.label}")
+        print(f"  note: measured worse on {p0.objective.label} than the candidates tied at the top ({', '.join(r.selection.tied)})")
     print("  rule: " + (", ".join(f"{k} {v:.3f}" for k, v in (("threshold", rd.threshold), ("min probability", rd.min_probability)) if v is not None) or "the plain argmax"))
     print(f"  {p0.objective.label}: {p0.value}  interval {p0.interval}  (n {e.n})")
     if e.test:
@@ -1025,7 +1042,7 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--concurrency", type=positive, help="calls in flight per model (default: the model's own); with it, models run one after another. 1 times each call alone")
 
     p = _command(sub, "report", report, context=("project", "connections"))
-    p.add_argument("task", nargs="?", help="the task (or --from PATH)")
+    p.add_argument("task", nargs="?", help="the task (or --from PATH); none: every task, its current version and why")
     p.add_argument("--json", action="store_true", help="every metric of each candidate, and the ranking, as JSON")
     p.add_argument("--limit", type=positive, default=12, help="candidates shown, in the ranking and the list (default: 12)")
     p.add_argument("--offset", type=int, default=0, help="candidates to skip (default: 0)")
@@ -1108,11 +1125,12 @@ def parser() -> argparse.ArgumentParser:
     f.add_argument("--log", required=True, help="the log to append to (JSONL)")
     f.add_argument("--path", help="a policy file, or a policy set from `policy export` (policies.json), instead of policies/ (as decide --path)")
     m = _command(group, "measure", feedback_measure, context=("project", "connections"), help="measure each policy in production from the feedback in its logs (needs s1flow[eval])",
-                 description="Measure each policy in production from the feedback in its logs, and add the cases with a kept state "
-                             "as labelled cases. Exit 1 when production is shown below. Needs s1flow[eval].")
+                 description="Measure each policy in production from the feedback in its logs; with --add, also add the cases with a "
+                             "kept state as labelled cases. Exit 1 when production is shown below. Needs s1flow[eval].")
     m.add_argument("task")
     m.add_argument("logs", nargs="+", help="SDK logs (JSONL) or OpenTelemetry JSON exports")
-    m.add_argument("--dry-run", action="store_true", help="measure only; add no cases")
+    m.add_argument("--add", action="store_true", help="also add the cases with a kept state and a valid label to tasks/<task>/feedback.jsonl")
+    m.add_argument("--dry-run", action="store_true", help=argparse.SUPPRESS)  # gone: measuring alone is the default
     m.add_argument("--json", action="store_true")
 
     group = sub.add_parser("policy", context=("project", "connections"), help="runtime specifications: check and save one (create), the ones an app uses in one file (export)").add_subparsers(

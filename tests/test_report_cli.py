@@ -33,7 +33,7 @@ def test_report_ranks_by_the_objective_and_writes_only_the_evaluation_set(ran):
     got = cli("report", "truth")
     assert got.exit_code == 0
     lines = got.output.splitlines()
-    assert lines[0].startswith("truth: ") and lines[2].split()[:2] == ["*", "good"]  # best first, the pick marked
+    assert lines[0].startswith("truth: ") and lines[2].split()[:2] == ["=", "good"]  # best first; no pick marked
     assert not (ran.root / "reports").exists()
     assert (ran.tasks_dir / "truth" / "split.json").exists()  # fixed on first use, as before
 
@@ -41,7 +41,7 @@ def test_report_ranks_by_the_objective_and_writes_only_the_evaluation_set(ran):
 def test_json_holds_every_metric_and_the_ranking(ran):
     got = json.loads(cli("report", "truth", "--json").output)
     assert {c["candidate"] for c in got["candidates"]} == {"good", "bad", "late"}
-    assert got["ranking"][0]["candidate"] == "good" and got["ranking"][0]["recommended"]
+    assert got["ranking"][0]["candidate"] == "good" and got["ranking"][0]["tied"] and "recommended" not in got["ranking"][0]
     by_name = {c["candidate"]: c for c in got["candidates"]}
     assert by_name["good"]["value"] == got["ranking"][0]["scores"][0]["value"]  # one number for the objective
 
@@ -92,7 +92,7 @@ def test_reading_saved_runs_builds_no_provider(ran, monkeypatch):
     config.write_text(config.read_text() + '\n[models.chat]\nprovider = "llm"\nid = "openai/gpt-x"\n')
     got = cli("report", "truth")
     assert got.exit_code == 0, got.err
-    assert got.output.splitlines()[2].split()[:2] == ["*", "good"] and "not ranked:" in got.output
+    assert got.output.splitlines()[2].split()[:2] == ["=", "good"] and "not ranked:" in got.output
 
 
 def test_a_variant_named_comparison_leaves_the_snapshot_alone(ran):

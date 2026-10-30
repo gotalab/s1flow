@@ -6,7 +6,8 @@ intervals overlap the best are compared on `tiebreak`'s objectives, in its order
 
 What the calls took (Evaluation.calls) is used in two places only, both here: the constraints on
 latency and API cost, and "latency" (p90 per case) and "cost" (API cost per 10,000 cases, unknown
-last) where `tiebreak` names them (Task.ties). Latency orders candidates only when they
+last) where `tiebreak` names them (Task.ties). With no tiebreak, the candidates the objective cannot tell apart
+are listed by name: nothing orders them, and the list says so. Latency orders candidates only when they
 were all measured alike: at one concurrency, with their retries recorded (a call saved before
 2026-10-16 may include the backoff). Otherwise it is skipped and `unlike` says why;
 `s1flow run --fresh --concurrency N` with one N for every candidate measures them again.
@@ -118,7 +119,7 @@ def _latency(group: list[Evaluation]) -> dict[str, float]:
 def rank(objective: Objective, then: list[Objective | CallKey], constraints: Constraints, evaluations: list[Evaluation]) -> list[Ranked]:
     """Every scored candidate, best first: those within the constraints, then the excluded ones.
     `tied_with_best` marks the candidates the objective cannot tell from the best; `then` (Task.ties: the
-    tiebreak's objectives, "latency" and "cost") orders them."""
+    tiebreak's objectives, "latency" and "cost") orders them, and with no `then` they are listed by name."""
     scored = [e for e in evaluations if e.n and e.objective is not None]
     ranked = [Ranked(candidate=e.candidate.name, scores=e.scores, excluded=violations(constraints, e)) for e in scored]
     populations = {tuple(sorted(e.answered_ids)) for e in scored}
@@ -167,7 +168,7 @@ def rank(objective: Objective, then: list[Objective | CallKey], constraints: Con
     def tie_key(x: Ranked) -> tuple[Any, ...]:
         return (*among[x.candidate], by_value(objective, x.scores[0]))
 
-    tied_sorted = sorted(tied, key=tie_key)
+    tied_sorted = sorted(tied, key=tie_key) if then else sorted(tied, key=lambda x: x.candidate)
     for x in tied_sorted:
         x.tied_with_best = True
     return tied_sorted + [x for x in ranked if x not in tied_sorted]

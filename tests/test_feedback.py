@@ -119,6 +119,6 @@ def test_new_cases_use_decision_id_and_exact_events_deduplicate(tmp_path):
                          feedback=[label("first"), label("first"), label("second")])
     rows = feedback.cases(task, logs)
     assert logs.issues.duplicates == 1
-    result = feedback.add(task, rows, dry_run=True)
+    result = feedback.add(task, rows, write=False)
     assert result.added == 2
     assert "duplicates 1" in feedback.markdown(task, [], result, issues=logs.issues)

@@ -383,7 +383,7 @@ def test_adopt_chooses_from_the_runs_and_names_the_version(tmp_path):
         asyncio.run(running.run_model(task, name, limit=None, variant="base"))
     listed = adopt.shortlist(task)
     fixed = evalset.path(task).read_text()  # the first run fixed the evaluation set
-    assert listed.recommended == "good" and task.policies.versions("toy") == []  # listing writes nothing
+    assert listed.fits[0].candidate == "good" and task.policies.versions("toy") == []  # listing writes nothing
     assert {r.candidate: r.pin for r in listed.rows()} == {"good": "alias", "good:2": "yes", "vague": "no"}
     with pytest.raises(S1flowError, match="good is an alias .*good:2"):
         adopt.adopt(task, "good", "you", "sure more often", listed=listed)
@@ -411,7 +411,7 @@ def test_a_person_picks_another_candidate_and_the_policy_says_so(tmp_path):
         asyncio.run(running.run_model(task, name, limit=None, variant="base"))
     listed = adopt.shortlist(task)
     rows_ = {r.candidate: r for r in listed.rows()}
-    assert rows_["good"].recommended and rows_["good"].tied and not rows_["vague"].recommended
+    assert rows_["good"].tied and not hasattr(rows_["good"], "recommended")  # the list marks no pick
     assert {r.pin for r in rows_.values()} == {"no"}  # neither declares versions: each serves one
     r = adopt.adopt(task, "vague", "you", "free tier", listed=listed)
     assert r.candidate.model == "vague" and r.selection.tied == listed.tied

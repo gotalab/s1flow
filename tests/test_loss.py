@@ -122,7 +122,7 @@ def test_a_custom_objective_goes_through_adopt_and_check(tmp_path):
     for name in ("good", "vague"):
         asyncio.run(running.run_model(t, name, limit=None, variant="base"))
     listed = adopt.shortlist(t)
-    r = adopt.adopt(t, listed.recommended, "you", "fewest costly misses", listed=listed, force=True)
+    r = adopt.adopt(t, listed.fits[0].candidate, "you", "fewest costly misses", listed=listed, force=True)
     o = r.evidence.evaluation.objective
     assert o is not None and o.objective == wake_cost(miss=3).objective and o.objective.code_sha256 == wake_cost().objective.code_sha256
     assert r.spec.rule.threshold is not None  # it set the threshold, as it declares
@@ -185,11 +185,11 @@ def test_halving_and_doubling_the_weights_shows_they_make_the_choice():
         pr.model = name
     t = labelled(task([ExpectedLoss(fn=1, fp=1)]), y)
     moved = sensitivity(t, preds)
-    assert [(r.factor, r.objective.params["fn"], r.recommended) for r in moved] == [(0.5, 0.5, "b"), (2.0, 2.0, "a")]
-    assert decides("a", moved)
+    assert [(r.factor, r.objective.params["fn"], r.tied) for r in moved] == [(0.5, 0.5, ["a", "b"]), (2.0, 2.0, ["a"])]
+    assert decides(["a", "b"], moved) and not decides(["a", "b"], moved[:1])
     evs = [metrics.evaluate(t, pr) for pr in preds.values()]
     text = "\n".join(report.weights_table(t, evs, preds))
-    assert "## With other weights" in text and "The recommendation moves" in text and "halved: loss per case (miss 0.5, false alarm 1)" in text
+    assert "## With other weights" in text and "The candidates tied at the top change" in text and "halved: loss per case (miss 0.5, false alarm 1)" in text
     assert sensitivity(labelled(task([Accuracy()]), y), preds) == [] and report.weights_table(task([Coverage()]), evs, preds) == []
     table = sensitivity(labelled(task([Loss(losses={"true": {"false": 1}, "false": {"true": 1}})]), y), preds)
     assert [r.objective.params["losses"] for r in table] == [{"true": {"false": 0.5}, "false": {"true": 0.5}}, {"true": {"false": 2.0}, "false": {"true": 2.0}}]
