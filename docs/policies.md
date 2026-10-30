@@ -12,7 +12,7 @@ This page covers how the three fit together, and when `adopt` refuses.
 policies/ticket-bug/v1.json             the PolicySpec your app runs
 policies/ticket-bug/v1.evaluation.json  the evaluation and selection record, if there is one
 policies/ticket-bug/channels.json       {"schema": "s1flow/channels@1", "channels": {"current": 3}}: the version that runs
-policies/ticket-bug/history.jsonl       one line per adopt: when, which version, the one before, who, why
+policies/ticket-bug/history.jsonl       one line per switch of current, and per refused candidate: when, which version, who, why
 ```
 
 ## Evidence and releases

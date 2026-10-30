@@ -90,7 +90,7 @@ is drawn when the signal it needs isn't available.
 
 ## Thresholds and intervals
 
-For yes/no questions (and choice questions with a positive option), every objective but Coverage, AUROC and MacroF1 picks a threshold on the training side of each
+For yes/no questions (and choice questions with a positive option), an objective that sets the rule (Accuracy, F1, ExpectedLoss, Recall, Loss, or a custom one through `sets=`) picks a threshold on the training side of each
 development fold. Reports keep three things apart: raw metrics, cross-validated metrics with a tuned threshold,
 and the held-out final result. Tuning a threshold is not the same as calibrating probabilities. Candidates whose
 intervals overlap are grouped together, to err on the side of caution. That doesn't prove they are equivalent,

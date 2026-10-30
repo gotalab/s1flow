@@ -51,7 +51,7 @@ does not change cwd, so `--connections`, `--log` and other relative paths start 
 the CLI searches upward from cwd to the nearest Git boundary; outside Git, only cwd and cwd/`s1flow`. The error
 for a missing project names where it searched and which option to pass.
 
-Connections: `--connections` when given, else the project's `s1flow.toml`; never merged. `decide --policy`, `feedback record`, `doctor --policy`, and `adopt --spec` outside a project need an explicit
+Connections: `--connections` when given, else the project's `s1flow.toml`; never merged. `decide --policy`, `feedback record`, `doctor --policy`, and `adopt --spec --root` need an explicit
 `--connections`. `report --from` takes neither option.
 
 ## Names

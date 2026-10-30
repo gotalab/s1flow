@@ -58,7 +58,7 @@
   `evaluated-policy-2.json` is now `evaluated-policy-3.json`). `selection.recommended` is gone: s1flow records who
   picked and why, not what it would have picked. `evidence.test_uses` is gone: it counted only the uses on the machine
   that ran, and CI lost them. `selection.forced` is new: `true` when `adopt --force` wrote a version below on the
-  held-out test, and `reason` says why. `@2` records no longer read. `forced` is refused on a record
+  held-out test, and `reason` says why. `@2` records no longer read: to keep one, drop `selection.recommended` and `evidence.test_uses` and set `"schema": "s1flow/policy-evaluation@3"` (a pull request that does fails the check Action, which never lets a saved record change, so merging it is your call). `forced` is refused on a record
   whose held-out test is not below. `adopt --json` prints the new shape.
 - Only `s1flow run` writes `tasks/<task>/split.json`, the first time it runs on a task. `report` no longer writes
   it, and `adopt`, `optimize` and `check` refuse with "the first `s1flow run TASK` fixes the held-out test share"
@@ -67,7 +67,8 @@
   never rewritten. A run with too few labelled cases to hold out a test share asks the models and writes no
   file yet; a later run does. The file is now
   `s1flow/split@2` (`schema/split-2.json`) without `uses`: it counted only the uses on the machine that ran. `@1`
-  files no longer read. `check --json` no longer has `test_uses`.
+  files no longer read: drop `uses` and set `"schema": "s1flow/split@2"` (deleting the file draws a new
+  held-out share). `check --json` no longer has `test_uses`.
 - The `s1flow check` Action fails a pending check (`on-pending: fail`, the new input's default; `warn` restores
   the warning). `s1flow init --ci` writes `on-pending: fail` into the workflow. A check that cannot measure (a
   pull request from a fork gets no keys, and some answers are not cached) no longer lets the change merge.
@@ -96,7 +97,7 @@
   `--patience` and `--max-cost` it changes GEPA's settings for one run, and is refused for another optimizer.
   `tasks/<task>/optimized/*.json` is now `s1flow/optimized@2`, one record for every optimizer: `optimizer`,
   `settings`, `model_calls`, `cost_usd` (what it spent beside the model's calls), and what only it records in
-  `detail` (GEPA's reflection LM, candidates and val scores). `@1` records no longer read. `optimize --json`'s
+  `detail` (GEPA's reflection LM, candidates and val scores). `@1` records no longer read: run `optimize` again, or delete the record. `optimize --json`'s
   `optimization` has the new shape.
 - `S1FLOW_CONNECTIONS` is gone: evaluation commands take `--connections PATH`, else the project's `s1flow.toml`.
 - `runs/` lines written before `s1flow/run@2` (with no `request_digest`) no longer read: `report` already ignored
