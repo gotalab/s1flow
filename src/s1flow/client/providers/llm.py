@@ -216,11 +216,8 @@ def response_cost(model: str, responses: list[Any], cache_dir: Path | None = Non
 
 
 def _raw(usage: Any) -> Any:
-    """LiteLLM's usage of one response, as JSON (None when it cannot be written)."""
-    try:
-        return usage.model_dump(mode="json")
-    except Exception:  # not LiteLLM's pydantic usage (a test's stand-in)
-        return None
+    """LiteLLM's usage of one response, as JSON."""
+    return usage.model_dump(mode="json")
 
 
 class LLMModel:
