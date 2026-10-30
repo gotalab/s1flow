@@ -28,7 +28,6 @@ s1flow init --task ticket-bug   # add --ci for the pull request check
 s1flow cases check ticket-bug
 s1flow run ticket-bug
 s1flow report ticket-bug
-s1flow compare ticket-bug --json
 s1flow adopt ticket-bug MODEL --reason "why this candidate" --json
 s1flow check ticket-bug --json
 s1flow promote ticket-bug@v1 --connections connections.toml --json
@@ -47,17 +46,18 @@ validation and decision rules; metrics and optimization live only in `s1flow.eva
 
 ## Compare candidates
 
-By default, `report`, ranking, review and `compare` use only the development cases. `compare` is the main way to
-see every model and question variant side by side. Its text and JSON output use the same candidate IDs and
-numbers, so a person, or an agent acting for them, can choose based on their own criteria. The
-comparison itself never ranks or recommends a candidate. The final test-set result comes only when you adopt a
-candidate or run `check`.
+`s1flow report` shows every model and question variant side by side, using only the development cases. The
+terminal shows the candidates ordered by the task's objective, with the ranking's pick marked; `--json` adds every
+metric of each candidate with the same candidate IDs and numbers, so a person, or an agent acting for them, can
+choose based on their own criteria. (It replaces `compare` and `rank`.) The
+final test-set result comes only when you adopt a candidate or run `check`.
 
 Adopting a candidate and making it live are separate steps: `adopt --reason` records the choice, and `promote`
 switches the channel (see [Policies, evidence and promotion](policies.md)).
 
-`s1flow compare ticket-bug --out comparison.json` saves a full snapshot of the development results, including
-the chart data, while keeping the terminal output short. `s1flow compare --from comparison.json` reads that
+`s1flow report ticket-bug --out DIR` saves `DIR/comparison.json`, a full snapshot of the development results
+including the chart data, and a Markdown report per question (`DIR/base.md`); it writes nothing else unless asked.
+`s1flow report --from DIR/comparison.json` reads that
 snapshot offline, without rescoring or rechecking anything. The snapshot keeps the source and date, provider and
 model, the declared and recorded concurrency, and where latency and cost figures came from: billed, list price,
 or shown as estimated, mixed or unknown. Unknown values stay unknown. Text and JSON output both support
@@ -92,9 +92,8 @@ and the held-out final result. Tuning a threshold is not the same as calibrating
 intervals overlap are grouped together, to err on the side of caution. That doesn't prove they are equivalent,
 in practice or statistically. An unknown measurement never counts as meeting a cost or latency limit you set.
 
-Ranking candidates automatically by the objective is a separate step you run explicitly with `rank`. An ordinary
-comparison keeps candidates whose evidence differs or is incomplete, and says where each falls short, without
-picking a winner.
+The ranking only orders candidates with an answer to every case; the JSON `candidates` keep the ones whose
+evidence differs or is incomplete, and say where each falls short.
 
 ## When old results stop counting
 

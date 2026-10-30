@@ -20,8 +20,7 @@ below test verdict; it cannot make stale execution conditions current.
 The evaluation loop is:
 
 ```bash
-s1flow compare <task> --json                   # preferred overview of model × question variants
-s1flow rank <task>                              # development comparison; writes nothing
+s1flow report <task>                            # the candidates by the objective (--json: every metric)
 s1flow adopt <task> <candidate> --reason "..."  # write the next policy and adoption record
 s1flow check <task> --candidate next             # final held-out check
 s1flow promote <task>@v<N> --connections s1flow.toml
@@ -29,9 +28,9 @@ s1flow promote <task>@v<N> --connections s1flow.toml
 
 The user or an agent with authority chooses the candidate and records why. `adopt` then explicitly scores that
 selected candidate on the held-out test and records the result. The choice may differ from the
-explicit objective-based ranking when the candidate is eligible. `compare`, `rank`, `report` and the optional HTML
+explicit objective-based ranking when the candidate is eligible. `report` and the optional HTML
 page describe development data; they do not activate a runtime policy. `check` is the final test comparison
-before promotion. Recommendation, adoption, and the current channel remain separate; ordinary compare/rank/report
+before promotion. Recommendation, adoption, and the current channel remain separate; an ordinary `report`
 do not read the held-out share.
 Historical benchmark files are reference material only and are not proof that a current model works;
 run the current task when a claim matters.

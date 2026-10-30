@@ -85,7 +85,7 @@ No labels yet? You can [ship a policy today](docs/app.md) and evaluate it later.
 | Page | What it covers |
 |---|---|
 | [Run decisions in your app](docs/app.md) | your first policy, the SDK, calling a model directly |
-| [Evaluate and compare](docs/evaluate.md) | cases, `compare`, charts, thresholds |
+| [Evaluate and compare](docs/evaluate.md) | cases, `report`, charts, thresholds |
 | [Policies, evidence and promotion](docs/policies.md) | versions, evidence, `promote`, schemas |
 | [Feedback and improvement](docs/feedback.md) | recording correct answers, measuring in production, prompt optimization |
 | [Connections and discovery](docs/connections.md) | which models your app may call, and how config files are found |

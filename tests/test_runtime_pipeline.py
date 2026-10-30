@@ -137,9 +137,8 @@ print(json.dumps({"decision_id": decision.decision_id, "value": decision.value})
         cli('run', 'ticket-bug')
         assert len(calls) == count  # measured identical requests are reused
         report = json.loads(cli('report', 'ticket-bug', '--json').stdout)
-        assert report['evaluations'][0]['n'] == 28 and report['evaluations'][0]['test'] is None
-        ranked = json.loads(cli('rank', 'ticket-bug', '--json').stdout)
-        assert ranked[0]['recommended']
+        assert report['candidates'][0]['n'] == 28 and report['ranking'][0]['recommended']
+        assert all('test' not in row for row in report['candidates'])
         cli('adopt', 'ticket-bug', 'local', '--reason', 'local HTTP integration proof', '--json')
         promoted = json.loads(cli('promote', 'ticket-bug@v2', '--connections', models, '--json').stdout)
         assert promoted['evaluated'] and promoted['policy'] == 'ticket-bug@v2'

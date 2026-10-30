@@ -552,7 +552,7 @@ def read(path: Path | str) -> Comparison:
         raise ConfigError(f"{path}: invalid comparison snapshot: {exc}") from None
 
 def _row_summary(row: ComparisonRow) -> dict[str, Any]:
-    """The bounded candidate shape used by ``compare --json``."""
+    """The bounded candidate shape used by ``report --json``."""
     calls = row.calls
     latency = {
         "p50_ms": None if calls.latency is None else calls.latency.p50_ms,
@@ -636,7 +636,7 @@ def text(comparison: Comparison, *, offset: int = 0, limit: int = 12, candidate:
             f"scope: {comparison.scope}; as-of: {comparison.at}; provenance: {('saved snapshot (offline; not current certification)' if snapshot else 'current comparison')}",
             f"interpretation: {comparison.question_type} {json.dumps(comparison.kind_params.model_dump(mode='json'))}",
             f"question: {json.dumps(detail['question'], ensure_ascii=False)}",
-            f"metric definitions: {json.dumps(detail['metric_definitions'], ensure_ascii=False)}",
+            f"metric definitions: {json.dumps([d.model_dump(mode='json') for d in comparison.metric_definitions], ensure_ascii=False)}",
             f"metrics: {json.dumps(detail['metrics'], ensure_ascii=False)}",
             f"rule: {json.dumps(detail['rule'], ensure_ascii=False)}",
             f"calls: {json.dumps(detail['calls'], ensure_ascii=False)}",

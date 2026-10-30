@@ -1,4 +1,4 @@
-"""`s1flow rank` lists the candidates by the task's objectives and constraints; `s1flow adopt` writes the one a
+"""`s1flow report` lists the candidates by the task's objectives and constraints; `s1flow adopt` writes the one a
 person picks as the next policy. Nothing is called: the runs are already scored.
 
 The ranking (select.rank) only recommends: the primary objective, then among the candidates it cannot

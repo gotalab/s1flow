@@ -61,9 +61,7 @@ TABLE = (
     ("tasks", "every task: the policy on each channel, its candidate, the model id that answers, pinned or not"),
     ("models", "the line-up in s1flow.toml, and what --verify found each model takes"),
     ("run", "ask the models about a task's cases (cached): runs/<task>/"),
-    ("report", "score the runs: reports/<task>/<variant>/latest.{md,json}"),
-    ("compare", "compare every current model and question variant on development data (saved evidence only)"),
-    ("rank", "the candidates by the task's objectives and constraints, the ranking's pick marked"),
+    ("report", "every model and question variant on the saved runs, best first by the task's objective; --out DIR writes it"),
     ("adopt", "write a candidate as the task's next policy, with why (the next channel)"),
     ("promote", "point a channel (default current) at a policy version"),
     ("check", "compare two versions on today's test cases, case by case (the CI gate)"),
@@ -89,8 +87,8 @@ HELP = "\n".join([
 
 GITHUB_SCRIPT = "the Skill's script, python .agents/skills/s1flow/scripts/github.py (s1flow skill install writes it)"
 RENAMED = {  # commands renamed or removed: none runs under its old name, the error names what replaces it
-    "propose": "`rank` (the list) or `adopt` (write the one picked)", "improve": "`optimize TASK`", "gh": GITHUB_SCRIPT,
-    "github": GITHUB_SCRIPT,
+    "propose": "`report` (the list) or `adopt` (write the one picked)", "improve": "`optimize TASK`", "gh": GITHUB_SCRIPT,
+    "github": GITHUB_SCRIPT, "compare": "`report`", "rank": "`report`",
     "data": "`cases`", "release": "`policy`", "record-feedback": "`feedback record`",
 }
 
@@ -638,94 +636,96 @@ def run(a: argparse.Namespace) -> int:
 
 
 def report(a: argparse.Namespace) -> int:
-    """Score every run on the question and write reports/<task>/<variant>/latest.{md,json}; prints the Markdown.
-    The first report fixes the task's evaluation set (tasks/<task>/split.json)."""
-    from .eval import evalset
+    """Read the saved runs by the task's objective: every candidate on every question variant, best first, the
+    ranking's pick marked. No model is called and nothing is written but the evaluation set on first use (tasks/<task>/split.json)
+    and, with --out DIR, the comparison snapshot and a Markdown report per question. --from reads a saved snapshot offline."""
+    from .eval import adopt as adopting
+    from .eval import comparison, evalset
     from .eval import report as reporting
-    from .eval.task import load
-
-    t = load(project(a), a.task)
-    if a.variant != "base" and a.variant not in t.variants:
-        raise NotFound(f"{a.task} has no variant {a.variant!r}; variants: {', '.join(t.variants) or 'none'}")
-    fixing = not evalset.path(t).exists()
-    md = reporting.write(t, a.variant)
-    out = t.where.reports_dir / t.id / a.variant
-    wrote = f"wrote {_shown(out / 'latest.md')}, {_shown(out / 'latest.json')}" + (
-        f", {_shown(evalset.path(t))} (the evaluation set, fixed now)" if fixing else "")
-    if a.json:  # stdout is latest.json alone
-        print((out / "latest.json").read_text())
-        print(wrote, file=sys.stderr)
-        return 0
-    print(md)
-    print(wrote)
-    return 0
-
-
-def compare(a: argparse.Namespace) -> int:
-    """Compare every current model and question variant on saved development evidence.
-
-    The command deliberately emits a bounded summary.  A full, renderer-ready
-    snapshot is written only when ``--out`` is supplied; ``--from`` reads that
-    snapshot offline and never rescoring or certifies it as current.
-    """
-    from .eval import comparison
     from .eval.task import load
 
     if a.offset < 0:
         raise ConfigError("--offset is 0 or more")
     if a.from_path and a.task:
-        raise ConfigError("compare takes TASK or --from PATH, not both")
-    snapshot_path = Path(a.from_path) if a.from_path else None
-    if snapshot_path is not None:
+        raise ConfigError("report takes TASK or --from PATH, not both")
+    snapshot = Path(a.from_path) if a.from_path else None
+    task, listed, unranked = None, None, None
+    if snapshot is not None:
         for option in ("project", "connections"):
             if getattr(a, option, None) is not None:
-                raise ConfigError(f"--{option} does not apply with compare --from; the saved snapshot is self-contained")
-        result = comparison.read(snapshot_path)
+                raise ConfigError(f"--{option} does not apply with --from; the saved snapshot is self-contained")
+        if a.out:
+            raise ConfigError("--out writes a report of the current runs; with --from the snapshot is already saved")
     else:
         if not a.task:
-            raise ConfigError("compare needs TASK, or --from PATH")
+            raise ConfigError("report needs TASK, or --from PATH")
         task = load(project(a), a.task)
+        for note in evalset.ensure(task)[1]:
+            print(f"notice: {note}", file=sys.stderr)
+        if a.candidate is None:
+            try:
+                listed = adopting.shortlist(task)
+            except ConfigError:
+                raise
+            except S1flowError as e:  # nothing to rank yet (no complete runs, a question no policy ships): still show what there is
+                unranked = str(e.args[0] if e.args else e)
+    shown = str(snapshot) if snapshot else None
+    result = None
+    if snapshot is not None:
+        result = comparison.read(snapshot)
+    else:
+        assert task is not None
         result = comparison.collect(task, include_charts=bool(a.out))
 
     if a.out:
+        assert task is not None and result is not None
         out = Path(a.out)
-        out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text(result.model_dump_json(by_alias=True, indent=1) + "\n")
+        if out.exists() and not out.is_dir():
+            raise ConfigError(f"--out takes a directory; {out} is a file")
+        out.mkdir(parents=True, exist_ok=True)
+        (out / "comparison.json").write_text(result.model_dump_json(by_alias=True, indent=1) + "\n")
+        wrote = [out / "comparison.json"]
+        for variant in ["base", *task.variants]:
+            if reporting.available_models(task, variant):
+                reporting.write(task, variant, out)
+                wrote += [out / f"{variant}.md", out / f"{variant}.json"]
+        print("wrote " + ", ".join(_shown(p) for p in wrote), file=sys.stderr)
 
     if a.candidate:
-        # An exact candidate detail includes the question and all measured
-        # call/failure metadata, while charts remain in --out only.
-        payload = comparison.summary(result, candidate=a.candidate, snapshot=str(snapshot_path) if snapshot_path else None)
+        assert result is not None
         if a.json:
-            print(json.dumps(payload, ensure_ascii=False, indent=1))
+            print(json.dumps(comparison.summary(result, candidate=a.candidate, snapshot=shown), ensure_ascii=False, indent=1))
         else:
-            print(comparison.text(result, candidate=a.candidate, snapshot=str(snapshot_path) if snapshot_path else None))
-        if a.out:
-            print(f"wrote {_shown(Path(a.out))}", file=sys.stderr)
+            print(comparison.text(result, candidate=a.candidate, snapshot=shown))
         return 0
-
-    payload = comparison.summary(result, offset=a.offset, limit=a.limit, snapshot=str(snapshot_path) if snapshot_path else None)
     if a.json:
+        assert result is not None
+        payload = comparison.summary(result, offset=a.offset, limit=a.limit, snapshot=shown)
+        if task is not None:  # the ranking: the candidates ordered by the task's objectives and constraints
+            payload["ranking"] = None if listed is None else [r.model_dump(mode="json") for r in listed.rows()[a.offset:a.offset + a.limit]]
+            if unranked:
+                payload["unranked"] = unranked
         print(json.dumps(payload, ensure_ascii=False, indent=1))
-    else:
-        print(comparison.text(result, offset=a.offset, limit=a.limit, snapshot=str(snapshot_path) if snapshot_path else None))
-    if a.out:
-        print(f"wrote {_shown(Path(a.out))}", file=sys.stderr)
-    return 0
-
-
-def rank(a: argparse.Namespace) -> int:
-    """List the candidates by the task's objectives and constraints, the ranking's pick marked. Writes nothing."""
-    from .eval import adopt as adopting
-    from .eval.task import load
-
-    listed = adopting.shortlist(load(project(a), a.task))
-    rows = listed.rows()
-    if a.json:
-        print(json.dumps([r.model_dump(mode="json") for r in rows], indent=1))
         return 0
-    _print_shortlist(a.task, rows)
-    _print_weights(listed)
+    if listed is not None:
+        assert task is not None and result is not None
+        rows = listed.rows()
+        _print_shortlist(task.id, rows[a.offset:a.offset + a.limit])
+        if len(rows) > a.offset + a.limit:
+            print(f"  … {len(rows) - a.offset - a.limit} more: --offset {a.offset + a.limit}")
+        ranked = {r.candidate for r in rows}
+        if left := [f"{r.candidate} ({', '.join(r.excluded) or 'incomplete'})" for r in result.candidates if r.candidate not in ranked]:
+            print(f"not ranked: {'; '.join(left)}")
+        if outside := [f"{r.candidate} ({', '.join(r.excluded)})" for r in rows if r.excluded]:
+            print(f"outside the constraints: {'; '.join(outside)}")
+        _print_weights(listed)
+        print(f"Every metric of each candidate: s1flow report {task.id} --json, or --candidate NAME; "
+              f"the snapshot and a Markdown report: s1flow report {task.id} --out DIR")
+        return 0
+    assert result is not None
+    print(comparison.text(result, offset=a.offset, limit=a.limit, snapshot=shown))
+    if unranked:
+        print(f"not ranked: {unranked}")
     return 0
 
 
@@ -1008,26 +1008,17 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--concurrency", type=positive, help="calls in flight per model (default: the model's own); with it, models run one after another. 1 times each call alone")
 
     p = _command(sub, "report", report, context=("project", "connections"))
-    p.add_argument("task")
-    p.add_argument("--variant", default="base", help="the task's question (base) or one of its variants")
-    p.add_argument("--json", action="store_true", help="print latest.json (every candidate's evaluation) instead of the Markdown")
-
-    p = _command(sub, "compare", compare, context=("project", "connections"))
-    p.add_argument("task", nargs="?", help="TASK to compare from current saved runs")
-    p.add_argument("--json", action="store_true", help="print a bounded machine-readable summary")
-    p.add_argument("--limit", type=positive, default=12, help="maximum candidates in the summary (default: 12)")
-    p.add_argument("--offset", type=int, default=0, help="number of candidates to skip (default: 0)")
-    p.add_argument("--candidate", help="show exact candidate detail: model[/variant]")
-    p.add_argument("--out", type=Path, help="write the full comparison snapshot, including chart series")
-    p.add_argument("--from", dest="from_path", type=Path, help="inspect a saved comparison snapshot offline")
-
-    p = _command(sub, "rank", rank, context=("project", "connections"))
-    p.add_argument("task")
-    p.add_argument("--json", action="store_true")
+    p.add_argument("task", nargs="?", help="the task (or --from PATH)")
+    p.add_argument("--json", action="store_true", help="every metric of each candidate, and the ranking, as JSON")
+    p.add_argument("--limit", type=positive, default=12, help="candidates shown, in the ranking and the list (default: 12)")
+    p.add_argument("--offset", type=int, default=0, help="candidates to skip (default: 0)")
+    p.add_argument("--candidate", help="one candidate in full: model[:version][/variant]")
+    p.add_argument("--out", type=Path, metavar="DIR", help="write comparison.json (with the chart series) and <variant>.md / .json for each question")
+    p.add_argument("--from", dest="from_path", type=Path, metavar="PATH", help="read a saved comparison.json offline")
 
     p = _command(sub, "adopt", adopt, context=("project", "connections"))
     p.add_argument("task")
-    p.add_argument("candidate", help="the candidate, model[:version][/variant] as `s1flow rank` names it")
+    p.add_argument("candidate", help="the candidate, model[:version][/variant] as `s1flow report` names it")
     p.add_argument("--reason", required=True, help="why this one (kept in the policy)")
     p.add_argument("--json", action="store_true")
 

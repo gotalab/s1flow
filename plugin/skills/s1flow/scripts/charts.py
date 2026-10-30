@@ -2,7 +2,7 @@
 
     python charts.py comparison.json --out comparison.html
 
-Create the input with `s1flow compare TASK --out comparison.json`. This renderer
+Create the input with `s1flow report TASK --out DIR` (DIR/comparison.json). This renderer
 uses only the Python standard library: no model calls, evaluation or rescoring.
 """
 from __future__ import annotations
@@ -21,7 +21,7 @@ def read_snapshot(path: Path) -> dict[str, Any]:
 
     data = json.loads(path.read_text(encoding='utf-8'), parse_constant=nonfinite)
     if not isinstance(data, dict) or data.get('schema') != 's1flow/comparison@2' or data.get('scope') != 'dev':
-        raise ValueError('expected a v2 dev snapshot; regenerate with s1flow compare TASK --out comparison.json')
+        raise ValueError('expected a v2 dev snapshot; regenerate with s1flow report TASK --out DIR')
     if not isinstance(data.get('task'), str) or not isinstance(data.get('objective'), dict):
         raise ValueError('comparison is missing its task or objective')
     rows = data.get('candidates')
@@ -51,7 +51,7 @@ def render(data: dict[str, Any]) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split('\n\n')[0])
-    parser.add_argument('snapshot', type=Path, help='JSON saved by s1flow compare TASK --out PATH')
+    parser.add_argument('snapshot', type=Path, help='DIR/comparison.json saved by s1flow report TASK --out DIR')
     parser.add_argument('--out', type=Path, help='HTML destination (default: beside the snapshot)')
     args = parser.parse_args(argv)
     out = args.out or args.snapshot.with_suffix('.html')

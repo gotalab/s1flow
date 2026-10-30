@@ -48,7 +48,7 @@ def test_help_shows_only_effective_configuration_options(tmp_path, words, expect
 @pytest.mark.parametrize("option", ["--project", "--connections"])
 def test_offline_comparison_rejects_live_configuration(tmp_path, option):
     snapshot = ROOT / "schema/fixtures/comparison-2.valid.json"
-    done = cli("compare", "--from", str(snapshot), option, str(tmp_path / "unused"), "--json", cwd=tmp_path)
+    done = cli("report", "--from", str(snapshot), option, str(tmp_path / "unused"), "--json", cwd=tmp_path)
     assert done.returncode == 2 and "--from" in done.stderr and option in done.stderr
     assert "does not apply" in done.stderr and "Traceback" not in done.stderr
 
