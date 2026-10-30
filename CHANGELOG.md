@@ -36,6 +36,13 @@
   commit (the pull request's base, or the commit before a push) and passes it as `--against`; its `against`
   input now defaults to that; when it cannot read the base commit, it warns and checks current alone. `check`
   no longer writes `reports/<task>/checks.json`.
+- Evaluation records (`vN.evaluation.json`) are now `s1flow/policy-evaluation@3` (`schema/policy-evaluation-3.json`;
+  `evaluated-policy-2.json` is now `evaluated-policy-3.json`). `selection.recommended` is gone: s1flow records who
+  picked and why, not what it would have picked. `evidence.test_uses` is gone: it counted only the uses on the machine
+  that ran, and CI lost them. `selection.forced` is new: `true` when `adopt --force` wrote a version below on the
+  held-out test, and `reason` says why. `@2` records still read, as `@3`, never forced: 0.1.0a1 stored a
+  version below on the held-out test without `--force`, so a `@2` record cannot say. `forced` is refused on a record
+  whose held-out test is not below. `adopt --json` prints the new shape.
 - `s1flow tasks` shows each task's current policy; its `--json` has `current` (a version) in place of
   `channels`, and each policy `current: true|false` in place of `channels: [...]`.
 

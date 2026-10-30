@@ -22,6 +22,7 @@ from s1flow.eval.cases import Correction, FeedbackCase
 from s1flow.eval.evalset import SplitFile
 from s1flow.eval.comparison import Comparison
 from s1flow.eval.policy import EvaluatedPolicy, EvaluationRecord
+from s1flow.eval import policy_v2
 from s1flow.eval.records import PredictionRecord
 from s1flow.policies.policy_set import PolicySet
 from s1flow.policies.log import Decision, Log
@@ -67,9 +68,10 @@ SCHEMAS: dict[str, Callable[[], dict[str, Any]]] = {
     "split-1": lambda: of(SplitFile),
     "comparison-2": lambda: of(Comparison),
     "policy-2": lambda: of(PolicySpec) | {"title": "Policy"},  # what a policy file holds
-    "evaluated-policy-2": lambda: of(EvaluatedPolicy),
+    "evaluated-policy-3": lambda: of(EvaluatedPolicy),
     "log-2": lambda: {"title": "Log", **TypeAdapter(Log).json_schema(by_alias=True)},
-    "policy-evaluation-2": lambda: of(EvaluationRecord),
+    "policy-evaluation-3": lambda: of(EvaluationRecord),
+    "policy-evaluation-2": lambda: of(policy_v2.EvaluationRecord),  # still read (upgraded to @3), no longer written
     "run-2": lambda: of(PredictionRecord),
     "response-1": lambda: of(Response),
     "decision-2": lambda: of(Decision),
