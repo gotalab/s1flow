@@ -19,6 +19,7 @@
 - The Agent Skill is one `SKILL.md` and six references by stage: `collect`, `measure`, `ship`, `app`, `learn` and
   `setup`. It says what the agent decides, what it asks the person, and to follow `tasks/<task>/criteria.md` when
   the person has written down how to decide. Copies an older s1flow wrote are updated by `init --skill --force`.
+- `s1flow init` run inside a project (a directory with `s1flow.toml`) adds to it instead of making `s1flow/s1flow/`.
 - `s1flow optimize prompt TASK` is now `s1flow optimize TASK`. Its `--pr` and `--dry-run` options are gone: open
   the pull request with your agent or `gh pr create`; its `--json` result no longer has `branch`.
 - `s1flow compare` and `s1flow rank` merge into `s1flow report`, which now prints the candidates ordered by the
@@ -83,7 +84,7 @@
   flags one that edits files under `tasks/<task>/` or `s1flow.toml`, which set the rules and the cases the check
   applies.
 - `report` marks no pick: the `*` mark and `ranking[].recommended` are gone, and `=` marks the candidates the
-  objective cannot tell apart at the top (`ranking[].tied_with_best`). The Markdown report's headline says which candidate
+  objective cannot tell apart at the top (`ranking[].tied`). The Markdown report's headline says which candidate
   the tiebreak puts first instead of which is "chosen", and its `◎` is now `=`. The weights table shows the
   candidates tied at the top with the weights halved and doubled, in place of a recommended one.
 - A `tiebreak` with neither `"latency"` nor `"cost"` no longer has them added after it: with no tiebreak, the
