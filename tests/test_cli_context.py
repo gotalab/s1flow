@@ -11,12 +11,8 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 @pytest.mark.parametrize("command, option", [
-    (["policy", "create", str(ROOT / "schema/fixtures/policy-2.valid.json"), "--check"], "--project"),
-    (["policy", "create", str(ROOT / "schema/fixtures/policy-2.valid.json")], "--project"),
-    (["policy", "export"], "--connections"),
+    (["export"], "--connections"),
     (["init", "new-project"], "--project"),
-    (["guide", "cli"], "--connections"),
-    (["skill", "path"], "--project"),
     (["cases", "check", "ticket"], "--connections"),
     (["cases", "correct", "ticket", "case-1", "--verdict", "keep", "--reason", "checked"], "--connections"),
 ])
@@ -30,13 +26,12 @@ def test_unused_context_options_fail_before_work(tmp_path, command, option, pref
 
 
 @pytest.mark.parametrize("words, expected", [
-    (["policy", "create"], {"--connections"}),
-    (["policy", "export"], {"--project"}),
+    (["export"], {"--project"}),
+    (["adopt"], {"--project", "--connections"}),
     (["cases", "check"], {"--project"}),
     (["cases", "review"], {"--project", "--connections"}),
     (["decide"], {"--project", "--connections"}),
     (["init"], set()),
-    (["guide"], set()),
 ])
 def test_help_shows_only_effective_configuration_options(tmp_path, words, expected):
     done = cli(*words, "--help", cwd=tmp_path)
@@ -54,8 +49,7 @@ def test_offline_comparison_rejects_live_configuration(tmp_path, option):
 
 
 def test_group_prefix_does_not_bypass_leaf_option_scope(tmp_path):
-    policy = ROOT / "schema/fixtures/policy-2.valid.json"
-    done = cli("policy", "--project", str(tmp_path), "create", str(policy), "--check", cwd=tmp_path)
-    assert done.returncode == 2 and "--project does not apply" in done.stderr
+    done = cli("cases", "--connections", str(tmp_path / "c.toml"), "check", "ticket", cwd=tmp_path)
+    assert done.returncode == 2 and "--connections does not apply" in done.stderr
 
 

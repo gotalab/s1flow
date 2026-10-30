@@ -18,7 +18,7 @@ inputs:
     description: An application id for log context (an issue or PR number); it may repeat and is not a feedback key.
     default: ""
   path:
-    description: A policy file, or a policy set from `s1flow policy export` (policies.json), instead of the project's policies/.
+    description: A policy file, or a policy set from `s1flow export` (policies.json), instead of the project's policies/.
     default: ""
   log:
     description: Append the answer to this JSONL file (keep it, e.g. as an artifact, for `s1flow feedback`).

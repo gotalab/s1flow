@@ -156,7 +156,7 @@ def test_cli_explicit_project_and_relative_connection_path(tmp_path, prefix):
 
 def test_missing_project_error_has_search_location_and_next_step(tmp_path):
     (tmp_path / ".git").mkdir()
-    done = cli("tasks", cwd=tmp_path)
+    done = cli("report", cwd=tmp_path)
     assert done.returncode == 2 and "Traceback" not in done.stderr
     assert str(tmp_path) in done.stderr and "--project" in done.stderr and "s1flow init" in done.stderr
 
@@ -181,7 +181,7 @@ def test_nested_cli_options_and_missing_policy_authorization(tmp_path):
     source = tmp_path / "policy.json"
     source.write_text(specification().dump())
     # A connection grant before a nested subcommand is retained, and binding errors stay readable.
-    done = cli("--connections", str(config), "policy", "create", str(source), "--check", cwd=tmp_path)
+    done = cli("--connections", str(config), "adopt", "--spec", str(source), "--check", cwd=tmp_path)
     assert done.returncode == 2 and "unknown connection 'trusted'" in done.stderr
     assert "toy" in done.stderr and str(config) in done.stderr and "Traceback" not in done.stderr
     done = cli("decide", "--policy", "ticket@v1", "--path", str(source), "--state", '"bug"',
@@ -192,7 +192,7 @@ def test_nested_cli_options_and_missing_policy_authorization(tmp_path):
 def test_explicit_missing_project_never_falls_back(tmp_path):
     connections(tmp_path / "s1flow.toml")
     missing = tmp_path / "wrong"
-    done = cli("tasks", "--project", str(missing), cwd=tmp_path)
+    done = cli("report", "--project", str(missing), cwd=tmp_path)
     assert done.returncode == 2 and str(missing) in done.stderr and "--project" in done.stderr
 
 

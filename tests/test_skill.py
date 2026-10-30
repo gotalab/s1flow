@@ -1,5 +1,5 @@
-"""The Agent Skill the package carries: `s1flow skill install`, `skill path`, `guide`, `init` leaving it out, the wheel
-holding it, and plugin/skills/ kept a copy of skills/."""
+"""The Agent Skill the package carries: `s1flow init --skill`, `init` leaving it out unless asked, the wheel holding
+it, and plugin/skills/ kept a copy of skills/."""
 
 import json
 import re
@@ -16,7 +16,7 @@ from s1flow import skill
 from s1flow.cli import main as base
 
 REPO = Path(__file__).resolve().parents[1]
-TOPICS = ["adopt-and-run", "charts", "cli", "collect", "compare", "fix", "logs", "new-version", "review", "sandbox", "task", "workflow"]
+TOPICS = ["app", "collect", "learn", "measure", "setup", "ship"]
 
 
 def run(*args, capsys):
@@ -41,7 +41,7 @@ def test_the_skill_routes_each_job_to_one_reference():
     assert src == REPO / "skills" / "s1flow"
     text = (src / "SKILL.md").read_text()
     assert text.startswith("---\nname: s1flow\ndescription:")
-    assert skill.topics() == TOPICS
+    assert sorted(p.stem for p in (src / "references").glob("*.md")) == TOPICS
     assert all(f"`references/{t}.md`" in text for t in TOPICS)
     assert len(text.splitlines()) < 50
 
@@ -59,14 +59,14 @@ def test_the_log_lines_in_the_guide_are_what_s1flow_reads():
 
     from s1flow.policies.log import Log
 
-    text = (skill.source() / "references" / "logs.md").read_text()
+    text = (skill.source() / "references" / "app.md").read_text()
     lines = re.findall(r"```json\n(.+?)\n```", text)
     got = [TypeAdapter(Log).validate_json(line).type for line in lines]
     assert got == ["answered", "failed", "feedback"]
 
 
-def test_install_writes_both_agent_dirs_at_the_git_root(repo, capsys):
-    code, out, _ = run("skill", "install", capsys=capsys)
+def test_init_skill_writes_both_agent_dirs_at_the_git_root(repo, capsys):
+    code, out, _ = run("init", "--skill", capsys=capsys)
     assert code == 0
     for d in (".agents/skills/s1flow", ".claude/skills/s1flow"):
         copy = repo / d
@@ -78,48 +78,36 @@ def test_install_writes_both_agent_dirs_at_the_git_root(repo, capsys):
     assert not (repo / "sub" / ".claude").exists() and not (repo.parent / "home").exists()
 
 
-def test_install_dir_and_user(repo, capsys):
-    a, b = repo.parent / "a", repo.parent / "b"
-    assert run("skill", "install", "--dir", str(a), "--dir", str(b), capsys=capsys)[0] == 0
-    assert (a / "s1flow" / "SKILL.md").is_file() and (b / "s1flow" / "references" / "review.md").is_file()
-    assert not (repo / ".claude").exists()
-
-    assert run("skill", "install", "--user", capsys=capsys)[0] == 0
-    home = repo.parent / "home"
-    assert (home / ".agents/skills/s1flow/SKILL.md").is_file() and (home / ".claude/skills/s1flow/SKILL.md").is_file()
-    assert not (repo / ".claude").exists()
-
-
 def test_a_file_changed_there_is_kept_unless_forced(repo, capsys):
     copy = repo / ".claude/skills/s1flow"
     skill.install(repo / ".claude/skills")
-    mine = copy / "references" / "review.md"
+    mine = copy / "references" / "ship.md"
     mine.write_text("our own notes\n")
 
-    code, out, _ = run("skill", "install", "--dir", str(repo / ".claude/skills"), capsys=capsys)
-    assert code == 0 and "  skipped references/review.md: changed there (--force overwrites it)" in out
+    code, out, _ = run("init", "--skill", capsys=capsys)
+    assert code == 0 and "  skipped references/ship.md: changed there (--force overwrites it)" in out
     assert f"{len(TOPICS) + 3} unchanged, 1 skipped" in out and mine.read_text() == "our own notes\n"
-    assert skill.install(repo / ".claude/skills").skipped == ["references/review.md"]  # still protected the next time
+    assert skill.install(repo / ".claude/skills").skipped == ["references/ship.md"]  # still protected the next time
 
-    run("skill", "install", "--dir", str(repo / ".claude/skills"), "--force", capsys=capsys)
-    assert mine.read_text() == (skill.source() / "references" / "review.md").read_text()
+    run("init", "--skill", "--force", capsys=capsys)
+    assert mine.read_text() == (skill.source() / "references" / "ship.md").read_text()
 
 
 def test_an_older_copy_is_updated_and_a_copy_made_by_hand_is_not_overwritten(repo):
     copy = repo / ".claude/skills/s1flow"
     skill.install(repo / ".claude/skills")
-    old = copy / "references" / "fix.md"
+    old = copy / "references" / "learn.md"
     old.write_text("what 0.0.1 wrote\n")  # as an older s1flow wrote it: the marker records this content
     (copy / "references" / "gone.md").write_text("a reference this version dropped\n")
     m = json.loads((copy / skill.MARKER).read_text())
-    m["s1flow_version"], m["files"]["references/fix.md"] = "0.0.1", skill._hash(old.read_bytes())
+    m["s1flow_version"], m["files"]["references/learn.md"] = "0.0.1", skill._hash(old.read_bytes())
     m["files"]["references/gone.md"] = skill._hash((copy / "references" / "gone.md").read_bytes())
     (copy / skill.MARKER).write_text(json.dumps(m))
-    assert skill.stale(repo) == [f"{copy} is from s1flow 0.0.1, this is {skill.version()}: s1flow skill install updates it"]
+    assert skill.stale(repo) == [f"{copy} is from s1flow 0.0.1, this is {skill.version()}: s1flow init --skill --force updates it"]
 
     done = skill.install(repo / ".claude/skills")
-    assert (done.updated, done.removed, done.skipped) == (["references/fix.md"], ["references/gone.md"], [])
-    assert old.read_text() == (skill.source() / "references" / "fix.md").read_text() and skill.stale(repo) == []
+    assert (done.updated, done.removed, done.skipped) == (["references/learn.md"], ["references/gone.md"], [])
+    assert old.read_text() == (skill.source() / "references" / "learn.md").read_text() and skill.stale(repo) == []
 
     by_hand = repo / "hand"
     shutil.copytree(skill.source(), by_hand / "s1flow")
@@ -130,30 +118,24 @@ def test_an_older_copy_is_updated_and_a_copy_made_by_hand_is_not_overwritten(rep
 def test_a_link_to_the_package_copy_is_left_alone(repo, capsys):
     (repo / ".claude/skills").mkdir(parents=True)
     (repo / ".claude/skills/s1flow").symlink_to(skill.source())
-    _, out, _ = run("skill", "install", "--dir", str(repo / ".claude/skills"), capsys=capsys)
+    _, out, _ = run("init", "--skill", capsys=capsys)
     assert "it is the package's own copy (a link)" in out and not (skill.source() / skill.MARKER).exists()
-
-
-def test_path_and_guide(capsys):
-    assert run("skill", "path", capsys=capsys)[1].strip() == str(skill.source())
-    code, out, _ = run("guide", capsys=capsys)
-    assert code == 0 and out.startswith("# s1flow\n") and "| The job | Read |" in out and "description:" not in out
-    _, out, _ = run("guide", "review", capsys=capsys)
-    assert out == (skill.source() / "references" / "review.md").read_text()
-    code, _, err = run("guide", "nope", capsys=capsys)
-    assert code == 2 and err.strip() == f"error: no guide on 'nope'; the topics: {', '.join(TOPICS)}"
 
 
 def test_the_skill_commands_run_on_the_base_install(tmp_path):
     code = ("import sys\nfor m in ('numpy', 'scipy', 'sklearn', 'litellm', 'PIL'): sys.modules[m] = None\n"
-            f"sys.argv = ['s1flow', 'skill', 'install', '--dir', {str(tmp_path)!r}]\nfrom s1flow.cli import main; main()")
-    done = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True)
+            "sys.argv = ARGS\nfrom s1flow.cli import main; main()")
+    (tmp_path / ".git").mkdir()
+    done = subprocess.run([sys.executable, "-c", code.replace("ARGS", "['s1flow', 'init', '--skill', '--task', 't']")], capture_output=True, text=True, cwd=tmp_path)
     assert done.returncode == 0, done.stderr
-    assert (tmp_path / "s1flow" / "SKILL.md").is_file()
+    assert (tmp_path / ".claude/skills/s1flow/SKILL.md").is_file() and (tmp_path / "s1flow/tasks/t/task.py").is_file()
+    for args in (["export"], ["adopt", "--spec", "nope.json", "--check"]):  # the base install runs them (here: nothing to export, no file)
+        ran = subprocess.run([sys.executable, "-c", code.replace("ARGS", repr(["s1flow", *args]))], capture_output=True, text=True, cwd=tmp_path)
+        assert "Traceback" not in ran.stderr and "s1flow[eval]" not in ran.stderr, ran.stderr
 
 
 def test_init_writes_only_the_project_unless_asked(repo):
-    """The Skill comes from the plugin or `skill install`, and the CI workflow only with --ci."""
+    """The Skill only with --skill (the plugin brings it too), and the CI workflow only with --ci."""
     done = cli("init")
     assert done.exit_code == 0, done.output
     assert (repo / "sub" / "s1flow" / "s1flow.toml").is_file()
@@ -214,3 +196,14 @@ def test_the_chart_page_draws_from_a_shared_snapshot_without_evaluation_dependen
     assert all(r["n"] == dev_n < 40 for r in data["candidates"])
     assert all(len(r["charts"]["threshold_sweep"]) >= 101 and "cases" not in r for r in data["candidates"])
     assert all(sum(b["positives"] + b["negatives"] for b in r["charts"]["distribution"]) == dev_n for r in data["candidates"])
+
+
+def test_init_inside_the_project_adds_to_it(repo, capsys):
+    assert run("init", capsys=capsys)[0] == 0
+    project = repo / "sub" / "s1flow"
+    import os
+    os.chdir(project)
+    code, out, _ = run("init", "--skill", capsys=capsys)
+    assert code == 0 and not (project / "s1flow").exists() and (repo / ".claude/skills/s1flow/SKILL.md").is_file()
+    code, _, err = run("init", "--force", capsys=capsys)
+    assert code == 2 and "--force overwrites changed Skill files: it goes with --skill" in err

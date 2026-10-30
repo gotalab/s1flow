@@ -38,7 +38,7 @@ command writes it. Cases added later are placed by a hash of their ID, so the fi
 labelled cases to hold out a test share, `run` still asks the models and writes the file on a later run.
 
 `s1flow init` creates an `s1flow/` project and nothing else. With `--ci` it also writes a pull request check to
-`.github/workflows/`; the Skill comes from the plugin or `s1flow skill install` (see
+`.github/workflows/`; with `--skill`, the Agent Skill (it also comes with the plugin; see
 [CLI, agents and CI](cli-and-ci.md#the-agent-skill)). The project's line-up compares three decision models that all work with a single key, `OPENROUTER_API_KEY`
 (about $0.02 per 1,000 calls on issue-sized inputs). Cases can come from GitHub issues, app logs or labels you
 already have. Fetching cases from GitHub (the Skill's `scripts/github.py`) needs the `gh` CLI, installed and signed in.

@@ -88,7 +88,7 @@ only-include = ["src", "skills", "README.md"]
 [tool.hatch.build.targets.wheel]
 packages = ["src/s1flow"]
 
-# The Agent Skill travels with the package, so a base install can write it (s1flow skill install).
+# The Agent Skill travels with the package, so a base install can write it (s1flow init --skill).
 [tool.hatch.build.targets.wheel.force-include]
 "skills/s1flow" = "s1flow/skills/s1flow"
 

@@ -6,10 +6,19 @@
 
 - `s1flow github fetch | audit | rationale` left the CLI. The same steps are the Skill's script,
   `python .agents/skills/s1flow/scripts/github.py fetch | audit | rationale owner/repo [--project DIR]`
-  (`s1flow skill install` writes it; standard library and the `gh` CLI only). It reads and writes the same
+  (`s1flow init --skill` writes it; standard library and the `gh` CLI only). It reads and writes the same
   `data/raw/github/` files and finds the project as the CLI did, so a fetch already made carries on where it stopped.
-- `s1flow policy validate FILE` is now `s1flow policy create FILE --check`. With `--connections` it still checks
-  the binding. `policy create` takes `--connections` too and checks the binding before it saves.
+- `s1flow policy validate FILE` is now `s1flow adopt --spec FILE --check`. With `--connections` it still checks
+  the binding.
+- The CLI has 12 commands. `s1flow tasks` is `s1flow report` with no task (each task's current version, and the
+  last reason in `history.jsonl`). `s1flow policy create FILE` is `s1flow adopt --spec FILE --reason "..."` (with
+  `--root` outside a project), and `--check` validates only. `s1flow policy export` is `s1flow export`.
+  `s1flow skill install` is `s1flow init --skill` (the project's `.agents/skills/` and `.claude/skills/`; its
+  `--dir` and `--user` are gone), and `s1flow skill path` and `s1flow guide` are gone: agents read the written
+  Skill. Each removed command prints its replacement and exits 2.
+- The Agent Skill is one `SKILL.md` and six references by stage: `collect`, `measure`, `ship`, `app`, `learn` and
+  `setup`. It says what the agent decides, what it asks the person, and to follow `tasks/<task>/criteria.md` when
+  the person has written down how to decide. Copies an older s1flow wrote are updated by `init --skill --force`.
 - `s1flow optimize prompt TASK` is now `s1flow optimize TASK`. Its `--pr` and `--dry-run` options are gone: open
   the pull request with your agent or `gh pr create`; its `--json` result no longer has `branch`.
 - `s1flow compare` and `s1flow rank` merge into `s1flow report`, which now prints the candidates ordered by the
@@ -25,8 +34,7 @@
   version and makes it current in `channels.json`, so the pull request shows the switch and its merge ships it.
 - Only `adopt` points `current`. `adopt TASK@vN --reason` is the rollback, and `adopt --spec FILE --reason` saves an
   unevaluated runtime spec as the next version and makes it current; both run on the base install, and outside an
-  s1flow project with `--root` (and `--connections` for `--spec`). `policy create`
-  is `adopt --spec` with `--root`, and now needs `--reason` (`--check` does not).
+  s1flow project with `--root` (and `--connections` for `--spec`).
 - Each switch appends a line to `policies/<task>/history.jsonl` (`schema/history-1.json`): when, the version, the one
   before, who, why, and for a measured candidate the held-out test's verdict and whether `--force` wrote it. A
   candidate `adopt` refuses as below on the held-out test gets a `refused` line too.
