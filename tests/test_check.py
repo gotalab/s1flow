@@ -283,6 +283,13 @@ def test_a_cost_not_known_is_not_free_and_a_list_price_estimates_it(task):
     assert s.cached == 20 and s.cost_source == "list" and s.cost_per_10k_usd == pytest.approx(100 * 1.0 / 1_000_000 * 10_000)
 
 
+def test_a_task_with_no_current_version_checks_the_one_asked_for(task):
+    ship(task, policy(1, "good"))
+    (task.policies.dir("toy") / "channels.json").unlink()  # 0.1.0a1 left only `next`: no current
+    r = check.check(task, against="v1")
+    assert [s.name for s in r.sides] == ["v1"] and r.exit == 0
+
+
 def test_check_writes_no_record_and_promote_is_gone(task, monkeypatch):
     ship(task, policy(1, "good"), policy(2, "good"), candidate=2)
     assert check.check(task, against="v1").verdict == "no_difference"

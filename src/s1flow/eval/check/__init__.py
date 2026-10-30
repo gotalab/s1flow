@@ -97,7 +97,8 @@ def pick(task: Task, spec: str) -> tuple[str, EvaluatedPolicy]:
 def default_candidate(task: Task, against: EvaluatedPolicy) -> str | None:
     """Current when against is another version (a pull request that adopted one), else an edit to the shipped
     question (a pull request that changes it before adopting it), else none."""
-    if task.policies.current(task.id) != against.spec.version:
+    current = task.policies.current(task.id)
+    if current is not None and current != against.spec.version:
         return CURRENT
     q = _current(task, against)
     if q is not None and q != against.spec.question:
