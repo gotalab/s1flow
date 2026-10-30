@@ -65,7 +65,6 @@ class CheckResult(BaseModel):
     reasons: list[str] = []
     notes: list[str] = []
     need_calls: dict[str, int] = {}  # pending: calls each version would make
-    test_uses: int = 0
 
     @property
     def exit(self) -> int:
@@ -149,8 +148,8 @@ def compare(
                 task.input_adapter_digest != policy.evidence.input_adapter_digest):
             fresh_notes.append(f"{name}: execution conditions changed; measured again with the current binding and input adapter")
     changed = custom_code(task, versions)  # before the split is made: a missing function leaves nothing behind
-    sf, made = evalset.ensure(task)  # after the policies are found: a failed check leaves nothing behind
-    notes = made + (notes or []) + changed + fresh_notes
+    sf = evalset.fixed(task)  # the test share the first run fixed (committed with the task)
+    notes = (notes or []) + changed + fresh_notes
     by_id = task.load_cases().by_id()
     test = [i for i in sf.ids("test") if i in by_id and by_id[i].label is not None]
     if not test:
@@ -189,15 +188,13 @@ def compare(
     cap, cost = task.constraints.cost_per_10k_usd, summaries[-1].cost_per_10k_usd
     if cap is not None and (cost is None or summaries[-1].cost_unknown):
         return CheckResult(task=task.id, n=len(cases), sample=sample, verdict="pending", sides=summaries, notes=notes,
-                           reasons=[f"{checked.name}: API cost constraint cannot be verified because cost is unknown"],
-                           test_uses=evalset.record_use(task, "check", " vs ".join(s.policy.spec.ref for s in sides)))
+                           reasons=[f"{checked.name}: API cost constraint cannot be verified because cost is unknown"])
     if cap is not None and cost is not None and cost > cap:
         reasons.append(f"{checked.name}: the API cost is {usd(cost, 2)} per 10k, above the constraint {usd(cap, 2)}")
     p99_cap, p99 = task.constraints.latency_p99_ms, summaries[-1].latency_p99_ms
     if p99_cap is not None and p99 is None:
         return CheckResult(task=task.id, n=len(cases), sample=sample, verdict="pending", sides=summaries, notes=notes,
-                           reasons=[f"{checked.name}: latency constraint cannot be verified because latency is unknown"],
-                           test_uses=evalset.record_use(task, "check", " vs ".join(s.policy.spec.ref for s in sides)))
+                           reasons=[f"{checked.name}: latency constraint cannot be verified because latency is unknown"])
     if p99_cap is not None and p99 is not None and p99 > p99_cap:
         reasons.append(f"{checked.name}: p99 is {p99:.0f}ms, above the constraint {p99_cap:.0f}ms (a cached answer keeps the time it took when asked; few cases make it noisy)")
     verdict: Verdict = "pass"
@@ -226,10 +223,7 @@ def compare(
             if hi_c < 0 if c.at_least else lo_c > 0:
                 reasons.append(f"the {c.what} is {'lower' if c.at_least else 'higher'} than {base.name}'s (the difference's 95% interval is {'below' if c.at_least else 'above'} 0)")
         verdict = "better" if better else "no_difference"
-    uses = evalset.record_use(task, "check", " vs ".join(s.policy.spec.ref for s in sides))
-    if uses > evalset.MANY_USES:
-        notes.append(f"this test share has been read {uses} times; to keep from fitting to it, add new cases to it (s1flow feedback measure)")
     return CheckResult(
         task=task.id, n=len(cases), sample=sample, verdict="fail" if reasons else verdict, primary_label=o0.label,
-        target_accuracy=task.coverage_target, data_sha256=sha, sides=summaries, diff=diffs, reasons=reasons, notes=notes, test_uses=uses,
+        target_accuracy=task.coverage_target, data_sha256=sha, sides=summaries, diff=diffs, reasons=reasons, notes=notes,
     )

@@ -32,6 +32,10 @@ s1flow adopt ticket-bug MODEL --reason "why this candidate" --json   # the new v
 # open a pull request: the s1flow check Action compares it with the version main ships; merging releases it
 ```
 
+The first `s1flow run` on a task holds out its test share and writes `tasks/<task>/split.json`; commit it with
+`task.py`, because `adopt`, `optimize` and the pull request check read that file and refuse without it. No other
+command writes it. Cases added later are placed by a hash of their ID, so the file never moves.
+
 `s1flow init` creates an `s1flow/` project and nothing else. With `--ci` it also writes a pull request check to
 `.github/workflows/`; the Skill comes from the plugin or `s1flow skill install` (see
 [CLI, agents and CI](cli-and-ci.md#the-agent-skill)). The project's line-up compares three decision models that all work with a single key, `OPENROUTER_API_KEY`

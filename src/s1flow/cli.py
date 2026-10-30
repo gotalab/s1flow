@@ -628,25 +628,31 @@ def models(a: argparse.Namespace) -> int:
 
 
 def run(a: argparse.Namespace) -> int:
-    """Ask the candidates about a task's cases (cached) and write runs/<task>/<variant>/<model[:version]>.jsonl."""
+    """Ask the candidates about a task's cases (cached) and write runs/<task>/<variant>/<model[:version]>.jsonl; the first
+    run on a task also fixes its held-out test share (tasks/<task>/split.json), the one command that writes it."""
     import asyncio
 
+    from .eval import evalset
     from .eval import run as running
     from .eval.task import load
 
     p = project(a)
     names = a.models.split(",") if a.models else [m.name for m in p.client().connections.list(default_only=True)]
-    stats = asyncio.run(running.run(load(p, a.task), names, fresh=a.fresh, concurrency=a.concurrency))
+    task = load(p, a.task)
+    running.candidates(task, names)  # every name checked before the split is written
+    if note := evalset.fix(task):
+        print(f"notice: {note}", file=sys.stderr)
+    stats = asyncio.run(running.run(task, names, fresh=a.fresh, concurrency=a.concurrency))
     print(json.dumps(stats, indent=1))
     return 0
 
 
 def report(a: argparse.Namespace) -> int:
     """Read the saved runs by the task's objective: every candidate on every question variant, best first, the
-    ranking's pick marked. No model is called and nothing is written but the evaluation set on first use (tasks/<task>/split.json)
-    and, with --out DIR, the comparison snapshot and a Markdown report per question. --from reads a saved snapshot offline."""
+    ranking's pick marked. No model is called and nothing is written but, with --out DIR, the comparison snapshot and a
+    Markdown report per question. --from reads a saved snapshot offline."""
     from .eval import adopt as adopting
-    from .eval import comparison, evalset
+    from .eval import comparison
     from .eval import report as reporting
     from .eval.task import load
 
@@ -666,8 +672,6 @@ def report(a: argparse.Namespace) -> int:
         if not a.task:
             raise ConfigError("report needs TASK, or --from PATH")
         task = load(project(a), a.task)
-        for note in evalset.ensure(task)[1]:
-            print(f"notice: {note}", file=sys.stderr)
         if a.candidate is None:
             try:
                 listed = adopting.shortlist(task)
@@ -855,7 +859,6 @@ def adopt(a: argparse.Namespace) -> int:
     if not a.task or not a.candidate:
         raise S1flowError("adopt takes TASK CANDIDATE, TASK@vN (a rollback) or --spec FILE")
     from .eval import adopt as adopting
-    from .eval import evalset
     from .eval.task import load
     from .integrations import git
 
@@ -870,9 +873,9 @@ def adopt(a: argparse.Namespace) -> int:
     held = r.evidence.test == "below" and not a.force
     d = task.policies.dir(task.id)
     wrote = ("not written: below on the held-out test (adopt again with --force to ship it anyway); wrote "
-             + ", ".join(_shown(f) for f in (d / "history.jsonl", evalset.path(task))) + " (the refusal, the test share's use count)" if held else
-             "wrote " + ", ".join(_shown(f) for f in (d / f"v{r.spec.version}.json", d / "channels.json", d / "history.jsonl", evalset.path(task)))
-             + " (the policy, current, why, the test share's use count)")
+             + _shown(d / "history.jsonl") + " (the refusal)" if held else
+             "wrote " + ", ".join(_shown(f) for f in (d / f"v{r.spec.version}.json", d / "channels.json", d / "history.jsonl"))
+             + " (the policy, current, why)")
     check_it = None if held or previous is None else f"compare it with v{previous}: s1flow check {task.id} --against v{previous}"
     if a.json:  # stdout is the policy alone
         print(r.model_dump_json(by_alias=True, indent=1))

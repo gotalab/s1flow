@@ -1,21 +1,23 @@
 """The evaluation set: which labelled case is train, val or test, kept across versions.
 
-    tasks/<id>/split.json  {"schema": "s1flow/split@1", "seed": 1, "assign": {"<id>": "test", ...}, "uses": [...]}
+    tasks/<id>/split.json  {"schema": "s1flow/split@2", "seed": 1, "assign": {"<id>": "test", ...}}
 
-The one owner of the held-out test share. Made from the split an optimization already used (so the
-cases GEPA never saw stay test), else from the labelled cases: `task.split.test` of them held out,
-stratified by label, then train / val within the rest. A case added later is assigned by a hash of
-its id, so no case ever moves. Every evaluation holds out its test cases (metrics.evaluate) and
-`check` compares on them. Until the file is written, `current` computes the same assignment without
-writing it; the first `report` writes it (or `adopt`, `check`, `optimize`, whichever comes first).
+The one owner of the held-out test share. `s1flow run` writes it, the first time it runs on a task, and
+nothing else does: from the labelled cases, `task.split.test` of them held out, stratified by label, then
+train / val within the rest (or from the split an optimization already used, so the cases GEPA never saw
+stay test). A case labelled later is assigned by a hash of its id when the file is read, so no case ever
+moves and the file never changes. Every evaluation holds out its test cases (metrics.evaluate) and
+`check` compares on them. Before the first run, `current` gives the assignment run will write; `adopt`,
+`check` and `optimize` refuse until the file is there (in CI: until it is committed).
 
-`uses` counts the times the test share was looked at to choose or check something: a test share
-looked at often stops being held out (choices drift toward it), so `check` asks for new cases then.
+How often the test share was looked at is not counted here: a count kept only where it ran, and lost in
+CI, told nothing. `adopt` records each candidate it tried on it, refused or not, in history.jsonl.
 """
 
 from __future__ import annotations
 
 import hashlib
+import json
 import math
 import random
 from pathlib import Path
@@ -31,24 +33,34 @@ from .task import Task
 
 Role = Literal["train", "val", "test"]
 TRAIN_SHARE = 0.6  # of the rest
-MANY_USES = 20  # past this, the test share wants new labels
 
 
 class Use(BaseModel):
     at: str
-    by: str  # adopt | check (propose in uses recorded before 2026-10-20)
+    by: str
     what: str
+
+
+# split.json as s1flow wrote it before @2 (schema/split-1.json, kept as published): read as @2, its `uses` dropped.
+class SplitFileV1(BaseModel):
+    model_config = ConfigDict(extra="forbid", populate_by_name=True, serialize_by_alias=True, title="SplitFile")
+    schema_: Literal["s1flow/split@1"] = Field(default="s1flow/split@1", alias="schema")
+    seed: int
+    test_share: float
+    at: str
+    source: str
+    assign: dict[str, Role]
+    uses: list[Use] = Field(default_factory=list)
 
 
 class SplitFile(BaseModel):
     model_config = ConfigDict(extra="forbid", populate_by_name=True, serialize_by_alias=True)
-    schema_: Literal["s1flow/split@1"] = Field(default="s1flow/split@1", alias="schema")
+    schema_: Literal["s1flow/split@2"] = Field(default="s1flow/split@2", alias="schema")
     seed: int
     test_share: float
     at: str  # when it was made
     source: str  # where the first assignment came from
-    assign: dict[str, Role]
-    uses: list[Use] = Field(default_factory=list)
+    assign: dict[str, Role]  # as the first run wrote it; current() adds the cases labelled since
 
     def ids(self, role: Role) -> list[str]:
         return [i for i, r in self.assign.items() if r == role]
@@ -59,12 +71,17 @@ def path(task: Task) -> Path:
 
 
 def read(task: Task) -> SplitFile | None:
+    """The file as written (an @1 file as @2), without the cases labelled since."""
     p = path(task)
-    return SplitFile.model_validate_json(p.read_text()) if p.exists() else None
-
-
-def _write(task: Task, sf: SplitFile) -> None:
-    path(task).write_text(sf.model_dump_json(by_alias=True, indent=1) + "\n")
+    if not p.exists():
+        return None
+    text = p.read_text()
+    try:
+        if json.loads(text).get("schema") == "s1flow/split@1":
+            return SplitFile.model_validate(SplitFileV1.model_validate_json(text).model_dump(by_alias=True, exclude={"uses", "schema_"}))
+        return SplitFile.model_validate_json(text)
+    except (ValueError, AttributeError) as e:
+        raise DataError(f"{p}: not a split file: {e}") from None
 
 
 def initial(task: Task, labelled: list[Case], seed: int) -> dict[Role, list[str]]:
@@ -101,44 +118,35 @@ def _hashed(seed: int, cid: str, test_share: float) -> Role:
 
 
 def current(task: Task) -> SplitFile:
-    """The task's split as `ensure` would leave it, without writing anything."""
-    return _made(task)[0]
+    """The task's split: the file's (else the one the first run will write) and the cases labelled since, by
+    their hash. Writes nothing."""
+    sf = read(task) or _initial(task)
+    for c in task.load_cases().labelled():
+        if c.id not in sf.assign:
+            sf.assign[c.id] = _hashed(sf.seed, c.id, sf.test_share)
+    return sf
 
 
-def ensure(task: Task) -> tuple[SplitFile, list[str]]:
-    """The task's split, written on first use and extended to new labelled cases. Returns the notes to show."""
-    sf, notes = _made(task)
-    if notes:
-        _write(task, sf)
-    return sf, notes
+def fixed(task: Task) -> SplitFile:
+    """`current`, once the first run has written it: what adopt, check and optimize choose and compare on."""
+    if not path(task).exists():
+        raise DataError(f"{task.id}: no {path(task).name} yet: the first `s1flow run {task.id}` fixes the held-out test share "
+                        "(commit it with the task, so CI checks on the same cases)")
+    return current(task)
 
 
-def _made(task: Task) -> tuple[SplitFile, list[str]]:
-    rows = task.load_cases().labelled()
-    sf = read(task)
-    notes: list[str] = []
-    if sf is None:
-        art = next(iter(task.optimized.values()), None)
-        sp = art.split if art else initial(task, rows, task.split.seed)
-        assign: dict[str, Role] = {i: role for role in ("train", "val", "test") for i in sp[role]}
-        n_test = len(sp["test"])
-        sf = SplitFile(
-            seed=task.split.seed, test_share=round(n_test / max(1, len(assign)), 3),
-            at=clock.now(),
-            source=f"optimized/{art.variant}" if art else "initial", assign=assign,
-        )
-        notes.append(f"fixed the evaluation set ({path(task).name}: {n_test} test cases, from {sf.source})")
-    new = [c.id for c in rows if c.id not in sf.assign]
-    for cid in new:
-        sf.assign[cid] = _hashed(sf.seed, cid, sf.test_share)
-    if new:
-        notes.append(f"assigned {len(new)} new cases ({sum(sf.assign[c] == 'test' for c in new)} to test)")
-    return sf, notes
+def fix(task: Task) -> str | None:
+    """Write the split if the task has none (s1flow run, the one writer); what it wrote, to show, or None."""
+    if path(task).exists():
+        return None
+    sf = _initial(task)
+    path(task).write_text(sf.model_dump_json(by_alias=True, indent=1) + "\n")
+    return f"fixed the evaluation set ({path(task).name}: {len(sf.ids('test'))} test cases, from {sf.source}); commit it with the task"
 
 
-def record_use(task: Task, by: str, what: str) -> int:
-    """Count every explicit look, including CI; this file is a local ledger only."""
-    sf, _ = ensure(task)
-    sf.uses.append(Use(at=clock.now(), by=by, what=what))
-    _write(task, sf)
-    return len(sf.uses)
+def _initial(task: Task) -> SplitFile:
+    art = next(iter(task.optimized.values()), None)
+    sp = art.split if art else initial(task, task.load_cases().labelled(), task.split.seed)
+    assign: dict[str, Role] = {i: role for role in ("train", "val", "test") for i in sp[role]}
+    return SplitFile(seed=task.split.seed, test_share=round(len(sp["test"]) / max(1, len(assign)), 3), at=clock.now(),
+                     source=f"optimized/{art.variant}" if art else "initial", assign=assign)

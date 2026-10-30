@@ -83,7 +83,7 @@ def test_run_adopt_and_check_share_runtime_interpretation_and_freshness(tmp_path
     adopt.validate_evidence(task, selected)
     assert selected.evidence.evaluation.test is not None
     result = check.check(task)  # adopt made it current
-    assert result.verdict == "pass" and result.sides[0].accuracy == 1 and result.test_uses >= 2
+    assert result.verdict == "pass" and result.sides[0].accuracy == 1
     # A standalone application only needs its runtime spec and trusted connections.
     from s1flow.policies import DecisionPolicy
     from s1flow.eval import feedback
@@ -244,7 +244,6 @@ def test_evaluation_contract_ignores_usage_history_but_rejects_unknown_evidence(
     task = scoring_task(tmp_path, ExpectedLoss())
     policy = adopt.adopt(task, "m", "test", "current contract")
     before = task.evaluation_contract_digest
-    evalset.record_use(task, "check", "bookkeeping only")
     saved = json.loads(evalset.path(task).read_text())
     saved["at"] = "2099-01-01T00:00:00Z"
     evalset.path(task).write_text(json.dumps(saved))

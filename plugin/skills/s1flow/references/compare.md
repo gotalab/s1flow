@@ -9,7 +9,7 @@ These sources are not merged. See `references/cli.md` for project search boundar
 explicit-construction rules.
 
 ```bash
-s1flow run <task> --models <model[:version][/variant]>
+s1flow run <task> --models <model[:version][/variant]>   # the first run also writes tasks/<task>/split.json: commit it
 s1flow report <task>                         # the candidates by the task's objective, the ranking's pick marked
 s1flow report <task> --json                  # every metric of each candidate, and the ranking, for an agent
 s1flow report <task> --json --limit 20 --offset 12

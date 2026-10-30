@@ -19,7 +19,7 @@ from pydantic import BaseModel, TypeAdapter
 
 from s1flow.client.answers import Response
 from s1flow.eval.cases import Correction, FeedbackCase
-from s1flow.eval.evalset import SplitFile
+from s1flow.eval.evalset import SplitFile, SplitFileV1
 from s1flow.eval.comparison import Comparison
 from s1flow.eval.policy import EvaluatedPolicy, EvaluationRecord
 from s1flow.eval import policy_v2
@@ -66,7 +66,8 @@ def lifted(types: dict[str, type[BaseModel]]) -> dict[str, Any]:
 
 SCHEMAS: dict[str, Callable[[], dict[str, Any]]] = {
     "case-1": case,
-    "split-1": lambda: of(SplitFile),
+    "split-1": lambda: of(SplitFileV1),  # still read (as @2), no longer written
+    "split-2": lambda: of(SplitFile),
     "comparison-2": lambda: of(Comparison),
     "policy-2": lambda: of(PolicySpec) | {"title": "Policy"},  # what a policy file holds
     "evaluated-policy-3": lambda: of(EvaluatedPolicy),

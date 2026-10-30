@@ -53,6 +53,12 @@
   whose held-out test is not below. `adopt --json` prints the new shape.
 - `s1flow tasks` shows each task's current policy; its `--json` has `current` (a version) in place of
   `channels`, and each policy `current: true|false` in place of `channels: [...]`.
+- Only `s1flow run` writes `tasks/<task>/split.json`, the first time it runs on a task. `report` no longer writes
+  it, and `adopt`, `optimize` and `check` refuse with "the first `s1flow run TASK` fixes the held-out test share"
+  when it is missing, instead of drawing one of their own (a CI checkout would draw it again on every run). Cases
+  added later are placed by a hash of their ID when the file is read; the file is never rewritten. The file is now
+  `s1flow/split@2` (`schema/split-2.json`) without `uses`: it counted only the uses on the machine that ran. `@1`
+  files still read. `check --json` no longer has `test_uses`.
 
 Each removed command fails with one line naming what replaces it.
 

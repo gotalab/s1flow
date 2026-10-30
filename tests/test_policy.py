@@ -339,7 +339,7 @@ class Sharp:
         return Response(answers={"q": BooleanAnswer(probability=p)}, answered_by=f"{self.id}-v2", usage=Usage(cost_usd=0.0001))
 
 
-def test_rank_writes_nothing_and_scores_as_the_first_report_fixes_the_test_share(tmp_path):
+def test_the_first_run_fixes_the_test_share_and_rank_and_report_write_nothing(tmp_path):
     from s1flow.objectives import Coverage
     from s1flow.eval import Task, adopt, evalset, report
     from s1flow.eval import run as running
@@ -351,11 +351,12 @@ def test_rank_writes_nothing_and_scores_as_the_first_report_fixes_the_test_share
                        label=lambda r: r["y"], objective=Coverage()), p)
     for name in ("good", "vague"):
         asyncio.run(running.run_model(task, name, limit=None, variant="base"))
-    ranked = adopt.shortlist(task).evaluations
-    assert evalset.read(task) is None and ranked["good"].test is None
+    fixed = evalset.path(task).read_text()
+    assert len(evalset.read(task).ids("test")) == 18  # the first run fixed it
+    ranked = adopt.shortlist(task).evaluations  # train/val only: the test share is never shown to a ranking
+    assert ranked["good"].test is None
     report.write(task, "base", task.where.root / "out")
-    assert len(evalset.read(task).ids("test")) == 18
-    assert adopt.shortlist(task).evaluations == ranked  # the numbers rank gave are the ones report fixed
+    assert evalset.path(task).read_text() == fixed and adopt.shortlist(task).evaluations == ranked
     one = attach(Task(id="one", cases="data.jsonl", dir=tmp_path / "one", state=lambda r: {"y": r["y"]}, question=Boolean(instructions="?"),
                       label=lambda r: r["y"]), p)
     (tmp_path / "one").mkdir()
@@ -378,14 +379,13 @@ def test_adopt_chooses_from_the_runs_and_names_the_version(tmp_path):
     for name in ("good", "good:2", "vague"):
         asyncio.run(running.run_model(task, name, limit=None, variant="base"))
     listed = adopt.shortlist(task)
+    fixed = evalset.path(task).read_text()  # the first run fixed the evaluation set
     assert listed.recommended == "good" and task.policies.versions("toy") == []  # listing writes nothing
     assert {r.candidate: r.pin for r in listed.rows()} == {"good": "alias", "good:2": "yes", "vague": "no"}
-    assert evalset.read(task) is None  # nor fixes the evaluation set
     with pytest.raises(S1flowError, match="good is an alias .*good:2"):
         adopt.adopt(task, "good", "you", "sure more often", listed=listed)
-    assert task.policies.versions("toy") == [] and evalset.read(task) is None
+    assert task.policies.versions("toy") == [] and evalset.path(task).read_text() == fixed
     r = adopt.adopt(task, "good:2", "you", "sure more often", listed=listed)
-    assert [u.what for u in evalset.read(task).uses] == ["toy@v1: good:2"]
     assert r.candidate.model == "good:2" and r.spec.model_id == "good-2" and r.spec.connection == "good:2"  # the id, not what the runs say
     assert r.answered_by == "sharp:0.97-v2" and task.where.client().connections.build(r.spec.connection).id == "sharp:0.97"
     assert r.spec.rule.min_probability == pytest.approx(0.97) and r.evidence.compared == ["good", "good:2", "vague"]

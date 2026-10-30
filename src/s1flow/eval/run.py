@@ -36,7 +36,7 @@ from ..client.state import State
 from ..core import clock
 from ..core.errors import ConfigError, NotFound
 from .candidate import Candidate
-from . import records
+from . import evalset, records
 from .records import PredictionRecord
 from .cases import Case
 from .task import Task
@@ -163,9 +163,11 @@ async def run_model(
     task: Task, model_name: str, *, limit: int | None, variant: str, fresh: bool = False,
     concurrency: int | None = None,
 ) -> dict[str, int]:
-    """`concurrency` overrides the model's own: 1 times each call alone, with nothing else in flight to it."""
+    """`concurrency` overrides the model's own: 1 times each call alone, with nothing else in flight to it. The first
+    run on a task fixes its held-out test share (evalset.fix)."""
     spec = task.where.lineup().resolved(model_name)
     require_provider_revision(spec)
+    evalset.fix(task)
     client = task.where.client()
     model = client.connections.build(spec, name=model_name)
     cache_dir = task.where.cache_dir

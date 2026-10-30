@@ -324,7 +324,9 @@ def add(task: Task, cs: list[Answered], dry_run: bool = False) -> Added:
         with path.open("a") as f:
             f.writelines(r.model_dump_json() + "\n" for r in rows)
         task.load_cases().forget()
-        notes = evalset.ensure(task)[1] if evalset.read(task) else []  # new cases get their share of test
+        if evalset.read(task):  # new cases get their share of test by the hash of their id (evalset.current)
+            sf = evalset.current(task)
+            notes = [f"{sum(sf.assign.get(r.id) == 'test' for r in rows)} of the {len(rows)} added cases are in the test share"]
     return Added(added=len(rows), notes=notes, **counts)
 
 
