@@ -44,6 +44,11 @@ class Selection(BaseModel):
     forced: bool = False  # written although the held-out test showed it below (adopt --force); `reason` says why
 
 
+def forced_rule(selection: Selection, evidence: Evidence) -> None:
+    if selection.forced and evidence.test != 'below':
+        raise ValueError(f'forced, but the held-out test shows it {evidence.test or "not measured"}: only a version below is forced')
+
+
 class EvaluatedPolicy(BaseModel):
     """Explicit runtime specification and the evaluation that selected it."""
     model_config = ConfigDict(extra='forbid')
@@ -59,6 +64,7 @@ class EvaluatedPolicy(BaseModel):
             raise ValueError('evaluation candidate does not match the selected candidate')
         if self.candidate.model != self.spec.connection:
             raise ValueError('candidate model does not match the execution connection')
+        forced_rule(self.selection, self.evidence)
         return self
 
 
@@ -76,6 +82,11 @@ class EvaluationRecord(BaseModel):
     def from_policy(cls, policy: EvaluatedPolicy) -> EvaluationRecord:
         return cls(policy_digest=policy.spec.digest, candidate=policy.candidate, selection=policy.selection,
                    evidence=policy.evidence, answered_by=policy.answered_by)
+
+    @model_validator(mode='after')
+    def _forced_below(self) -> EvaluationRecord:
+        forced_rule(self.selection, self.evidence)
+        return self
 
     def attach(self, spec: PolicySpec) -> EvaluatedPolicy:
         if self.policy_digest != spec.digest:
@@ -96,9 +107,8 @@ def read_record(text: str) -> EvaluationRecord:
 
 
 def upgrade(old: v2.EvaluationRecord) -> EvaluationRecord:
-    # A @2 record below on the held-out test was only ever written by --force.
-    selection = Selection(by=old.selection.by, reason=old.selection.reason, tied=old.selection.tied,
-                          forced=old.evidence.test == 'below')
+    # Not forced: 0.1.0a1 stored a version below on the held-out test without --force, so @2 cannot say.
+    selection = Selection(by=old.selection.by, reason=old.selection.reason, tied=old.selection.tied)
     evidence = Evidence.model_validate(old.evidence.model_dump(exclude={'test_uses'}))
     return EvaluationRecord(policy_digest=old.policy_digest, candidate=old.candidate, selection=selection,
                             evidence=evidence, answered_by=old.answered_by)
