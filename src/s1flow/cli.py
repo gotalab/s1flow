@@ -794,6 +794,11 @@ def _adopt_without_evaluation(a: argparse.Namespace) -> int:
 
     if a.candidate or a.force:
         raise S1flowError("adopt TASK@vN and adopt --spec take no candidate and no --force: nothing is measured")
+    if a.check:  # validate only: it binds to an allowed model (--connections, else the project's s1flow.toml)
+        spec = read_file(a.spec)
+        DecisionPolicy(spec, client=_policy_client(a) if a.connections or a.root else project(a).client())
+        print(json.dumps({"policy": spec.ref, "valid": True}) if a.json else f"{spec.ref}: valid (binds to {spec.connection}); nothing written")
+        return 0
     # In an s1flow project its policies/ and s1flow.toml; in an app's repository, --root and --connections.
     proj = None if a.root else project(a)
     store = Policies(place.absolute(a.root, "policy root") if a.root else proj.policies_dir)  # type: ignore[union-attr]
@@ -805,9 +810,6 @@ def _adopt_without_evaluation(a: argparse.Namespace) -> int:
             raise S1flowError("adopt --spec FILE takes no TASK: the spec names its task and version")
         spec = read_file(a.spec)
         DecisionPolicy(spec, client=proj.client() if proj else _policy_client(a))  # it binds to an allowed model
-        if a.check:
-            print(json.dumps({"policy": spec.ref, "valid": True}) if a.json else f"{spec.ref}: valid (binds to {spec.connection}); nothing written")
-            return 0
         previous = _adopt_spec(store, spec, user, a.reason)
         path = store.dir(spec.task) / f"v{spec.version}.json"
         out = {"policy": spec.ref, "previous": previous, "evaluated": False, "path": str(path)}

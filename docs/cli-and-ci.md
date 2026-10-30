@@ -11,9 +11,9 @@ its target), and 2 means invalid input or configuration, or a check that couldn'
 The Skill ships as a plugin for Claude Code (`/plugin marketplace add gotalab/s1flow`, then
 `/plugin install s1flow@s1flow`) and for Codex (`codex plugin marketplace add gotalab/s1flow`). The plugin also
 carries a Cursor manifest and follows the Agent Plugins format, for teams that import it into a Cursor team
-marketplace. For any other agent, `s1flow skill install` copies the Skill into `.agents/skills/` and
-`.claude/skills/` at the Git root (`--user` puts it in your home directory instead). `s1flow init` never installs
-it. `s1flow guide` lists its topic guides. The source lives in `skills/s1flow/`, and `scripts/sync_plugin.py`
+marketplace. For any other agent, `s1flow init --skill` copies the Skill into `.agents/skills/` and
+`.claude/skills/` at the Git root; `s1flow init` writes it only when asked. `SKILL.md` says which of its six
+references (collect, measure, ship, app, learn, setup) to read at each stage. The source lives in `skills/s1flow/`, and `scripts/sync_plugin.py`
 writes the plugin copy. The Skill
 drives collecting cases, comparing, reviewing and improving through the same CLI; it isn't a second
 implementation.

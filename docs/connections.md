@@ -36,7 +36,7 @@ cache. `s1flow.client.lineup.Lineup.read(path)` only reads configuration: pass c
 
 The CLI accepts `--project PATH` and `--connections PATH` only on commands that list them in `--help`. On those
 commands, the option can go before or after the subcommand. An option a command doesn't take is an error before
-anything runs: `policy create`, for example, takes `--connections` but not `--project`.
+anything runs: `export`, for example, takes `--project` but not `--connections`.
 
 `--project` must point exactly at a directory that contains `s1flow.toml`, or at a repository that contains
 `s1flow/s1flow.toml`; it doesn't search upward. It doesn't change the working directory, so other relative paths in the command are still

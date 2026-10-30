@@ -54,7 +54,7 @@ one passes leaves a trace.
 ```bash
 s1flow adopt --spec spec.json --reason "hand-written first rule" --json
 s1flow adopt ticket-bug@v1 --reason "v2 misreads feature requests"
-s1flow policy export ticket-bug --out policies.json
+s1flow export ticket-bug --out policies.json
 ```
 
 ## Exporting and deploying
@@ -68,6 +68,6 @@ remote code or install packages.
 
 The public JSON Schemas in `schema/` are generated from the types: `policy-2.json`, `policy-evaluation-3.json`,
 `policy-set-2.json`, `decision-2.json`, `log-2.json`, `history-1.json` and `run-2.json`. JSON Schema only checks structure. Use
-`s1flow policy create --check` for checks across fields, such as whether the positive option you set on a choice
+`s1flow adopt --spec FILE --check` for checks across fields, such as whether the positive option you set on a choice
 question works with a threshold, and to check the policy against a connection file. `policy-evaluation-2.json`
 stays for records earlier versions wrote: s1flow still reads them, as `@3` records.

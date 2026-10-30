@@ -76,10 +76,10 @@ def exercise_runtime(root: Path, python: str = sys.executable, *, evaluate: bool
             'questions': {'bug': {'question': {'type': 'boolean', 'instructions': 'Is this a bug?'},
                                   'rule': {'threshold': .5}}},
         }))
-        checked = json.loads(cli('policy', 'create', source, '--connections', models, '--check', '--json').stdout)
-        assert checked['binding_checked'] and not calls
-        cli('policy', 'create', source, '--root', root / 'policies', expected=2)  # it makes v1 current: why?
-        created = json.loads(cli('policy', 'create', source, '--root', root / 'policies', '--reason', 'the first', '--json').stdout)
+        checked = json.loads(cli('adopt', '--spec', source, '--connections', models, '--check', '--json').stdout)
+        assert checked == {'policy': 'ticket-bug@v1', 'valid': True} and not calls
+        cli('adopt', '--spec', source, '--root', root / 'policies', '--connections', models, expected=2)  # it makes v1 current: why?
+        created = json.loads(cli('adopt', '--spec', source, '--root', root / 'policies', '--connections', models, '--reason', 'the first', '--json').stdout)
         policy_path = Path(created['path'])
         second = root / 'bug-v2.json'
         second.write_text(json.dumps({**json.loads(source.read_text()), 'version': 2}))

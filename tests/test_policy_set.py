@@ -1,4 +1,4 @@
-"""policies.json (`s1flow policy export`): the policies an app uses, in one file it vendors and loads from."""
+"""policies.json (`s1flow export`): the policies an app uses, in one file it vendors and loads from."""
 
 import json
 from conftest import ship, point
@@ -102,7 +102,7 @@ def test_a_policy_set_edited_by_hand_is_refused(shipped, tmp_path):
 
 def test_the_commands_export_and_read_the_policy_set(shipped):
     project = shipped
-    done = s1flow("policy", "export", "nod-wake", "--out", "policies.json", cwd=project)
+    done = s1flow("export", "nod-wake", "--out", "policies.json", cwd=project)
     assert done.returncode == 0, done.stderr
     assert "nod-wake@v1 (current)" in done.stdout and (project / "policies.json").is_file()
     shutil.rmtree(project / "policies")  # the app has the one file, not policies/

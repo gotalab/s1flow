@@ -212,7 +212,7 @@ def test_doctor_names_a_project_skill_an_older_s1flow_wrote(project):
     (copy / skill.MARKER).write_text(json.dumps({"schema": "s1flow/skill-marker@1", "s1flow_version": "0.0.1", "files": {}}))
     done = s1flow("doctor", "--models", "toy", cwd=project)
     assert done.returncode == 0
-    assert done.stdout.splitlines()[-1] == f"skill: .claude/skills/s1flow is from s1flow 0.0.1, this is {skill.version()}: s1flow skill install updates it"
+    assert done.stdout.splitlines()[-1] == f"skill: .claude/skills/s1flow is from s1flow 0.0.1, this is {skill.version()}: s1flow init --skill --force updates it"
     assert json.loads(s1flow("doctor", "--models", "toy", "--json", cwd=project).stdout)["skill"] == [done.stdout.splitlines()[-1].removeprefix("skill: ")]
 
 
