@@ -5,13 +5,13 @@ runtime specification. The base install can validate and run that specification 
 the evaluation extra:
 
 ```bash
+s1flow policy create spec.json --connections s1flow.toml --check
 s1flow policy create spec.json --root policies
-s1flow policy validate spec.json --connections s1flow.toml
 s1flow promote ticket-kind@v3 --root policies --connections s1flow.toml --json
 ```
 
-`policy create` only accepts a v2 `PolicySpec` and never overwrites a saved version. `policy validate`
-checks the file; adding `--connections` also binds its `connection` and `model_id` to the trusted
+`policy create` only accepts a v2 `PolicySpec` and never overwrites a saved version. With `--check` it
+only validates the file; adding `--connections` also binds its `connection` and `model_id` to the trusted
 connections in that file. `promote` always checks that binding. A valid unevaluated version can be
 activated manually. If an evaluation record exists, `promote` also checks that its execution digest
 still matches the supplied connections and reports the held-out test result. `--force` can override a

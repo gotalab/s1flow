@@ -1,7 +1,7 @@
 """The `s1flow` console script: every command, in the standard library's argparse.
 
 Each command imports what it needs when it runs, so the base install (pydantic and httpx) runs init, decide,
-feedback record, policy, an unevaluated promote, github, doctor, skill and guide: an app or a workflow decides and
+feedback record, policy, an unevaluated promote, doctor, skill and guide: an app or a workflow decides and
 records feedback, and an agent makes a project and gets the Skill, without the evaluation stack. The other commands need s1flow[eval]; on the base
 install they end in one line saying what to install, not a traceback. `s1flow --help` lists every command in one
 table (HELP), and a command that does not exist is one line naming the closest.
@@ -11,7 +11,7 @@ table (HELP), and a command that does not exist is one line naming the closest.
     s1flow decide --policy gh-ruff-area[@next|@v3] --state @issue.json [--path policies.json] [--case-id] [--log [--keep-state]] [--github-output]
     s1flow feedback record gh-ruff-area@v3 DECISION_ID formatter --log log.jsonl   the right answer, once known
     s1flow feedback measure gh-ruff-area log.jsonl [--dry-run]               production from the logs (s1flow[eval])
-    s1flow policy create spec.json [--root policies] | validate spec.json [--connections PATH]   a runtime spec, unevaluated
+    s1flow policy create spec.json [--root policies] [--connections PATH] [--check]   a runtime spec, unevaluated (--check: validate only)
     s1flow policy export [gh-ruff-area ...] [--channel current] --out policies.json        one file for an app to vendor
     s1flow doctor [--models jev,d1@vercel | --policy gh-ruff-area[@…]] [--reach] [--json]   the keys and hosts they need
     s1flow skill install [--dir PATH ...] [--user] [--force]    write the Agent Skill where agents read it (skill.py)
@@ -54,7 +54,7 @@ if TYPE_CHECKING:
     from .project import Project
 
 EXITS = "Exit codes: 0 done; 1 a gate failed or something was found (check fails, doctor or models --verify finds a problem); 2 usage, configuration, could not run, or check pending."
-BASE = ("init", "decide", "feedback", "policy", "promote", "github", "doctor", "skill", "guide")  # what the base install runs (feedback record, unevaluated promote)
+BASE = ("init", "decide", "feedback", "policy", "promote", "doctor", "skill", "guide")  # what the base install runs (feedback record, unevaluated promote)
 # Every command, as `s1flow --help` lists it.
 TABLE = (
     ("init", "make a project in ./s1flow: s1flow.toml, a task with --task, the CI workflow with --ci"),
@@ -69,10 +69,9 @@ TABLE = (
     ("check", "compare two versions on today's test cases, case by case (the CI gate)"),
     ("optimize", "optimize the current policy's question; adopt it as next when better (s1flow[optimize])"),
     ("cases", "check a task's cases; review and correct their labels"),
-    ("github", "fetch a GitHub repository's history, audit its labels, add why each case got its label (needs the GitHub CLI, gh)"),
     ("decide", "call a model (--model), or decide with a task's policy (--policy)"),
     ("feedback", "record the right answer for a case a policy decided (record); measure policies in production (measure, s1flow[eval])"),
-    ("policy", "runtime specifications: save one (create), check one (validate), the ones an app uses in one file (export)"),
+    ("policy", "runtime specifications: check and save one (create), the ones an app uses in one file (export)"),
     ("doctor", "the keys and hosts the models need, and whether they are there"),
     ("skill", "write the Agent Skill where agents read it (install), or print where the package's copy is (path)"),
     ("guide", "print the Skill's routing table, or one topic (s1flow guide cli: exit codes, --json, names)"),
@@ -82,15 +81,22 @@ HELP = "\n".join([
     "--project PATH selects a project without changing cwd; --connections PATH selects one trusted connection file.",
     "Use these options only where listed by COMMAND --help; they also work before the command. SDK calls do not discover projects.", "", "Commands:",
     *(f"  {name:<16} {what}" for name, what in TABLE), "",
-    "init, decide, feedback record, policy, unevaluated promote, github, doctor, skill and guide run on the base install; "
+    "init, decide, feedback record, policy, unevaluated promote, doctor, skill and guide run on the base install; "
     "the others need the eval extra: install s1flow[eval].",
     EXITS,
 ])
 
 
-RENAMED = {  # commands renamed on 2026-10-20: none runs under its old name, the error names the new one
-    "propose": "`rank` (the list) or `adopt` (write the one picked)", "improve": "`optimize`", "gh": "`github`",
+GITHUB_SCRIPT = "the Skill's script, python .agents/skills/s1flow/scripts/github.py (s1flow skill install writes it)"
+RENAMED = {  # commands renamed or removed: none runs under its old name, the error names what replaces it
+    "propose": "`rank` (the list) or `adopt` (write the one picked)", "improve": "`optimize TASK`", "gh": GITHUB_SCRIPT,
+    "github": GITHUB_SCRIPT,
     "data": "`cases`", "release": "`policy`", "record-feedback": "`feedback record`",
+}
+
+REMOVED_ACTIONS = {  # subcommands removed after 0.1.0a1, by what replaces them
+    ("policy", "validate"): "`s1flow policy create FILE --check` (with --connections to check the binding)",
+    ("optimize", "prompt"): "`s1flow optimize TASK`",
 }
 
 T = TypeVar("T")
@@ -179,6 +185,26 @@ def positive(text: str) -> int:
     return n
 
 
+def _command_words(args: list[str]) -> list[str]:
+    """The command, its subcommand and the next word as typed, past the options that may come before them
+    (--project, --connections)."""
+    words: list[str] = []
+    i = 0
+    while i < len(args) and len(words) < 3:
+        x = args[i]
+        if x in ("--project", "--connections"):
+            i += 2
+            continue
+        if x.startswith("-"):
+            if words:  # an option of the command itself: what follows is its value or its arguments
+                break
+            i += 1
+            continue
+        words.append(x)
+        i += 1
+    return words
+
+
 def main(argv: list[str] | None = None) -> None:
     args = sys.argv[1:] if argv is None else argv
     first = args[0] if args else None
@@ -186,8 +212,13 @@ def main(argv: list[str] | None = None) -> None:
         print(HELP)
         sys.exit(0 if first else 2)
     assert first is not None
-    if not first.startswith("-") and first not in {name for name, _ in TABLE}:
-        unknown_command(first)
+    words = _command_words(args)
+    if words and words[0] not in {name for name, _ in TABLE}:
+        unknown_command(words[0])
+    # `optimize prompt` alone optimizes a task named prompt; only `optimize prompt TASK` is the removed form
+    removed = len(words) == 3 if words[:2] == ["optimize", "prompt"] else True
+    if removed and (gone := REMOVED_ACTIONS.get(tuple(words[:2]))) is not None:  # type: ignore[arg-type]
+        usage_error(f"no command {' '.join(words[:2])}: it is now {gone}", f"s1flow {words[0]}")
     notices()
     a = parser().parse_args(args)
     try:
@@ -427,27 +458,23 @@ def feedback_measure(a: argparse.Namespace) -> int:
 
 
 def policy_create(a: argparse.Namespace) -> int:
-    from .policies import Policies
-    from .policies.file import read_file
-
-    spec = read_file(a.file)
-    store = Policies(a.root)
-    store.write_new(spec)
-    path = store.dir(spec.task) / f"v{spec.version}.json"
-    result = {"status": "created", "policy": spec.ref, "policy_digest": spec.digest, "path": str(path)}
-    print(json.dumps(result) if a.json else f"created {spec.ref}: {path} (not evaluated)")
-    return 0
-
-
-def policy_validate(a: argparse.Namespace) -> int:
-    from .policies import DecisionPolicy
+    """Validate a runtime specification and save it (never overwriting a version); --check validates only.
+    With --connections, also check that it binds to a model in that file (no model is called)."""
+    from .policies import DecisionPolicy, Policies
     from .policies.file import read_file
 
     spec = read_file(a.file)
     if a.connections:
         DecisionPolicy(spec, client=_policy_client(a))
-    result = {"status": "valid", "policy": spec.ref, "policy_digest": spec.digest, "binding_checked": bool(a.connections)}
-    print(json.dumps(result) if a.json else f"valid {spec.ref}; connection {'checked' if a.connections else 'not checked'}")
+    if a.check:
+        result = {"status": "valid", "policy": spec.ref, "policy_digest": spec.digest, "binding_checked": bool(a.connections)}
+        print(json.dumps(result) if a.json else f"valid {spec.ref}; connection {'checked' if a.connections else 'not checked'}")
+        return 0
+    store = Policies(a.root)
+    store.write_new(spec)
+    path = store.dir(spec.task) / f"v{spec.version}.json"
+    result = {"status": "created", "policy": spec.ref, "policy_digest": spec.digest, "path": str(path)}
+    print(json.dumps(result) if a.json else f"created {spec.ref}: {path} (not evaluated)")
     return 0
 
 
@@ -888,7 +915,6 @@ def optimize(a: argparse.Namespace) -> int:
     task = load(project(a), a.task)
     r = optimizing.optimize(task, a.budget, model=a.model, reflection=a.reflection, patience=a.patience, max_cost=a.max_cost,
                             git_sha=git.sha(task.where.root))
-    opened = git.open_pr(task.where.root, r.branch.name, r.branch.files, r.branch.title, r.branch.body, dry_run=a.dry_run) if a.pr and r.branch else None
     if a.json:
         print(r.model_dump_json(indent=1))
         return 0
@@ -898,8 +924,6 @@ def optimize(a: argparse.Namespace) -> int:
         print(f"  {r.reason}")
     if r.check:
         print(comment.markdown(task, r.check))
-    if opened:
-        print(opened.model_dump_json(indent=1))
     return 0  # its verdict is the first line: adopted, or why not
 
 
@@ -943,35 +967,6 @@ def cases_correct(a: argparse.Namespace) -> int:
         raise ConfigError("a correction records who decided: give --by or set git config user.name")
     fix = reviewing.correct(task, a.case_id, cast(Verdict, a.verdict), reason=a.reason, by=by, label=value)
     print(f"{fix.id}: {fix.verdict}" + (f" {fix.was!r} -> {fix.label!r}" if fix.verdict == "relabel" else "") + f" ({VERDICTS[fix.verdict]})")
-    return 0
-
-
-def github_fetch(a: argparse.Namespace) -> int:
-    """Fetch a repository's issues and merged PRs into data/raw/github (resumable)."""
-    from .sources import github  # the calls go through the GitHub CLI
-
-    github.require_gh()
-    p = project(a)
-    print(f"issues: {github.fetch(p, a.repo, 'issues', a.issues, a.page)}")
-    print(f"prs: {github.fetch(p, a.repo, 'prs', a.prs, max(5, a.page // 2))}")
-    return 0
-
-
-def github_audit(a: argparse.Namespace) -> int:
-    """How labels are used today: coverage per group, and who applies them."""
-    from .sources import github  # reads what fetch saved
-
-    print(github.audit(project(a), a.repo))
-    return 0
-
-
-def github_rationale(a: argparse.Namespace) -> int:
-    """Add each case's labelling comments as `rationale` (shown to GEPA's reflection LM, never to the model)."""
-    from .sources import github  # the calls go through the GitHub CLI
-
-    github.require_gh()
-    filled, n = github.add_rationales(project(a), a.repo, a.task)
-    print(f"{filled}/{n} cases have a rationale")
     return 0
 
 
@@ -1052,8 +1047,7 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--json", action="store_true")
     p.add_argument("--markdown", type=Path, help="also write the PR comment here")
 
-    optimizers = sub.add_parser("optimize", context=("project", "connections"), help="optimize a prompt, not model weights").add_subparsers(dest="optimization", required=True, parser_class=Parser)
-    p = _command(optimizers, "prompt", optimize, context=("project", "connections"), help="search prompt candidates using a documented surrogate, then verify the objective")
+    p = _command(sub, "optimize", optimize, context=("project", "connections"))
     p.add_argument("task")
     p.add_argument("--json", action="store_true")
     p.add_argument("--budget", type=int, default=300, help="GEPA metric calls (model calls on train/val)")
@@ -1061,8 +1055,6 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--reflection", help="the reflection LM, an `llm` model of s1flow.toml (default: gpt-6.1-sol on OpenAI's API, OPENAI_API_KEY)")
     p.add_argument("--patience", type=int, help="stop after this many proposals without a new best on val")
     p.add_argument("--max-cost", type=float, help="stop once the reflection LM has cost this much (USD)")
-    p.add_argument("--pr", action="store_true", help="open a pull request when the new version is better")
-    p.add_argument("--dry-run", action="store_true", help="with --pr: show the branch and commands instead of running them")
 
     group = sub.add_parser("cases", context=("project", "connections"), help="check a task's cases; review and correct their labels",
                            description="Check a task's cases, and review and correct their labels.").add_subparsers(dest="action", required=True, parser_class=Parser)
@@ -1082,19 +1074,6 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--reason", required=True, help="the criterion that decides it, or what the state lacks")
     p.add_argument("--by", help="who decided (default: git config user.name)")
     p.add_argument("--label", help="relabel only: the new label (a class key, or true / false)")
-
-    group = sub.add_parser("github", context=("project",), help="fetch a GitHub repository's history and audit its labels (through the GitHub CLI, gh)",
-                           description="Fetch a GitHub repository's issues and PRs, audit how its labels are used, and add why each case got its label; writing the task from them is the Skill's step (s1flow guide collect).").add_subparsers(dest="action", required=True, parser_class=Parser)
-    p = _command(group, "fetch", github_fetch, context=("project",))
-    p.add_argument("repo", help="owner/name")
-    p.add_argument("--issues", type=int, default=1000, help="newest issues to keep")
-    p.add_argument("--prs", type=int, default=500, help="newest merged PRs to keep")
-    p.add_argument("--page", type=int, default=25)
-    p = _command(group, "audit", github_audit, context=("project",))
-    p.add_argument("repo", help="owner/name")
-    p = _command(group, "rationale", github_rationale, context=("project",))
-    p.add_argument("repo", help="owner/name")
-    p.add_argument("--id", dest="task", metavar="TASK", required=True)
 
     d = _command(sub, "decide", decide, context=("project", "connections"), help="call a model (--model) or decide with a policy (--policy)",
                  description="Call a model with the questions given here (--model), or decide with a task's policy (--policy).")
@@ -1131,15 +1110,13 @@ def parser() -> argparse.ArgumentParser:
     m.add_argument("--dry-run", action="store_true", help="measure only; add no cases")
     m.add_argument("--json", action="store_true")
 
-    group = sub.add_parser("policy", context=("project", "connections"), help="runtime specifications: save one (create), check one (validate), the ones an app uses in one file (export)").add_subparsers(
+    group = sub.add_parser("policy", context=("project", "connections"), help="runtime specifications: check and save one (create), the ones an app uses in one file (export)").add_subparsers(
         dest="action", required=True, parser_class=Parser)
-    create = _command(group, "create", policy_create, help="validate and save an unevaluated runtime specification")
+    create = _command(group, "create", policy_create, context=("connections",), help="validate and save an unevaluated runtime specification")
     create.add_argument("file", type=Path, help="PolicySpec JSON file")
     create.add_argument("--root", type=Path, default=Path("policies"), help="directory for immutable policy versions")
+    create.add_argument("--check", action="store_true", help="validate only; save nothing")
     create.add_argument("--json", action="store_true")
-    validate = _command(group, "validate", policy_validate, context=("connections",), help="validate a runtime specification without calling a model")
-    validate.add_argument("file", type=Path)
-    validate.add_argument("--json", action="store_true")
     ex = _command(group, "export", policy_export, context=("project",), help="write the policies an app uses into one file (policies.json)",
                   description="One file with each task's policy on a channel and its digest, for an app in another repository or "
                               "language to vendor and review in its own pull requests. policies.load(task, path=FILE) reads it.")
@@ -1162,6 +1139,7 @@ def parser() -> argparse.ArgumentParser:
     si.add_argument("--dir", action="append", metavar="PATH", help="a skills directory to write s1flow/ into; repeatable")
     si.add_argument("--user", action="store_true", help="~/.agents/skills/ and ~/.claude/skills/")
     si.add_argument("--force", action="store_true", help="overwrite files changed there")
+
     _command(group, "path", skill_path, help="print the package's own copy of the Skill (to link to)")
 
     g = _command(sub, "guide", guide, help="print the Skill's routing table, or one of its references",

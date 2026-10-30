@@ -41,5 +41,5 @@ remote code or install packages.
 
 The public JSON Schemas in `schema/` are generated from the types: `policy-2.json`, `policy-evaluation-2.json`,
 `policy-set-2.json`, `decision-2.json`, `log-2.json` and `run-2.json`. JSON Schema only checks structure. Use
-`s1flow policy validate` for checks across fields, such as whether the positive option you set on a choice
+`s1flow policy create --check` for checks across fields, such as whether the positive option you set on a choice
 question works with a threshold, and to check the policy against a connection file.

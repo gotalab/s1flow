@@ -24,15 +24,15 @@ s1flow decide --policy ticket-kind --state @state.json \
 s1flow feedback record ticket-kind DECISION_ID true \
   --connections s1flow.toml --log "$RUNNER_TEMP/s1flow-log.jsonl"
 s1flow policy create spec.json --root policies
-s1flow policy validate spec.json --connections s1flow.toml
+s1flow policy create spec.json --connections s1flow.toml --check
 s1flow promote ticket-kind@v3 --root policies --connections s1flow.toml --json
 ```
 
 The file passed to `--connections` is the complete allow-list for that invocation. Keep a dedicated
 application file there; do not let an incoming policy choose a provider, import code, or discover a
 connection beside itself. `decide --policy`, `feedback record`, `doctor --policy` and `promote` all
-require this explicit binding. `policy validate` can validate the portable file without a binding,
-then checks it when `--connections` is supplied.
+require this explicit binding. `policy create --check` validates the portable file without saving it;
+with `--connections` it also checks the binding.
 
 `decide --policy --json` returns a `Decision`, including `decision_id` and
 `below_min_probability`. The latter is `null` when the policy has no lower bound, `true` when the
@@ -55,8 +55,8 @@ s1flow --project ./repo --connections ./prod.toml decide --policy ticket-kind --
 s1flow decide --policy ticket-kind --state @state.json --project ./repo --connections ./prod.toml
 ```
 
-`policy create`, `init`, `guide` and `skill` accept neither option. `policy validate` accepts only
-`--connections`; `policy export`, `cases check`, `cases correct` and `github` accept only `--project`.
+`init`, `guide` and `skill` accept neither option. `policy create` accepts only
+`--connections`; `policy export`, `cases check` and `cases correct` accept only `--project`.
 An unsupported command option fails before the command runs. Offline `compare --from` rejects both options.
 An unevaluated `promote --root` rejects `--project`, since `--root` already selects its store.
 
@@ -97,7 +97,7 @@ clear what changes:
 uv tool install 's1flow[eval,optimize]'
 s1flow run <task> --models <model>:<version>
 s1flow report <task>                         # development report
-s1flow optimize prompt <task>                # propose a changed question
+s1flow optimize <task>                       # propose a changed question
 s1flow check <task> --candidate next         # final test comparison
 ```
 
@@ -122,6 +122,6 @@ runtime `PolicySpec`; a saved runtime specification names only its registered `c
 `model_id`, question and rule.
 
 Commands with `--json` emit machine-readable results for `tasks`, `models`, `doctor`, `compare`, `rank`, `adopt`,
-`promote`, `check`, `report`, `cases review`, `feedback measure`, `optimize prompt` and `decide`, and for
-`policy create` and `policy validate`. Other commands
+`promote`, `check`, `report`, `cases review`, `feedback measure`, `optimize` and `decide`, and for
+`policy create`. Other commands
 print their verdict and use the exit code; commands that write files name the files they wrote.

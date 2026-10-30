@@ -40,7 +40,7 @@ lines of Python; s1flow has no importer on purpose. Where to look, by purpose:
 
 | Source | Notes |
 |---|---|
-| GitHub issues and PRs | `s1flow github` below. Labels a bot applied are that bot's output: scoring against them measures agreement with the bot, not accuracy. Say which. |
+| GitHub issues and PRs | `scripts/github.py` below. Labels a bot applied are that bot's output: scoring against them measures agreement with the bot, not accuracy. Say which. |
 | The app's own logs | The states the app really sends, with the outcome learned later (a reply, a refund, a revert) as the label. |
 | Labels people already gave | A support tool's tags, a review queue, a spreadsheet. Keep who labelled. |
 | No labels anywhere | Draft labels for 50-100 cases, have the user correct them, and use only the corrected ones. Never score against unreviewed drafts. |
@@ -55,12 +55,13 @@ GitHub access is the user's own `gh` login. GraphQL allows 5,000 points an hour 
 or two); never use the search API for bulk work (30 requests a minute).
 
 ```bash
-s1flow github fetch owner/repo --issues 1500 --prs 600   # data/raw/github/<owner>__<repo>/, resumable
-s1flow github audit owner/repo                           # per label group: coverage, doubles, who applied
-s1flow github rationale owner/repo --id gh-<repo>-area   # after data.jsonl: the maintainers' comments around each label
+python <skill>/scripts/github.py fetch owner/repo --issues 1500 --prs 600   # data/raw/github/<owner>__<repo>/, resumable
+python <skill>/scripts/github.py audit owner/repo                           # per label group: coverage, doubles, who applied
+python <skill>/scripts/github.py rationale owner/repo --id gh-<repo>-area   # after data.jsonl: the maintainers' comments around each label
 ```
 
-`s1flow github` needs the GitHub CLI (`gh`, logged in). `rationale` looks each case's label up as a GitHub
+`<skill>` is this Skill's directory. It finds the project as the CLI does (or `--project DIR`). The script needs only Python's
+standard library and the GitHub CLI (`gh`, logged in). `rationale` looks each case's label up as a GitHub
 label name: it fills only a task whose choice keys are the label names as they are (not a true/false task). Read the audit with the user before writing a
 task: a group that is rarely used, or used twice on the same issue, is not one decision yet.
 

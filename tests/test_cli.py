@@ -25,7 +25,9 @@ def s1flow(*args: str, cwd: Path | None = None) -> subprocess.CompletedProcess[s
     (("run",), "error: the following arguments are required: task (see s1flow run --help)"),
     (("run", "t", "--bogus"), "error: unrecognized arguments: --bogus (see s1flow run --help)"),
     (("check", "t", "--sample", "0"), "error: argument --sample: 0 is not 1 or more (see s1flow check --help)"),
-    (("github",), "error: the following arguments are required: action (see s1flow github --help)"),
+    (("github", "fetch", "o/r"), "error: no command 'github': it is now the Skill's script, python .agents/skills/s1flow/scripts/github.py"),
+    (("policy", "validate", "p.json"), "error: no command policy validate: it is now `s1flow policy create FILE --check`"),
+    (("optimize", "prompt", "t"), "error: no command optimize prompt: it is now `s1flow optimize TASK` (see s1flow optimize --help)"),
     (("decide", "--bogus"), "error: unrecognized arguments: --bogus (see s1flow decide --help)"),
     (("policy", "export", "--bogus"), "error: unrecognized arguments: --bogus (see s1flow policy export --help)"),
 ])
@@ -62,8 +64,8 @@ def test_every_command_takes_h_and_its_help_ends_with_the_exit_codes():
     from s1flow.cli import parser
 
     found = list(_commands(parser()))
-    assert ("cases", "review") in found and ("policy", "export") in found and ("policy", "create") in found and ("policy", "validate") in found and ("optimize", "prompt") in found and ("compare",) in found and len(found) == 27
-    for words in found + [("cases",), ("github",), ("feedback",), ("policy",), ("skill",)]:
+    assert ("cases", "review") in found and ("policy", "export") in found and ("policy", "create") in found and ("optimize",) in found and ("compare",) in found and len(found) == 23
+    for words in found + [("cases",), ("feedback",), ("policy",), ("skill",)]:
         done = cli(*words, "-h")
         assert done.exit_code == 0 and " ".join(EXITS.split()) in " ".join(done.output.split()), words
 
@@ -124,3 +126,18 @@ def test_tasks_is_the_overview_of_what_runs(tmp_path):
     assert [x.split()[1] for x in text[1:4]] == ["current", "next", "staging"]
     done = s1flow("tasks", "ruff-area", cwd=tmp_path)
     assert done.returncode == 2 and done.stderr.startswith("error: no task 'ruff-area'; tasks: gh-ruff-area")
+
+
+@pytest.mark.parametrize("args, said", [
+    (("--connections", "c.toml", "policy", "validate", "p.json"), "it is now `s1flow policy create FILE --check`"),
+    (("--project", ".", "github", "fetch", "o/r"), "no command 'github': it is now the Skill's script"),
+    (("--project", ".", "optimize", "prompt", "t"), "it is now `s1flow optimize TASK`"),
+])
+def test_a_removed_command_is_named_after_the_options_that_come_first(tmp_path, args, said):
+    done = s1flow(*args, cwd=tmp_path)
+    assert done.returncode == 2 and said in done.stderr and "Traceback" not in done.stderr
+
+
+def test_a_task_named_prompt_is_optimized_not_taken_for_the_removed_form(tmp_path):
+    done = s1flow("optimize", "prompt", "--json", cwd=tmp_path)
+    assert "it is now" not in done.stderr and "Traceback" not in done.stderr

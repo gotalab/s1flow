@@ -1,10 +1,22 @@
-"""The GitHub source on fetched issues (no network): how labels are used, why a case got its label, and gh."""
+"""The Skill's GitHub script on fetched issues (no network): how labels are used, why a case got its label, and gh."""
 
+import importlib.util
 import json
+import subprocess
+import sys
+from pathlib import Path
 
-from conftest import cli, make_project
+import pytest
 
-from s1flow.sources import github
+ROOT = Path(__file__).resolve().parents[1]
+SCRIPT = ROOT / "skills/s1flow/scripts/github.py"
+spec = importlib.util.spec_from_file_location("skill_github", SCRIPT)
+github = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(github)
+
+
+def invoke(*args: str, env: dict[str, str] | None = None):
+    return subprocess.run([sys.executable, "-S", str(SCRIPT), *args], capture_output=True, text=True, env=env)
 
 
 def issue(n, *labels, by="human"):
@@ -19,7 +31,9 @@ def issue(n, *labels, by="human"):
 
 
 def fetched(tmp_path, issues, labels=()):
-    p = make_project(tmp_path / "p")
+    p = tmp_path / "p"
+    p.mkdir(parents=True)
+    (p / "s1flow.toml").write_text("")
     d = github.repo_dir(p, "o/r")
     d.mkdir(parents=True)
     (d / "issues.jsonl").write_text("".join(json.dumps(i) + "\n" for i in issues))
@@ -46,7 +60,7 @@ def test_a_rationale_is_what_maintainers_wrote_around_the_labelling(tmp_path):
     ]
     (github.repo_dir(p, "o/r") / "comments.jsonl").write_text(
         json.dumps({"number": 1, "comments": comments}) + "\n" + json.dumps({"number": 2, "comments": []}) + "\n")
-    d = p.tasks_dir / "t"
+    d = p / "tasks" / "t"
     d.mkdir(parents=True)
     (d / "data.jsonl").write_text("".join(json.dumps({"id": f"#{n}", "label": "bug"}) + "\n" for n in (1, 2)))
     assert github.add_rationales(p, "o/r", "t") == (1, 2)  # the comments were cached: gh is not called
@@ -54,10 +68,31 @@ def test_a_rationale_is_what_maintainers_wrote_around_the_labelling(tmp_path):
     assert [r["rationale"] for r in rows] == ["A crash, so a bug.", ""]
 
 
-def test_without_gh_the_command_says_what_to_install(tmp_path, monkeypatch):
+def test_without_gh_the_script_says_what_to_install_and_audit_still_runs(tmp_path):
     p = fetched(tmp_path, [issue(1, "bug")])
-    monkeypatch.chdir(p.root)
-    monkeypatch.setattr(github.shutil, "which", lambda name: None)
+    no_gh = {"PATH": str(tmp_path / "empty")}
+    got = invoke("fetch", "o/r", "--project", str(p), env=no_gh)
+    assert got.returncode == 2 and github.GH_MISSING in got.stderr and "Traceback" not in got.stderr
+    assert invoke("audit", "o/r", "--project", str(p), env=no_gh).returncode == 0  # reads what fetch saved
+
+
+def test_the_project_is_found_as_the_cli_finds_it(tmp_path, monkeypatch):
+    p = fetched(tmp_path / "repo", [issue(1, "bug")])  # repo/p/s1flow.toml
+    (tmp_path / "repo" / ".git").mkdir()
+    assert github.find_project(p) == p
+    (tmp_path / "repo" / "p").rename(tmp_path / "repo" / "s1flow")
+    assert github.find_project(tmp_path / "repo") == tmp_path / "repo" / "s1flow"  # DIR's s1flow/ child
+    monkeypatch.chdir(tmp_path / "repo" / "s1flow" / "data")
+    assert github.find_project(None) == tmp_path / "repo" / "s1flow"  # searched up from here
+    (tmp_path / "repo" / ".git").rmdir()
+    with pytest.raises(github.Stop):  # outside Git only the starting directory counts, as in the CLI
+        github.find_project(None)
+    got = invoke("audit", "o/r", "--project", str(tmp_path / "elsewhere"))
+    assert got.returncode == 2 and "no s1flow project" in got.stderr and "Traceback" not in got.stderr
+
+
+def test_the_cli_no_longer_has_a_github_command():
+    from conftest import cli
+
     got = cli("github", "fetch", "o/r")
-    assert got.exit_code == 2 and github.GH_MISSING in got.err
-    assert cli("github", "audit", "o/r").exit_code == 0  # reads what fetch saved: no gh needed
+    assert got.exit_code == 2 and "skills/s1flow/scripts/github.py" in got.err

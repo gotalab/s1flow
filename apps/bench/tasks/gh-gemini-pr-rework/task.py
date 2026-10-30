@@ -1,6 +1,6 @@
 """google-gemini/gemini-cli: will a pull request need rework after review?
 
-Built from the merged PRs `s1flow github fetch` saved, those by people
+Built from the merged PRs the Skill's `github.py fetch` saved, those by people
 (bot-authored PRs left out). Positive when 2 or more commits were pushed after the first human
 review; review bots (gemini-code-assist) and the author's own reviews do not count. The state is
 what is known when the PR opens: title, description, author association, size and touched paths.
