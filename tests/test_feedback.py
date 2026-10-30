@@ -68,9 +68,9 @@ def adopted(task, objective):
                             probabilities=True, failures=Failures(calls=20, failed=0, unsupported=0, data_errors=0, unlabeled=0),
                             objective=ObjectiveScore(objective=objective, value=0, interval=(0, 1)))
     policy = EvaluatedPolicy(spec=spec, candidate=Candidate(model="m"), answered_by="model",
-                             selection=Selection(by="test", reason="test", recommended="m", tied=["m"]),
+                             selection=Selection(by="test", reason="test", tied=["m"]),
                              evidence=Evidence(data_sha256="data", execution_digest="exec", evaluation=evaluation,
-                                               test=None, test_uses=0, compared=["m"]))
+                                               test=None, compared=["m"]))
     task.policies.write_new(policy)
     return policy
 

@@ -15,6 +15,7 @@ from s1flow.core.errors import Rejected
 from s1flow.eval.cases import Correction, FeedbackCase
 from s1flow.eval.evalset import SplitFile
 from s1flow.eval.comparison import Comparison
+from s1flow.eval import policy_v2
 from s1flow.eval.policy import EvaluatedPolicy, EvaluationRecord
 from s1flow.eval.records import PredictionRecord
 from s1flow.policies.policy_set import PolicySet
@@ -27,9 +28,9 @@ ROOT = Path(__file__).resolve().parents[1]
 SCHEMA = ROOT / "schema"
 TYPES: dict[str, TypeAdapter | None] = {
     "comparison-2": TypeAdapter(Comparison),
-    "policy-evaluation-2": TypeAdapter(EvaluationRecord), "run-2": TypeAdapter(PredictionRecord),
+    "policy-evaluation-3": TypeAdapter(EvaluationRecord), "policy-evaluation-2": TypeAdapter(policy_v2.EvaluationRecord), "run-2": TypeAdapter(PredictionRecord),
     "case-1": None,  # a row is the task's own: no type of s1flow's reads it whole
-    "split-1": TypeAdapter(SplitFile), "policy-2": TypeAdapter(PolicySpec), "evaluated-policy-2": TypeAdapter(EvaluatedPolicy),
+    "split-1": TypeAdapter(SplitFile), "policy-2": TypeAdapter(PolicySpec), "evaluated-policy-3": TypeAdapter(EvaluatedPolicy),
     "log-2": TypeAdapter(Log), "response-1": TypeAdapter(Response), "decision-2": TypeAdapter(Decision), "policy-set-2": TypeAdapter(PolicySet),
 }
 
@@ -126,3 +127,15 @@ def test_a_log_written_by_a_policy_fits(tmp_path):
     assert errors(validator("decision-2"), json.loads(d.model_dump_json())) == []
     assert errors(validator("response-1"), json.loads(d.response.model_dump_json())) == []
 
+
+
+def test_an_old_evaluation_record_reads_as_the_new_one():
+    from s1flow.eval.policy import read_record
+
+    old = json.loads((SCHEMA / "fixtures" / "policy-evaluation-2.valid.json").read_text())
+    for test, forced in (("kept", False), ("below", True)):  # @2 stored a version below only under --force
+        old["evidence"]["test"] = test
+        new = read_record(json.dumps(old))
+        assert new.schema_ == "s1flow/policy-evaluation@3" and new.selection.forced is forced
+        assert new.selection.reason == old["selection"]["reason"] and new.selection.tied == old["selection"]["tied"]
+        assert errors(validator("policy-evaluation-3"), json.loads(new.dump())) == []

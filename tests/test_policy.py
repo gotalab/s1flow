@@ -70,9 +70,9 @@ def policy(task="t", version=1, rule=DecisionRule(min_probability=0.8), test=Non
     )
     return EvaluatedPolicy(
         spec=spec, candidate=Candidate(model="fake"), answered_by="fake-1",
-        selection=Selection(by="t", reason="t", recommended="fake", tied=["fake"]),
+        selection=Selection(by="t", reason="t", tied=["fake"]),
         evidence=Evidence(data_sha256="0", execution_digest=execution_digest(policy_client().connections.resolved("fake"), spec.digest),
-                          evaluation=evaluation(), test=test, test_uses=1, compared=["fake"]),
+                          evaluation=evaluation(), test=test, compared=["fake"]),
     )
 
 
@@ -389,7 +389,7 @@ def test_adopt_chooses_from_the_runs_and_names_the_version(tmp_path):
     assert r.candidate.model == "good:2" and r.spec.model_id == "good-2" and r.spec.connection == "good:2"  # the id, not what the runs say
     assert r.answered_by == "sharp:0.97-v2" and task.where.client().connections.build(r.spec.connection).id == "sharp:0.97"
     assert r.spec.rule.min_probability == pytest.approx(0.97) and r.evidence.compared == ["good", "good:2", "vague"]
-    assert r.selection.by == "you" and r.selection.recommended == "good" and r.spec.s1flow_version
+    assert r.selection.by == "you" and not r.selection.forced and r.spec.s1flow_version
     assert task.policies.current("toy") == 1 and r.spec.state_schema == {"type": "object", "properties": {"y": {"type": "boolean"}}, "required": ["y"], "additionalProperties": False}
     assert r.evidence.evaluation.objective and r.evidence.evaluation.objective.objective == Coverage()
 
@@ -411,7 +411,7 @@ def test_a_person_picks_another_candidate_and_the_policy_says_so(tmp_path):
     assert rows_["good"].recommended and rows_["good"].tied and not rows_["vague"].recommended
     assert {r.pin for r in rows_.values()} == {"no"}  # neither declares versions: each serves one
     r = adopt.adopt(task, "vague", "you", "free tier", listed=listed)
-    assert r.candidate.model == "vague" and r.selection.recommended == "good" and r.selection.tied == listed.tied
+    assert r.candidate.model == "vague" and r.selection.tied == listed.tied
     with pytest.raises(S1flowError, match="cannot be picked.*pick one of"):
         adopt.adopt(task, "nope", "you", "x", listed=listed)
     with pytest.raises(S1flowError, match="who adopted it and why"):

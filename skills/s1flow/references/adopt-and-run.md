@@ -24,7 +24,7 @@ s1flow check <task> --against v<N>              # final held-out check against t
 Then open a pull request with the change to `policies/<task>/`. The `s1flow check` Action compares the version the
 base branch ships with the new current, and merging the pull request is the release; nothing is switched after it.
 `adopt` refuses stale evidence, and writes nothing when the held-out test shows the candidate below; `--force`
-writes it anyway, and the person decides that, not the agent.
+writes it anyway and the record marks it `forced`, with the reason as the why; the person decides that, not the agent.
 
 The user or an agent with authority chooses the candidate and records why. `adopt` then explicitly scores that
 selected candidate on the held-out test and records the result. The choice may differ from the

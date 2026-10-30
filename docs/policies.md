@@ -22,8 +22,8 @@ declared prices or the split invalidates an old shortlist or adoption record, so
 Evaluation records never change the policy itself, and the runtime never reads them.
 
 `adopt` records the chosen candidate and your reason, and makes it current. It refuses evidence that is out of
-date, and writes nothing when the candidate falls short on the test set: `--force` ships it anyway, but never
-mismatched identities. On the pull request, the `s1flow check` Action compares the version the base branch ships
+date, and writes nothing when the candidate falls short on the test set: `--force` ships it anyway, and the
+evaluation record marks it `forced`, with your reason as the why, but never mismatched identities. On the pull request, the `s1flow check` Action compares the version the base branch ships
 with the one the pull request makes current, on today's test cases, and fails when it is worse.
 
 A policy that was never evaluated, written by hand and saved with only the base runtime, is current as soon as
@@ -46,7 +46,8 @@ remote code or install packages.
 
 ## Schemas
 
-The public JSON Schemas in `schema/` are generated from the types: `policy-2.json`, `policy-evaluation-2.json`,
+The public JSON Schemas in `schema/` are generated from the types: `policy-2.json`, `policy-evaluation-3.json`,
 `policy-set-2.json`, `decision-2.json`, `log-2.json` and `run-2.json`. JSON Schema only checks structure. Use
 `s1flow policy create --check` for checks across fields, such as whether the positive option you set on a choice
-question works with a threshold, and to check the policy against a connection file.
+question works with a threshold, and to check the policy against a connection file. `policy-evaluation-2.json`
+stays for records earlier versions wrote: s1flow still reads them, as `@3` records.
