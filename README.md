@@ -43,9 +43,9 @@ uv tool install "s1flow[eval]"
 |---|---|
 | Claude Code | `/plugin marketplace add gotalab/s1flow`, then `/plugin install s1flow@s1flow` |
 | Codex | `codex plugin marketplace add gotalab/s1flow`, then install s1flow from the Plugins directory |
-| Cursor and other agents | `s1flow skill install` copies the Skill into `.agents/skills/` and `.claude/skills/` |
+| Cursor and other agents | `s1flow init --skill` copies the Skill into `.agents/skills/` and `.claude/skills/` |
 
-Plugins update through your agent's plugin manager. `s1flow skill install` copies the files into your
+Plugins update through your agent's plugin manager. `s1flow init --skill` copies the files into your
 repository instead, so they change only when you run it again.
 
 **3. Tell your agent what to decide, in your own words.**

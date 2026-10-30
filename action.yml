@@ -80,10 +80,23 @@ runs:
           local body
           [ -n "$BASE" ] && [ "$BASE" != 0000000000000000000000000000000000000000 ] || return 0
           if body=$(gh api -H "Accept: application/vnd.github.raw" "repos/$GITHUB_REPOSITORY/contents/${dir:+$dir/}policies/$1/channels.json?ref=$BASE" 2>"$lookup"); then
-            base_version=$(jq -r '.channels.current // empty' <<<"$body")
-          elif ! grep -q "HTTP 404" "$lookup"; then
-            echo "::error title=s1flow check::$1: could not read the base commit's channels.json ($(head -c 200 "$lookup" | tr '\n' ' '))"
-            return 1
+            base_version=$(jq -r '.channels.current // empty' <<<"$body" 2>"$lookup") && return 0
+          elif grep -q "HTTP 404" "$lookup"; then
+            return 0
+          fi
+          echo "::error title=s1flow check::$1: could not read the base commit's channels.json ($(head -c 200 "$lookup" | tr '\n' ' '))"
+          printf '%s\n### s1flow check · %s\n\n> [!CAUTION]\n> Could not read the base commit'"'"'s `channels.json`, so what this change is compared with is not known. The check fails.\n' \
+            "<!-- s1flow-check:$1 -->" "$1" > "$out/$1.md"
+          return 1
+        }
+        publish() {  # the step summary, and the pull request's comment kept up to date
+          [ -f "$out/$1.md" ] || return 0
+          cat "$out/$1.md" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$COMMENT" = true ] && [ -n "$PR" ]; then
+            marker="<!-- s1flow-check:$1 -->"
+            id=$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" --paginate --jq ".[] | select(.body | startswith(\"$marker\")) | .id" | head -1)
+            if [ -n "$id" ]; then gh api -X PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$id" -F body=@"$out/$1.md" >/dev/null
+            else gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" -F body=@"$out/$1.md" >/dev/null; fi
           fi
         }
         # the files this change touches, as "status filename" (a renamed file's old name as "renamed-from"): the check reads
@@ -114,7 +127,7 @@ runs:
         failed=0
         for t in $TASKS; do
           against="$AGAINST"
-          if ! shipped "$t"; then failed=1; continue; fi
+          if ! shipped "$t"; then failed=1; publish "$t"; continue; fi
           if [ -z "$against" ]; then against=${base_version:+v$base_version}; against=${against:-current}; fi
           "${jf[@]}" check "$t" --against "$against" "${args[@]}" --json --markdown "$out/$t.md" > "$out/$t.json"
           code=$?
@@ -132,16 +145,10 @@ runs:
             echo "::warning title=s1flow check::$t: this change edits $rules, which set the rules or the cases this check applies"
             [ -f "$out/$t.md" ] && printf '\n> [!WARNING]\n> This change edits %s, which set the rules or the cases this check applies (objective, constraints, the held-out test share, labels and corrections, prices). The check above used the edited files: review that diff.\n' "$rules" >> "$out/$t.md"
           fi
-          [ -f "$out/$t.md" ] && cat "$out/$t.md" >> "$GITHUB_STEP_SUMMARY"
           if [ "$code" = 1 ]; then failed=1; echo "::error title=s1flow check::$t is worse than $against";
           elif [ "$code" = 2 ] && [ "$verdict" = pending ] && [ "$ON_PENDING" = warn ]; then echo "::warning title=s1flow check::$t is pending: answers needed that only a run with keys can get";
           elif [ "$code" = 2 ] && [ "$verdict" = pending ]; then failed=1; echo "::error title=s1flow check::$t is pending: answers needed that only a run with keys can get (on-pending: fail)";
           elif [ "$code" != 0 ]; then failed=1; echo "::error title=s1flow check::$t could not be checked (exit $code)"; fi
-          if [ "$COMMENT" = true ] && [ -n "$PR" ] && [ -f "$out/$t.md" ]; then
-            marker="<!-- s1flow-check:$t -->"
-            id=$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" --paginate --jq ".[] | select(.body | startswith(\"$marker\")) | .id" | head -1)
-            if [ -n "$id" ]; then gh api -X PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$id" -F body=@"$out/$t.md" >/dev/null
-            else gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" -F body=@"$out/$t.md" >/dev/null; fi
-          fi
+          publish "$t"
         done
         exit $failed

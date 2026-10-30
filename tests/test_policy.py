@@ -197,8 +197,6 @@ def test_development_discovery_and_explicit_runtime_store(tmp_path, monkeypatch)
 
 
 def test_project_configuration_is_explicit_not_environment_owned(tmp_path, monkeypatch):
-
-
     home = tmp_path / "app"
     home.mkdir()
     (home / "s1flow.toml").write_text("default = []\n[models]\n")

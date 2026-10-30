@@ -71,8 +71,7 @@ Connections: `--connections` when given, else the project's `s1flow.toml`; never
 | 2 | usage, configuration, could not run, or a pending check | read the `error:` line and fix the named input |
 
 A usage error is one `error: ... (see s1flow <command> --help)` line. A `notice:` line on stderr is a warning.
-`check --cached-only` returns 2 when an answer is needed but not cached. A removed command
-prints its replacement and exits 2.
+`check --cached-only` returns 2 when an answer is needed but not cached.
 
 `--json` gives machine-readable output for `report`, `adopt`, `check`, `optimize`, `cases review`,
 `feedback measure`, `decide`, `doctor` and `models`. Other commands print their verdict and name the files they

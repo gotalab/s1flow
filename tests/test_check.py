@@ -324,7 +324,7 @@ def test_a_cost_not_known_is_not_free_and_a_list_price_estimates_it(task):
 
 def test_a_task_with_no_current_version_checks_the_one_asked_for(task):
     ship(task, policy(1, "good"))
-    (task.policies.dir("toy") / "channels.json").unlink()  # 0.1.0a1 left only `next`: no current
+    (task.policies.dir("toy") / "channels.json").unlink()
     r = check.check(task, against="v1")
     assert [s.name for s in r.sides] == ["v1"] and r.exit == 0
 

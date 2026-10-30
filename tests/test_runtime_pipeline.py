@@ -53,7 +53,6 @@ def exercise_runtime(root: Path, python: str = sys.executable, *, evaluate: bool
     other = root / 'application'; other.mkdir()
     env = dict(os.environ, S1FLOW_TEST_API_KEY='local-test-only', NO_PROXY='127.0.0.1,localhost',
                GIT_CONFIG_COUNT='1', GIT_CONFIG_KEY_0='user.name', GIT_CONFIG_VALUE_0='Runtime integration test')
-    env.pop('S1FLOW_CONNECTIONS', None)
     env.pop('PYTHONPATH', None)
 
     def cli(*args, cwd=root, expected=0):

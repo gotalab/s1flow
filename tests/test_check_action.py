@@ -20,17 +20,17 @@ def step() -> str:
 
 
 def run(tmp_path: Path, verdict: str, code: int, *, on_pending: str = "fail", changed: str | list[dict[str, str]] | None = "",
-        workdir: str = "s1flow") -> tuple[subprocess.CompletedProcess[str], Path]:
+        workdir: str = "s1flow", base: str = "echo '{\"channels\": {\"current\": 1}}'") -> tuple[subprocess.CompletedProcess[str], Path]:
     """`changed`: the pull request's files as "status filename" lines, or as GitHub lists them (put through the
-    Action's own --jq); None: listing them fails."""
+    Action's own --jq); None: listing them fails. `base`: what `gh` does for the base commit's channels.json."""
     work, stubs, temp = tmp_path / workdir, tmp_path / "bin", tmp_path / "temp"
     for d in (work / "policies" / "toy", stubs, temp):
         d.mkdir(parents=True, exist_ok=True)
     (work / "policies" / "toy" / "channels.json").write_text(json.dumps({"channels": {"current": 2}}))
-    # gh: the base commit's channels.json and history.jsonl, and the pull request's files
+    # gh: the base commit's channels.json, and the pull request's files
     (stubs / "gh").write_text(f"""#!/usr/bin/env bash
 case "$*" in
-  *channels.json*) echo '{{"channels": {{"current": 1}}}}';;
+  *channels.json*) {base};;
   *pulls/7/files*) {"echo 'HTTP 502' >&2; exit 1" if changed is None else
                      "printf '%s\\n' " + shlex.quote(changed) if isinstance(changed, str) else
                      'q=""; prev=""; for a in "$@"; do [ "$prev" = --jq ] && q="$a"; prev="$a"; done; printf %s '
@@ -67,6 +67,20 @@ def test_a_pending_check_fails_unless_the_workflow_says_warn(tmp_path):
 def test_the_base_commits_version_is_what_it_is_checked_against(tmp_path):
     ran, _ = run(tmp_path, "pass", 0)
     assert ran.returncode == 0 and "check toy --against v1 " in (tmp_path / "args").read_text()
+
+
+def test_a_base_with_no_channels_json_is_checked_against_current(tmp_path):
+    ran, _ = run(tmp_path, "pass", 0, base="echo 'gh: Not Found (HTTP 404)' >&2; exit 1")
+    assert ran.returncode == 0 and "check toy --against current " in (tmp_path / "args").read_text()
+
+
+@pytest.mark.parametrize("base", ["echo 'HTTP 502' >&2; exit 1", "echo 'not json'"])
+def test_a_base_that_cannot_be_read_fails_and_says_so(tmp_path, base):
+    ran, temp = run(tmp_path, "pass", 0, base=base)
+    assert ran.returncode == 1 and "::error title=s1flow check::toy: could not read the base commit's channels.json" in ran.stdout
+    assert not (tmp_path / "args").exists()  # nothing was checked
+    summary = (temp / "summary").read_text()
+    assert summary.startswith("<!-- s1flow-check:toy -->") and "The check fails" in summary  # and the comment says so
 
 def test_a_change_to_the_rules_is_flagged(tmp_path):
     changed = "modified s1flow/tasks/toy/task.py\nmodified s1flow/tasks/toy/corrections.jsonl\nmodified README.md\nmodified s1flow/tasks/other/task.py"

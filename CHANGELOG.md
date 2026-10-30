@@ -89,8 +89,8 @@
 - `feedback measure` only measures by default; `--add` also adds the cases to `tasks/<task>/feedback.jsonl`
   (it used to add them unless `--dry-run`, which is gone). Its `--json` `added` has
   `written`.
-- `s1flow report` with no task lists every task's current version, as `s1flow tasks` does, with the last switch
-  from `history.jsonl` (who, when, why); its `--json` has `why`. `s1flow tasks` shows the same lines.
+- `s1flow report` with no task lists every task's current version with the last switch from `history.jsonl`
+  (who, when, why); its `--json` has `why`.
 - `report --json` has `order`: what orders the `tied` rows (`by`, task.py's tiebreak as applied; `skipped`, and
   `why`). With nothing in `by`, the order of the tied rows says nothing.
 - `s1flow optimize` runs the optimizer task.py names: `optimizer=Gepa(budget=300, reflection=None)` (the template
@@ -101,8 +101,6 @@
   `settings`, `model_calls`, `cost_usd` (what it spent beside the model's calls), and what only it records in
   `detail` (GEPA's reflection LM, candidates and val scores). `@1` records still read. `optimize --json`'s
   `optimization` has the new shape.
-
-Each removed command fails with one line naming what replaces it.
 
 ### Added
 

@@ -21,6 +21,8 @@ def s1flow(*args: str, cwd: Path | None = None) -> subprocess.CompletedProcess[s
 
 @pytest.mark.parametrize("args, said", [
     (("repot",), "error: no command 'repot'; did you mean 'report'? (see s1flow --help)"),
+    (("--project", ".", "repot"), "error: no command 'repot'; did you mean 'report'?"),
+    (("--connections", "c.toml", "skill", "install"), "error: no command 'skill'"),
     (("run",), "error: the following arguments are required: task (see s1flow run --help)"),
     (("run", "t", "--bogus"), "error: unrecognized arguments: --bogus (see s1flow run --help)"),
     (("check", "t", "--sample", "0"), "error: argument --sample: 0 is not 1 or more (see s1flow check --help)"),
