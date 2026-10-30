@@ -84,7 +84,9 @@
   (it used to add them unless `--dry-run`). `--dry-run` fails, naming the replacement. Its `--json` `added` has
   `written`.
 - `s1flow report` with no task lists every task's current version, as `s1flow tasks` does, with the last switch
-  from `history.jsonl` (who, when, why); its `--json` has `why`.
+  from `history.jsonl` (who, when, why); its `--json` has `why`. `s1flow tasks` shows the same lines.
+- `report --json` has `order`: what orders the `tied` rows (`by`, task.py's tiebreak as applied; `skipped`, and
+  `why`). With nothing in `by`, the order of the tied rows says nothing.
 
 Each removed command fails with one line naming what replaces it.
 

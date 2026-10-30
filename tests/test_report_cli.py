@@ -42,6 +42,7 @@ def test_json_holds_every_metric_and_the_ranking(ran):
     got = json.loads(cli("report", "truth", "--json").output)
     assert {c["candidate"] for c in got["candidates"]} == {"good", "bad", "late"}
     assert got["ranking"][0]["candidate"] == "good" and got["ranking"][0]["tied"] and "recommended" not in got["ranking"][0]
+    assert set(got["order"]) == {"by", "skipped", "why"}  # what orders the tied rows
     by_name = {c["candidate"]: c for c in got["candidates"]}
     assert by_name["good"]["value"] == got["ranking"][0]["scores"][0]["value"]  # one number for the objective
 

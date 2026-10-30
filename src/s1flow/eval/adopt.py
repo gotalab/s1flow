@@ -120,6 +120,15 @@ class Row(BaseModel):
     per_minute: int | None  # the model's rate limit, when s1flow.toml declares one (Capabilities.per_minute)
 
 
+class Order(BaseModel):
+    """What orders the candidates the primary objective cannot tell apart (`tied`): `by`, task.py's tiebreak as
+    applied; none: they are listed by name, and their order says nothing."""
+
+    by: list[str]  # objective keys, "latency", "cost", in the order applied
+    skipped: list[str]  # named by the tiebreak but not applied ("latency": measured unalike)
+    why: str | None = None  # why one was skipped, and how to measure again
+
+
 @dataclass
 class Shortlist:
     """Every candidate scored on train + val, best first. Building it writes nothing and shows no test result."""
@@ -144,6 +153,13 @@ class Shortlist:
     @property
     def tied(self) -> list[str]:
         return [x.candidate for x in self.ranked if x.tied_with_best]
+
+    def order(self) -> Order:
+        ties = self.task.ties
+        unlike = unlike_among_tied(self.ranked, list(self.evaluations.values())) if "latency" in ties else None
+        keys = [t if isinstance(t, str) else t.key for t in ties]
+        skipped = ["latency"] if unlike else []
+        return Order(by=[k for k in keys if k not in skipped], skipped=skipped, why=unlike.en(self.task.id) if unlike else None)
 
     def pickable(self, pick: str) -> Ranked:
         """The candidate named `pick` (model[:version][/variant]), or an error listing the ones that can be picked."""
