@@ -1,4 +1,5 @@
-"""Question optimization with GEPA, for `s1flow optimize` (install `s1flow[optimize]`).
+"""Question optimization with GEPA, the built-in optimizer of `s1flow optimize` (eval/optimizers.py; install
+`s1flow[optimize]`).
 
 The candidate is the question itself: its instructions and every option's
 description, as one text block. DSPy's GEPA mutates a signature's
@@ -8,8 +9,8 @@ of GEPA's reach. So this drives the `gepa` engine that dspy.GEPA wraps with an
 adapter over s1flow's own (cached) providers, which also lets any model be
 optimized.
 
-GEPA sees the dev share only (train to read errors from, val to select on). The test share is
-saved with the result; `optimize` checks the new question on it.
+GEPA sees the dev share only (train to read errors from, val to select on); the test share is not in the
+problem it is given.
 
 Two optional inputs give the reflection LM more than right and wrong answers:
 `tasks/<id>/context.md` (how the team decides: a triage policy, CONTRIBUTING, a bot's
@@ -26,16 +27,15 @@ from dataclasses import dataclass
 from typing import Any, Callable, Coroutine
 
 from ..client import AsyncClient, cost
-from ..core import clock
 from ..client.answers import BooleanAnswer, ChoiceAnswer, Usage
 from ..client.models import DecisionModel, ModelSpec, Price
 from ..client.questions import Boolean, Choice, Question
 from ..core.errors import ConfigError, ProviderError, Rejected, S1flowError
 from ..policies.rule import DecisionRule
-from . import evalset
 from .run import call
 from .cases import Case
-from .task import Optimized, Task
+from .optimizers import Found, Gepa, Problem
+from .task import Task
 
 # The reflection LM when `--reflection` names no `llm` model of s1flow.toml: OpenAI's own API with OPENAI_API_KEY,
 # the key luna@decisions reads, so OpenAI bills it and its credit (ChatGPT Pro's API credits included) applies.
@@ -267,29 +267,8 @@ class ReflectionLM:
 # ---------- the run ----------
 
 
-def splits(task: Task, cases: list[Case]) -> dict[evalset.Role, list[str]]:
-    """test (kept from GEPA) / train / val: the task's fixed evaluation set (evalset.py), over these cases."""
-    sf = evalset.fixed(task)
-    have = {c.id for c in cases}
-    roles: tuple[evalset.Role, ...] = ("train", "val", "test")
-    return {role: [i for i in sf.ids(role) if i in have] for role in roles}
-
-
-def optimize(
-    task: Task,
-    model_name: str,
-    *,
-    budget: int,
-    seed: int = 1,
-    reflection: str | None = None,
-    minibatch: int = 8,
-    start: str = "base",
-    merge: bool = False,
-    patience: int | None = None,
-    max_cost: float | None = None,
-    name: str | None = None,
-) -> Optimized:
-    """`start` picks the question GEPA begins from: the task's own, or one of its variants.
+def run(problem: Problem, settings: Gepa) -> Found:
+    """GEPA from `problem.start`, on its train (errors to read) and val (to select on).
 
     The budget (`max_metric_calls`) bounds the loop. `patience` stops after that many proposals
     without a new best on val, `max_cost` once the reflection LM has cost that much (USD, list
@@ -298,15 +277,11 @@ def optimize(
     import gepa
     from gepa.utils.stop_condition import NoImprovementStopper
 
-    cases = task.load_cases().all()
-    by_id = {c.id: c for c in cases}
-    sp = splits(task, cases)
+    task = problem.task
     client = task.where.client()
-    model = client.connections.build(model_name)
-    adapter = QuestionAdapter(task, client, model, spec=client.connections.resolved(model_name))
-    lm = ReflectionLM(client, reflection)
-    seed_q = task.question if start == "base" else task.variants[start]
-    seed_text = to_text(seed_q)
+    model = client.connections.build(problem.model)
+    adapter = QuestionAdapter(task, client, model, spec=client.connections.resolved(problem.model))
+    lm = ReflectionLM(client, settings.reflection)
     max_ins, max_desc = limits(model)
     ctx_path = task.dir / "context.md"
     context = f"How this team decides (for reference):\n```\n{ctx_path.read_text().strip()}\n```\n\n" if ctx_path.exists() else ""
@@ -314,37 +289,31 @@ def optimize(
         TEMPLATE.replace("{max_instructions}", str(max_ins)).replace("{max_description}", str(max_desc)).replace("<context>", context)
     )
     stoppers: list[Any] = []
-    if patience:
-        stoppers.append(NoImprovementStopper(patience))
-    if max_cost:
+    if settings.patience:
+        stoppers.append(NoImprovementStopper(settings.patience))
+    if settings.max_cost:
+        max_cost = settings.max_cost
         stoppers.append(lambda state: lm.cost >= max_cost)
     result: Any = gepa.optimize(
-        seed_candidate={"question": seed_text},
-        trainset=[Inst(by_id[i]) for i in sp["train"]],
-        valset=[Inst(by_id[i]) for i in sp["val"]],
+        seed_candidate={"question": to_text(problem.start)},
+        trainset=[Inst(c) for c in problem.train],
+        valset=[Inst(c) for c in problem.val],
         adapter=adapter,  # type: ignore[arg-type]  # a structural GEPAAdapter; gepa's generics cannot infer Inst
         reflection_lm=lm,
         reflection_prompt_template=template,
-        reflection_minibatch_size=minibatch,
-        max_metric_calls=budget,
-        seed=seed,
+        reflection_minibatch_size=settings.minibatch,
+        max_metric_calls=settings.budget,
+        seed=settings.seed,
         display_progress_bar=False,
         raise_on_exception=False,
-        use_merge=merge,
+        use_merge=settings.merge,
         stop_callbacks=stoppers or None,
     )
-    best = from_text(result.best_candidate["question"], task.question)
-    name = name or (f"gepa-{model_name}" if start == "base" else f"gepa-{model_name}-from-{start}")
-    artifact = Optimized(
-        variant=name, model=model_name, method="gepa", at=clock.now(), question=best, seed_question=seed_q, start=start,
-        context=ctx_path.name if ctx_path.exists() else None,
-        rationales=sum(1 for i in sp["train"] + sp["val"] if by_id[i].rationale),
-        split=sp, seed=seed, budget=budget, merge=merge, patience=patience, max_cost=max_cost, reflection_lm=lm.name,
-        reflection_calls=lm.calls, reflection_cost_usd=round(lm.cost, 4), model_calls=adapter.calls, candidates=len(result.candidates),
-        val_scores=[round(s, 4) for s in result.val_aggregate_scores], best_index=result.best_idx,
+    return Found(
+        question=from_text(result.best_candidate["question"], task.question), model_calls=adapter.calls, cost_usd=round(lm.cost, 4),
+        detail={"surrogate": "0.5 * correctness + 0.5 * (1 - per-case Brier); prompt-only search", "reflection_lm": lm.name,
+                "context": ctx_path.name if ctx_path.exists() else None,
+                "rationales": sum(1 for c in problem.train + problem.val if c.rationale),
+                "reflection_calls": lm.calls, "candidates": len(result.candidates),
+                "val_scores": [round(x, 4) for x in result.val_aggregate_scores], "best_index": result.best_idx},
     )
-    out = task.dir / "optimized" / f"{name}.json"
-    out.parent.mkdir(exist_ok=True)
-    out.write_text(artifact.model_dump_json(exclude_none=True, indent=1))
-    task.add_optimized(artifact)
-    return artifact

@@ -25,10 +25,12 @@ says how many cases it could add. Adding them changes the task's data, so ask th
 To improve the question, use the explicit development command:
 
 ```bash
-s1flow optimize <task> --budget 800 --patience 5
+s1flow optimize <task>                      # task.py's optimizer=Gepa(budget=..., reflection=...)
+s1flow optimize <task> --budget 800 --patience 5   # GEPA's settings changed for this run
 ```
 
-It writes a new question with the optimization extra and runs it as a new candidate (`<model>/<variant>`);
+It writes a new question with task.py's optimizer (GEPA, the optimization extra, unless task.py names another)
+and runs it as a new candidate (`<model>/<variant>`); the optimizer is never given the test share;
 it ships nothing. Compare it with `s1flow report <task>` and, if the person picks it, `s1flow adopt` it like
 any candidate. The held-out test remains the final check; never treat optimization's
 surrogate score or a historical benchmark as current production evidence.

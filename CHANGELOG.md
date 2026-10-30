@@ -87,6 +87,14 @@
   from `history.jsonl` (who, when, why); its `--json` has `why`. `s1flow tasks` shows the same lines.
 - `report --json` has `order`: what orders the `tied` rows (`by`, task.py's tiebreak as applied; `skipped`, and
   `why`). With nothing in `by`, the order of the tied rows says nothing.
+- `s1flow optimize` runs the optimizer task.py names: `optimizer=Gepa(budget=300, reflection=None)` (the template
+  writes it; it is also the default), another object with `name`, `settings()` and `run(problem)`, or the name of
+  an `s1flow.optimizers` entry point. `--budget` no longer has a default of its own: with `--reflection`,
+  `--patience` and `--max-cost` it changes GEPA's settings for one run, and is refused for another optimizer.
+  `tasks/<task>/optimized/*.json` is now `s1flow/optimized@2`, one record for every optimizer: `optimizer`,
+  `settings`, `model_calls`, `cost_usd` (what it spent beside the model's calls), and what only it records in
+  `detail` (GEPA's reflection LM, candidates and val scores). `@1` records still read. `optimize --json`'s
+  `optimization` has the new shape.
 
 Each removed command fails with one line naming what replaces it.
 

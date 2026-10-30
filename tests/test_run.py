@@ -179,8 +179,8 @@ def test_a_task_whose_id_differs_from_its_directory_is_refused(tmp_path):
 def test_the_task_init_writes_spells_out_the_defaults(tmp_path):
     p = make_project(tmp_path / "p", {"fake": lambda b: Fake(b.spec.id)})
     written = scaffold.stub("t", "Bug?")
-    bare = re.sub(r"\n    # Every value below.*?\n    constraints=Constraints\(\),", "\n    objective=Accuracy(),", written, flags=re.S)
-    assert "split=" not in bare and "tiebreak=" not in bare
+    bare = re.sub(r"\n    # Every value below.*?\n    optimizer=Gepa\(budget=300, reflection=None\),", "\n    objective=Accuracy(),", written, flags=re.S)
+    assert "split=" not in bare and "tiebreak=" not in bare and "optimizer=" not in bare
     rows = "".join(json.dumps({"id": str(i), "text": "x", "label": i % 2 == 0}) + "\n" for i in range(20))
     tasks = []
     for name, text in (("t", written), ("t", bare)):
@@ -190,7 +190,7 @@ def test_the_task_init_writes_spells_out_the_defaults(tmp_path):
         (d / "data.jsonl").write_text(rows)
         tasks.append(load(p, name))
     spelled, default = tasks
-    assert spelled.split == default.split and spelled.constraints == default.constraints
+    assert spelled.split == default.split and spelled.constraints == default.constraints and spelled.optimizer == default.optimizer
     assert spelled.objectives == default.objectives and spelled.ties == ["latency", "cost"] and default.ties == []  # unordered without one
     ordered = default.copy(tiebreak=["latency", "cost"])
     assert spelled.evaluation_contract_digest == ordered.evaluation_contract_digest  # what was measured is measured alike

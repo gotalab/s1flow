@@ -1,4 +1,4 @@
-"""optimize (with GEPA stubbed) and feedback from production logs (no network)."""
+"""optimize (with a test optimizer in GEPA's place) and feedback from production logs (no network)."""
 
 import asyncio
 import json
@@ -21,7 +21,10 @@ from s1flow.core.errors import ProviderError, Unsupported
 from s1flow.eval import adopt as adopting
 from s1flow.eval import report
 from s1flow.eval import run as running
+from s1flow.eval import optimizers
+from s1flow.eval.optimizers import Found, Gepa, Problem
 from s1flow.eval.task import Optimized
+from s1flow.core.errors import ConfigError
 from s1flow.policies.kinds import KindParams
 
 CLASSES = ["a", "b", "c"]
@@ -72,24 +75,26 @@ def current(task: Task) -> EvaluatedPolicy:
 
 
 
-def stub_optimize(monkeypatch, task: Task, text: str) -> None:
-    def optimize(t, model, *, budget, reflection, start, name, **kw):
-        sf = evalset.fixed(t)  # as gepa.optimize does: train and val from the fixed split
-        art = Optimized(
-            variant=name, model=model, method="gepa", at="2026-10-16T00:00:00Z", question=q(text), seed_question=task.question, start=start,
-            split={r: sf.ids(r) for r in ("train", "val", "test")}, seed=1, budget=budget, reflection_lm=reflection or "r", reflection_calls=1,
-            reflection_cost_usd=0.01, model_calls=budget, candidates=2, val_scores=[0.5, 0.9], best_index=1,
-        )
-        task.optimized[name], task.variants[name] = art, q(text)
-        return art
+class Rewrite:
+    """The least an optimizer is: it writes `text` as the question, after asking the model about every val case once."""
 
-    monkeypatch.setattr(optimizing.gepa, "optimize", optimize)
+    name = "rewrite"
+
+    def __init__(self, text: str = "Better?"):
+        self.text, self.seen = text, []
+
+    def settings(self):
+        return {"text": self.text}
+
+    def run(self, problem: Problem) -> Found:
+        self.seen.append(problem)
+        return Found(question=q(self.text), model_calls=len(problem.val), cost_usd=None, detail={"tried": 1})
 
 
-def test_a_better_question_becomes_the_candidate(task, monkeypatch):
+def test_a_better_question_becomes_the_candidate(task):
     current(task)
-    stub_optimize(monkeypatch, task, "Better?")
-    r = optimizing.optimize(task, 50)
+    task.optimizer = rewrite = Rewrite("Better?")
+    r = optimizing.optimize(task)
     store = task.policies
     assert r.candidate == f"m/{r.variant}" and store.versions("toy") == [1] and store.current("toy") == 1  # it ships nothing
     listed = adopting.shortlist(task)
@@ -97,12 +102,58 @@ def test_a_better_question_becomes_the_candidate(task, monkeypatch):
     adopted = adopting.adopt(task, r.candidate, "you", "the optimized question", listed=listed)
     assert store.current("toy") == 2 and adopted.candidate.variant == r.variant  # adopt, as for any candidate
     assert [(h.action, h.version, h.previous) for h in store.history("toy")][-1] == ("adopt", 2, 1)
+    # the same record for every optimizer, what only it knows in `detail`; it never saw the test share
+    o = r.optimization
+    assert (o.optimizer, o.settings, o.model_calls, o.cost_usd, o.detail) == ("rewrite", {"text": "Better?"}, len(o.split["val"]), None, {"tried": 1})
+    test = set(evalset.fixed(task).ids("test"))
+    given = rewrite.seen[0]
+    assert given.start == task.question and not test & {c.id for c in given.train + given.val} and o.split["test"]
+    saved = Optimized.read((task.dir / "optimized" / f"{r.variant}.json").read_text())
+    assert saved == o and saved.schema_ == "s1flow/optimized@2"
 
 
-def test_a_question_that_does_not_win_is_still_only_a_candidate(task, monkeypatch):
+def test_an_optimizer_is_named_by_an_entry_point(task, monkeypatch):
+    from importlib.metadata import EntryPoint
+
     current(task)
-    stub_optimize(monkeypatch, task, "Worse?")
-    r = optimizing.optimize(task, 50)
+    made = Rewrite("Better?")
+    monkeypatch.setitem(globals(), "_made", made)
+    found = [EntryPoint(name="rewrite", value=f"{__name__}:_made_factory", group=optimizers.GROUP)]
+    monkeypatch.setattr(optimizers, "entry_points", lambda group, name=None: [e for e in found if name in (None, e.name)])
+    task.optimizer = "rewrite"
+    assert optimizing.optimize(task).optimization.optimizer == "rewrite" and made.seen
+    task.optimizer = "nope"
+    with pytest.raises(ConfigError, match="no optimizer 'nope'; known: gepa, rewrite"):
+        optimizing.optimize(task)
+    task.optimizer = made
+    with pytest.raises(ConfigError, match="--budget set GEPA's settings; toy optimizes with rewrite"):
+        optimizing.optimize(task, budget=10)
+    assert optimizers.resolve("gepa") == Gepa() and Gepa(budget=10).settings()["budget"] == 10
+    # a factory that fails, or the class named instead of an object, is the user's to fix, not s1flow's bug
+    found.append(EntryPoint(name="broken", value="json:loads", group=optimizers.GROUP))
+    with pytest.raises(ConfigError, match="'broken' optimizer .* failed to load: TypeError"):
+        optimizers.resolve("broken")
+    with pytest.raises(ConfigError, match="an optimizer has `name`"):
+        optimizers.resolve(Gepa)  # type: ignore[arg-type]
+
+
+def _made_factory():
+    return globals()["_made"]
+
+
+def test_a_record_from_before_reads_as_the_common_one():
+    old = {"schema": "s1flow/optimized@1", "variant": "gepa-m", "model": "m", "method": "gepa", "at": "2026-10-16T00:00:00Z",
+           "question": q("Better?").model_dump(), "seed_question": q("Which?").model_dump(), "split": {"train": ["0"], "val": ["1"], "test": ["2"]},
+           "seed": 1, "budget": 50, "reflection_lm": "r", "reflection_calls": 3, "reflection_cost_usd": 0.02, "model_calls": 50,
+           "candidates": 2, "val_scores": [0.5, 0.9], "best_index": 1}
+    art = Optimized.read(json.dumps(old))
+    assert (art.optimizer, art.settings["budget"], art.cost_usd, art.detail["val_scores"]) == ("gepa", 50, 0.02, [0.5, 0.9])
+
+
+def test_a_question_that_does_not_win_is_still_only_a_candidate(task):
+    current(task)
+    task.optimizer = Rewrite("Worse?")
+    r = optimizing.optimize(task)
     assert r.candidate.endswith(r.variant) and task.policies.versions("toy") == [1] and task.policies.current("toy") == 1
 
 
@@ -262,3 +313,11 @@ def test_a_log_line_in_an_older_shape_names_its_file_and_line(tmp_path):
     log.write_text('{"type": "answered", "policy": "t@1", "observed_at": "2026-10-20T00:00:00+00:00"}\n')
     with pytest.raises(DataError, match=r"log.jsonl:1: invalid log record"):
         feedback.read([log])
+
+
+
+def test_a_malformed_record_is_a_validation_error():
+    from pydantic import ValidationError
+
+    with pytest.raises(ValidationError):  # what load() turns into a ConfigError naming the file
+        Optimized.read("{not json")

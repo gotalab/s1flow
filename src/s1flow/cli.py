@@ -950,18 +950,20 @@ def check(a: argparse.Namespace) -> int:
 
 
 def optimize(a: argparse.Namespace) -> int:
-    """Optimize current's question for a model into a new candidate (needs s1flow[optimize]); it ships nothing:
-    report compares it with the others, adopt makes it current when a person picks it."""
+    """Optimize current's question for a model into a new candidate with task.py's optimizer (GEPA by default, needs
+    s1flow[optimize]); it ships nothing: report compares it with the others, adopt makes it current when a person
+    picks it."""
     from .eval import optimize as optimizing
     from .eval.task import load
 
     task = load(project(a), a.task)
-    r = optimizing.optimize(task, a.budget, model=a.model, reflection=a.reflection, patience=a.patience, max_cost=a.max_cost)
+    r = optimizing.optimize(task, model=a.model, budget=a.budget, reflection=a.reflection, patience=a.patience, max_cost=a.max_cost)
     if a.json:
         print(r.model_dump_json(indent=1))
         return 0
     o = r.optimization
-    print(f"{r.task}: candidate {r.candidate}  (from {r.start}; {o.candidates} questions tried, reflection ${o.reflection_cost_usd}, val {o.val_scores[0]} -> {o.val_scores[o.best_index]})")
+    spent = "not priced" if o.cost_usd is None else f"${o.cost_usd}"
+    print(f"{r.task}: candidate {r.candidate}  (from {r.start}, by {o.optimizer}: {o.model_calls} model calls, {spent} beside them)")
     print(f"compare it: s1flow report {r.task}; adopt it: s1flow adopt {r.task} {r.candidate} --reason \"...\"")
     return 0
 
@@ -1077,11 +1079,12 @@ def parser() -> argparse.ArgumentParser:
     p = _command(sub, "optimize", optimize, context=("project", "connections"))
     p.add_argument("task")
     p.add_argument("--json", action="store_true")
-    p.add_argument("--budget", type=int, default=300, help="GEPA metric calls (model calls on train/val)")
     p.add_argument("--model", help="model whose question is optimized (default: current's)")
-    p.add_argument("--reflection", help="the reflection LM, an `llm` model of s1flow.toml (default: gpt-6.1-sol on OpenAI's API, OPENAI_API_KEY)")
-    p.add_argument("--patience", type=int, help="stop after this many proposals without a new best on val")
-    p.add_argument("--max-cost", type=float, help="stop once the reflection LM has cost this much (USD)")
+    # GEPA's settings, for this run: task.py's `optimizer=Gepa(...)` sets them
+    p.add_argument("--budget", type=positive, help="GEPA: model calls on train/val (task.py's Gepa(budget=...), 300 when not set)")
+    p.add_argument("--reflection", help="GEPA: the reflection LM, an `llm` model of s1flow.toml (default: task.py's Gepa(reflection=...), else gpt-6.1-sol on OpenAI's API, OPENAI_API_KEY)")
+    p.add_argument("--patience", type=int, help="GEPA: stop after this many proposals without a new best on val")
+    p.add_argument("--max-cost", type=float, help="GEPA: stop once the reflection LM has cost this much (USD)")
 
     group = sub.add_parser("cases", context=("project", "connections"), help="check a task's cases; review and correct their labels",
                            description="Check a task's cases, and review and correct their labels.").add_subparsers(dest="action", required=True, parser_class=Parser)
