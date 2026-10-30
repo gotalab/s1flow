@@ -10,6 +10,9 @@ s1flow adopt --spec spec.json --reason "..."
 s1flow adopt <task>@v<N> --reason "..."     # a rollback
 ```
 
+Outside an s1flow project (an app's repository), add `--root policies` to both, and `--connections FILE` to
+`--spec`.
+
 `adopt --spec` only accepts a v2 `PolicySpec`, never overwrites a saved version, and makes the version it saves
 current. `policy create --check` only validates the file; adding `--connections` also binds its `connection` and
 `model_id` to the trusted connections in that file. Such a version has no evaluation evidence. Every switch,

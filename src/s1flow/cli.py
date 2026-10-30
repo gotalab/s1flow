@@ -814,16 +814,17 @@ def _adopt_without_evaluation(a: argparse.Namespace) -> int:
 
     if a.candidate or a.force:
         raise S1flowError("adopt TASK@vN and adopt --spec take no candidate and no --force: nothing is measured")
-    proj = project(a)
-    store = Policies(proj.policies_dir)
-    user = git.user(proj.root)
+    # In an s1flow project its policies/ and s1flow.toml; in an app's repository, --root and --connections.
+    proj = None if a.root else project(a)
+    store = Policies(place.absolute(a.root, "policy root") if a.root else proj.policies_dir)  # type: ignore[union-attr]
+    user = git.user(proj.root if proj else Path.cwd())
     if not user:
         raise S1flowError("adopt records who switched current: set git config user.name")
     if a.spec:
         if a.task:
             raise S1flowError("adopt --spec FILE takes no TASK: the spec names its task and version")
         spec = read_file(a.spec)
-        DecisionPolicy(spec, client=proj.client())  # it binds to a model of s1flow.toml
+        DecisionPolicy(spec, client=proj.client() if proj else _policy_client(a))  # it binds to an allowed model
         previous = _adopt_spec(store, spec, user, a.reason)
         path = store.dir(spec.task) / f"v{spec.version}.json"
         out = {"policy": spec.ref, "previous": previous, "evaluated": False, "path": str(path)}
@@ -846,7 +847,10 @@ def adopt(a: argparse.Namespace) -> int:
     measured candidate (TASK CANDIDATE), to an older version (TASK@vN, a rollback), or to a runtime spec saved
     unevaluated (--spec FILE; these two need only the base install). The pull request that carries it ships it when
     it merges. A candidate the held-out test shows below is not written (exit 1) unless --force."""
-    if a.spec or "@" in (a.task or ""):
+    a.reason = a.reason.strip()
+    if not a.reason:
+        raise S1flowError("adopt records why: give --reason a sentence")
+    if a.spec or "@" in (a.task or "") or a.root:
         return _adopt_without_evaluation(a)
     if not a.task or not a.candidate:
         raise S1flowError("adopt takes TASK CANDIDATE, TASK@vN (a rollback) or --spec FILE")
@@ -1027,6 +1031,7 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("task", nargs="?", help="the task, or TASK@vN to roll back to a saved version")
     p.add_argument("candidate", nargs="?", help="the candidate, model[:version][/variant] as `s1flow report` names it")
     p.add_argument("--spec", type=Path, metavar="FILE", help="save this runtime spec as the next version, unevaluated, and make it current")
+    p.add_argument("--root", type=Path, help="the policies directory, outside an s1flow project (an app's repository; with --connections for --spec)")
     p.add_argument("--reason", required=True, help="why (kept in the policy and in history.jsonl)")
     p.add_argument("--force", action="store_true", help="write it even when the held-out test shows it below")
     p.add_argument("--json", action="store_true")

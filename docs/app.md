@@ -53,7 +53,7 @@ Now write `bug.json`. You don't need any evaluation data, model responses or pla
 
 ```bash
 s1flow policy create bug.json --connections connections.toml --check --json
-s1flow adopt --spec bug.json --reason "first rule" --json
+s1flow adopt --spec bug.json --root policies --connections connections.toml --reason "first rule" --json
 s1flow decide --policy ticket-bug@v1 --path policies/ticket-bug/v1.json \
   --connections connections.toml --state '{"text":"Crash on startup"}' --json
 ```

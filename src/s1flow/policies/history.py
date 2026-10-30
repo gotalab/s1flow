@@ -22,7 +22,7 @@ class Switch(BaseModel):
     schema_: Literal['s1flow/history@1'] = Field(default='s1flow/history@1', alias='schema')
     at: str = Field(default_factory=clock.now)
     action: Action  # adopt: a measured candidate; spec: a version saved without evaluation; rollback: an older version
-    version: int | None = Field(ge=1)  # what current points at after it (refused: the version it would have been)
+    version: int = Field(ge=1)  # what current points at after it (refused: the version it would have been)
     previous: int | None = Field(ge=1)  # what current pointed at before
     by: str = Field(min_length=1)
     reason: str = Field(min_length=1)

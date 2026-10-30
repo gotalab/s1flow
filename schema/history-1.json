@@ -25,16 +25,9 @@
    "type": "string"
   },
   "version": {
-   "anyOf": [
-    {
-     "minimum": 1,
-     "type": "integer"
-    },
-    {
-     "type": "null"
-    }
-   ],
-   "title": "Version"
+   "minimum": 1,
+   "title": "Version",
+   "type": "integer"
   },
   "previous": {
    "anyOf": [

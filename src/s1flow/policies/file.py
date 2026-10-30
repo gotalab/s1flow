@@ -364,19 +364,26 @@ class Policies:
         """Save a new version; `adopted` (s1flow adopt's) also makes it the version that runs (merging that change
         ships it)."""
         with self.locked(spec.task):
+            if adopted is not None:
+                self._may_switch(spec.task, adopted)
             self._write_new(spec)
             if adopted is not None:
                 self._switch(spec.task, adopted)
 
-    def _switch(self, task: str, entry: Switch) -> None:
-        """The one writer of channels.json: points current at entry.version and says why in history.jsonl."""
-        if entry.version is None or entry.action == 'refused':
+    def _may_switch(self, task: str, entry: Switch) -> None:
+        """Before anything is written: a switch from what current no longer is would undo another adopt."""
+        if entry.action == 'refused':
             raise ConfigError(f'{task}: a refused candidate switches nothing')
         if entry.previous != self.current(task):
             raise ConfigError(f'{task}: current changed while adopting (v{self.current(task)}, not v{entry.previous}); adopt again')
+
+    def _switch(self, task: str, entry: Switch) -> None:
+        """The one writer of channels.json: points current at entry.version, after saying why in history.jsonl (a
+        line whose switch did not happen is told apart by channels.json; a switch with no why could not be)."""
+        self._may_switch(task, entry)
         self.read(task, version=entry.version)
-        atomic_write(self._file(task, 'channels.json'), ChannelsFile(channels={CURRENT: entry.version}).dump())
         self._log(task, entry)
+        atomic_write(self._file(task, 'channels.json'), ChannelsFile(channels={CURRENT: entry.version}).dump())
 
     def _log(self, task: str, entry: Switch) -> None:
         with self._file(task, 'history.jsonl').open('a', encoding='utf-8') as f:

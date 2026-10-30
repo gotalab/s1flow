@@ -24,7 +24,8 @@
 - Merging the pull request is the release. `s1flow promote` and the `next` channel are gone: `adopt` saves the new
   version and makes it current in `channels.json`, so the pull request shows the switch and its merge ships it.
 - Only `adopt` points `current`. `adopt TASK@vN --reason` is the rollback, and `adopt --spec FILE --reason` saves an
-  unevaluated runtime spec as the next version and makes it current; both run on the base install. `policy create`
+  unevaluated runtime spec as the next version and makes it current; both run on the base install, and outside an
+  s1flow project with `--root` (and `--connections` for `--spec`). `policy create`
   is `adopt --spec` with `--root`, and now needs `--reason` (`--check` does not).
 - Each switch appends a line to `policies/<task>/history.jsonl` (`schema/history-1.json`): when, the version, the one
   before, who, why, and for a measured candidate the held-out test's verdict and whether `--force` wrote it. A

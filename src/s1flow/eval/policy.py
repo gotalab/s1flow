@@ -168,6 +168,8 @@ class Store:
         policy = EvaluatedPolicy.model_validate_json(policy.model_dump_json())
         record = EvaluationRecord.from_policy(policy)
         with self.runtime.locked(policy.spec.task):
+            if adopted is not None:
+                self.runtime._may_switch(policy.spec.task, adopted)
             self.runtime._write_new(policy.spec)
             atomic_write(self._record_path(policy.spec), record.dump(), immutable=True)
             if adopted is not None:
