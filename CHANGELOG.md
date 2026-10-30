@@ -46,3 +46,12 @@
   `channels`, and each policy `current: true|false` in place of `channels: [...]`.
 
 Each removed command fails with one line naming what replaces it.
+
+### Added
+
+- `tiebreak` takes `"latency"` and `"cost"` beside objectives, in the order that ranks the tied candidates
+  (`tiebreak=["cost", "latency"]` puts API cost first). A tiebreak naming neither still has latency and then API
+  cost after it, as before.
+- `s1flow init --task` writes every default into task.py: `split=Split(test=0.3, k=5, seed=1)`,
+  `objective=Accuracy()`, `tiebreak=["latency", "cost"]`, `constraints=Constraints()`. The task measures and ranks
+  as it did with them left out.

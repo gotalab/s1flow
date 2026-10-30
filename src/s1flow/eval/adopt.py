@@ -198,9 +198,9 @@ def shortlist(task: Task, only: list[str] | None = None, variants: list[str] | N
         warnings.warn(f"left out until it has an answer to every case: {why}; ask them again: {again}", stacklevel=2)
         preds = {c[0]: preds[c[0]] for c in cands}
     evaluations = {name: metrics.evaluate(task, preds[name], variant=variant) for name, model, variant in cands}
-    ranked = rank(task.primary, task.objectives[1:], task.constraints, list(evaluations.values()))
+    ranked = rank(task.primary, task.ties, task.constraints, list(evaluations.values()))
     moved = weights.sensitivity(task, preds, {c[0]: c[2] for c in cands})
-    if unlike := unlike_among_tied(ranked, list(evaluations.values())):
+    if "latency" in task.ties and (unlike := unlike_among_tied(ranked, list(evaluations.values()))):
         warnings.warn(unlike.en(task.id), stacklevel=2)
     if task.data_digest != data_digest or task.input_adapter_digest != input_adapter_digest:
         raise ConfigError(f"{task.id}: comparison data or execution conditions changed during ranking")

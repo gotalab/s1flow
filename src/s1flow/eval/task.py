@@ -23,7 +23,7 @@ from ..core.errors import ConfigError, invalid
 from .kinds import Kind, KindParams, kind_of
 from .candidate import variant_name
 from .cases import Case, Cases, Row
-from .objectives.declare import Constraints, Objective, check, default_for, fitted
+from .objectives.declare import CallKey, Constraints, Objective, check, default_for, fitted
 from .objectives.measure import Measure
 from .objectives.custom import Custom
 
@@ -98,12 +98,14 @@ class Task:
     kind_params: KindParams = field(default_factory=KindParams)
     split: Split = field(default_factory=Split)
     # What the task optimizes: `objective` (it alone decides how a policy reads its answers; None: the kind's
-    # default, Accuracy for a boolean, choice or box question), and `tiebreak`, more objectives, in order, for the
-    # candidates it cannot tell apart (eval/objectives/declare.py); latency and API cost come after them on their
-    # own (eval/select.py). A custom objective (@per_case / @on_set, called with its params) goes in either.
-    # Both are kept as declared; `objectives` holds what they resolve to, and `custom` the custom ones' functions.
+    # default, Accuracy for a boolean, choice or box question), and `tiebreak`, what orders the candidates it cannot
+    # tell apart, in order: more objectives (eval/objectives/declare.py), "latency" (p90 per case) and "cost" (API
+    # cost per 10,000 cases) (eval/select.py). A tiebreak naming neither "latency" nor "cost" still has them after
+    # it, latency first. A custom objective (@per_case / @on_set, called with its params) goes in either.
+    # Both are kept as declared; `objectives` holds the objectives they resolve to, `ties` the tiebreak resolved
+    # (with "latency" and "cost" where they go), and `custom` the custom ones' functions.
     objective: Objective | Custom | None = None
-    tiebreak: list[Objective | Custom] = field(default_factory=list)
+    tiebreak: list[Objective | Custom | CallKey] = field(default_factory=list)
     constraints: Constraints = field(default_factory=Constraints)  # what a model may not exceed
     variants: dict[str, Question] = field(default_factory=dict)
     source: str = ""  # where the data comes from, with its license
@@ -114,6 +116,7 @@ class Task:
     _cases: Cases | None = field(default=None, init=False, repr=False)
     custom: dict[str, Custom] = field(default_factory=dict, init=False, repr=False)  # the task's custom objectives, by key
     objectives: list[Objective] = field(default_factory=list, init=False, repr=False)  # the objective, then those in `tiebreak`
+    ties: list[Objective | CallKey] = field(default_factory=list, init=False, repr=False)  # `tiebreak` resolved, in order
 
     def __post_init__(self) -> None:
         if why := place.task_id_error(self.id):
@@ -134,9 +137,12 @@ class Task:
 
         for name in self.variants:
             variant_name(name)
-        primary, later = declared(self.objective or default), [declared(x) for x in self.tiebreak]
-        check(primary, later, self.kind, self.id, frozenset(self.custom))
-        self.objectives = [primary, *later]
+        primary = declared(self.objective or default)
+        self.ties = [x if isinstance(x, str) else declared(x) for x in self.tiebreak]
+        check(primary, self.ties, self.kind, self.id, frozenset(self.custom))
+        if not any(isinstance(x, str) for x in self.ties):
+            self.ties += ["latency", "cost"]
+        self.objectives = [primary, *(x for x in self.ties if isinstance(x, Objective))]
         if self.constraints.floors and not (self.kind.binary and self.primary.sets == "threshold"):
             raise ConfigError(f"{self.id}: min_precision and min_recall limit the P(positive) threshold, so they need a binary question "
                               f"and an objective that sets it (Accuracy, F1, ExpectedLoss, Recall); {self.primary.label} sets {self.primary.sets or 'none'}")

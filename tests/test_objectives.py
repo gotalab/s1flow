@@ -63,7 +63,7 @@ def test_a_tie_on_the_primary_goes_to_the_next_objective_then_the_cheaper():
     c, a = Coverage(), AUROC()
     tied = [ev("a", [scored(c, 0.80), scored(a, 0.80)], cost=5.0), ev("b", [scored(c, 0.78), scored(a, 0.95)], cost=1.0), ev("c", [scored(c, 0.79), scored(a, 0.80)], cost=0.5)]
     only_cov = [e.model_copy(update={"tiebreak": []}) for e in tied]
-    assert rank(c, [], Constraints(), only_cov)[0].candidate == "c"  # cheapest among the tied
+    assert rank(c, ["latency", "cost"], Constraints(), only_cov)[0].candidate == "c"  # cheapest among the tied
     assert rank(c, [a], Constraints(), tied)[0].candidate == "b"  # the next objective first
 
 
@@ -143,7 +143,7 @@ LOAD_ERRORS = {
     "an objective with no such name": (lambda: declared([Accuracy(), LATENCY_BY_HAND]), "no objective named 'latency'"),
     "a built-in written by hand": (lambda: declared([HAND_WRITTEN]), re.escape("coverage is a built-in objective; declare it with its function (Coverage(...))")),
     "Coverage in then under another objective": (lambda: declared([Accuracy(), Coverage()]), "coverage decides min_probability, so it only ranks as the objective"),
-    "then holding something else": (lambda: declared([Coverage(), "accuracy"]), "tiebreak= lists objectives"),
+    "then holding something else": (lambda: declared([Coverage(), "accuracy"]), "tiebreak= takes objectives and .latency. and .cost., got .accuracy."),
     "objective= given a list": (lambda: Task(id="gh-ruff-area", cases="x", state=lambda r: r, question=CHOICE, label=lambda r: r,
                                              objective=[Coverage()]), "objective= is one objective"),
 }

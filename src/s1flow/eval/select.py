@@ -5,8 +5,8 @@ chosen on the objective among those that meet the constraints, and only candidat
 intervals overlap the best are compared on `tiebreak`'s objectives, in its order.
 
 What the calls took (Evaluation.calls) is used in two places only, both here: the constraints on
-latency and API cost, and the fixed order after `tiebreak` among the still tied, latency (p90 per
-case) and then API cost per 10,000 cases (unknown last). Latency orders candidates only when they
+latency and API cost, and "latency" (p90 per case) and "cost" (API cost per 10,000 cases, unknown
+last) where `tiebreak` names them (Task.ties). Latency orders candidates only when they
 were all measured alike: at one concurrency, with their retries recorded (a call saved before
 2026-10-16 may include the backoff). Otherwise it is skipped and `unlike` says why;
 `s1flow run --fresh --concurrency N` with one N for every candidate measures them again.
@@ -21,7 +21,7 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 from .evaluation import Estimate, Evaluation, ObjectiveScore
-from .objectives.declare import Constraints, Objective
+from .objectives.declare import CallKey, Constraints, Objective
 from .shown import pct, usd
 
 
@@ -115,10 +115,10 @@ def _latency(group: list[Evaluation]) -> dict[str, float]:
     return {n: float("inf") if s.value is None else 0.0 if overlaps(s) else s.value for n, s in of.items()}
 
 
-def rank(objective: Objective, then: list[Objective], constraints: Constraints, evaluations: list[Evaluation]) -> list[Ranked]:
+def rank(objective: Objective, then: list[Objective | CallKey], constraints: Constraints, evaluations: list[Evaluation]) -> list[Ranked]:
     """Every scored candidate, best first: those within the constraints, then the excluded ones.
-    `tied_with_best` marks the candidates the objective cannot tell from the best; `tiebreak`, then latency and
-    API cost order them."""
+    `tied_with_best` marks the candidates the objective cannot tell from the best; `then` (Task.ties: the
+    tiebreak's objectives, "latency" and "cost") orders them."""
     scored = [e for e in evaluations if e.n and e.objective is not None]
     ranked = [Ranked(candidate=e.candidate.name, scores=e.scores, excluded=violations(constraints, e)) for e in scored]
     populations = {tuple(sorted(e.answered_ids)) for e in scored}
@@ -133,15 +133,19 @@ def rank(objective: Objective, then: list[Objective], constraints: Constraints, 
         return float("inf") if s.value is None else (-s.value if o.maximize else s.value)
 
     def values(group: list[Ranked]) -> dict[str, list[float]]:
-        """Each candidate's keys within `group`: `tiebreak`'s objectives in its order, then its place on latency
-        among the group, then its API cost."""
+        """Each candidate's keys within `group`, in `then`'s order: an objective's value, its place on latency
+        among the group, its API cost."""
         placed = _latency([by[x.candidate] for x in group])
-        out: dict[str, list[float]] = {}
-        for x in group:
-            cost = by[x.candidate].calls.cost_per_10k_usd
-            out[x.candidate] = [*(by_value(t, next(s for s in x.scores if s.objective.key == t.key)) for t in then),
-                           placed[x.candidate], float("inf") if cost is None else cost]
-        return out
+
+        def value(x: Ranked, t: Objective | CallKey) -> float:
+            if t == "latency":
+                return placed[x.candidate]
+            if t == "cost":
+                cost = by[x.candidate].calls.cost_per_10k_usd
+                return float("inf") if cost is None else cost
+            return by_value(t, next(s for s in x.scores if s.objective.key == t.key))
+
+        return {x.candidate: [value(x, t) for t in then] for x in group}
 
     every = values(ranked)
 

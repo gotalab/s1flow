@@ -1,5 +1,5 @@
-"""`tiebreak`: objectives only, read at the primary objective's rule; after it, latency orders the tied candidates
-(only when measured alike), then API cost."""
+"""`tiebreak`: objectives, read at the primary objective's rule, and "latency" (only when measured alike) and "cost",
+in the order it lists them; one naming neither has latency and then API cost after it."""
 
 import asyncio
 import json
@@ -80,7 +80,7 @@ def timed(model, cov, p90, half=10.0, cost=1.0, concurrency=4, unrecorded=0, aur
 
 
 def order(evs, tiebreak=()):
-    return [x.candidate for x in rank(Coverage(), list(tiebreak), Constraints(), evs)]
+    return [x.candidate for x in rank(Coverage(), task([Coverage(), *tiebreak]).ties, Constraints(), evs)]
 
 
 def test_the_faster_of_the_tied_comes_first_when_measured_alike():
@@ -95,7 +95,7 @@ def test_the_faster_of_the_tied_comes_first_when_measured_alike():
 
 def test_latency_measured_unalike_is_skipped_and_says_how_to_measure_again():
     a, b = timed("a", 0.80, 300, cost=0.1, concurrency=8), timed("b", 0.79, 100, cost=5.0, concurrency=1)
-    ranked = rank(Coverage(), [], Constraints(), [a, b])
+    ranked = rank(Coverage(), ["latency", "cost"], Constraints(), [a, b])
     assert [x.candidate for x in ranked] == ["a", "b"]  # not by speed: by API cost
     why = unlike_among_tied(ranked, [a, b])
     assert why is not None and why.concurrencies == [1, 8]
@@ -114,7 +114,23 @@ def test_the_report_names_what_ordered_the_tie_and_what_was_skipped():
     assert "the lowest API cost is chosen: **b**" in unalike and "Latency not compared (concurrency 4, 8)" in unalike
 
 
-@pytest.mark.parametrize("tiebreak", [["latency"], [object()]])
-def test_tiebreak_takes_objectives_only(tiebreak):
-    with pytest.raises(ConfigError, match="tiebreak= lists objectives"):
+def test_tiebreak_says_where_latency_and_cost_go():
+    cheap_slow, dear_fast = timed("cheap-slow", 0.80, 300, cost=0.1), timed("dear-fast", 0.79, 100, cost=5.0)
+    assert order([cheap_slow, dear_fast], ["cost", "latency"]) == ["cheap-slow", "dear-fast"]
+    assert order([cheap_slow, dear_fast], ["cost"]) == ["cheap-slow", "dear-fast"]  # latency not used at all
+    assert task([Coverage(), "cost"]).ties == ["cost"]
+    sharp = [timed("cheap-slow", 0.80, 300, cost=0.1, auroc=0.7), timed("dear-fast", 0.79, 100, cost=5.0, auroc=0.9)]
+    assert order(sharp, ["latency", AUROC()]) == ["dear-fast", "cheap-slow"]  # latency before the objective, as listed
+    t = task([Coverage(), AUROC()])
+    assert t.ties == [AUROC(), "latency", "cost"] and t.objectives == [Coverage(), AUROC()]  # the default after it
+    unalike = [timed("a", 0.80, 300, cost=5.0, concurrency=8), timed("b", 0.79, 100, cost=0.1)]
+    assert "latency not compared" not in report.headline(task([Coverage(), "cost"]), unalike)  # not asked for: not warned of
+    assert "compared by API cost, then p90 latency" in report.headline(task([Coverage(), "cost", "latency"]),
+                                                                       [timed("a", 0.80, 300, cost=5.0), timed("b", 0.79, 100, cost=0.1)])
+
+
+@pytest.mark.parametrize("tiebreak, why", [(["speed"], "takes objectives and 'latency' and 'cost', got 'speed'"),
+                                           (["cost", "cost"], "'cost' is listed twice"), ([object()], "tiebreak= lists objectives")])
+def test_tiebreak_takes_objectives_latency_and_cost_only(tiebreak, why):
+    with pytest.raises(ConfigError, match=why):
         task([Coverage(), *tiebreak])

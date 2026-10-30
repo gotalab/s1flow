@@ -29,10 +29,10 @@ or `ExpectedLoss(fn=, fp=)`; the weights are the user's to set, never yours: ask
 lines for the weights halved and doubled. A measure s1flow lacks is a function in task.py:
 `@per_case(direction="min", sets="threshold") def wake_loss(label, reading, *, miss: float = 20.0) -> float`,
 then `objective=wake_loss(miss=20)`. `objective=` is the one objective that decides how the policy
-reads its answers; `tiebreak=[...]` lists more objectives, in order, for the candidates it cannot tell apart,
-each measured at the rule `objective=` chose. Latency and API cost are not objectives and never go in
-`tiebreak`: they are measured on the calls, limit candidates through `constraints=Constraints(latency_p99_ms=...,
-cost_per_10k_usd=...)`, and order what `tiebreak` still leaves tied, latency first, then API cost. Latency counts
+reads its answers; `tiebreak=[...]` lists, in order, what orders the candidates it cannot tell apart: more
+objectives, each measured at the rule `objective=` chose, and `"latency"` and `"cost"`, measured on the calls
+(the template writes `tiebreak=["latency", "cost"]`; a tiebreak naming neither still has them after it). Latency
+and API cost also limit candidates through `constraints=Constraints(latency_p99_ms=..., cost_per_10k_usd=...)`. Latency counts
 only between candidates run at one concurrency with retries recorded; otherwise report says so and how to run
 them again (`s1flow run <id> --fresh --concurrency N`, one N for all). Re-running asks every candidate again:
 say what it will spend before suggesting it. When the decision is only useful above some precision and recall
