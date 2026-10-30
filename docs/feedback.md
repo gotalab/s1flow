@@ -13,7 +13,7 @@ get a new ID.
 s1flow feedback record ticket-bug@v1 DECISION_ID true --log decisions.jsonl \
   --path policies/ticket-bug/v1.json --connections connections.toml
 s1flow feedback measure ticket-bug decisions.jsonl --dry-run --json
-s1flow optimize ticket-bug --budget 300 --json
+s1flow optimize ticket-bug --budget 300 --json     # a new candidate; report and adopt as for any other
 ```
 
 ## Measure in production
