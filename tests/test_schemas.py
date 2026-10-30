@@ -134,12 +134,26 @@ def test_an_old_evaluation_record_reads_as_the_new_one():
     from s1flow.eval.policy import read_record
 
     old = json.loads((SCHEMA / "fixtures" / "policy-evaluation-2.valid.json").read_text())
-    for test, forced in (("kept", False), ("below", True)):  # @2 stored a version below only under --force
+    for test in ("kept", "below"):  # 0.1.0a1 stored a version below without --force: @2 cannot say it was forced
         old["evidence"]["test"] = test
         new = read_record(json.dumps(old))
-        assert new.schema_ == "s1flow/policy-evaluation@3" and new.selection.forced is forced
+        assert new.schema_ == "s1flow/policy-evaluation@3" and new.selection.forced is False
         assert new.selection.reason == old["selection"]["reason"] and new.selection.tied == old["selection"]["tied"]
         assert errors(validator("policy-evaluation-3"), json.loads(new.dump())) == []
+
+
+def test_only_a_version_below_on_the_held_out_test_is_forced():
+    from s1flow.eval.policy import read_record
+
+    record = json.loads((SCHEMA / "fixtures" / "policy-evaluation-3.valid.json").read_text())
+    record["selection"]["forced"] = True
+    for test, ok in (("below", True), ("kept", False), (None, False)):
+        record["evidence"]["test"] = test
+        if ok:
+            assert read_record(json.dumps(record)).selection.forced
+        else:
+            with pytest.raises(ValidationError, match="only a version below is forced"):
+                read_record(json.dumps(record))
 
 
 @pytest.mark.parametrize("text", ["[]", "null", "{"])
