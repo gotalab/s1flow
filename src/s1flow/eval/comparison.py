@@ -133,22 +133,24 @@ def _variants(task: Task, variants: Sequence[str] | None = None) -> list[str]:
     return list(dict.fromkeys(chosen))
 
 
-def _inputs(task: Task, variants: Sequence[str] | None = None, only: Sequence[str] | None = None) -> list[_CandidateInput]:
-    lineup = task.where.lineup()
+def _candidates(task: Task, variants: Sequence[str] | None = None, only: Sequence[str] | None = None) -> list[Candidate]:
+    """Every model and question variant to compare, by name, never by how well a candidate did."""
     wanted = set(only or ())
+    every = [Candidate(model=m, variant=v) for m in task.where.lineup().probe_names() for v in _variants(task, variants)]
+    return sorted((c for c in every if not wanted or c.name in wanted), key=lambda c: (c.model, c.variant != "base", c.variant))
+
+
+def _inputs(task: Task, candidates: Sequence[Candidate]) -> list[_CandidateInput]:
+    lineup = task.where.lineup()
     out: list[_CandidateInput] = []
-    for model in lineup.probe_names():
-        for variant in _variants(task, variants):
-            candidate = Candidate(model=model, variant=variant)
-            if wanted and candidate.name not in wanted:
-                continue
-            path = run_path(task, variant, model)
-            spec: ModelSpec | None
-            try:
-                spec = lineup.resolved(model)
-            except S1flowError:
-                spec = None
-            out.append(_CandidateInput(candidate, task.questions(variant)[task.question_id], spec, path))
+    for candidate in candidates:
+        spec: ModelSpec | None
+        try:
+            spec = lineup.resolved(candidate.model)
+        except S1flowError:
+            spec = None
+        out.append(_CandidateInput(candidate, task.questions(candidate.variant)[task.question_id], spec,
+                                   run_path(task, candidate.variant, candidate.model)))
     return out
 
 
@@ -389,12 +391,9 @@ def collect(task: Task, *, variants: Sequence[str] | None = None, only: Sequence
     Chart series are opt-in because an agent summary should stay bounded.  The
     evidence identity and metric values are identical with or without them.
     """
-    # by name, never by how well a candidate did
-    inputs = sorted(
-        _inputs(task, variants, only),
-        key=lambda x: (x.candidate.model, x.candidate.variant != "base", x.candidate.variant),
-    )
-    measured = Conditions.now(task, [item.candidate for item in inputs], task.where.lineup().resolved)
+    candidates = _candidates(task, variants, only)
+    measured = Conditions.now(task, candidates, task.where.lineup().resolved)  # before the questions and specs are read
+    inputs = _inputs(task, candidates)
     total = _dev_n(task)
     rows: list[ComparisonRow] = []
     evaluations: dict[str, Evaluation] = {}
