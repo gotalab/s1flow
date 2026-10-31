@@ -83,14 +83,15 @@ pattern = '\]\((?!https?:|#)([^)]+)\)'
 replacement = '](https://github.com/gotalab/s1flow/blob/main/\1)'
 
 [tool.hatch.build.targets.sdist]
-only-include = ["src", "skills", "README.md"]
+only-include = ["src", "plugin/skills", "README.md"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/s1flow"]
 
-# The Agent Skill travels with the package, so a base install can write it (s1flow init --skill).
+# The Agent Skill lives once, inside the plugin (Claude Code refuses a plugin symlink to a path outside it), and
+# travels with the package so a base install can write it (s1flow init --skill).
 [tool.hatch.build.targets.wheel.force-include]
-"skills/s1flow" = "s1flow/skills/s1flow"
+"plugin/skills/s1flow" = "s1flow/skills/s1flow"
 
 [dependency-groups]
 dev = [

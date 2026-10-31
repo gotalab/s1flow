@@ -1,5 +1,5 @@
-"""The Agent Skill the package carries: `s1flow init --skill`, `init` leaving it out unless asked, the wheel holding
-it, and plugin/skills/ kept a copy of skills/."""
+"""The Agent Skill the package carries: `s1flow init --skill`, `init` leaving it out unless asked, and the wheel holding
+it."""
 
 import json
 import re
@@ -38,7 +38,7 @@ def repo(tmp_path, monkeypatch):
 
 def test_the_skill_routes_each_job_to_one_reference():
     src = skill.source()
-    assert src == REPO / "skills" / "s1flow"
+    assert src == REPO / "plugin" / "skills" / "s1flow"
     text = (src / "SKILL.md").read_text()
     assert text.startswith("---\nname: s1flow\ndescription:")
     assert sorted(p.stem for p in (src / "references").glob("*.md")) == TOPICS
@@ -154,11 +154,6 @@ def test_the_wheel_carries_the_skill(tmp_path):
     assert "s1flow/skills/s1flow/SKILL.md" in names
     assert "s1flow/skills/s1flow/scripts/charts.html" in names
     assert {f"s1flow/skills/s1flow/references/{t}.md" for t in TOPICS} <= set(names)
-
-
-def test_the_plugin_carries_the_same_skill():
-    done = subprocess.run([sys.executable, str(REPO / "scripts" / "sync_plugin.py"), "--check"], capture_output=True, text=True)
-    assert done.returncode == 0, done.stderr
 
 
 def test_the_chart_page_draws_from_a_shared_snapshot_without_evaluation_dependencies(tmp_path):
