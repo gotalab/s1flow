@@ -23,5 +23,5 @@ are not a measure of any provider's current accuracy.
 3. Tag the same commit `v<version>` and push the tag (`git tag -a v<version> <sha> && git push origin v<version>`).
    `s1flow init --ci` writes `gotalab/s1flow@v<version>` of the CLI that ran it, so a release without its tag
    gives new projects a workflow that cannot find its Action.
-4. Point the `gotalab/s1flow/decide@` and `s1flow==` pins in `examples/` and in the Skill's `references/app.md` at
-   the new tag, and run `uv run python scripts/sync_plugin.py`.
+4. Point the `gotalab/s1flow/decide@v<version>` and `s1flow==<version>` pins in `examples/` and in the Skill's
+   `references/app.md` at the new release, and run `uv run python scripts/sync_plugin.py`.
