@@ -10,7 +10,7 @@ from typing import Any
 
 import pytest
 
-from conftest import TRUTH, cli, compare_fake, make_project, write_cases
+from conftest import CONDITIONS, TRUTH, change_condition, cli, compare_fake, make_project, write_cases
 from s1flow.client import (
     Boolean,
     Box,
@@ -228,6 +228,24 @@ def test_comparison_identity_changes_with_effective_connection_conditions(tmp_pa
         spec.id = 'different-concrete-model'
     after = comparison.collect(task)
     assert after.id != before.id
+
+
+@pytest.mark.parametrize('what', CONDITIONS)
+@pytest.mark.parametrize('reading', ['_inputs', '_actual_row'])  # once the questions and specs are cached; the run
+def test_a_condition_changed_while_comparing_refuses_the_comparison(tmp_path, monkeypatch, what, reading):
+    task = task_fixture(tmp_path, question=Boolean(instructions='truth?'))
+    run_saved(task, ['fake'])
+    named, read = [], getattr(comparison, reading)
+
+    def read_then_change(*args, **kwargs):
+        got = read(*args, **kwargs)
+        named.append(change_condition(task, what, 'fake'))
+        return got
+
+    monkeypatch.setattr(comparison, reading, read_then_change)
+    with pytest.raises(ConfigError) as refused:
+        comparison.collect(task)
+    assert str(refused.value) == f'compare: {named[0]} changed during the comparison; compare again'
 
 
 MUTATIONS = {

@@ -100,10 +100,11 @@ def test_without_a_tiebreak_the_tied_are_listed_by_name():
 
 def test_the_list_says_what_ordered_the_tied_candidates():
     from s1flow.eval.adopt import Shortlist
+    from s1flow.eval.run import Conditions
 
     def order(tiebreak, evs):
         t = task([Coverage(), *tiebreak])
-        return Shortlist(t, "", "", "", {}, {}, rank(Coverage(), t.ties, Constraints(), evs), {e.candidate.name: e for e in evs}, {}, []).order()
+        return Shortlist(t, Conditions((), "", "", "", {}, {}), rank(Coverage(), t.ties, Constraints(), evs), {e.candidate.name: e for e in evs}, {}, []).order()
 
     alike = [timed("a", 0.80, 300), timed("b", 0.79, 100)]
     assert order([], alike).by == [] and order(["latency", "cost"], alike).by == ["latency", "cost"]

@@ -107,6 +107,34 @@ def attach(task: Task, project: Project, dir: Path | None = None) -> Task:
     return task
 
 
+CONDITIONS = ("data", "adapter", "contract", "binding", "run")  # what eval.run.Conditions holds
+
+
+def change_condition(task: Task, what: str, model: str) -> str:
+    """Change one condition scoring `model`'s base run depends on, as another process could while it is scored;
+    the words a refusal names it with."""
+    from s1flow.eval import run
+    from s1flow.eval.objectives.declare import Constraints
+
+    if what == "data":
+        path = task.dir / task.cases
+        path.write_text(json.dumps([{**row, "label": not row["label"]} for row in json.loads(path.read_text())]))
+        return "input data or labels"
+    if what == "adapter":
+        state = task.state
+        task.state = lambda row: state(row)  # the same inputs from other code
+        return "the input adapter"
+    if what == "contract":
+        task.constraints = Constraints(min_recall=0.01)
+        return "the evaluation contract"
+    if what == "binding":
+        task.where.lineup().models[model].concurrency = 8
+        return f"the execution conditions of {model}"
+    meta = run.run_path(task, "base", model).with_suffix(".meta.json")
+    meta.write_text(meta.read_text() + "\n")
+    return f"the runs of {model}"
+
+
 @pytest.fixture
 def no_ci(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("CI", raising=False)
