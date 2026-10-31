@@ -27,8 +27,7 @@ s1flow feedback measure <task> logs/*.jsonl --add    # also add cases to tasks/<
 ```
 
 It reads v2 decision and feedback logs (or OpenTelemetry JSON exports) and measures each policy version on the
-decisions that got a label. Exit 1 when production is shown below. Records without the v2 identity fields are
-not reconstructed.
+decisions that got a label. Exit 1 when production is shown below. Any other line stops it with the file and line.
 
 `--add` adds only decisions whose state was kept (`keep_state=True`, `decide --keep-state`, the Action's
 `keep-state`) and whose label is valid. Adding production cases changes what every later run measures, so ask

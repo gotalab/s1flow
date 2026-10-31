@@ -1,7 +1,7 @@
 # Ship: adopt, the pull request, check
 
 `adopt` is the only command that changes which version is current. Merging the pull request that carries it is
-the release; nothing is switched after the merge.
+the release.
 
 ## Who decides
 
@@ -17,12 +17,12 @@ s1flow adopt --spec spec.json --reason "..."      # a runtime spec, saved uneval
 s1flow adopt --spec spec.json --check             # validate only; save nothing
 ```
 
-- `adopt TASK CANDIDATE` scores the chosen candidate on the held-out test and records the result. If the test
-  shows it below the version it replaces, nothing is written, exit 1, and `history.jsonl` gets a `refused` line.
+- `adopt TASK CANDIDATE` scores the chosen candidate on the held-out test and records the result. If the held-out
+  test shows it below (its constraint or floors broken, or worse than its train + val interval), nothing is written, exit 1, and `history.jsonl` gets a `refused` line.
   `--force` writes it anyway, marked `forced`; the reason must say why. Stale evidence is refused.
 - `--spec` needs only the base install. `--spec` takes a v2 `PolicySpec` (task/version, a trusted
   `connection` and exact `model_id`, one boolean or choice question, a rule, an optional input shape). It has no
-  evaluation evidence. Add `--connections FILE` to check its binding to trusted connections.
+  evaluation evidence. It always checks the binding: against the project's `s1flow.toml`, or `--connections FILE`.
 - Outside an s1flow project (an app's repository), add `--root policies`, and `--connections FILE` with `--spec`.
 - A saved `vN.json` is never overwritten. `channels.json` names the one `current` version.
 - To go back to an older version, save it again as the next one: `adopt --spec` with its `vN.json` renumbered
@@ -32,7 +32,7 @@ s1flow adopt --spec spec.json --check             # validate only; save nothing
 
 ### The reason
 
-The reason is kept in the policy and in `history.jsonl`, and `report` shows the last one. Write it for someone who
+The reason is kept in `history.jsonl` (and, for a candidate, in `vN.evaluation.json`), and `report` shows the last one. Write it for someone who
 reads it a year later:
 
 - who chose, and by what: "Picked by <person>" or "by criteria.md: <the rule>";

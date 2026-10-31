@@ -8,10 +8,11 @@
   `python .agents/skills/s1flow/scripts/github.py fetch | audit | rationale owner/repo [--project DIR]`
   (`s1flow init --skill` writes it; standard library and the `gh` CLI only). It reads and writes the same
   `data/raw/github/` files and finds the project as the CLI did, so a fetch already made carries on where it stopped.
-- `s1flow policy validate FILE` is now `s1flow adopt --spec FILE --check`. With `--connections` it still checks
-  the binding.
-- The CLI has 12 commands. `s1flow tasks` is `s1flow report` with no task (each task's current version, and the
-  last reason in `history.jsonl`). `s1flow policy create FILE` is `s1flow adopt --spec FILE --reason "..."` (with
+- `s1flow policy validate FILE` is now `s1flow adopt --spec FILE --check`. It checks the binding against
+  `--connections`, else the project's `s1flow.toml`.
+- The CLI has 12 commands. `s1flow tasks` is `s1flow report` with no task: each task's current version with the
+  last switch from `history.jsonl` (who, when, why). Its `--json` has `current` (a version) in place of
+  `channels`, each policy `current: true|false` in place of `channels: [...]`, and `why`. `s1flow policy create FILE` is `s1flow adopt --spec FILE --reason "..."` (with
   `--root` outside a project), and `--check` validates only. `s1flow policy export` is `s1flow export`.
   `s1flow skill install` is `s1flow init --skill` (the project's `.agents/skills/` and `.claude/skills/`; its
   `--dir` and `--user` are gone), and `s1flow skill path` and `s1flow guide` are gone: agents read the written
@@ -23,7 +24,7 @@
 - `s1flow optimize prompt TASK` is now `s1flow optimize TASK`. Its `--pr` and `--dry-run` options are gone: open
   the pull request with your agent or `gh pr create`; its `--json` result no longer has `branch`.
 - `s1flow compare` and `s1flow rank` merge into `s1flow report`, which now prints the candidates ordered by the
-  task's objective with the ranking's pick marked (what `rank` printed). `--json` gives every metric of each
+  task's objective (what `rank` printed). `--json` gives every metric of each
   candidate (what `compare --json` gave) plus `ranking` (what `rank --json` gave, now under that key).
   `--json` prints this comparison summary, not the old `s1flow/report@1` document. `--candidate` and `--from` work
   as on `compare`; `--limit` and `--offset` now page the ranking too. The text names each candidate it does not
@@ -35,7 +36,8 @@
   version and makes it current in `channels.json`, so the pull request shows the switch and its merge ships it.
 - Only `adopt` points `current`. `adopt --spec FILE --reason` saves an unevaluated runtime spec as the next version
   and makes it current; it runs on the base install, and outside an s1flow project with `--root` and
-  `--connections`. To go back to an older version, adopt it again as the next one.
+  `--connections`. To go back to an older version, save it again as the next
+  version: `adopt --spec` with its `vN.json` renumbered, or adopt its candidate again.
 - Each switch appends a line to `policies/<task>/history.jsonl` (`schema/history-1.json`): when, the version, the one
   before, who, why, and for a measured candidate the held-out test's verdict and whether `--force` wrote it. A
   candidate `adopt` refuses as below on the held-out test gets a `refused` line too.
@@ -44,7 +46,7 @@
   Its `--json` has `candidate` in place of `verdict`, `reason`, `check` and `policy`.
 - `adopt` writes nothing when the held-out test shows the candidate below (exit 1); `--force`, which was on
   `promote`, now writes it anyway. `promotion-overrides.jsonl` is no longer written.
-- Named channels (`TASK@staging`) are gone: a policy is `TASK`, `TASK@current` or `TASK@vN`. A `channels.json`
+- Named channels (`TASK@staging`) are gone: a policy is `TASK` (its current version) or `TASK@vN`. A `channels.json`
   or an exported policy set that names another channel is refused: edit it to name only `current`.
   `policy export --channel` is gone (it exports each task's current version), and `s1flow.policies.NEXT` with it.
 - `check` compares current with `--against vN`; its default candidate is current when `--against` names another
@@ -56,10 +58,8 @@
   `evaluated-policy-2.json` is now `evaluated-policy-3.json`). `selection.recommended` is gone: s1flow records who
   picked and why, not what it would have picked. `evidence.test_uses` is gone: it counted only the uses on the machine
   that ran, and CI lost them. `selection.forced` is new: `true` when `adopt --force` wrote a version below on the
-  held-out test, and `reason` says why. `@2` records no longer read. `forced` is refused on a record
+  held-out test, and `reason` says why. `@2` records no longer read: to keep one, drop `selection.recommended` and `evidence.test_uses` and set `"schema": "s1flow/policy-evaluation@3"` (a pull request that does fails the check Action, which never lets a saved record change, so merging it is your call). `forced` is refused on a record
   whose held-out test is not below. `adopt --json` prints the new shape.
-- `s1flow report` with no task shows each task's current policy; its `--json` has `current` (a version) in place
-  of `channels`, and each policy `current: true|false` in place of `channels: [...]`.
 - Only `s1flow run` writes `tasks/<task>/split.json`, the first time it runs on a task. `report` no longer writes
   it, and `adopt`, `optimize` and `check` refuse with "the first `s1flow run TASK` fixes the held-out test share"
   when it is missing, instead of drawing one of their own (a CI checkout would draw it again on every run). Cases
@@ -67,7 +67,8 @@
   never rewritten. A run with too few labelled cases to hold out a test share asks the models and writes no
   file yet; a later run does. The file is now
   `s1flow/split@2` (`schema/split-2.json`) without `uses`: it counted only the uses on the machine that ran. `@1`
-  files no longer read. `check --json` no longer has `test_uses`.
+  files no longer read: drop `uses` and set `"schema": "s1flow/split@2"` (deleting the file draws a new
+  held-out share). `check --json` no longer has `test_uses`.
 - The `s1flow check` Action fails a pending check (`on-pending: fail`, the new input's default; `warn` restores
   the warning). `s1flow init --ci` writes `on-pending: fail` into the workflow. A check that cannot measure (a
   pull request from a fork gets no keys, and some answers are not cached) no longer lets the change merge.
@@ -88,8 +89,6 @@
 - `feedback measure` only measures by default; `--add` also adds the cases to `tasks/<task>/feedback.jsonl`
   (it used to add them unless `--dry-run`, which is gone). Its `--json` `added` has
   `written`.
-- `s1flow report` with no task lists every task's current version with the last switch from `history.jsonl`
-  (who, when, why); its `--json` has `why`.
 - `report --json` has `order`: what orders the `tied` rows (`by`, task.py's tiebreak as applied; `skipped`, and
   `why`). With nothing in `by`, the order of the tied rows says nothing.
 - `s1flow optimize` runs the optimizer task.py names: `optimizer=Gepa(budget=300, reflection=None)` (the template
@@ -98,8 +97,9 @@
   `--patience` and `--max-cost` it changes GEPA's settings for one run, and is refused for another optimizer.
   `tasks/<task>/optimized/*.json` is now `s1flow/optimized@2`, one record for every optimizer: `optimizer`,
   `settings`, `model_calls`, `cost_usd` (what it spent beside the model's calls), and what only it records in
-  `detail` (GEPA's reflection LM, candidates and val scores). `@1` records no longer read. `optimize --json`'s
+  `detail` (GEPA's reflection LM, candidates and val scores). `@1` records no longer read: run `optimize` again, or delete the record. `optimize --json`'s
   `optimization` has the new shape.
+- `S1FLOW_CONNECTIONS` is gone: evaluation commands take `--connections PATH`, else the project's `s1flow.toml`.
 - `runs/` lines written before `s1flow/run@2` (with no `request_digest`) no longer read: `report` already ignored
   them, and `run` again asks for what they held.
 

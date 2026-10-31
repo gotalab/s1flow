@@ -54,14 +54,13 @@ validation and decision rules; metrics and optimization live only in `s1flow.eva
 terminal shows the candidates ordered by the task's objective, with the ones it cannot tell apart at the top marked
 `=` (ordered by `tiebreak` in task.py, or by name without one); it marks no pick. `--json` adds every
 metric of each candidate with the same candidate IDs and numbers, so a person, or an agent acting for them, can
-choose based on their own criteria. (It replaces `compare` and `rank`.) The
-final test-set result comes only when you adopt a candidate or run `check`.
+choose based on their own criteria. The final test-set result comes only when you adopt a candidate or run `check`.
 
 `adopt --reason` records the choice and makes it current in your working tree; it goes live when the pull request
 that carries it merges (see [Policies, evidence and releases](policies.md)).
 
 `s1flow report ticket-bug --out DIR` saves `DIR/comparison.json`, a full snapshot of the development results
-including the chart data, and a Markdown report per question (`DIR/questions/base.md`); it writes nothing else unless asked.
+including the chart data, and `DIR/questions/<variant>.md` and `.json` for each question variant.
 `s1flow report --from DIR/comparison.json` reads that
 snapshot offline, without rescoring or rechecking anything. The snapshot keeps the source and date, provider and
 model, the declared and recorded concurrency, and where latency and cost figures came from: billed, list price,
@@ -91,7 +90,7 @@ is drawn when the signal it needs isn't available.
 
 ## Thresholds and intervals
 
-For yes/no questions (and choice questions with a positive option), Accuracy, F1 and ExpectedLoss can pick a threshold on the training side of each
+For yes/no questions (and choice questions with a positive option), an objective that sets the rule (Accuracy, F1, ExpectedLoss, Recall, Loss, or a custom one through `sets=`) picks a threshold on the training side of each
 development fold. Reports keep three things apart: raw metrics, cross-validated metrics with a tuned threshold,
 and the held-out final result. Tuning a threshold is not the same as calibrating probabilities. Candidates whose
 intervals overlap are grouped together, to err on the side of caution. That doesn't prove they are equivalent,
