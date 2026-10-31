@@ -553,8 +553,7 @@ def test_only_adopt_switches_current():
     src = Path(__file__).resolve().parents[1] / "src" / "s1flow"
     callers = sorted(f"{p.relative_to(src)}" for p in src.rglob("*.py")
                      if re.search(r"adopted=|\.switch\(|\._switch\(", p.read_text()) and p.name != "history.py")
-    assert callers == ["cli.py", "eval/adopt.py", "eval/policy.py", "policies/file.py"]
-    cli = (src / "cli.py").read_text()
-    assert [m.start() for m in re.finditer(r"adopted=|\.switch\(", cli)] and all(
-        cli.rfind("\ndef ", 0, m.start()) in (cli.find("\ndef _adopt_spec"), cli.find("\ndef _adopt_without_evaluation"))
-        for m in re.finditer(r"adopted=|\.switch\(", cli))
+    assert callers == ["cli/adopt.py", "eval/adopt.py", "eval/policy.py", "policies/file.py"]
+    cli = (src / "cli" / "adopt.py").read_text()  # in the CLI, only adopt --spec writes (the rest goes through eval/adopt.py)
+    found = [m.start() for m in re.finditer(r"adopted=|\.switch\(", cli)]
+    assert found and all(cli.rfind("\ndef ", 0, at) == cli.find("\ndef _adopt_spec") for at in found)
