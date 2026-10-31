@@ -1,6 +1,5 @@
 """A portable set of v2 execution specifications, without evaluation records."""
 from __future__ import annotations
-import json
 from pathlib import Path
 from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator

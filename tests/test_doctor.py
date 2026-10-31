@@ -182,7 +182,7 @@ def test_doctor_on_a_policy(project):
         from test_policy import policy
     finally:
         sys.path.remove(str(HERE))
-    from s1flow.eval.policy import EvaluatedPolicy, Store
+    from s1flow.eval.policy import Store
 
     store = Store(project / "policies")
     r = policy(task="t")

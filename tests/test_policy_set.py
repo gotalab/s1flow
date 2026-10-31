@@ -1,10 +1,8 @@
 """policies.json (`s1flow export`): the policies an app uses, in one file it vendors and loads from."""
 
 import json
-from conftest import ship, point
+from conftest import point
 import shutil
-import subprocess
-import sys
 from pathlib import Path
 
 import pytest
@@ -14,7 +12,7 @@ from test_client import s1flow
 from s1flow import Client, policies
 from s1flow.core.errors import ConfigError, NotFound
 from s1flow.policies import policy_set
-from s1flow.policies.file import Policies, PolicySpec, read_file
+from s1flow.policies.file import Policies, read_file
 
 BENCH = Path(__file__).resolve().parents[1] / "apps" / "bench"
 SCHEMA = json.loads((BENCH.parents[1] / "schema" / "policy-set-2.json").read_text())

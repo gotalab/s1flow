@@ -6,7 +6,7 @@ from s1flow.client import Boolean
 from s1flow.client.identity import state_digest
 from s1flow.eval import Task, feedback
 from s1flow.eval.candidate import Candidate
-from s1flow.eval.evaluation import Estimate, Evaluation, Failures, ObjectiveScore
+from s1flow.eval.evaluation import Evaluation, Failures, ObjectiveScore
 from s1flow.eval.objectives.declare import Accuracy, ExpectedLoss
 from s1flow.eval.policy import EvaluatedPolicy, Evidence, Selection
 from s1flow.policies import DecisionRule, PolicySpec

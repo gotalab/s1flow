@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 import json
-from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -78,7 +77,6 @@ def go(task):
 def test_input_and_effective_binding_invalidate_skip_and_metrics(task):
     assert go(task)['calls'] == 12
     assert go(task)['skipped'] == 12
-    original = task.load_cases()._all[0]
     change_case(task, '0', state={'i': 100})
     assert '0' not in metrics.load(task, 'base', 'fake').ids
     assert go(task)['calls'] == 1
