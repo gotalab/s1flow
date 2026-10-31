@@ -1,5 +1,5 @@
 {
- "schema": "s1flow/policy-evaluation@2",
+ "schema": "s1flow/policy-evaluation@3",
  "policy_digest": "b8b453eb185c1da7b374ced568a0ac3bdc6e210472558b02e125492ba92b37b7",
  "candidate": {
   "model": "d1@vercel",
@@ -8,13 +8,14 @@
  "selection": {
   "by": "s1flow improve",
   "reason": "written before a person picked releases (2026-10-17): the rule's choice, kept as it was",
-  "recommended": "d1@vercel · improve-d1@vercel-20261016-0701",
-  "tied": []
+  "tied": [],
+  "forced": false
  },
  "evidence": {
   "data_sha256": "c6f1e1197c4c106c6200e817a5e92c37f814cc039d507b60a7a19341a02355f5",
   "execution_digest": null,
   "input_adapter_digest": "",
+  "evaluation_contract_digest": null,
   "git_sha": "e6e3d8cd7088ae215488064ada8708e777d86594",
   "evaluation": {
    "candidate": {
@@ -243,7 +244,6 @@
    }
   },
   "test": "inconclusive",
-  "test_uses": 15,
   "compared": [
    "d1@vercel",
    "jev",

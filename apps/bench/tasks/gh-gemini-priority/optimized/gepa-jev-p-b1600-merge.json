@@ -1,8 +1,16 @@
 {
- "schema": "s1flow/optimized@1",
+ "schema": "s1flow/optimized@2",
  "variant": "gepa-jev-p-b1600-merge",
  "model": "jev",
- "method": "gepa",
+ "optimizer": "gepa",
+ "settings": {
+  "budget": 1600,
+  "reflection": "vercel_ai_gateway/openai/gpt-6.1-sol",
+  "patience": null,
+  "max_cost": null,
+  "merge": true,
+  "seed": 1
+ },
  "at": "2026-10-03T00:00:00Z",
  "question": {
   "type": "choice",
@@ -23,8 +31,6 @@
   }
  },
  "start": "policy",
- "context": "context.md",
- "rationales": 159,
  "split": {
   "train": [
    "#28321",
@@ -333,33 +339,33 @@
    "#29600"
   ]
  },
- "seed": 1,
- "budget": 1600,
- "merge": true,
- "patience": null,
- "max_cost": null,
- "reflection_lm": "vercel_ai_gateway/openai/gpt-6.1-sol",
- "reflection_calls": 15,
- "reflection_cost_usd": 0.1553,
  "model_calls": 1489,
- "candidates": 16,
- "val_scores": [
-  0.6361,
-  0.678,
-  0.6789,
-  0.6869,
-  0.6335,
-  0.6564,
-  0.6635,
-  0.6763,
-  0.6764,
-  0.6155,
-  0.7242,
-  0.6884,
-  0.6449,
-  0.6923,
-  0.6215,
-  0.6813
- ],
- "best_index": 10
+ "cost_usd": 0.1553,
+ "detail": {
+  "surrogate": "0.5 * correctness + 0.5 * (1 - per-case Brier); prompt-only search",
+  "reflection_lm": "vercel_ai_gateway/openai/gpt-6.1-sol",
+  "context": "context.md",
+  "rationales": 159,
+  "reflection_calls": 15,
+  "candidates": 16,
+  "val_scores": [
+   0.6361,
+   0.678,
+   0.6789,
+   0.6869,
+   0.6335,
+   0.6564,
+   0.6635,
+   0.6763,
+   0.6764,
+   0.6155,
+   0.7242,
+   0.6884,
+   0.6449,
+   0.6923,
+   0.6215,
+   0.6813
+  ],
+  "best_index": 10
+ }
 }

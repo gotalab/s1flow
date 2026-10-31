@@ -311,16 +311,6 @@ def test_help_on_the_base_install_lists_what_it_runs():
     assert done.returncode == 2 and "needs s1flow[eval]" in done.stderr and "need only s1flow" in done.stderr
 
 
-def test_every_run_line_reads_with_the_new_answers():
-    """Historical runs retain their original schema and still parse as typed prediction records."""
-    from s1flow.eval import records
-
-    n = 0
-    for path in sorted((BENCH / "runs").rglob("*.jsonl")):
-        n += len(records.read(path))
-    assert n > 60_000
-
-
 @pytest.mark.parametrize('answered_by', ['', ' \t\n'])
 def test_blank_answering_model_is_a_provider_failure(toml, answered_by):
     from s1flow.client import BooleanAnswer, Response

@@ -1,8 +1,16 @@
 {
- "schema": "s1flow/optimized@1",
+ "schema": "s1flow/optimized@2",
  "variant": "gepa-jev-p-b800-s2",
  "model": "jev",
- "method": "gepa",
+ "optimizer": "gepa",
+ "settings": {
+  "budget": 800,
+  "reflection": "vercel_ai_gateway/openai/gpt-6.1-sol",
+  "patience": null,
+  "max_cost": null,
+  "merge": false,
+  "seed": 2
+ },
  "at": "2026-10-03T00:00:00Z",
  "question": {
   "type": "choice",
@@ -23,8 +31,6 @@
   }
  },
  "start": "policy",
- "context": "context.md",
- "rationales": 159,
  "split": {
   "train": [
    "#28321",
@@ -333,26 +339,26 @@
    "#29600"
   ]
  },
- "seed": 2,
- "budget": 800,
- "merge": false,
- "patience": null,
- "max_cost": null,
- "reflection_lm": "vercel_ai_gateway/openai/gpt-6.1-sol",
- "reflection_calls": 8,
- "reflection_cost_usd": 0.0895,
  "model_calls": 798,
- "candidates": 9,
- "val_scores": [
-  0.6361,
-  0.6957,
-  0.6799,
-  0.661,
-  0.5651,
-  0.6621,
-  0.6584,
-  0.6985,
-  0.6903
- ],
- "best_index": 7
+ "cost_usd": 0.0895,
+ "detail": {
+  "surrogate": "0.5 * correctness + 0.5 * (1 - per-case Brier); prompt-only search",
+  "reflection_lm": "vercel_ai_gateway/openai/gpt-6.1-sol",
+  "context": "context.md",
+  "rationales": 159,
+  "reflection_calls": 8,
+  "candidates": 9,
+  "val_scores": [
+   0.6361,
+   0.6957,
+   0.6799,
+   0.661,
+   0.5651,
+   0.6621,
+   0.6584,
+   0.6985,
+   0.6903
+  ],
+  "best_index": 7
+ }
 }

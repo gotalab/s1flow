@@ -1,5 +1,5 @@
 {
- "schema": "s1flow/policy-evaluation@2",
+ "schema": "s1flow/policy-evaluation@3",
  "policy_digest": "a6139281169066cecd2055088d4b7ebc4a8255a699114094c192810a0f34efd3",
  "candidate": {
   "model": "jev",
@@ -8,13 +8,14 @@
  "selection": {
   "by": "s1flow propose",
   "reason": "written before a person picked releases (2026-10-17): the rule's choice, kept as it was",
-  "recommended": "jev",
-  "tied": []
+  "tied": [],
+  "forced": false
  },
  "evidence": {
   "data_sha256": "c6f1e1197c4c106c6200e817a5e92c37f814cc039d507b60a7a19341a02355f5",
   "execution_digest": null,
   "input_adapter_digest": "",
+  "evaluation_contract_digest": null,
   "git_sha": "1b614f2c8c603f0ab298a9326ddab3f012b992cd",
   "evaluation": {
    "candidate": {
@@ -230,7 +231,6 @@
    }
   },
   "test": "kept",
-  "test_uses": 0,
   "compared": [
    "jev"
   ]
