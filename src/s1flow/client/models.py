@@ -141,7 +141,7 @@ class ModelSpec(BaseModel):
             raise NotFound(f"no version {version!r}; versions: {known}")
         v = self.versions[version]
         update: dict[str, Any] = {"id": v.id, "versions": None}
-        if v.capabilities is not None:  # only then: a provider tells declared capabilities from the default (build.declared)
+        if v.capabilities is not None:
             own = self.capabilities.model_dump(exclude_unset=True) | v.capabilities.model_dump(exclude_unset=True)
             update["capabilities"] = Capabilities.model_validate(own)
         return self.model_copy(update=update)

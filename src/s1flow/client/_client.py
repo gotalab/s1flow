@@ -140,11 +140,9 @@ class AsyncResponses:
         m = self._model(model)
         try:
             d = await m.decide(state, qs, options=options)
-        except ProviderError:
-            raise
+            return validate_response(d, qs, m.id)  # in the try: a value that skipped pydantic fails here too
         except (AttributeError, KeyError, TypeError, ValueError, ValidationError) as e:
             raise ProviderError(f"{m.id} returned a malformed response outside the contract: {e}") from e
-        return validate_response(d, qs, m.id)
 
 
 class Responses:

@@ -5,7 +5,7 @@
   says a part is not accepted) or `ProviderError` (anything else), both carrying the status.
 
 A key that is not set is left out rather than stopping the call: a sandbox's proxy may add it on the way
-(a network secret). If the provider then answers 401 or 403, the error is the missing key's, as before.
+(a network secret). If the provider then answers 401 or 403, the error is the missing key's.
 A 401 with every key set says the key was not accepted.
 
 408 / 409 / 429 / 5xx and timeouts are retried with exponential backoff first. The latency is
@@ -24,7 +24,7 @@ from typing import Any
 import httpx
 
 from ...core.errors import ConfigError, ProviderError, Rejected
-from .keys import how_to_set
+from .needs import how_to_set
 
 RETRY_STATUS = frozenset({408, 409, 429, 500, 502, 503, 504})
 AUTH_STATUS = frozenset({401, 403})
@@ -55,7 +55,6 @@ class Request:
     body: dict[str, Any]
     headers: dict[str, str] = field(default_factory=dict)  # none of them secret
     keys: dict[str, tuple[str, str]] = field(default_factory=dict)  # header -> (prefix, environment variable), filled when sent
-    method: str = "POST"
 
     def unset_keys(self) -> list[str]:
         return [env for _, env in self.keys.values() if not os.environ.get(env)]
