@@ -2,7 +2,7 @@
 
 2026-10-31 · 210 labelled dev cases (True 105, False 105) · split: stratified k-fold (no test case among these: CV numbers only) · source: LLM-jp Toxicity Dataset（LLM-jp, CC BY 4.0）の 1,000 字以下から toxic / nontoxic 各 150 件
 
-**haiku@vercel** has the highest accuracy (all), 99% [98, 100] (API cost $1.32 per 10k, p99 4538ms). Its interval overlaps with clef-flash@openrouter, clef@openrouter, d1-ultra@openrouter, d1.1@openrouter, decider-flash@openrouter, decider@openrouter, decision-1@openrouter, drex-max@openrouter, elephant@openrouter, jev:1.14, kev@openrouter, luna@decisions, mammoth@openrouter, mercury@openrouter, span@openrouter: the objective cannot tell them apart; interval overlap does not establish equivalence. task.py names no tiebreak, so they are listed by name, unordered. The highest raw accuracy (dev) is haiku@vercel's, 99% [98, 100].
+**haiku@vercel** has the highest accuracy (all), 99% [98, 100] (API cost $1.32 per 10k, p99 4538ms). Its interval overlaps with clef-flash@openrouter, clef@openrouter, d1-ultra@openrouter, d1.1@openrouter, d1@vercel, decider-flash@openrouter, decider@openrouter, decision-1@openrouter, drex-max@openrouter, elephant@openrouter, jev:1.14, kev@openrouter, luna@decisions, mammoth@openrouter, mercury@openrouter, span@openrouter: the objective cannot tell them apart; interval overlap does not establish equivalence. task.py names no tiebreak, so they are listed by name, unordered. The highest raw accuracy (dev) is haiku@vercel's, 99% [98, 100].
 
 ## Comparison
 
@@ -12,6 +12,7 @@
 | clef@openrouter | 210 | 98.6% [97, 100] | 0.99 | 0.99 | 0.05 | 100% [99, 100] | 98.6% (96.3%) | 0/210 | 0/210 |
 | d1-ultra@openrouter | 210 | 98.1% [96, 100] | 0.98 | 0.99 | 0.04 | 100% [99, 100] | 98.1% (95.7%) | 0/210 | 0/210 |
 | d1.1@openrouter | 210 | 98.1% [96, 100] | 0.98 | 0.99 | 0.03 | 100% [99, 100] | 98.6% (96.3%) | 0/210 | 0/210 |
+| d1@vercel | 210 | 97.6% [95, 100] | 0.98 | 0.99 | 0.01 | 100% [99, 100] | 98.1% (95.7%) | 0/210 | 0/210 |
 | decider-flash@openrouter | 210 | 98.1% [96, 100] | 0.98 | 0.99 | 0.07 | 100% [99, 100] | 98.1% (95.7%) | 0/210 | 0/210 |
 | decider@openrouter | 210 | 97.1% [95, 99] | 0.97 | 0.99 | 0.07 | 100% [99, 100] | 97.1% (94.4%) | 0/210 | 0/210 |
 | decision-1@openrouter | 210 | 96.2% [93, 99] | 0.96 | 0.99 | 0.03 | 100% [99, 100] | 96.7% (93.8%) | 0/210 | 0/210 |
@@ -29,7 +30,7 @@
 
 Not compared: flash-lite@vercel (4 cases whose every call failed). With cases it has no answer to, a candidate is measured on the rest only, not on the cases the others answered, so it is not ranked. Ask them again: `s1flow run ja-toxicity --models flash-lite@vercel`
 
-Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef@openrouter = cloudflare/clef; d1-ultra@openrouter = liquid/d1-ultra-20261015; d1.1@openrouter = liquid/d1.1-20261027; decider-flash@openrouter = perplexity/pplx-decider-flash-v1.2-20261016; decider@openrouter = perplexity/pplx-decider-v1.2-20261016; decision-1@openrouter = microsoft/microsoft-decision-1-20261009; drex-max@openrouter = nace-ai/drex-max-20261016; elephant@openrouter = baseten/elephant-1-20261021; flash-lite@vercel = vercel_ai_gateway/google/gemini-3.5-flash-lite; haiku@vercel = vercel_ai_gateway/anthropic/claude-haiku-5.5; jev:1.14 = jev-1.14.0; joey@openrouter = baseten/joey-1-20261029; kev@openrouter = jaredpalmer/kev-4b-20260924; luna@decisions = gpt-6-luna; mammoth@openrouter = baseten/mammoth-1-20261021; mercury@openrouter = inception/mercury-decide-20260930; span@openrouter = respan/span-02-20261015. To compare versions, run each by name: `s1flow run <task> --models jev:1.14`.
+Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef@openrouter = cloudflare/clef; d1-ultra@openrouter = liquid/d1-ultra-20261015; d1.1@openrouter = liquid/d1.1-20261027; d1@vercel = liquid/d1; decider-flash@openrouter = perplexity/pplx-decider-flash-v1.2-20261016; decider@openrouter = perplexity/pplx-decider-v1.2-20261016; decision-1@openrouter = microsoft/microsoft-decision-1-20261009; drex-max@openrouter = nace-ai/drex-max-20261016; elephant@openrouter = baseten/elephant-1-20261021; flash-lite@vercel = vercel_ai_gateway/google/gemini-3.5-flash-lite; haiku@vercel = vercel_ai_gateway/anthropic/claude-haiku-5.5; jev:1.14 = jev-1.14.0; joey@openrouter = baseten/joey-1-20261029; kev@openrouter = jaredpalmer/kev-4b-20260924; luna@decisions = gpt-6-luna; mammoth@openrouter = baseten/mammoth-1-20261021; mercury@openrouter = inception/mercury-decide-20260930; span@openrouter = respan/span-02-20261015. To compare versions, run each by name: `s1flow run <task> --models jev:1.14`.
 
 ## Objectives and constraints
 
@@ -39,6 +40,7 @@ Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef@openrouter = cl
 | clef@openrouter = | 99% [97, 100] | 0.50 | met |
 | d1-ultra@openrouter = | 98% [96, 100] | 0.75 | met |
 | d1.1@openrouter = | 98% [96, 100] | 0.45 | met |
+| d1@vercel = | 97% [94, 99] | 0.70 | met |
 | decider-flash@openrouter = | 98% [95, 100] | 0.35 | met |
 | decider@openrouter = | 99% [97, 100] | 0.15 | met |
 | decision-1@openrouter = | 96% [93, 99] | 0.65 | met |
@@ -63,6 +65,7 @@ Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef@openrouter = cl
 | clef@openrouter | 210 | 1491 ms | 1960 ms | 5593 ms | 8331 ms | 3.8 | 0 | 8 | $1.23 | billed |  |
 | d1-ultra@openrouter | 210 | 1312 ms | 2135 ms | 5505 ms | 8408 ms | 4.2 | 0 | 8 | $0.21 | billed |  |
 | d1.1@openrouter | 210 | 1275 ms | 2024 ms | 3854 ms | 5354 ms | 3.0 | 0 | 8 | $0.10 | billed | ○ |
+| d1@vercel | 210 | 221 ms | 293 ms | 514 ms | 580 ms | 2.3 | 0 | 8 | $0.10 | billed | ○ |
 | decider-flash@openrouter | 210 | 1229 ms | 1875 ms | 4055 ms | 5547 ms | 3.3 | 0 | 8 | $0.05 | billed | ○ |
 | decider@openrouter | 210 | 1300 ms | 2182 ms | 5397 ms | 6307 ms | 4.2 | 0 | 8 | $0.10 | billed |  |
 | decision-1@openrouter | 210 | 1417 ms | 2176 ms | 5457 ms | 8101 ms | 3.9 | 0 | 8 | $0.20 | billed |  |
@@ -80,7 +83,7 @@ Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef@openrouter = cl
 
 Measured on the calls, not the answers: never an objective, only the constraints and the order of candidates the objectives tie (the p90 of each case's slowest call, then API cost). Frontier ○: no other model beats it on all three of the primary objective, API cost per 10k and p99.
 Latency is the time from sending to receiving one call that answered (the round trip from here included), without retries or the wait before them. Many calls at once read slower, from the provider's load and this machine's connections: to compare models, measure every candidate again at the same concurrency (`s1flow run <task> --fresh --concurrency N`, the same N for all).
-Where the API costs come from: billed: clef-flash@openrouter, clef@openrouter, d1-ultra@openrouter, d1.1@openrouter, decider-flash@openrouter, decider@openrouter, decision-1@openrouter, drex-max@openrouter, elephant@openrouter, joey@openrouter, kev@openrouter, mammoth@openrouter, mercury@openrouter, span@openrouter; estimated (recorded tokens times a list price: s1flow.toml's where dated, else the LLM price table's; not a bill): flash-lite@vercel, haiku@vercel, jev:1.14 (list price of 2026-10-03), luna@decisions (list price of 2026-10-09). Billed and estimated API costs sit side by side, so their differences do not compare as they are.
+Where the API costs come from: billed: clef-flash@openrouter, clef@openrouter, d1-ultra@openrouter, d1.1@openrouter, d1@vercel, decider-flash@openrouter, decider@openrouter, decision-1@openrouter, drex-max@openrouter, elephant@openrouter, joey@openrouter, kev@openrouter, mammoth@openrouter, mercury@openrouter, span@openrouter; estimated (recorded tokens times a list price: s1flow.toml's where dated, else the LLM price table's; not a bill): flash-lite@vercel, haiku@vercel, jev:1.14 (list price of 2026-10-03), luna@decisions (list price of 2026-10-09). Billed and estimated API costs sit side by side, so their differences do not compare as they are.
 
 ## API cost and time for these cases
 
@@ -90,6 +93,7 @@ Where the API costs come from: billed: clef-flash@openrouter, clef@openrouter, d
 | clef@openrouter | $0.03 | 41 s (estimated, 210 calls) | 32 min | 8 |
 | d1-ultra@openrouter | $0.0045 | 41 s (estimated, 210 calls) | 32 min | 8 |
 | d1.1@openrouter | $0.0021 | 37 s (estimated, 210 calls) | 29 min | 8 |
+| d1@vercel | $0.0021 | 6 s (estimated, 210 calls) | 5 min | 8 |
 | decider-flash@openrouter | $0.0011 | 35 s (estimated, 210 calls) | 28 min | 8 |
 | decider@openrouter | $0.0022 | 39 s (estimated, 210 calls) | 31 min | 8 |
 | decision-1@openrouter | $0.0042 | 40 s (estimated, 210 calls) | 32 min | 8 |
@@ -121,6 +125,7 @@ The threshold with the lowest total loss, chosen by CV, a miss (a positive read 
 | clef@openrouter | 98.6% | 98.6% | 1 | 2 | 0.50 | 0.50 |
 | d1-ultra@openrouter | 98.1% | 98.1% | 3 | 1 | 0.75 | 0.75 |
 | d1.1@openrouter | 98.1% | 98.1% | 2 | 2 | 0.45 | 0.45 |
+| d1@vercel | 97.6% | 96.7% | 4 | 3 | 0.70 | 0.70 |
 | decider-flash@openrouter | 98.1% | 97.6% | 3 | 2 | 0.35 | 0.35 |
 | decider@openrouter | 97.1% | 98.6% | 2 | 1 | 0.15 | 0.15 |
 | decision-1@openrouter | 96.2% | 96.2% | 2 | 6 | 0.65 | 0.65 |
@@ -192,6 +197,20 @@ The threshold with the lowest total loss, chosen by CV, a miss (a positive read 
 | 0.50 | 2 (2%) | 2 (2%) |
 | 0.60 | 2 (2%) | 2 (2%) |
 | 0.70 | 2 (2%) | 2 (2%) |
+| 0.80 | 4 (4%) | 0 (0%) |
+| 0.90 | 8 (8%) | 0 (0%) |
+
+## Misses and false alarms by threshold (d1@vercel)
+
+| threshold | misses | false alarms |
+|---|---|---|
+| 0.10 | 1 (1%) | 7 (7%) |
+| 0.20 | 2 (2%) | 4 (4%) |
+| 0.30 | 2 (2%) | 3 (3%) |
+| 0.40 | 2 (2%) | 3 (3%) |
+| 0.50 | 3 (3%) | 2 (2%) |
+| 0.60 | 3 (3%) | 2 (2%) |
+| 0.70 | 3 (3%) | 1 (1%) |
 | 0.80 | 4 (4%) | 0 (0%) |
 | 0.90 | 8 (8%) | 0 (0%) |
 
@@ -428,6 +447,12 @@ The threshold with the lowest total loss, chosen by CV, a miss (a positive read 
 |---|---|---|---|---|
 | t00915 | True | False | 0.99 | 入会を希望される方は、入会申込書に必要事項を記入のうえ、学会事務局に郵送またはＦＡＸにてお送り下さい。入会は、理事会の審査により認められま… |
 
+**d1@vercel** (1)
+
+| id | label | answer | probability | case |
+|---|---|---|---|---|
+| t00915 | True | False | 1.00 | 入会を希望される方は、入会申込書に必要事項を記入のうえ、学会事務局に郵送またはＦＡＸにてお送り下さい。入会は、理事会の審査により認められま… |
+
 **decider-flash@openrouter** (1)
 
 | id | label | answer | probability | case |
@@ -522,17 +547,17 @@ The threshold with the lowest total loss, chosen by CV, a miss (a positive read 
 
 ## Cases the models disagree on (12 of 35)
 
-| id | label | clef-flash@openrouter | clef@openrouter | d1-ultra@openrouter | d1.1@openrouter | decider-flash@openrouter | decider@openrouter | decision-1@openrouter | drex-max@openrouter | elephant@openrouter | flash-lite@vercel | haiku@vercel | jev:1.14 | joey@openrouter | kev@openrouter | luna@decisions | mammoth@openrouter | mercury@openrouter | span@openrouter | case |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| t01272 | True | True (0.62) | True (0.97) | True (0.88) | True (0.96) | True (0.86) | True (0.72) | True (0.89) | True (0.86) | True (0.81) | True (1.00) | True (1.00) | True (0.85) | False (0.55) | True (0.51) | True (0.93) | True (0.90) | True (0.97) | True (0.85) | 人に見られそうな場所で無理矢理アソコをイジられて挿れられて、バレたくなかったら声はガマンしろなんてーーー！ 人気サッカー選手でさわやかな見… |
-| t01769 | True | True (0.79) | True (0.86) | True (0.86) | True (0.78) | True (0.73) | False (0.83) | True (0.68) | False (0.55) | True (0.67) | True (1.00) | True (1.00) | True (0.58) | False (0.59) | False (0.65) | True (0.58) | True (0.72) | False (0.96) | False (0.76) | ▽ あ～ちんさんの書き込み 【SM交際】  上げ上げのノリノリ～ヽ(^o^)丿  #### メールを返信  新規エントリー＆メッセージ送信… |
-| t00139 | True | True (0.92) | True (0.97) | True (0.91) | True (0.92) | True (0.73) | False (0.60) | True (0.91) | True (0.79) | True (0.88) | True (1.00) | True (1.00) | True (0.89) | False (0.67) | True (0.75) | True (0.82) | True (0.84) | True (0.82) | True (0.83) | ホーム > 女優一覧 > 高野ひとみ  該当件数 : 8 件の商品があります 高野ひとみ は他の名前の作品もあります \| 稲葉めい \|… |
-| t01370 | True | True (0.94) | True (0.98) | True (0.89) | True (0.92) | True (0.84) | True (0.70) | True (0.93) | True (0.96) | True (0.91) | True (1.00) | True (1.00) | True (0.80) | True (0.88) | False (0.50) | True (0.80) | True (0.91) | True (0.95) | True (0.80) | パイパン キス 業界未経験 未経験 熟女 黒髪  出勤予定 6月10日(土)6月11日(日)6月12日(月)6月13日(火)6月14日(水… |
-| t01783 | True | True (0.95) | True (0.98) | True (0.98) | True (0.98) | True (0.92) | True (0.92) | True (0.99) | True (0.99) | True (0.94) | True (1.00) | True (1.00) | True (0.93) | False (0.88) | True (0.72) | True (0.95) | True (0.98) | True (0.99) | True (0.97) | 写メ日記 ほたるの写メ日記  ### ほたるの写メ日記  #### おち○ちんおっきくなってるよ？2023/02/03 21:01  あれ… |
-| t01740 | True | True (0.90) | True (0.96) | True (0.95) | True (0.97) | True (0.91) | True (0.79) | True (0.97) | True (0.97) | True (0.92) | True (1.00) | True (1.00) | True (0.93) | False (0.65) | True (0.51) | True (1.00) | True (0.88) | True (0.90) | True (0.85) | ## 【柏木さりな】発育が止まらないエチエチJKのフレッシュ腋  ◆女性歌手・女性芸能人  弱冠17歳にして、最近は大人の色気がどんどん強… |
-| t00507 | False | False (0.83) | False (0.73) | True (0.63) | False (0.74) | False (0.91) | False (0.87) | False (0.95) | False (0.73) | False (0.76) | False (1.00) | False (1.00) | False (0.62) | False (0.75) | False (0.70) | True (0.79) | True (0.52) | False (0.56) | False (0.98) | アフガニスタン タリバン テロ事件  # アフガンの銀行前で旧支配勢力タリバンが自動車爆弾を使った攻撃　34人死亡58人負傷  Tweet… |
-| t00740 | False | False (0.65) | True (0.89) | True (0.75) | True (0.78) | False (0.60) | False (0.91) | True (0.71) | False (0.85) | True (0.74) | False (1.00) | False (1.00) | True (0.71) | True (0.59) | False (0.57) | False (0.84) | True (0.65) | True (0.50) | False (0.88) | この作品 「【C85】ガッチャマンクラウズ18禁本サンプル」 は 「兄弟(意味深)」「ガッチャマン500users入り」 等のタグがつけら… |
-| t01598 | True | True (0.77) | True (0.93) | True (0.89) | True (0.91) | True (0.79) | True (0.70) | True (0.68) | True (0.82) | True (0.71) | True (1.00) | True (1.00) | True (0.78) | True (0.68) | False (0.57) | True (0.83) | True (0.86) | False (0.84) | False (0.55) | 作者の性癖発散しまくりで草  ふーん？エッチじゃん？  蘭クズ過ぎやろwww誠みたいに最後は56されてほしい。  海苔邪魔すんな  何だこ… |
-| t00277 | False | False (0.91) | False (0.76) | False (0.89) | False (0.85) | False (0.92) | False (0.93) | False (0.84) | False (0.96) | False (0.87) | False (1.00) | False (1.00) | False (0.80) | True (0.79) | False (0.83) | False (0.97) | False (0.82) | False (1.00) | False (1.00) | ◆ e-Bookのタイトル 『【PRIDE】たった1つのブログで月に4記事書くだけで月8万稼いでいるブログアフィリエイト（アドセンス+楽天… |
-| t01459 | True | True (0.75) | True (0.94) | True (0.88) | True (0.87) | True (0.82) | True (0.69) | True (0.65) | True (0.89) | True (0.86) | True (1.00) | True (1.00) | True (0.83) | False (0.77) | True (0.57) | True (0.94) | True (0.88) | True (0.53) | True (0.66) | # にょたえっち。～俺、女のカラダで義兄にズッポリハマってます～ 16巻  ｢そんなに挿入(い)れたらダメ、お腹の奥がギュってなっちゃう。… |
-| t01763 | True | True (0.90) | True (0.96) | True (0.81) | True (0.97) | True (0.85) | True (0.58) | True (0.91) | True (0.88) | True (0.90) | True (1.00) | True (1.00) | True (0.84) | True (0.73) | True (0.63) | True (0.86) | True (0.89) | True (0.80) | False (0.56) | # 吸い付きたい腋・脇・WAKI（FTKD-035）  吸い付きたい腋・脇・WAKI（FTKD-035）  ## フェチ界のアダルトビデオ… |
+| id | label | clef-flash@openrouter | clef@openrouter | d1-ultra@openrouter | d1.1@openrouter | d1@vercel | decider-flash@openrouter | decider@openrouter | decision-1@openrouter | drex-max@openrouter | elephant@openrouter | flash-lite@vercel | haiku@vercel | jev:1.14 | joey@openrouter | kev@openrouter | luna@decisions | mammoth@openrouter | mercury@openrouter | span@openrouter | case |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| t01272 | True | True (0.62) | True (0.97) | True (0.88) | True (0.96) | True (0.96) | True (0.86) | True (0.72) | True (0.89) | True (0.86) | True (0.81) | True (1.00) | True (1.00) | True (0.85) | False (0.55) | True (0.51) | True (0.93) | True (0.90) | True (0.97) | True (0.85) | 人に見られそうな場所で無理矢理アソコをイジられて挿れられて、バレたくなかったら声はガマンしろなんてーーー！ 人気サッカー選手でさわやかな見… |
+| t01769 | True | True (0.79) | True (0.86) | True (0.86) | True (0.78) | True (0.73) | True (0.73) | False (0.83) | True (0.68) | False (0.55) | True (0.67) | True (1.00) | True (1.00) | True (0.58) | False (0.59) | False (0.65) | True (0.58) | True (0.72) | False (0.96) | False (0.76) | ▽ あ～ちんさんの書き込み 【SM交際】  上げ上げのノリノリ～ヽ(^o^)丿  #### メールを返信  新規エントリー＆メッセージ送信… |
+| t00139 | True | True (0.92) | True (0.97) | True (0.91) | True (0.92) | True (0.95) | True (0.73) | False (0.60) | True (0.91) | True (0.79) | True (0.88) | True (1.00) | True (1.00) | True (0.89) | False (0.67) | True (0.75) | True (0.82) | True (0.84) | True (0.82) | True (0.83) | ホーム > 女優一覧 > 高野ひとみ  該当件数 : 8 件の商品があります 高野ひとみ は他の名前の作品もあります \| 稲葉めい \|… |
+| t01370 | True | True (0.94) | True (0.98) | True (0.89) | True (0.92) | True (0.96) | True (0.84) | True (0.70) | True (0.93) | True (0.96) | True (0.91) | True (1.00) | True (1.00) | True (0.80) | True (0.88) | False (0.50) | True (0.80) | True (0.91) | True (0.95) | True (0.80) | パイパン キス 業界未経験 未経験 熟女 黒髪  出勤予定 6月10日(土)6月11日(日)6月12日(月)6月13日(火)6月14日(水… |
+| t01783 | True | True (0.95) | True (0.98) | True (0.98) | True (0.98) | True (0.98) | True (0.92) | True (0.92) | True (0.99) | True (0.99) | True (0.94) | True (1.00) | True (1.00) | True (0.93) | False (0.88) | True (0.72) | True (0.95) | True (0.98) | True (0.99) | True (0.97) | 写メ日記 ほたるの写メ日記  ### ほたるの写メ日記  #### おち○ちんおっきくなってるよ？2023/02/03 21:01  あれ… |
+| t01740 | True | True (0.90) | True (0.96) | True (0.95) | True (0.97) | True (0.90) | True (0.91) | True (0.79) | True (0.97) | True (0.97) | True (0.92) | True (1.00) | True (1.00) | True (0.93) | False (0.65) | True (0.51) | True (1.00) | True (0.88) | True (0.90) | True (0.85) | ## 【柏木さりな】発育が止まらないエチエチJKのフレッシュ腋  ◆女性歌手・女性芸能人  弱冠17歳にして、最近は大人の色気がどんどん強… |
+| t00507 | False | False (0.83) | False (0.73) | True (0.63) | False (0.74) | False (0.58) | False (0.91) | False (0.87) | False (0.95) | False (0.73) | False (0.76) | False (1.00) | False (1.00) | False (0.62) | False (0.75) | False (0.70) | True (0.79) | True (0.52) | False (0.56) | False (0.98) | アフガニスタン タリバン テロ事件  # アフガンの銀行前で旧支配勢力タリバンが自動車爆弾を使った攻撃　34人死亡58人負傷  Tweet… |
+| t00740 | False | False (0.65) | True (0.89) | True (0.75) | True (0.78) | True (0.72) | False (0.60) | False (0.91) | True (0.71) | False (0.85) | True (0.74) | False (1.00) | False (1.00) | True (0.71) | True (0.59) | False (0.57) | False (0.84) | True (0.65) | True (0.50) | False (0.88) | この作品 「【C85】ガッチャマンクラウズ18禁本サンプル」 は 「兄弟(意味深)」「ガッチャマン500users入り」 等のタグがつけら… |
+| t01598 | True | True (0.77) | True (0.93) | True (0.89) | True (0.91) | True (0.84) | True (0.79) | True (0.70) | True (0.68) | True (0.82) | True (0.71) | True (1.00) | True (1.00) | True (0.78) | True (0.68) | False (0.57) | True (0.83) | True (0.86) | False (0.84) | False (0.55) | 作者の性癖発散しまくりで草  ふーん？エッチじゃん？  蘭クズ過ぎやろwww誠みたいに最後は56されてほしい。  海苔邪魔すんな  何だこ… |
+| t00277 | False | False (0.91) | False (0.76) | False (0.89) | False (0.85) | False (0.89) | False (0.92) | False (0.93) | False (0.84) | False (0.96) | False (0.87) | False (1.00) | False (1.00) | False (0.80) | True (0.79) | False (0.83) | False (0.97) | False (0.82) | False (1.00) | False (1.00) | ◆ e-Bookのタイトル 『【PRIDE】たった1つのブログで月に4記事書くだけで月8万稼いでいるブログアフィリエイト（アドセンス+楽天… |
+| t01459 | True | True (0.75) | True (0.94) | True (0.88) | True (0.87) | True (0.93) | True (0.82) | True (0.69) | True (0.65) | True (0.89) | True (0.86) | True (1.00) | True (1.00) | True (0.83) | False (0.77) | True (0.57) | True (0.94) | True (0.88) | True (0.53) | True (0.66) | # にょたえっち。～俺、女のカラダで義兄にズッポリハマってます～ 16巻  ｢そんなに挿入(い)れたらダメ、お腹の奥がギュってなっちゃう。… |
+| t01763 | True | True (0.90) | True (0.96) | True (0.81) | True (0.97) | True (0.97) | True (0.85) | True (0.58) | True (0.91) | True (0.88) | True (0.90) | True (1.00) | True (1.00) | True (0.84) | True (0.73) | True (0.63) | True (0.86) | True (0.89) | True (0.80) | False (0.56) | # 吸い付きたい腋・脇・WAKI（FTKD-035）  吸い付きたい腋・脇・WAKI（FTKD-035）  ## フェチ界のアダルトビデオ… |

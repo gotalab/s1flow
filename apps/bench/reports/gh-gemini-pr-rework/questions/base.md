@@ -12,6 +12,7 @@
 | clef@openrouter | 338 | 70.4% [65, 75] | 0.46 | 0.70 | 0.08 | 10% [7, 13] | 87.9% (74.4%) | 0/338 | 0/338 |
 | d1-ultra@openrouter | 338 | 71.0% [66, 76] | 0.48 | 0.71 | 0.07 | 6% [3, 8] | 89.5% (70.4%) | 0/338 | 0/338 |
 | d1.1@openrouter | 338 | 68.9% [64, 74] | 0.44 | 0.71 | 0.11 | 3% [1, 4] | 66.7% (34.5%) | 0/338 | 0/338 |
+| d1@vercel | 338 | 72.5% [68, 77] | 0.36 | 0.72 | 0.14 | 3% [1, 5] | 100.0% (76.2%) | 0/338 | 0/338 |
 | decider-flash@openrouter | 338 | 73.7% [69, 78] | 0.08 | 0.67 | 0.08 | 5% [3, 7] | 87.5% (65.6%) | 0/338 | 0/338 |
 | decider@openrouter | 338 | 74.9% [70, 80] | 0.33 | 0.71 | 0.08 | 16% [12, 19] | 92.5% (83.6%) | 0/338 | 0/338 |
 | decision-1@openrouter | 338 | 59.8% [54, 64] | 0.47 | 0.69 | 0.15 | 0% [0, 1] | 0.0% (0.0%) | 0/338 | 0/338 |
@@ -27,7 +28,7 @@
 | mercury@openrouter | 338 | 73.7% [69, 78] | 0.39 | 0.70 | 0.16 | 3% [1, 4] | 55.6% (25.1%) | 0/338 | 0/338 |
 | span@openrouter | 338 | 74.9% [70, 79] | 0.38 | 0.70 | 0.19 | 8% [5, 11] | 88.9% (73.7%) | 0/338 | 0/338 |
 
-Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef@openrouter = cloudflare/clef; d1-ultra@openrouter = liquid/d1-ultra-20261015; d1.1@openrouter = liquid/d1.1-20261027; decider-flash@openrouter = perplexity/pplx-decider-flash-v1.2-20261016; decider@openrouter = perplexity/pplx-decider-v1.2-20261016; decision-1@openrouter = microsoft/microsoft-decision-1-20261009; drex-max@openrouter = nace-ai/drex-max-20261016; elephant@openrouter = baseten/elephant-1-20261021; flash-lite@vercel = vercel_ai_gateway/google/gemini-3.5-flash-lite; haiku@vercel = vercel_ai_gateway/anthropic/claude-haiku-5.5; jev:1.14 = jev-1.14.0; joey@openrouter = baseten/joey-1-20261029; kev@openrouter = jaredpalmer/kev-4b-20260924; luna@decisions = gpt-6-luna; mammoth@openrouter = baseten/mammoth-1-20261021; mercury@openrouter = inception/mercury-decide-20260930; span@openrouter = respan/span-02-20261015. To compare versions, run each by name: `s1flow run <task> --models jev:1.14`.
+Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef@openrouter = cloudflare/clef; d1-ultra@openrouter = liquid/d1-ultra-20261015; d1.1@openrouter = liquid/d1.1-20261027; d1@vercel = liquid/d1; decider-flash@openrouter = perplexity/pplx-decider-flash-v1.2-20261016; decider@openrouter = perplexity/pplx-decider-v1.2-20261016; decision-1@openrouter = microsoft/microsoft-decision-1-20261009; drex-max@openrouter = nace-ai/drex-max-20261016; elephant@openrouter = baseten/elephant-1-20261021; flash-lite@vercel = vercel_ai_gateway/google/gemini-3.5-flash-lite; haiku@vercel = vercel_ai_gateway/anthropic/claude-haiku-5.5; jev:1.14 = jev-1.14.0; joey@openrouter = baseten/joey-1-20261029; kev@openrouter = jaredpalmer/kev-4b-20260924; luna@decisions = gpt-6-luna; mammoth@openrouter = baseten/mammoth-1-20261021; mercury@openrouter = inception/mercury-decide-20260930; span@openrouter = respan/span-02-20261015. To compare versions, run each by name: `s1flow run <task> --models jev:1.14`.
 
 ## Objectives and constraints
 
@@ -41,6 +42,7 @@ Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef@openrouter = cl
 | d1-ultra@openrouter | 6% [3, 8] | 0.290 [0.240, 0.343] | 0.93 | met |
 | decider-flash@openrouter | 5% [3, 7] | 0.263 [0.216, 0.311] | 0.92 | met |
 | elephant@openrouter | 4% [2, 6] | 0.272 [0.228, 0.322] | — | met |
+| d1@vercel | 3% [1, 5] | 0.275 [0.228, 0.322] | 1.00 | met |
 | mercury@openrouter | 3% [1, 4] | 0.263 [0.219, 0.311] | 1.00 | met |
 | clef-flash@openrouter | 3% [1, 4] | 0.266 [0.222, 0.317] | 0.96 | met |
 | d1.1@openrouter | 3% [1, 4] | 0.311 [0.260, 0.358] | 0.99 | met |
@@ -58,10 +60,11 @@ Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef@openrouter = cl
 
 | model | calls | p50 | p90 | p99 | max | spread (p99/p50) | retried | concurrency | API cost per 10k | source | frontier |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| clef-flash@openrouter | 338 | 415 ms | 568 ms | 883 ms | 1177 ms | 2.1 | 0 | 8 | $0.14 | billed | ○ |
+| clef-flash@openrouter | 338 | 415 ms | 568 ms | 883 ms | 1177 ms | 2.1 | 0 | 8 | $0.14 | billed |  |
 | clef@openrouter | 338 | 1520 ms | 2340 ms | 5766 ms | 8420 ms | 3.8 | 0 | 8 | $1.38 | billed |  |
 | d1-ultra@openrouter | 338 | 1334 ms | 2197 ms | 5874 ms | 11584 ms | 4.4 | 0 | 8 | $0.25 | billed |  |
 | d1.1@openrouter | 338 | 1238 ms | 2103 ms | 4911 ms | 6537 ms | 4.0 | 0 | 8 | $0.12 | billed |  |
+| d1@vercel | 338 | 222 ms | 326 ms | 561 ms | 6841 ms | 2.5 | 0 | 8 | $0.12 | billed | ○ |
 | decider-flash@openrouter | 338 | 1244 ms | 2424 ms | 5318 ms | 5692 ms | 4.3 | 0 | 8 | $0.06 | billed | ○ |
 | decider@openrouter | 338 | 1344 ms | 2174 ms | 5241 ms | 8593 ms | 3.9 | 0 | 8 | $0.12 | billed | ○ |
 | decision-1@openrouter | 338 | 1414 ms | 2063 ms | 4324 ms | 6270 ms | 3.1 | 0 | 8 | $0.23 | billed |  |
@@ -79,7 +82,7 @@ Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef@openrouter = cl
 
 Measured on the calls, not the answers: never an objective, only the constraints and the order of candidates the objectives tie (the p90 of each case's slowest call, then API cost). Frontier ○: no other model beats it on all three of the primary objective, API cost per 10k and p99.
 Latency is the time from sending to receiving one call that answered (the round trip from here included), without retries or the wait before them. Many calls at once read slower, from the provider's load and this machine's connections: to compare models, measure every candidate again at the same concurrency (`s1flow run <task> --fresh --concurrency N`, the same N for all).
-Where the API costs come from: billed: clef-flash@openrouter, clef@openrouter, d1-ultra@openrouter, d1.1@openrouter, decider-flash@openrouter, decider@openrouter, decision-1@openrouter, drex-max@openrouter, elephant@openrouter, joey@openrouter, kev@openrouter, mammoth@openrouter, mercury@openrouter, span@openrouter; estimated (recorded tokens times a list price: s1flow.toml's where dated, else the LLM price table's; not a bill): flash-lite@vercel, haiku@vercel, jev:1.14 (list price of 2026-10-03), luna@decisions (list price of 2026-10-09). Billed and estimated API costs sit side by side, so their differences do not compare as they are.
+Where the API costs come from: billed: clef-flash@openrouter, clef@openrouter, d1-ultra@openrouter, d1.1@openrouter, d1@vercel, decider-flash@openrouter, decider@openrouter, decision-1@openrouter, drex-max@openrouter, elephant@openrouter, joey@openrouter, kev@openrouter, mammoth@openrouter, mercury@openrouter, span@openrouter; estimated (recorded tokens times a list price: s1flow.toml's where dated, else the LLM price table's; not a bill): flash-lite@vercel, haiku@vercel, jev:1.14 (list price of 2026-10-03), luna@decisions (list price of 2026-10-09). Billed and estimated API costs sit side by side, so their differences do not compare as they are.
 
 ## API cost and time for these cases
 
@@ -89,6 +92,7 @@ Where the API costs come from: billed: clef-flash@openrouter, clef@openrouter, d
 | clef@openrouter | $0.05 | 68 s (estimated, 338 calls) | 34 min | 8 |
 | d1-ultra@openrouter | $0.0083 | 67 s (estimated, 338 calls) | 33 min | 8 |
 | d1.1@openrouter | $0.0040 | 60 s (estimated, 338 calls) | 30 min | 8 |
+| d1@vercel | $0.0040 | 12 s (estimated, 338 calls) | 6 min | 8 |
 | decider-flash@openrouter | $0.0020 | 64 s (estimated, 338 calls) | 31 min | 8 |
 | decider@openrouter | $0.0041 | 65 s (estimated, 338 calls) | 32 min | 8 |
 | decision-1@openrouter | $0.0077 | 65 s (estimated, 338 calls) | 32 min | 8 |
@@ -120,6 +124,7 @@ The threshold with the lowest total loss, chosen by CV, a miss (a positive read 
 | clef@openrouter | 70.4% | 74.0% | 73 | 15 | 0.80 | 0.80 |
 | d1-ultra@openrouter | 71.0% | 72.2% | 73 | 21 | 0.80 | 0.80 |
 | d1.1@openrouter | 68.9% | 72.5% | 78 | 15 | 0.85 | 0.85 |
+| d1@vercel | 72.5% | 73.4% | 73 | 17 | 0.70 | 0.70 |
 | decider-flash@openrouter | 73.7% | 74.0% | 79 | 9 | 0.40 | 0.35 |
 | decider@openrouter | 74.9% | 76.3% | 71 | 9 | 0.55 | 0.55 |
 | decision-1@openrouter | 59.8% | 76.3% | 59 | 21 | 0.85 | 0.85 |
@@ -191,6 +196,20 @@ The threshold with the lowest total loss, chosen by CV, a miss (a positive read 
 | 0.80 | 69 (76%) | 19 (8%) |
 | 0.85 | 71 (78%) | 16 (6%) |
 | 0.90 | 78 (86%) | 10 (4%) |
+
+## Misses and false alarms by threshold (d1@vercel)
+
+| threshold | misses | false alarms |
+|---|---|---|
+| 0.10 | 25 (27%) | 99 (40%) |
+| 0.20 | 40 (44%) | 67 (27%) |
+| 0.30 | 50 (55%) | 46 (19%) |
+| 0.40 | 58 (64%) | 35 (14%) |
+| 0.50 | 65 (71%) | 28 (11%) |
+| 0.60 | 72 (79%) | 20 (8%) |
+| 0.70 | 72 (79%) | 14 (6%) |
+| 0.80 | 80 (88%) | 10 (4%) |
+| 0.90 | 85 (93%) | 6 (2%) |
 
 ## Misses and false alarms by threshold (decider-flash@openrouter)
 
@@ -441,6 +460,19 @@ The threshold with the lowest total loss, chosen by CV, a miss (a positive read 
 | #26949 | True | False | 0.95 | fix(ci): configure git remote with token for authentication |
 | #29185 | True | False | 0.95 | test(integration): deflake run_shell_command and file-system-interact… |
 
+**d1@vercel** (31)
+
+| id | label | answer | probability | case |
+|---|---|---|---|---|
+| #29185 | True | False | 1.00 | test(integration): deflake run_shell_command and file-system-interact… |
+| #25822 | True | False | 1.00 | fix(cli): add missing response key to custom theme text schema |
+| #29377 | True | False | 1.00 | fix(core): update auth error documentation link to valid anchor and a… |
+| #26991 | True | False | 1.00 | fix(ui): clamped table column widths |
+| #26270 | True | False | 0.99 | feat(ui): added microphone and updated placeholder for voice mode |
+| #26949 | True | False | 0.99 | fix(ci): configure git remote with token for authentication |
+| #28216 | True | False | 0.99 | Refactor: exclude transient CI configuration files from workspace con… |
+| #25324 | True | False | 0.99 | fix(cli): prevent spam loop when preferredEditor is invalid |
+
 **decider-flash@openrouter** (8)
 
 | id | label | answer | probability | case |
@@ -569,17 +601,17 @@ The threshold with the lowest total loss, chosen by CV, a miss (a positive read 
 
 ## Cases the models disagree on (12 of 211)
 
-| id | label | clef-flash@openrouter | clef@openrouter | d1-ultra@openrouter | d1.1@openrouter | decider-flash@openrouter | decider@openrouter | decision-1@openrouter | drex-max@openrouter | elephant@openrouter | flash-lite@vercel | haiku@vercel | jev:1.14 | joey@openrouter | kev@openrouter | luna@decisions | mammoth@openrouter | mercury@openrouter | span@openrouter | case |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| #29568 | True | False (0.65) | True (0.80) | True (0.88) | True (0.91) | False (0.66) | True (0.71) | True (0.93) | True (0.89) | True (0.62) | False (1.00) | True (1.00) | True (0.70) | False (0.57) | False (0.66) | True (0.83) | True (0.80) | True (0.92) | True (0.92) | fix(core): implement append-only delta patching and bounded history w… |
-| #29558 | False | False (0.90) | True (0.50) | False (0.67) | False (0.74) | False (0.87) | False (0.87) | False (0.71) | False (0.90) | False (0.69) | False (1.00) | False (1.00) | False (0.67) | False (0.80) | False (0.79) | False (0.66) | False (0.63) | False (0.88) | False (0.93) | fix(cli): persist state atomically and recover from backup on corrupt… |
-| #29539 | True | False (0.88) | False (0.82) | False (0.71) | True (0.50) | False (0.83) | False (0.83) | False (0.75) | False (0.89) | False (0.84) | False (1.00) | False (1.00) | False (0.61) | False (0.54) | False (0.76) | False (0.66) | False (0.68) | False (0.97) | False (0.96) | fix(core): enable autonomous plan execution in non-interactive mode |
-| #29520 | False | False (0.79) | True (0.57) | True (0.59) | True (0.75) | False (0.73) | False (0.73) | False (0.62) | False (0.81) | True (0.50) | False (1.00) | True (1.00) | True (0.50) | True (0.67) | False (0.69) | True (0.70) | True (0.62) | False (0.88) | False (0.92) | fix(cli): preserve scroll position and partition pending height budget |
-| #29506 | True | False (0.65) | True (0.84) | True (0.84) | True (0.95) | False (0.63) | True (0.78) | True (0.93) | True (0.84) | True (0.63) | False (1.00) | True (1.00) | True (0.63) | True (0.66) | False (0.69) | True (0.76) | True (0.84) | False (0.59) | True (0.87) | fix(core): align policy redirection gates, path validation, and workf… |
-| #29499 | True | False (0.71) | True (0.81) | True (0.86) | True (0.85) | False (0.67) | False (0.69) | True (0.88) | False (0.61) | True (0.73) | False (1.00) | True (1.00) | True (0.60) | False (0.53) | False (0.72) | True (0.76) | True (0.71) | False (0.75) | True (0.54) | fix(core): serialize file tool operations and make writes atomic (#29… |
-| #29487 | False | False (0.91) | False (0.54) | False (0.79) | False (0.67) | False (0.78) | False (0.75) | False (0.62) | False (0.87) | False (0.79) | False (1.00) | True (1.00) | False (0.54) | False (0.58) | False (0.75) | False (0.65) | False (0.51) | False (0.93) | False (0.97) | fix(cli): restore paused stdin after capability detection |
-| #29463 | False | False (0.90) | False (0.55) | False (0.66) | False (0.74) | False (0.83) | False (0.87) | True (0.50) | False (0.94) | False (0.79) | False (1.00) | False (1.00) | False (0.62) | False (0.73) | False (0.77) | False (0.60) | False (0.70) | True (0.50) | False (0.89) | fix(acp): resolve session before config initialization and avoid same… |
-| #29451 | True | False (0.61) | True (0.74) | True (0.91) | True (0.92) | False (0.67) | True (0.55) | True (0.75) | True (0.75) | True (0.64) | False (1.00) | True (1.00) | True (0.66) | False (0.51) | False (0.68) | True (0.77) | True (0.79) | False (0.78) | False (0.52) | fix(core): bound tool output size and optimize memory lifecycle in lo… |
-| #29450 | False | False (0.68) | True (0.79) | True (0.81) | True (0.92) | False (0.68) | True (0.52) | True (0.91) | True (0.72) | True (0.53) | False (1.00) | True (1.00) | True (0.64) | True (0.68) | False (0.67) | True (0.80) | True (0.76) | True (0.92) | True (0.81) | refactor(a2a-server): implement V1 to V2 settings migration logic |
-| #29446 | False | False (0.94) | False (0.88) | False (0.82) | False (0.92) | False (0.89) | False (0.95) | False (0.87) | False (0.95) | False (0.94) | False (1.00) | False (1.00) | False (0.77) | False (0.83) | False (0.82) | False (0.71) | False (0.91) | True (0.50) | False (0.99) | fix(cli): distinguish missing MCP enablement config from malformed JS… |
-| #29448 | False | False (0.64) | True (0.78) | True (0.85) | True (0.87) | False (0.68) | False (0.61) | True (0.78) | False (0.62) | True (0.69) | False (1.00) | True (1.00) | True (0.61) | False (0.64) | False (0.71) | True (0.78) | True (0.76) | False (0.56) | False (0.68) | fix(auth): prevent infinite auth loop from file contention, headless … |
+| id | label | clef-flash@openrouter | clef@openrouter | d1-ultra@openrouter | d1.1@openrouter | d1@vercel | decider-flash@openrouter | decider@openrouter | decision-1@openrouter | drex-max@openrouter | elephant@openrouter | flash-lite@vercel | haiku@vercel | jev:1.14 | joey@openrouter | kev@openrouter | luna@decisions | mammoth@openrouter | mercury@openrouter | span@openrouter | case |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| #29568 | True | False (0.65) | True (0.80) | True (0.88) | True (0.91) | True (0.91) | False (0.66) | True (0.71) | True (0.93) | True (0.89) | True (0.62) | False (1.00) | True (1.00) | True (0.70) | False (0.57) | False (0.66) | True (0.83) | True (0.80) | True (0.92) | True (0.92) | fix(core): implement append-only delta patching and bounded history w… |
+| #29558 | False | False (0.90) | True (0.50) | False (0.67) | False (0.74) | False (0.94) | False (0.87) | False (0.87) | False (0.71) | False (0.90) | False (0.69) | False (1.00) | False (1.00) | False (0.67) | False (0.80) | False (0.79) | False (0.66) | False (0.63) | False (0.88) | False (0.93) | fix(cli): persist state atomically and recover from backup on corrupt… |
+| #29539 | True | False (0.88) | False (0.82) | False (0.71) | True (0.50) | False (0.62) | False (0.83) | False (0.83) | False (0.75) | False (0.89) | False (0.84) | False (1.00) | False (1.00) | False (0.61) | False (0.54) | False (0.76) | False (0.66) | False (0.68) | False (0.97) | False (0.96) | fix(core): enable autonomous plan execution in non-interactive mode |
+| #29520 | False | False (0.79) | True (0.57) | True (0.59) | True (0.75) | False (0.69) | False (0.73) | False (0.73) | False (0.62) | False (0.81) | True (0.50) | False (1.00) | True (1.00) | True (0.50) | True (0.67) | False (0.69) | True (0.70) | True (0.62) | False (0.88) | False (0.92) | fix(cli): preserve scroll position and partition pending height budget |
+| #29506 | True | False (0.65) | True (0.84) | True (0.84) | True (0.95) | True (0.59) | False (0.63) | True (0.78) | True (0.93) | True (0.84) | True (0.63) | False (1.00) | True (1.00) | True (0.63) | True (0.66) | False (0.69) | True (0.76) | True (0.84) | False (0.59) | True (0.87) | fix(core): align policy redirection gates, path validation, and workf… |
+| #29499 | True | False (0.71) | True (0.81) | True (0.86) | True (0.85) | True (0.58) | False (0.67) | False (0.69) | True (0.88) | False (0.61) | True (0.73) | False (1.00) | True (1.00) | True (0.60) | False (0.53) | False (0.72) | True (0.76) | True (0.71) | False (0.75) | True (0.54) | fix(core): serialize file tool operations and make writes atomic (#29… |
+| #29487 | False | False (0.91) | False (0.54) | False (0.79) | False (0.67) | False (0.93) | False (0.78) | False (0.75) | False (0.62) | False (0.87) | False (0.79) | False (1.00) | True (1.00) | False (0.54) | False (0.58) | False (0.75) | False (0.65) | False (0.51) | False (0.93) | False (0.97) | fix(cli): restore paused stdin after capability detection |
+| #29463 | False | False (0.90) | False (0.55) | False (0.66) | False (0.74) | False (0.74) | False (0.83) | False (0.87) | True (0.50) | False (0.94) | False (0.79) | False (1.00) | False (1.00) | False (0.62) | False (0.73) | False (0.77) | False (0.60) | False (0.70) | True (0.50) | False (0.89) | fix(acp): resolve session before config initialization and avoid same… |
+| #29451 | True | False (0.61) | True (0.74) | True (0.91) | True (0.92) | True (0.85) | False (0.67) | True (0.55) | True (0.75) | True (0.75) | True (0.64) | False (1.00) | True (1.00) | True (0.66) | False (0.51) | False (0.68) | True (0.77) | True (0.79) | False (0.78) | False (0.52) | fix(core): bound tool output size and optimize memory lifecycle in lo… |
+| #29450 | False | False (0.68) | True (0.79) | True (0.81) | True (0.92) | True (0.90) | False (0.68) | True (0.52) | True (0.91) | True (0.72) | True (0.53) | False (1.00) | True (1.00) | True (0.64) | True (0.68) | False (0.67) | True (0.80) | True (0.76) | True (0.92) | True (0.81) | refactor(a2a-server): implement V1 to V2 settings migration logic |
+| #29446 | False | False (0.94) | False (0.88) | False (0.82) | False (0.92) | False (0.99) | False (0.89) | False (0.95) | False (0.87) | False (0.95) | False (0.94) | False (1.00) | False (1.00) | False (0.77) | False (0.83) | False (0.82) | False (0.71) | False (0.91) | True (0.50) | False (0.99) | fix(cli): distinguish missing MCP enablement config from malformed JS… |
+| #29448 | False | False (0.64) | True (0.78) | True (0.85) | True (0.87) | True (0.53) | False (0.68) | False (0.61) | True (0.78) | False (0.62) | True (0.69) | False (1.00) | True (1.00) | True (0.61) | False (0.64) | False (0.71) | True (0.78) | True (0.76) | False (0.56) | False (0.68) | fix(auth): prevent infinite auth loop from file contention, headless … |

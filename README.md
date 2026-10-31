@@ -25,7 +25,7 @@
 
 These five models are within 8 points of each other on accuracy, yet the share of cases each can handle while
 staying 95% accurate ranges from 0% to 94%. Claude Haiku 5.5, an LLM asked once per case, answers without a
-probability, so no threshold gets it to 95%. The numbers are a snapshot of five of the 18 models in the
+probability, so no threshold gets it to 95%. The numbers are a snapshot of five of the 19 models in the
 [reports](apps/bench/reports), not a ranking of providers. Your own cases may tell a different story, which is
 exactly why you measure them.
 

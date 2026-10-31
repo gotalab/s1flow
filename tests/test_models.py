@@ -59,6 +59,11 @@ def test_the_repo_lineup_keeps_its_cache_ids():
     assert BENCH_LINEUP.build("haiku@vercel").capabilities.distribution == "none"
 
 
+def test_concurrency_reaches_the_built_model(tmp_path):
+    lineup = load(tmp_path, BASE + '\n[models.slow]\nprovider = "openrouter"\nid = "x/slow"\nconcurrency = 2\n')
+    assert Client(connections=lineup).connections.build("slow").concurrency == 2
+
+
 def test_sampling_is_part_of_an_llm_id(tmp_path):
     lineup = load(tmp_path, BASE + '\n[models.k5]\nprovider = "llm"\nid = "vercel_ai_gateway/x/m"\noptions.samples = 5\n')
     m = Client(connections=lineup).connections.build("k5")

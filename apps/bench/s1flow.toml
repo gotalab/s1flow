@@ -7,7 +7,7 @@
 # answer records the model that actually answered, and readers pick it (metrics.load).
 #
 # `versions` lists what a model serves under short names, the same on every model (`1.14`), each with the
-# id the provider is sent: `jev:1.14`, `jev@openrouter:1.14`. A version's `capabilities` replace the
+# id the provider is sent: `jev:1.14`. A version's `capabilities` replace the
 # model's field by field. A model with versions whose `id` is none of their ids is an alias
 # (`jev-latest`): it runs and compares, and `s1flow adopt` refuses it, since a policy names the version.
 #
@@ -31,7 +31,7 @@ default = ["jev", "d1.1@openrouter", "luna@decisions"]
 [models.jev]
 provider = "typesafe"
 id = "jev-latest"
-# `jev-latest` follows the latest jev (1.13 on 2026-10-16), so it is an alias: it runs and compares, and a
+# `jev-latest` follows the latest jev (1.14 on 2026-10-31), so it is an alias: it runs and compares, and a
 # policy names a version instead (`jev:1.14`).
 capabilities.image = true
 price.input_per_mtok = 0.042
@@ -61,8 +61,7 @@ capabilities.context_tokens = 32768
 capabilities.image = true
 
 # Added 2026-10-17 from OpenRouter's decision models (GET /api/v1/models?output_modalities=decisions).
-# `s1flow models --verify` on 2026-10-17: all but classify-1 take boolean, choice and score; none takes box.
-# Not measured on a task yet (`s1flow run`).
+# `s1flow models --verify` on 2026-10-31: each takes boolean, choice and score; none takes box.
 [models."decision-1@openrouter"]
 provider = "openrouter"
 id = "microsoft/microsoft-decision-1"
