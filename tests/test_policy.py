@@ -203,7 +203,7 @@ def test_project_configuration_is_explicit_not_environment_owned(tmp_path, monke
     (home / "s1flow.toml").write_text("default = []\n[models]\n")
     monkeypatch.chdir(home)
     project = Project(place.project(None, required=True))
-    assert place.root() == project.root == home.resolve()
+    assert place.find() == project.root == home.resolve()
     assert project.config == home / "s1flow.toml"
     assert project.policies_dir == home / "policies"
     assert project.cache_dir == home / ".cache"

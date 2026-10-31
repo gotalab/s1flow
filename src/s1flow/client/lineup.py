@@ -20,7 +20,6 @@ from ..core.errors import ConfigError, NotFound, invalid
 from .models import ModelSpec
 
 NAME = re.compile(r"[A-Za-z0-9][\w.+@-]*")  # no ":" (it asks for a version) and no "," (it separates --models)
-BUILTIN_LINEUP = Path(__file__).resolve().parents[1] / "templates" / "s1flow.toml"  # what `init` copies
 
 
 class Lineup(BaseModel):
