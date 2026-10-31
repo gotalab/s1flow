@@ -1,14 +1,9 @@
-"""One neutral development comparison for terminal readers and agents.
+"""One neutral development comparison of the current line-up's saved runs, for terminal readers and agents.
 
-The comparison is deliberately a read of the current line-up and saved run
-evidence.  It never builds a provider or asks a model.  ``metrics`` owns all
-numbers; this module assembles the common snapshot and bounded terminal views.
-Comparison itself does not rank or recommend candidates.  The explicit
-selection/adoption paths continue to use ``eval.select`` separately.
+It never asks a model, and it neither ranks nor recommends: ``metrics`` owns the numbers, ``eval.select`` the ranking.
 """
 from __future__ import annotations
 
-import hashlib
 import json
 import math
 from collections.abc import Sequence
@@ -18,7 +13,7 @@ from typing import Any, Literal, cast
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from ..client.identity import digest, execution_digest
+from ..client.identity import digest
 from ..client.models import ModelSpec
 from ..client.questions import Choice, Question
 from ..core import clock
@@ -35,8 +30,9 @@ from .evaluation import (
     Evaluation,
     Failures,
 )
-from .objectives.declare import Constraints, Objective
-from .run import run_path
+from .objectives.declare import METRICS, Constraints, Objective
+from .objectives.measure import MEASURES, measured_as
+from .run import Conditions, run_path
 from .task import Task
 
 
@@ -130,16 +126,6 @@ class _CandidateInput:
     question: Question
     spec: ModelSpec | None
     path: Path
-    run_digest: str
-
-
-def _run_digest(path: Path) -> str:
-    """Digest the saved run and metadata without embedding records in a snapshot."""
-    return digest({
-        path.name: hashlib.sha256(path.read_bytes()).hexdigest() if path.exists() else None,
-        path.with_suffix(".meta.json").name: hashlib.sha256(path.with_suffix(".meta.json").read_bytes()).hexdigest()
-        if path.with_suffix(".meta.json").exists() else None,
-    })
 
 
 def _variants(task: Task, variants: Sequence[str] | None = None) -> list[str]:
@@ -147,22 +133,24 @@ def _variants(task: Task, variants: Sequence[str] | None = None) -> list[str]:
     return list(dict.fromkeys(chosen))
 
 
-def _inputs(task: Task, variants: Sequence[str] | None = None, only: Sequence[str] | None = None) -> list[_CandidateInput]:
-    lineup = task.where.lineup()
+def _candidates(task: Task, variants: Sequence[str] | None = None, only: Sequence[str] | None = None) -> list[Candidate]:
+    """Every model and question variant to compare, by name, never by how well a candidate did."""
     wanted = set(only or ())
+    every = [Candidate(model=m, variant=v) for m in task.where.lineup().probe_names() for v in _variants(task, variants)]
+    return sorted((c for c in every if not wanted or c.name in wanted), key=lambda c: (c.model, c.variant != "base", c.variant))
+
+
+def _inputs(task: Task, candidates: Sequence[Candidate]) -> list[_CandidateInput]:
+    lineup = task.where.lineup()
     out: list[_CandidateInput] = []
-    for model in lineup.probe_names():
-        for variant in _variants(task, variants):
-            candidate = Candidate(model=model, variant=variant)
-            if wanted and candidate.name not in wanted:
-                continue
-            path = run_path(task, variant, model)
-            spec: ModelSpec | None
-            try:
-                spec = lineup.resolved(model)
-            except S1flowError:
-                spec = None
-            out.append(_CandidateInput(candidate, task.questions(variant)[task.question_id], spec, path, _run_digest(path)))
+    for candidate in candidates:
+        spec: ModelSpec | None
+        try:
+            spec = lineup.resolved(candidate.model)
+        except S1flowError:
+            spec = None
+        out.append(_CandidateInput(candidate, task.questions(candidate.variant)[task.question_id], spec,
+                                   run_path(task, candidate.variant, candidate.model)))
     return out
 
 
@@ -177,9 +165,7 @@ def _measurement(item: _CandidateInput, pr: metrics.Preds | None) -> Measurement
     model_id = "unknown" if spec is None else spec.id
     declared = None if spec is None else spec.concurrency
     distribution: DistributionEvidence = "unknown"
-    # ``metrics.load`` has already selected the current prompt, request
-    # identity and answering model.  Use that aggregate rather than reading
-    # append-only history here: old generations must not change this display.
+    # From the records metrics.load selected, never the append-only history: older rows must not change this display.
     if pr is not None and pr.distribution is not None:
         distribution = pr.distribution
     return Measurement(provider=provider, model_id=model_id, distribution=distribution, declared_concurrency=declared)
@@ -195,13 +181,7 @@ def _adoption_blocked(task: Task, item: _CandidateInput) -> list[str]:
     return blocked
 
 
-def _missing_reason(item: _CandidateInput, pr: metrics.Preds | None, error: Exception | None = None) -> list[str]:
-    if error is not None:
-        return [str(error)]
-    if not item.path.exists():
-        return [f"missing run evidence for {item.candidate.name}"]
-    if pr is None:
-        return [f"could not read run evidence for {item.candidate.name}"]
+def _missing_reason(pr: metrics.Preds) -> list[str]:
     reasons: list[str] = []
     if pr.never_asked:
         reasons.append(f"{len(pr.never_asked)} labelled dev cases never asked")
@@ -221,30 +201,6 @@ def _missing_reason(item: _CandidateInput, pr: metrics.Preds | None, error: Exce
 def _empty_failures(total: int, reason: str | None = None) -> Failures:
     return Failures(calls=0, failed=0, unsupported=0, data_errors=0, unlabeled=0,
                     never_asked=total if reason else 0, failed_cases=0, refused_cases=0)
-
-
-_KNOWN_METRIC_LABELS = {
-    "accuracy": "accuracy",
-    "precision": "precision",
-    "recall": "recall",
-    "f1": "F1",
-    "macro_f1": "macro-F1",
-    "mean_iou": "mean IoU",
-    "mae": "MAE (levels)",
-    "qwk": "QWK",
-    "auroc": "AUROC",
-    "brier": "Brier score",
-    "ece": "ECE",
-}
-_KNOWN_METRIC_UNITS: dict[str, Literal["share", "number"]] = {
-    "accuracy": "share", "precision": "share", "recall": "share",
-    "f1": "number", "macro_f1": "number", "mean_iou": "number", "mae": "number", "qwk": "number",
-    "auroc": "number", "brier": "number", "ece": "number",
-}
-_KNOWN_METRIC_DIRECTIONS: dict[str, Literal["max", "min"]] = {
-    "accuracy": "max", "precision": "max", "recall": "max", "f1": "max",
-    "macro_f1": "max", "mean_iou": "max", "mae": "min", "qwk": "max", "auroc": "max", "brier": "min", "ece": "min",
-}
 
 
 def _target_key(target: float) -> str:
@@ -275,9 +231,10 @@ def _plain_reading_basis(task: Task) -> str:
         return "plain choice reading: selected option with highest probability (default rule)"
     if kind.type == "box":
         return f"plain box reading: correct at IoU >= {kind.iou:g}"
-    if kind.type == "score":
-        return "plain score reading: the expected level, rounded (.5 up)"
-    return "plain reading"
+    return "plain score reading: the expected level, rounded (.5 up)"
+
+
+CALIBRATION = ("auroc", "brier", "ece")  # what the probabilities say: defined and shown only when a candidate gave some
 
 
 def _metric_definitions(task: Task, evaluations: Sequence[Evaluation]) -> list[MetricDefinition]:
@@ -292,51 +249,19 @@ def _metric_definitions(task: Task, evaluations: Sequence[Evaluation]) -> list[M
             seen.add(key)
 
     reading = _plain_reading_basis(task)
-    plain_bases = {
-        "accuracy": f"{reading}; correct / answered labelled dev cases",
-        "precision": f"{reading}; true positives / predicted positives among answered labelled dev cases",
-        "recall": f"{reading}; true positives / labelled positives among answered labelled dev cases",
-        "f1": f"{reading}; harmonic mean of precision and recall over answered labelled dev cases",
-        "macro_f1": f"{reading}; mean of per-class F1 over answered labelled dev cases",
-        "mean_iou": f"{reading}; mean IoU over answered labelled dev cases",
-        "mae": "expected level; mean absolute error in levels over answered labelled dev cases",
-        "qwk": f"{reading}; quadratic weighted kappa over answered labelled dev cases",
-    }
-    add("accuracy", "accuracy", "share", plain_bases["accuracy"], "max")
-    for key in task.kind.report:
-        if key in _KNOWN_METRIC_LABELS:
-            add(key, _KNOWN_METRIC_LABELS[key], _KNOWN_METRIC_UNITS[key],
-                plain_bases.get(key, "plain answers over answered labelled dev cases"), _KNOWN_METRIC_DIRECTIONS[key])
+    measured = measured_as(task.kind)
 
-    # Probability-derived metrics are included only when at least one current
-    # evaluation has genuine probability support. Rows without it remain null.
+    def add_metric(name: str) -> None:
+        metric, basis = METRICS[name], MEASURES[(name, measured)].basis
+        assert basis is not None, f"{name} on a {measured} question has no basis to show"
+        add(name, metric.label, metric.unit, basis.format(reading=reading), metric.direction)
+
+    # the plain answers' numbers, then what the probabilities say, when a candidate gave any
+    for name in ("accuracy", *task.kind.report):
+        add_metric(name)
     if any(e.probabilities for e in evaluations):
-        if task.kind.type == "box":
-            add("auroc", "AUROC", "number",
-                "recorded box confidence; hit-ranking AUROC over answered labelled dev cases", "max")
-            add("ece", "ECE", "number",
-                "recorded box confidence; calibration of hit correctness over answered labelled dev cases", "min")
-        elif task.kind.type == "score":
-            add("auroc", "AUROC", "number",
-                "genuine model probabilities; mean over the cuts k of AUROC(label >= k, P(level >= k)) over answered labelled dev cases", "max")
-            add("brier", "Brier score", "number",
-                "genuine model probabilities; ranked probability score over (levels - 1), over answered labelled dev cases", "min")
-            add("ece", "ECE", "number",
-                "genuine model probabilities; calibration of the rounded level's correctness over answered labelled dev cases", "min")
-        elif task.kind.binary:
-            add("auroc", "AUROC", "number",
-                "genuine model probabilities; binary positive-vs-negative AUROC over answered labelled dev cases", "max")
-            add("brier", "Brier score", "number",
-                "genuine model probabilities; binary Brier score over answered labelled dev cases", "min")
-            add("ece", "ECE", "number",
-                "genuine model probabilities; calibration of answer correctness over answered labelled dev cases", "min")
-        else:
-            add("auroc", "AUROC", "number",
-                "genuine model probabilities; macro one-v-rest AUROC over options and answered labelled dev cases", "max")
-            add("brier", "Brier score", "number",
-                "genuine model probabilities; multiclass Brier score over answered labelled dev cases", "min")
-            add("ece", "ECE", "number",
-                "genuine model probabilities; calibration of selected-answer correctness over answered labelled dev cases", "min")
+        for name in CALIBRATION:
+            add_metric(name)
 
     for i, objective in enumerate(task.objectives):
         if (
@@ -348,10 +273,7 @@ def _metric_definitions(task: Task, evaluations: Sequence[Evaluation]) -> list[M
                 for s in evaluation.selective
             )
         ):
-            # The primary Coverage score is the same configured target as the
-            # selective coverage/accepted-accuracy pair. Keep row.value/rule
-            # as primary context, but expose one neutral metric projection.
-            continue
+            continue  # the selective coverage:<target> metric already shows it
         if i == 0:
             where = "configured primary objective"
             reading_basis = (
@@ -391,12 +313,10 @@ def _row_metrics(evaluation: Evaluation | None, definitions: Sequence[MetricDefi
     for key, estimate in evaluation.measures.items():
         values[key] = estimate
     if evaluation.probabilities:
-        if evaluation.auroc is not None:
-            values["auroc"] = evaluation.auroc
-        if evaluation.brier is not None:
-            values["brier"] = Estimate(value=evaluation.brier)
-        if evaluation.ece is not None:
-            values["ece"] = Estimate(value=evaluation.ece)
+        for name in CALIBRATION:  # Evaluation's fields of the same names
+            got = getattr(evaluation, name)
+            if got is not None:
+                values[name] = got if isinstance(got, Estimate) else Estimate(value=got)
 
     primary_infeasible = _primary_rule_infeasible(evaluation)
     for score in evaluation.scores:
@@ -435,7 +355,7 @@ def _actual_row(item: _CandidateInput, task: Task, total: int, *, include_charts
             error = exc
             reason.append(str(exc))
     if error is None and pr is not None:
-        reason.extend(_missing_reason(item, pr))
+        reason.extend(_missing_reason(pr))
     question = item.question
     failures = evaluation.failures if evaluation is not None else _empty_failures(total, reason[0] if reason else None)
     probabilities = bool(pr.probabilities) if pr is not None else False
@@ -446,8 +366,7 @@ def _actual_row(item: _CandidateInput, task: Task, total: int, *, include_charts
             assert pr is not None
             charts = metrics.chart_data(task, pr, evaluation)
         except (S1flowError, ValueError, OSError) as exc:
-            # A renderer problem must not make a numerically eligible
-            # candidate ineligible.  Keep it as snapshot metadata instead.
+            # a chart failure is a notice, never an exclusion
             chart_notice = f"charts unavailable for {item.candidate.name}: {exc}"
     infeasible = _primary_rule_infeasible(evaluation)
     objective = None if evaluation is None or incomplete or infeasible else evaluation.objective
@@ -472,19 +391,9 @@ def collect(task: Task, *, variants: Sequence[str] | None = None, only: Sequence
     Chart series are opt-in because an agent summary should stay bounded.  The
     evidence identity and metric values are identical with or without them.
     """
-    data_digest = task.data_digest
-    contract_digest = task.evaluation_contract_digest
-    adapter_digest = task.input_adapter_digest
-    # A neutral comparison has a stable, human-readable order independent of
-    # objective direction, constraints, intervals, or API cost.
-    inputs = sorted(
-        _inputs(task, variants, only),
-        key=lambda x: (x.candidate.model, x.candidate.variant != "base", x.candidate.variant),
-    )
-    binding_digests = {
-        item.candidate.model: execution_digest(item.spec, '') if item.spec is not None else 'unresolved'
-        for item in inputs
-    }
+    candidates = _candidates(task, variants, only)
+    measured = Conditions.now(task, candidates, task.where.lineup().resolved)  # before the questions and specs are read
+    inputs = _inputs(task, candidates)
     total = _dev_n(task)
     rows: list[ComparisonRow] = []
     evaluations: dict[str, Evaluation] = {}
@@ -517,40 +426,29 @@ def collect(task: Task, *, variants: Sequence[str] | None = None, only: Sequence
             definitions,
             incomplete=incomplete.get(item.candidate.name, False),
         )
-    ordered = rows
 
     if len({tuple(sorted(e.answered_ids)) for e in population_evaluations}) > 1:
         notices.append("answered populations differ across candidates; each candidate remains visible and no candidate is selected")
     latency_notice = select.unlike(list(evaluations.values()))
     if latency_notice:
         notices.append(latency_notice.en(task.id))
-    run_digests = {item.candidate.name: item.run_digest for item in inputs}
-    if task.data_digest != data_digest or task.evaluation_contract_digest != contract_digest or task.input_adapter_digest != adapter_digest:
-        raise ConfigError(f"{task.id}: comparison data, adapter or evaluation contract changed during comparison")
-    current_run_digests = {item.candidate.name: _run_digest(item.path) for item in inputs}
-    if current_run_digests != run_digests:
-        raise ConfigError(f"{task.id}: run evidence changed during comparison; compare again")
-    current_bindings = {
-        item.candidate.model: execution_digest(task.where.lineup().resolved(item.candidate.model), '')
-        if item.spec is not None else 'unresolved' for item in inputs
-    }
-    if current_bindings != binding_digests:
-        raise ConfigError(f"{task.id}: model connection conditions changed during comparison; compare again")
+    if changed := measured.changed(task, task.where.lineup().resolved):
+        raise ConfigError(f"{task.id}: {changed} changed during the comparison; compare again")
     comparison_id = digest({
         "schema": "s1flow/comparison@2", "task": task.id, "variants": _variants(task, variants),
-        "data_digest": data_digest, "evaluation_contract_digest": contract_digest,
-        "input_adapter_digest": adapter_digest, "binding_digests": binding_digests, "run_digests": run_digests,
+        "data_digest": measured.data, "evaluation_contract_digest": measured.evaluation_contract,
+        "input_adapter_digest": measured.input_adapter, "binding_digests": measured.bindings, "run_digests": measured.runs,
     })
-    excluded_count = sum(bool(row.excluded) for row in ordered)
+    excluded_count = sum(bool(row.excluded) for row in rows)
     if excluded_count:
         notices.append(f"{excluded_count} candidates have missing or ineligible evidence; see each candidate's excluded reasons")
     return Comparison(
         id=comparison_id, task=task.id, source=task.source, at=clock.now(), scope="dev",
         question_type=task.kind.type, kind_params=task.kind_params,
         objective=task.primary, constraints=task.constraints,
-        data_digest=data_digest, evaluation_contract_digest=contract_digest, input_adapter_digest=adapter_digest,
-        binding_digests=binding_digests, run_digests=run_digests,
-        n=total, metric_definitions=definitions, notices=notices, candidates=ordered,
+        data_digest=measured.data, evaluation_contract_digest=measured.evaluation_contract,
+        input_adapter_digest=measured.input_adapter, binding_digests=measured.bindings, run_digests=measured.runs,
+        n=total, metric_definitions=definitions, notices=notices, candidates=rows,
     )
 
 
@@ -581,10 +479,7 @@ def _row_summary(row: ComparisonRow) -> dict[str, Any]:
         "excluded": row.excluded, "adoption_blocked": row.adoption_blocked,
         "probabilities": row.probabilities,
         "selection_basis": ("box confidence" if row.question.type == "box" else "selected-answer probability") if row.probabilities else None,
-        "failures": {"calls": row.failures.calls, "failed": row.failures.failed, "unsupported": row.failures.unsupported,
-                      "data_errors": row.failures.data_errors, "unlabeled": row.failures.unlabeled,
-                      "never_asked": row.failures.never_asked, "failed_cases": row.failures.failed_cases,
-                      "refused_cases": row.failures.refused_cases},
+        "failures": row.failures.model_dump(),
         "calls": {"latency": latency, "cost_per_10k_usd": calls.cost_per_10k_usd,
                   "cost_total_usd": calls.cost_total_usd, "cost_source": calls.cost_source,
                   "cost_unknown": calls.cost_unknown},

@@ -33,10 +33,6 @@ def test_select_scores_the_latest_answering_model_on_the_current_prompt():
     chosen, version, versions = metrics.select(lines, "p1")
     assert version == "jev-1.14.0" and versions == ["jev-1.14.0", "jev-1.13.0"]
     assert ids(chosen) == [("a", "jev-1.14.0", False)]  # b was never answered by 1.14; c was another prompt
-    chosen, version, _ = metrics.select(lines, "p1", "jev-1.13.0")
-    assert ids(chosen) == [("a", "jev-1.13.0", False), ("b", "jev-1.13.0", False)]
-    with pytest.raises(NotFound):
-        metrics.select(lines, "p1", "jev-2")
 
 
 def test_select_a_later_failure_does_not_hide_an_answer():

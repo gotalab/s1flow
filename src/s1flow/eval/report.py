@@ -10,9 +10,9 @@ from collections import Counter
 
 from ..core import clock
 from .kinds import Kind
-from .evaluation import ChartData, ChartSummary, Estimate, Evaluation, Floor, ObjectiveScore, cost_note
+from .evaluation import Estimate, Evaluation, Floor, ObjectiveScore, cost_note
 from .objectives import measure
-from .objectives.declare import Objective
+from .objectives.declare import METRICS, Objective
 from .objectives.measure import bound
 from . import evalset, metrics
 from .run import ask_again
@@ -188,13 +188,11 @@ def pareto(o0: Objective, ranked: list[Ranked], by: dict[str, Evaluation]) -> se
     return {m for m, a in pts.items() if not any(beats(b, a) for b in pts.values())}
 
 
-REPORTED = {"f1": "F1", "macro_f1": "macro-F1", "mean_iou": "mean IoU", "mae": "MAE"}  # a kind's own number, as the comparison heads it
-
-
 def render(task: Task, variant: str, evs: list[Evaluation], preds: dict[str, metrics.Preds]) -> str:
     sf = evalset.current(task)
     cases = {cid: c for cid, c in task.load_cases().by_id().items() if sf.assign.get(cid) != "test"}
     kind = task.kind
+    own = kind.report[0]  # the kind's own number, beside its accuracy
     box = kind.type == "box"
     first = next((e for e in evs if e.n), None)
     labelled = [c for c in task.load_cases().labelled() if sf.assign.get(c.id) != "test"]
@@ -211,7 +209,8 @@ def render(task: Task, variant: str, evs: list[Evaluation], preds: dict[str, met
         "",
         "## Comparison",
         "",
-        "| model | scored | accuracy | " + REPORTED[kind.report[0]] + " | AUROC | ECE | coverage | sure accuracy (lower bound) | refused / unsupported | failed |",
+        "| model | scored | " + " | ".join(METRICS[name].label for name in ("accuracy", own, "auroc", "ece"))
+        + " | coverage | sure accuracy (lower bound) | refused / unsupported | failed |",
         "|---|---|---|---|---|---|---|---|---|---|",
     ]
     for e in evs:
@@ -223,7 +222,7 @@ def render(task: Task, variant: str, evs: list[Evaluation], preds: dict[str, met
         flag = "" if e.probabilities else " ※"
         acc = e.accuracy or Estimate(value=None)
         L.append(
-            f"| {e.candidate.name}{flag}{' ✕' if f.missing else ''} | {e.n} | {pct(acc.value, 1)}{band(acc.interval)} | {num(e.measures[kind.report[0]].value if kind.report[0] in e.measures else None)} | {num(e.auroc.value if e.auroc else None)} | {num(e.ece)} "
+            f"| {e.candidate.name}{flag}{' ✕' if f.missing else ''} | {e.n} | {pct(acc.value, 1)}{band(acc.interval)} | {num(e.measures[own].value if own in e.measures else None)} | {num(e.auroc.value if e.auroc else None)} | {num(e.ece)} "
             f"| {pct(s.coverage.value)}{band(s.coverage.interval)} | {pct(s.accuracy, 1)} ({pct(s.lower, 1)}) | {f.unsupported}/{f.calls} | {f.failed}/{f.calls} |"
         )
     L += left_out(task, evs)
@@ -398,40 +397,6 @@ def time_table(evs: list[Evaluation]) -> list[str]:
 REPORT = "s1flow/report@1"  # <out>/<variant>.json
 
 
-def chart_summary(task: Task, evaluations: list[Evaluation], data: dict[str, ChartData]) -> ChartSummary:
-    """Summarize raw/CV change and the 2D cost-quality frontier on dev only.
-
-    The report's other Pareto view includes p99 latency. This explicitly named
-    projection ignores latency, so it can answer the cost-versus-quality question.
-    """
-    compared_evaluations = compared(evaluations)
-    eligible = [e for e in compared_evaluations if e.objective and e.objective.rule and e.objective.rule.threshold is not None
-                and data[e.candidate.name].raw_value is not None and data[e.candidate.name].cv_value is not None]
-    changes = [(e.candidate.name, data[e.candidate.name]) for e in eligible]
-    def gain(item: tuple[str, ChartData]) -> float:
-        row = item[1]
-        assert row.raw_value is not None and row.cv_value is not None
-        return (row.cv_value - row.raw_value) * (1 if task.primary.maximize else -1)
-    largest = max(changes, key=lambda item: abs(gain(item)), default=None)
-    points = [(e.candidate.name, e.calls.cost_per_10k_usd, e.objective.value)
-              for e in compared_evaluations if e.objective and e.objective.value is not None
-              and e.calls.cost_per_10k_usd is not None and e.calls.cost_per_10k_usd >= 0]
-    frontier = []
-    for name, price, value in sorted(points, key=lambda point: (point[1], point[0])):
-        assert price is not None and value is not None
-        quality = -value if task.primary.maximize else value
-        if not any(other_price is not None and other_value is not None and other_price <= price
-                   and (-other_value if task.primary.maximize else other_value) <= quality
-                   and (other_price < price or (-other_value if task.primary.maximize else other_value) < quality)
-                   for _, other_price, other_value in points):
-            frontier.append(name)
-    return ChartSummary(candidate_count=len(changes), improved_count=sum(gain(item) > 1e-9 for item in changes),
-                        largest_change_candidate=None if largest is None else largest[0],
-                        largest_change_raw=None if largest is None else largest[1].raw_value,
-                        largest_change_cv=None if largest is None else largest[1].cv_value,
-                        cost_quality_frontier=frontier)
-
-
 def write(task: Task, variant: str, out: Path) -> str:
     """<out>/<variant>.md and <variant>.json from every run on the variant's question; the Markdown is returned.
     """
@@ -447,8 +412,7 @@ def write(task: Task, variant: str, out: Path) -> str:
     saved = {"schema": REPORT, "task": task.id, "variant": variant, "at": clock.now(),
              "data_digest": data_digest, "evaluation_contract_digest": contract_digest, "input_adapter_digest": adapter_digest,
              "evaluations": [e.model_dump(mode="json") for e in evs],
-             "charts": {name: values.model_dump(mode="json") for name, values in charts.items()},
-             "chart_summary": chart_summary(task, evs, charts).model_dump(mode="json")}
+             "charts": {name: values.model_dump(mode="json") for name, values in charts.items()}}
 
     (out / f"{variant}.md").write_text(md)
     (out / f"{variant}.json").write_text(json.dumps(saved, ensure_ascii=False, indent=1))

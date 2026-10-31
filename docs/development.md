@@ -5,7 +5,7 @@ The checks below run offline and need no API keys. To call real models from the 
 
 ```bash
 uv sync --frozen
-uv run pytest -q -n auto   # also checks schema/, plugin/skills/, the import contracts and the wheel
+uv run pytest -q -n auto   # also checks schema/, the import contracts and the wheel
 uv run ruff check          # pyflakes: unused imports and variables, undefined names
 uv run mypy src/s1flow
 ```
@@ -21,8 +21,8 @@ makes them unreadable, rewrite them to the current shape in the same change.
 ## Release
 
 1. In one pull request, set the version in `pyproject.toml`, and pin the Action at `v<version>` and the package at
-   `==<version>` in `examples/` and the Skill's `references/app.md` (`tests/test_docs.py` fails until they agree;
-   `uv run python scripts/sync_plugin.py` copies the Skill to `plugin/`). Merge it.
+   `==<version>` in `examples/` and the Skill's `references/app.md` (`tests/test_docs.py` fails until they agree).
+   Merge it.
 2. Tag the merge commit `v<version>` and push the tag (`git tag -a v<version> <sha> -m v<version> && git push origin v<version>`).
    `s1flow init --ci` writes `gotalab/s1flow@v<version>` of the CLI that ran it, so every release needs its tag.
 3. Run the publish workflow from that tag (Actions → publish → Run workflow → Use workflow from: `v<version>`).

@@ -8,7 +8,7 @@ one label and the reading of its answers (policies/kinds.py) per case. numpy and
 What is measured is the question type, except that a choice scored as P(positive) is measured as a
 boolean. A measure never chooses a rule and a rule never knows a measure: metrics finds the
 rule on a fold's fit side and measures the eval side read at it, check and feedback measure what
-a policy read. The kind's own numbers (`f1`, `mean_iou`, `mae`, `qwk`, `brier`) are measures too.
+a policy read. The kind's own numbers (`f1`, `mean_iou`, `mae`, `qwk`, `brier`, `ece`) are measures too.
 
 A constraint is a share an objective keeps on one side of a bound (Coverage: the accuracy of what is
 answered; Recall: the false alarms among the negatives). Only the built-ins hold one.
@@ -181,6 +181,9 @@ class Measure:
     value: Callable[[Pairs, Params], float | None]
     constraint: Callable[[Params], Constraint] | None = None
     heavy: bool = False  # slow (many options): an interval takes the first HEAVY draws only
+    # what it is on, as the comparison defines its metric ({reading}: the plain reading it reads the answers at);
+    # None: shown only as an objective
+    basis: str | None = None
 
 
 # One bootstrap draws BOOTSTRAP resamples of the cases (the evaluation's intervals, the check's paired differences);
@@ -225,8 +228,6 @@ def _ious(p: Pairs) -> np.ndarray:
 
 
 # ---------- the loss table (Loss; Accuracy and ExpectedLoss are fixed forms of it) ----------
-
-BINARY_KEYS = {"true": True, "false": False}
 
 
 @dataclass(frozen=True)
@@ -440,34 +441,58 @@ def _brier_score(p: Pairs, _: Params) -> float | None:
     return float(np.mean(((above - truth) ** 2).sum(axis=1) / (p.levels - 1)))
 
 
+def _ece(p: Pairs, _: Params, bins: int = 10) -> float | None:
+    """Expected calibration error: the probability against the share right, over equal bins (the first closed at 0)."""
+    conf, correct = p.probability, p.correct
+    edges = np.linspace(0, 1, bins + 1)
+    total = 0.0
+    for i in range(bins):
+        m = (conf > edges[i]) & (conf <= edges[i + 1]) if i else (conf >= 0) & (conf <= edges[1])
+        if m.any():
+            total += m.mean() * abs(conf[m].mean() - correct[m].mean())
+    return float(total)
+
+
+_ACCURACY = Measure(_accuracy, basis="{reading}; correct / answered labelled dev cases")
+_COVERAGE = Measure(_coverage, _sure_accuracy)
+
+# What each metric is on each kind (what it is called is METRICS', declare.py). A basis is what the comparison
+# says it is measured on: {reading} is the plain reading of the answers it is read at.
 MEASURES: dict[tuple[str, str], Measure] = {
-    ("accuracy", "boolean"): Measure(_accuracy),
-    ("accuracy", "choice"): Measure(_accuracy),
-    ("accuracy", "box"): Measure(_accuracy),
-    ("accuracy", "score"): Measure(_accuracy),
-    ("coverage", "boolean"): Measure(_coverage, _sure_accuracy),
-    ("coverage", "choice"): Measure(_coverage, _sure_accuracy),
-    ("coverage", "box"): Measure(_coverage, _sure_accuracy),
-    ("coverage", "score"): Measure(_coverage, _sure_accuracy),
-    ("recall", "boolean"): Measure(_recall, _false_alarms),
-    ("precision", "boolean"): Measure(_precision),
+    ("accuracy", "boolean"): _ACCURACY,
+    ("accuracy", "choice"): _ACCURACY,
+    ("accuracy", "box"): _ACCURACY,
+    ("accuracy", "score"): _ACCURACY,
+    ("coverage", "boolean"): _COVERAGE,
+    ("coverage", "choice"): _COVERAGE,
+    ("coverage", "box"): _COVERAGE,
+    ("coverage", "score"): _COVERAGE,
+    ("recall", "boolean"): Measure(_recall, _false_alarms, basis="{reading}; true positives / labelled positives among answered labelled dev cases"),
+    ("precision", "boolean"): Measure(_precision, basis="{reading}; true positives / predicted positives among answered labelled dev cases"),
     ("expected_loss", "boolean"): Measure(_expected_loss),
     ("loss", "boolean"): Measure(_loss),
     ("loss", "choice"): Measure(_loss),
-    ("auroc", "boolean"): Measure(_auroc_binary),
-    ("auroc", "choice"): Measure(_auroc_choice, heavy=True),
-    ("auroc", "box"): Measure(_auroc_box),
-    ("auroc", "score"): Measure(_auroc_score),
-    ("mae", "score"): Measure(_mae),
-    ("qwk", "score"): Measure(_qwk),
-    ("f1", "boolean"): Measure(_f1_binary),
-    ("macro_f1", "choice"): Measure(_f1_macro),
+    ("auroc", "boolean"): Measure(_auroc_binary, basis="genuine model probabilities; binary positive-vs-negative AUROC over answered labelled dev cases"),
+    ("auroc", "choice"): Measure(_auroc_choice, heavy=True,
+                                 basis="genuine model probabilities; macro one-v-rest AUROC over options and answered labelled dev cases"),
+    ("auroc", "box"): Measure(_auroc_box, basis="recorded box confidence; hit-ranking AUROC over answered labelled dev cases"),
+    ("auroc", "score"): Measure(_auroc_score, basis="genuine model probabilities; mean over the cuts k of AUROC(label >= k, P(level >= k)) "
+                                                    "over answered labelled dev cases"),
+    ("mae", "score"): Measure(_mae, basis="expected level; mean absolute error in levels over answered labelled dev cases"),
+    ("qwk", "score"): Measure(_qwk, basis="{reading}; quadratic weighted kappa over answered labelled dev cases"),
+    ("f1", "boolean"): Measure(_f1_binary, basis="{reading}; harmonic mean of precision and recall over answered labelled dev cases"),
+    ("macro_f1", "choice"): Measure(_f1_macro, basis="{reading}; mean of per-class F1 over answered labelled dev cases"),
     # the kinds' own numbers (Kind.report), and the calibration every evaluation reports
-    ("mean_iou", "box"): Measure(_mean_iou),
-    ("brier", "boolean"): Measure(_brier_binary),
-    ("brier", "choice"): Measure(_brier_choice),
-    ("brier", "box"): Measure(_brier_box),
-    ("brier", "score"): Measure(_brier_score),
+    ("mean_iou", "box"): Measure(_mean_iou, basis="{reading}; mean IoU over answered labelled dev cases"),
+    ("brier", "boolean"): Measure(_brier_binary, basis="genuine model probabilities; binary Brier score over answered labelled dev cases"),
+    ("brier", "choice"): Measure(_brier_choice, basis="genuine model probabilities; multiclass Brier score over answered labelled dev cases"),
+    ("brier", "box"): Measure(_brier_box, basis="recorded box confidence; Brier score of hit correctness over answered labelled dev cases"),
+    ("brier", "score"): Measure(_brier_score, basis="genuine model probabilities; ranked probability score over (levels - 1), "
+                                                    "over answered labelled dev cases"),
+    ("ece", "boolean"): Measure(_ece, basis="genuine model probabilities; calibration of answer correctness over answered labelled dev cases"),
+    ("ece", "choice"): Measure(_ece, basis="genuine model probabilities; calibration of selected-answer correctness over answered labelled dev cases"),
+    ("ece", "box"): Measure(_ece, basis="recorded box confidence; calibration of hit correctness over answered labelled dev cases"),
+    ("ece", "score"): Measure(_ece, basis="genuine model probabilities; calibration of the rounded level's correctness over answered labelled dev cases"),
 }
 
 

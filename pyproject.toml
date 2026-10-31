@@ -83,14 +83,15 @@ pattern = '\]\((?!https?:|#)([^)]+)\)'
 replacement = '](https://github.com/gotalab/s1flow/blob/main/\1)'
 
 [tool.hatch.build.targets.sdist]
-only-include = ["src", "skills", "README.md"]
+only-include = ["src", "plugin/skills", "README.md"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/s1flow"]
 
-# The Agent Skill travels with the package, so a base install can write it (s1flow init --skill).
+# The Agent Skill lives once, inside the plugin (Claude Code refuses a plugin symlink to a path outside it), and
+# travels with the package so a base install can write it (s1flow init --skill).
 [tool.hatch.build.targets.wheel.force-include]
-"skills/s1flow" = "s1flow/skills/s1flow"
+"plugin/skills/s1flow" = "s1flow/skills/s1flow"
 
 [dependency-groups]
 dev = [
@@ -121,7 +122,7 @@ strict_equality = true
 
 # The contract and the code that touches the wire are held to strict typing.
 [[tool.mypy.overrides]]
-module = ["s1flow.core.*", "s1flow.client.*", "s1flow.policies.*", "s1flow.cli", "s1flow.cli.*", "s1flow.skill", "s1flow.eval.records", "s1flow.eval.run", "s1flow.eval.verify", "s1flow.project.*"]
+module = ["s1flow.core.*", "s1flow.client.*", "s1flow.policies.*", "s1flow.cli", "s1flow.cli.*", "s1flow.skill", "s1flow.eval.records", "s1flow.eval.run", "s1flow.project.*"]
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
 warn_return_any = true

@@ -77,7 +77,7 @@ def ship(task: Task, *rs: EvaluatedPolicy, current: int = 1, candidate: int | No
         r.evidence.input_adapter_digest = task.input_adapter_digest
         r.evidence.evaluation_contract_digest = task.evaluation_contract_digest
         r.evidence.data_sha256 = task.data_digest
-        store.write_new(r)
+        store.write_evaluated(r)
     point(store, "toy", candidate or current)
     evalset.fix(task)  # the task's first run fixed the held-out test share
 
@@ -302,7 +302,7 @@ def test_a_cost_not_known_is_not_free_and_a_list_price_estimates_it(task):
     assert r.sides[0].cost_per_10k_usd is None and r.sides[0].cost_unknown == 20
     assert "calls whose API cost is not known" in comment.markdown(task, r)
     priced = policy(2, "tokens")
-    task.policies.write_new(priced)
+    task.policies.write_evaluated(priced)
     path = task.where.root / "s1flow.toml"
     path.write_text(path.read_text() + '\n[models.tokens.price]\ninput_per_mtok = 1.0\nas_of = "2026-10-19"\nsource = "t"\n')
     point(task.policies, "toy", 2)

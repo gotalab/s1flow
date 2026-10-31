@@ -1,5 +1,5 @@
-"""The Agent Skill that travels with the package (`skills/s1flow/` in the repository, `s1flow/skills/s1flow/` in the wheel),
-and writing it where agents read it. Standard library only: it runs on the base install.
+"""The Agent Skill that travels with the package (`plugin/skills/s1flow/` in the repository, `s1flow/skills/s1flow/` in
+the wheel), and writing it where agents read it. Standard library only: it runs on the base install.
 
     s1flow init --skill                   <git root or cwd>/.agents/skills/s1flow/ and .claude/skills/s1flow/
     (the Claude Code plugin brings the same Skill)
@@ -28,9 +28,9 @@ AGENT_DIRS = (".agents/skills", ".claude/skills")  # Codex, Devin and others; Cl
 
 
 def source() -> Path:
-    """The Skill this s1flow carries: inside the installed package, or skills/s1flow/ of a source checkout."""
+    """The Skill this s1flow carries: inside the installed package, or plugin/skills/s1flow/ of a source checkout."""
     here = Path(__file__).resolve().parent
-    for d in (here / "skills" / NAME, here.parents[1] / "skills" / NAME):
+    for d in (here / "skills" / NAME, here.parents[1] / "plugin" / "skills" / NAME):
         if (d / "SKILL.md").is_file():
             return d
     raise ConfigError(f"this s1flow carries no Skill (looked in {here / 'skills' / NAME})")

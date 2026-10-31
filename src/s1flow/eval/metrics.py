@@ -87,16 +87,14 @@ class Preds:
         return self.pairs.y
 
 
-def select(lines: list[PredictionRecord], prompt: str, version: str | None = None) -> tuple[list[PredictionRecord], str | None, list[str]]:
-    """The records to score: lines for this prompt, from one answering model (default: the one
-    that answered last), the latest line per case. A case that model never answered
-    keeps its latest refusal or failure, so it still counts as unsupported or failed."""
+def select(lines: list[PredictionRecord], prompt: str) -> tuple[list[PredictionRecord], str | None, list[str]]:
+    """The records to score: lines for this prompt from the answering model that answered last, the latest
+    line per case. A case that model never answered keeps its latest refusal or failure, so it still counts
+    as unsupported or failed."""
     lines = [r for r in lines if r.prompt == prompt]
     answered = sorted((r for r in lines if r.answered), key=lambda r: r.at)
     versions = list(dict.fromkeys(r.answered_by for r in reversed(answered) if r.answered_by))
-    chosen = version or (versions[0] if versions else None)
-    if version and version not in versions:
-        raise NotFound(f"no answers from {version}; answered by: {', '.join(versions) or 'none'}")
+    chosen = versions[0] if versions else None
     best: dict[str, PredictionRecord] = {}
     for r in sorted(lines, key=lambda r: r.at):
         k = r.id
@@ -245,16 +243,6 @@ def labels_needed(correct: int, n: int, coverage: float, target: float) -> int |
     return int(np.ceil((lo - n) / coverage))
 
 
-def ece(conf: np.ndarray, correct: np.ndarray, bins: int = 10) -> float:
-    edges = np.linspace(0, 1, bins + 1)
-    total = 0.0
-    for i in range(bins):
-        m = (conf > edges[i]) & (conf <= edges[i + 1]) if i else (conf >= 0) & (conf <= edges[1])
-        if m.any():
-            total += m.mean() * abs(conf[m].mean() - correct[m].mean())
-    return float(total)
-
-
 def _better(b: Bound, v: float | None, than: float | None) -> bool:
     if v is None:
         return False
@@ -384,10 +372,6 @@ def evaluate(task: Task, pr: Preds, target: float | None = None, variant: str = 
     if len(dev) < 2:
         return Evaluation(**base)  # type: ignore[arg-type]
     folds = list(splitting.folds(plan, _strata(p0.y), task.split))
-    seen = np.zeros(n, dtype=bool)
-    for _, ev in folds:
-        seen[ev] = True
-    idx_m = np.flatnonzero(seen)
     custom = task.custom_measures
 
     # the primary, read with the task's floors on the threshold it sets, the one a policy reads with (Task checks it
@@ -400,8 +384,7 @@ def evaluate(task: Task, pr: Preds, target: float | None = None, variant: str = 
     # `tiebreak` is measured at the primary's rule, the one a policy reads with: it chooses none of its own
     later = [_Read(bound(o, kind, custom), primary.pairs, [], None) for o in task.objectives[1:]]
 
-    # Every ordinary number and its interval uses the same dev population.
-    _, of_dev = _resamples(n, idx_m, task.split.seed)
+    _, of_dev = _resamples(n, dev, task.split.seed)
     accuracy, auroc = bound(Accuracy(), kind), bound(AUROC(), kind)
     acc_i, au_i = _intervals([accuracy, auroc], p0, of_dev)
     primary_i, *later_i = _intervals([primary.bound, *(r.bound for r in later)], primary.pairs, of_dev)
@@ -409,9 +392,9 @@ def evaluate(task: Task, pr: Preds, target: float | None = None, variant: str = 
 
     selective = []
     for t, r, interval in zip(targets, covered, covered_i):
-        sc = _score(r, idx_m, interval)
+        sc = _score(r, dev, interval)
         assert r.bound.constraint is not None and r.dev is not None
-        a_ok, a_n = r.bound.constraint.count(r.pairs[idx_m])
+        a_ok, a_n = r.bound.constraint.count(r.pairs[dev])
         cov = sc.value or 0.0
         selective.append(Selective(
             target_accuracy=t, coverage=Estimate(value=sc.value, interval=sc.interval), accuracy=a_ok / a_n if a_n else None,
@@ -421,7 +404,7 @@ def evaluate(task: Task, pr: Preds, target: float | None = None, variant: str = 
     threshold = None
     if tuned is not None:
         assert tuned.dev is not None
-        on = tuned.pairs[idx_m]
+        on = tuned.pairs[dev]
         threshold = ErrorLossThreshold(
             accuracy=float(on.correct.mean()), misses=int((on.y & ~on.said).sum()), false_alarms=int((~on.y & on.said).sum()),
             median=float(np.median(tuned.cuts)), chosen=tuned.dev,
@@ -443,7 +426,7 @@ def evaluate(task: Task, pr: Preds, target: float | None = None, variant: str = 
     floor_rows = []
     if floors:
         at_test = None if test is None or primary.dev is None or primary.dev == np.inf else primary.pairs.at(threshold=primary.dev)[plan.test]
-        floor_rows = [Floor(what=c.what, bound=c.bound, rate=c.rate(primary.pairs[idx_m]), test=None if at_test is None else c.count(at_test))
+        floor_rows = [Floor(what=c.what, bound=c.bound, rate=c.rate(primary.pairs[dev]), test=None if at_test is None else c.count(at_test))
                       for c in floors]
 
     reported = {name: measure.measure(name, p0[dev]) for name in kind.report}
@@ -459,11 +442,11 @@ def evaluate(task: Task, pr: Preds, target: float | None = None, variant: str = 
         split=splitting.describe(plan), split_method=str(plan.method),
         accuracy=Estimate(value=accuracy.value(p0[dev]), interval=acc_i), measures={k: Estimate(value=v) for k, v in reported.items()},
         auroc=Estimate(value=auroc.value(p0[dev]), interval=au_i),
-        brier=measure.measure("brier", p0[dev]), ece=ece(conf[dev], correct[dev]),
+        brier=measure.measure("brier", p0[dev]), ece=measure.measure("ece", p0[dev]),
         selective=selective, error_loss_threshold=threshold, floors=floor_rows,
         sweep=sweep(p0.y[dev], p0.p_positive[dev], sorted({*SWEEP, threshold.chosen})) if threshold else None,
-        objective=_score(primary, idx_m, primary_i), tiebreak=[_score(r, idx_m, i) for r, i in zip(later, later_i)],
-        test=test, high_confidence_errors=high, calls=calls(pr, idx_m, of_dev),
+        objective=_score(primary, dev, primary_i), tiebreak=[_score(r, dev, i) for r, i in zip(later, later_i)],
+        test=test, high_confidence_errors=high, calls=calls(pr, dev, of_dev),
     )
 
 
@@ -607,16 +590,11 @@ def chart_data(task: Task, pr: Preds, evaluation: Evaluation) -> ChartData:
     raw_value = objective.value(pairs) if len(dev) else None
     cv_value = None if evaluation.objective is None else evaluation.objective.value
 
-    # Selection is meaningful for all question kinds that returned a genuine
-    # distribution/confidence.  Build it before the binary-only charts return
-    # below so Choice and Box comparisons retain their useful curve too.
     selection_basis: Literal["selected-answer probability", "box confidence"] = "box confidence" if task.kind.type == "box" else "selected-answer probability"
     selected = None
     if evaluation.objective is not None and evaluation.objective.rule is not None:
         selected = evaluation.objective.rule.min_probability
-    # A Boolean (including a positive Choice) has two independent controls:
-    # the final selected P(positive) threshold and the acceptance probability
-    # cut.  The curve must keep the former fixed while varying the latter.
+    # A binary question's curve holds its chosen P(positive) threshold while the acceptance cut varies.
     selection_pairs = pairs
     selection_threshold = 0.5
     if task.kind.binary:

@@ -2,7 +2,7 @@
 import json
 
 import pytest
-from conftest import attach, make_project
+from conftest import CONDITIONS, attach, change_condition, make_project
 
 from s1flow.client import Boolean, BooleanAnswer, Box
 from s1flow.client.answers import BoxAnswer, BoxEdges
@@ -104,7 +104,7 @@ def test_run_adopt_and_check_share_runtime_interpretation_and_freshness(tmp_path
     data.write_text(json.dumps([{"id": str(i), "input": bool(i % 2), "label": not bool(i % 2)} for i in range(40)]))
     with pytest.raises(ConfigError, match="data or labels changed"):
         adopt.validate_evidence(task, selected)
-    with pytest.raises(ConfigError, match="comparison data or execution conditions changed"):
+    with pytest.raises(ConfigError, match="input data or labels changed since ranking; rank again"):
         adopt.adopt(task, "m", "test", "stale list", listed=listed)
 
 
@@ -176,12 +176,12 @@ def test_old_shortlist_cannot_ship_a_rule_for_a_changed_loss(tmp_path, monkeypat
     before = adopt.shortlist(task)
     changed = task.copy(objective=ExpectedLoss(fn=5, fp=1))
     fresh = adopt.shortlist(changed)
-    assert before.evaluations["m"].primary.rule != fresh.evaluations["m"].primary.rule
+    assert before.evaluations["m"].objective.rule != fresh.evaluations["m"].objective.rule
     with pytest.raises(ConfigError, match="evaluation contract changed"):
         adopt.adopt(changed, "m", "test", "changed losses", listed=before)
     # Raw requests have not changed. Current rescoring needs no model run.
     adopted = adopt.adopt(changed, "m", "test", "rescored losses", listed=fresh)
-    assert adopted.spec.rule == fresh.evaluations["m"].primary.rule
+    assert adopted.spec.rule == fresh.evaluations["m"].objective.rule
 
 
 @pytest.mark.parametrize("change", ["objective", "cost", "floor", "tiebreak", "split_config", "split_assignment"])
@@ -281,7 +281,7 @@ def test_concurrency_change_invalidates_old_shortlist_but_reuses_raw_answers(tmp
     path = task.where.root / "s1flow.toml"
     path.write_text(path.read_text().replace("concurrency = 1", "concurrency = 8"))
     task.project = Project(task.where.root)
-    with pytest.raises(ConfigError, match="comparison data or execution conditions changed"):
+    with pytest.raises(ConfigError, match="the execution conditions of m changed since ranking"):
         adopt.adopt(task, "m", "test", "stale concurrency", listed=listed)
     fresh = adopt.shortlist(task)
     assert fresh.evaluations["m"].n == listed.evaluations["m"].n
@@ -320,11 +320,65 @@ def test_requested_run_width_change_invalidates_shortlist_without_new_calls(tmp_
 
     monkeypatch.setattr(task.where.client().responses, "create", unexpected_call)
     asyncio.run(run.run_model(task, "m", limit=None, variant="base", concurrency=8))
-    with pytest.raises(ConfigError, match="run evidence changed"):
+    with pytest.raises(ConfigError, match="the runs of m changed since ranking"):
         adopt.adopt(task, "m", "test", "stale requested width", listed=listed)
     fresh = adopt.shortlist(task)
     assert fresh.evaluations["m"].n == listed.evaluations["m"].n
     assert fresh.evaluations["m"].calls.latency is None
+
+
+@pytest.mark.parametrize("what", CONDITIONS)
+def test_a_condition_changed_while_ranking_refuses_the_list(tmp_path, monkeypatch, what):
+    from s1flow.core.errors import ConfigError
+    from s1flow.eval import adopt
+    from s1flow.eval.objectives.declare import ExpectedLoss
+
+    task = scoring_task(tmp_path, ExpectedLoss())
+    named, ranking = [], adopt.rank
+
+    def rank_while_it_changes(*args):
+        named.append(change_condition(task, what, "m"))  # the runs are read: their scores are ranked
+        return ranking(*args)
+
+    monkeypatch.setattr(adopt, "rank", rank_while_it_changes)
+    with pytest.raises(ConfigError) as refused:
+        adopt.shortlist(task)
+    assert str(refused.value) == f"toy: {named[0]} changed during ranking; rank again"
+
+
+@pytest.mark.parametrize("what", CONDITIONS)
+@pytest.mark.parametrize("reading", ["evalset.fixed", "metrics.load"])  # the test cases, then the picked run (the last read)
+def test_a_condition_changed_while_adopting_refuses_the_policy(tmp_path, monkeypatch, what, reading):
+    from s1flow.core.errors import ConfigError
+    from s1flow.eval import adopt, evalset, metrics
+    from s1flow.eval.objectives.declare import ExpectedLoss
+
+    task = scoring_task(tmp_path, ExpectedLoss())
+    listed = adopt.shortlist(task)
+    module, name = {"evalset": evalset, "metrics": metrics}[reading.split(".")[0]], reading.split(".")[1]
+    named, read = [], getattr(module, name)
+
+    def read_while_it_changes(*a, **k):
+        named.append(change_condition(task, what, "m"))
+        return read(*a, **k)
+
+    monkeypatch.setattr(module, name, read_while_it_changes)
+    with pytest.raises(ConfigError) as refused:
+        adopt.adopt(task, "m", "test", "changed meanwhile", listed=listed)
+    assert str(refused.value) == f"toy: {named[0]} changed during adoption; rank again before adopting"
+    assert task.policies.versions("toy") == []
+
+
+def test_stored_evidence_refuses_changed_execution_conditions(tmp_path):
+    from s1flow.core.errors import ConfigError
+    from s1flow.eval import adopt
+    from s1flow.eval.objectives.declare import ExpectedLoss
+
+    task = scoring_task(tmp_path, ExpectedLoss())
+    policy = adopt.adopt(task, "m", "test", "measured at the declared concurrency")
+    change_condition(task, "binding", "m")
+    with pytest.raises(ConfigError, match="execution conditions changed; measure and adopt again"):
+        adopt.validate_evidence(task, policy)
 
 
 def test_price_change_invalidates_scoring_evidence_while_raw_requests_remain_reusable(tmp_path, monkeypatch):
@@ -370,7 +424,7 @@ def test_adopt_writes_no_version_below_on_the_held_out_test_unless_forced(tmp_pa
     assert held.evidence.test == "below" and task.policies.versions("toy") == [] and task.policies.current("toy") is None
     shipped = adopt.adopt(task, "m", "test", "shipped anyway", force=True)
     assert task.policies.versions("toy") == [shipped.spec.version] and task.policies.current("toy") == shipped.spec.version
-    stored = task.policies.read("toy", version=shipped.spec.version).selection  # the evidence says it was forced, and why
+    stored = task.policies.evaluated("toy", version=shipped.spec.version).selection  # the evidence says it was forced, and why
     assert stored.forced and stored.reason == "shipped anyway"
     tried = [(h.action, h.version, h.test, h.forced, h.reason) for h in task.policies.history("toy")]
     assert tried == [("refused", 1, "below", False, "below on test"), ("adopt", 1, "below", True, "shipped anyway")]  # the refusal leaves a trace

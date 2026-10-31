@@ -120,9 +120,6 @@ class Task:
             raise ConfigError(f"{self.id}: kind_params: {e}") from None
         if kind.type == "score" and getattr(kind, "levels", 0) < 2:
             raise ConfigError(f"{self.id}: a score question needs two levels or more")
-        default = default_for(kind)
-        if default is None:
-            raise ConfigError(f"{self.id}: {self.kind.type} questions are not evaluated yet (no metric scores them)")
 
         def declared(x: Any) -> Any:
             if isinstance(x, Custom):
@@ -132,7 +129,7 @@ class Task:
 
         for name in self.variants:
             variant_name(name)
-        primary = declared(self.objective or default)
+        primary = declared(self.objective or default_for(kind))
         self.ties = [x if isinstance(x, str) else declared(x) for x in self.tiebreak]
         check(primary, self.ties, self.kind, self.id, frozenset(self.custom))
         self.objectives = [primary, *(x for x in self.ties if isinstance(x, Objective))]
@@ -205,9 +202,9 @@ class Task:
     @property
     def policies(self) -> Store:
         """The project's policies, with their evidence (eval/policy.py)."""
-        from .policy import store
+        from .policy import Store
 
-        return store(self.where)
+        return Store(self.where.policies_dir)
 
     @property
     def primary(self) -> Objective:

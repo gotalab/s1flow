@@ -9,7 +9,7 @@ from conftest import cli
 
 ROOT = Path(__file__).resolve().parents[1]
 DOCS = [ROOT / "README.md", ROOT / "action.yml", ROOT / "decide" / "action.yml",
-        *sorted(ROOT.glob("docs/*.md")), *sorted(ROOT.glob("skills/**/*.md")), *sorted(ROOT.glob("examples/*"))]
+        *sorted(ROOT.glob("docs/*.md")), *sorted(ROOT.glob("plugin/skills/**/*.md")), *sorted(ROOT.glob("examples/*"))]
 VERSION = tomllib.loads((ROOT / "pyproject.toml").read_text())["project"]["version"]
 
 # A command as docs write one: `s1flow X`, uv run / uvx [options] s1flow X, or a code-block line starting s1flow X.

@@ -2,7 +2,7 @@
 (cli/<command>.py: its function and its arguments); common.py is what they share.
 
 Each command imports what it needs when it runs, so the base install (pydantic and httpx) runs init, decide,
-feedback record, export, doctor and adopt --spec: an app or a workflow decides and
+feedback record, export, doctor, models and adopt --spec (models --verify draws images: s1flow[images]): an app or a workflow decides and
 records feedback, and an agent makes a project and gets the Skill, without the evaluation stack. The other commands need s1flow[eval]; on the base
 install they end in one line saying what to install, not a traceback. `s1flow --help` lists every command in one
 table (HELP), and a command that does not exist is one line naming the closest.
@@ -46,7 +46,7 @@ from ..core.errors import S1flowError
 from . import adopt, cases, check, decide, doctor, export, feedback, init, models, optimize, report, run
 from .common import EXITS, Parser, usage_error
 
-BASE = ("init", "decide", "feedback", "export", "doctor")  # what the base install runs (feedback record; adopt --spec)
+BASE = ("init", "decide", "feedback", "export", "doctor", "models")  # what the base install runs (feedback record; adopt --spec; models without --verify)
 # Every command, in the order `s1flow --help` lists it: its module (cli/<name>.py) and its line in that list.
 COMMANDS = (
     (init, "init", "make a project in ./s1flow: s1flow.toml, a task with --task, the CI workflow with --ci, the Agent Skill with --skill"),
@@ -68,7 +68,7 @@ HELP = "\n".join([
     "--project PATH selects a project without changing cwd; --connections PATH selects one trusted connection file.",
     "Use these options only where listed by COMMAND --help; they also work before the command. SDK calls do not discover projects.", "", "Commands:",
     *(f"  {name:<16} {what}" for name, what in TABLE), "",
-    "init, decide, feedback record, export, doctor and adopt --spec run on the base install; "
+    "init, decide, feedback record, export, doctor, models and adopt --spec run on the base install (models --verify: s1flow[images]); "
     "the others need the eval extra: install s1flow[eval].",
     EXITS,
 ])

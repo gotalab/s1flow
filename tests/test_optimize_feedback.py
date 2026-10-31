@@ -212,7 +212,7 @@ def production_policy(task):
                         selection=Selection(by="t", reason="t", tied=["m"]),
                         evidence=Evidence(data_sha256=task.data_digest, execution_digest=runtime.execution_digest,
                                           evaluation=e, test=None, compared=["m"]))
-    task.policies.write_new(r)
+    task.policies.write_evaluated(r)
     return r
 
 
