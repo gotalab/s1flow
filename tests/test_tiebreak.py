@@ -6,9 +6,7 @@ import json
 
 import numpy as np
 import pytest
-from conftest import binary_preds, labelled, make_project
-from test_latency import Timed
-from test_objectives import ev, scored, task
+from conftest import Timed, binary_preds, ev, labelled, make_project, scored, task
 
 from s1flow.eval import metrics, report
 from s1flow.eval import run as running

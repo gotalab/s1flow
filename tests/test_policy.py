@@ -6,7 +6,7 @@ import sys
 
 import pytest
 from pydantic import ValidationError
-from conftest import attach, make_project, ship
+from conftest import Sharp, attach, make_project, ship
 
 from s1flow import policies
 from s1flow.core.errors import ConfigError, DataError, NotFound, ProviderError, S1flowError
@@ -25,7 +25,7 @@ from s1flow.client.lineup import Lineup
 from s1flow.client import identity
 from s1flow.client.identity import execution_digest
 from s1flow.policies.state_shape import mismatch, schema_of
-from s1flow.client import Boolean, BooleanAnswer, Capabilities, Choice, ChoiceAnswer, Response, ModelBuild, ModelSpec, Usage
+from s1flow.client import Boolean, Choice, ChoiceAnswer, Response, ModelBuild, ModelSpec
 from s1flow.policies.kinds import KindParams
 
 STATE = {"title": "Crash on start", "body": "It crashes."}
@@ -305,18 +305,6 @@ def test_the_packages_depend_downward_only():
     lint = Path(sys.executable).with_name("lint-imports")
     done = subprocess.run([str(lint)], cwd=Path(__file__).parents[1], capture_output=True, text=True)
     assert done.returncode == 0, done.stdout[-2000:]
-
-
-class Sharp:
-    """Right on every case, with the probability it was made with."""
-
-    def __init__(self, b: ModelBuild):
-        self.sure = {"good": 0.97, "vague": 0.6}[b.name]
-        self.id, self.concurrency, self.capabilities = f"sharp:{self.sure}", 4, Capabilities()
-
-    async def decide(self, state, questions, *, options=None):
-        p = self.sure if state["y"] else 1 - self.sure
-        return Response(answers={"q": BooleanAnswer(probability=p)}, answered_by=f"{self.id}-v2", usage=Usage(cost_usd=0.0001))
 
 
 def test_the_first_run_fixes_the_test_share_and_rank_and_report_write_nothing(tmp_path):

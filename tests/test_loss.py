@@ -6,9 +6,7 @@ import json
 
 import numpy as np
 import pytest
-from conftest import attach, binary_preds, labelled, make_project
-from test_objectives import declared, task
-from test_policy import Sharp
+from conftest import Sharp, attach, binary_preds, declared, labelled, make_project, task
 
 from s1flow.client import Boolean, Box
 from s1flow.core.errors import ConfigError

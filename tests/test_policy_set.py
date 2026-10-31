@@ -1,13 +1,12 @@
 """policies.json (`s1flow export`): the policies an app uses, in one file it vendors and loads from."""
 
 import json
-from conftest import PROJECT, point
+from conftest import PROJECT, point, s1flow
 import shutil
 from pathlib import Path
 
 import pytest
 from jsonschema import Draft202012Validator
-from test_client import s1flow
 
 from s1flow import Client, policies
 from s1flow.core.errors import ConfigError, NotFound

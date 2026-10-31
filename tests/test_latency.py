@@ -4,27 +4,12 @@ import asyncio
 import json
 
 import numpy as np
-from conftest import binary_preds, make_project
-from test_objectives import cov
+from conftest import Timed, binary_preds, cov, make_project
 
 from s1flow.objectives import Constraints, Coverage
-from s1flow.client import Capabilities, ChoiceAnswer, Response
 from s1flow.eval import metrics, records, report
 from s1flow.eval import run as running
 from s1flow.eval.task import load
-
-
-class Timed:
-    """Answers right on every case after 120 ms, with one retry as a provider would report it."""
-
-    def __init__(self, b=None):
-        self.id, self.concurrency, self.capabilities = "fake:t", 4, Capabilities()
-        self.ms, self.retries = 120, 1
-
-    async def decide(self, state, questions, *, options=None):
-        q = next(iter(questions))
-        a = ChoiceAnswer(choice="wake", probabilities={"wake": 0.99, "sleep": 0.01})
-        return Response(answers={q: a}, answered_by=self.id, latency_ms=self.ms, retries=self.retries)
 
 
 def test_a_run_records_retries_and_the_concurrency_it_ran_at(tmp_path):

@@ -6,8 +6,7 @@ import json
 
 import pytest
 
-from conftest import cli, make_project
-from test_comparison import fake
+from conftest import cli, compare_fake, make_project
 
 TASK = '''from s1flow.eval import Task
 from s1flow.questions import Boolean
@@ -19,7 +18,7 @@ task = Task(id="truth", cases="data.jsonl", state=lambda r: {"truth": r["truth"]
 
 @pytest.fixture
 def ran(tmp_path, monkeypatch):
-    project = make_project(tmp_path / "p", {"good": fake("good"), "bad": fake("bad"), "late": fake("good")})
+    project = make_project(tmp_path / "p", {"good": compare_fake("good"), "bad": compare_fake("bad"), "late": compare_fake("good")})
     d = project.tasks_dir / "truth"
     d.mkdir(parents=True)
     (d / "task.py").write_text(TASK)

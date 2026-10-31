@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 import pytest
-from conftest import PROJECT, ship
+from conftest import PROJECT, s1flow, ship
 
 from s1flow import AsyncClient, Client
 from s1flow.client import ModelSpec, Refusal
@@ -218,13 +218,6 @@ def test_an_extra_provider_answer_is_a_provider_failure(toml):
 
 
 # ---------- the base-install CLI ----------
-
-
-def s1flow(*args, cwd, env=None):
-    import os
-
-    e = {k: v for k, v in os.environ.items() if not k.startswith("S1FLOW_")} | {"PYTHONPATH": str(HERE)} | (env or {})
-    return subprocess.run([sys.executable, "-c", "from s1flow.cli import main; main()", *args], cwd=cwd, capture_output=True, text=True, env=e)
 
 
 def test_decide_with_a_model(toml):

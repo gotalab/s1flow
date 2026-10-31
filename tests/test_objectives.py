@@ -4,13 +4,12 @@ import re
 
 import numpy as np
 import pytest
-from conftest import binary_preds, labelled
+from conftest import CHOICE, binary_preds, cov, declared, ev, labelled, scored, task
 
 from s1flow.core.errors import ConfigError
 from s1flow.eval.candidate import Candidate
-from s1flow.eval.evaluation import Calls, Estimate, Evaluation, Failures, ObjectiveScore, Selective
+from s1flow.eval.evaluation import Evaluation
 from s1flow.objectives import AUROC, Accuracy, Constraints, Coverage, ExpectedLoss, F1, Objective, Recall
-from s1flow.eval import evaluation
 from s1flow.client import Boolean, Choice, Score
 from s1flow.eval import Task, evalset, metrics
 from s1flow.eval.objectives import measure
@@ -18,29 +17,6 @@ from s1flow.eval.objectives.measure import MEASURES, bound, measured_as
 from s1flow.eval.select import rank
 from s1flow.eval.kinds import BooleanKind, kind_of
 from s1flow.policies.kinds import KindParams
-
-
-def task(objs, **kw):
-    return Task(id="t", cases="x.jsonl", state=lambda r: r["x"], question=Boolean(instructions="?"), label=lambda r: r["y"],
-                objective=objs[0] if objs else None, tiebreak=objs[1:], **kw)
-
-
-def scored(o: Objective, v: float, half: float = 0.05) -> ObjectiveScore:
-    return ObjectiveScore(objective=o, value=v, interval=(v - half, v + half))
-
-
-def ev(model, scores: list[ObjectiveScore], cost=1.0, p99=100.0, n=100) -> Evaluation:
-    lat = evaluation.Latency(n=n, p50_ms=p99 / 2, p90_ms=p99, p95_ms=p99, p99_ms=p99, max_ms=p99, spread=2.0, retried=0, unrecorded=0, concurrency=[4], concurrency_unknown=0)
-    return Evaluation(
-        candidate=Candidate(model=model), answered_by=model, answered_by_all=[model], answered_ids=[str(i) for i in range(n)], n=n, probabilities=True,
-        failures=Failures(calls=n, failed=0, unsupported=0, data_errors=0, unlabeled=0), accuracy=Estimate(value=0.9, interval=(0.85, 0.95)),
-        objective=scores[0], tiebreak=scores[1:], calls=Calls(cost_per_10k_usd=cost, latency=lat),
-    )
-
-
-def cov(model, v, **kw) -> Evaluation:
-    sel = Selective(target_accuracy=0.95, coverage=Estimate(value=v, interval=(v - 0.05, v + 0.05)), accuracy=0.96, n=50, errors=2, lower=0.9, labels_needed=None, min_probability=0.9)
-    return ev(model, [scored(Coverage(), v)], **kw).model_copy(update={"selective": [sel]})
 
 
 def test_objectives_must_fit_the_task():
@@ -124,14 +100,8 @@ def test_accuracy_as_an_objective_leaves_the_test_share_out():
     assert final.test is not None and final.test.accuracy == 0.0
 
 
-CHOICE = Choice(instructions="?", criteria={"a": None, "b": None, "c": None})
 HAND_WRITTEN = Objective(name="coverage", params={"target_accuracy": 0.9}, direction="min", sets="min_probability", unit="share", label="x")
 LATENCY_BY_HAND = Objective(name="latency", direction="min", sets=None, unit="number", label="p99")
-
-
-def declared(objs, question=CHOICE, **kw):
-    return Task(id="gh-ruff-area", cases="x", state=lambda r: r, question=question, label=lambda r: r,
-                objective=objs[0] if objs else None, tiebreak=objs[1:], **kw)
 
 
 # One case per error stopped when a task.py loads (ConfigError, naming the task).

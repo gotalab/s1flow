@@ -11,18 +11,11 @@ from typing import Any, cast
 
 import pytest
 
-from conftest import cli, make_project
+from conftest import TRUTH, cli, compare_fake, make_project
 from s1flow.client import (
-    BooleanAnswer,
     Boolean,
     Box,
-    BoxAnswer,
-    BoxEdges,
     Choice,
-    ChoiceAnswer,
-    ModelBuild,
-    Response,
-    Usage,
 )
 from s1flow.core.errors import ConfigError
 from s1flow.eval import comparison, evalset, metrics, records, run
@@ -32,43 +25,9 @@ from s1flow.eval.task import Task
 from s1flow.policies.kinds import KindParams
 
 
-TRUTH = BoxEdges(top=0.1, bottom=0.5, left=0.2, right=0.6)
-
-
-class CompareFake:
-    def __init__(self, build: ModelBuild, mode: str) -> None:
-        self.id = f"wire:{build.spec.id}"
-        self.capabilities = build.spec.capabilities
-        self.concurrency = 2
-        self.mode = mode
-
-    async def decide(self, state: dict[str, Any], questions: dict[str, Any], *, options: dict[str, Any] | None = None) -> Response:
-        answer: dict[str, Any] = {}
-        truth = bool(state.get("truth", False))
-        for qid, question in questions.items():
-            if question.type == "boolean":
-                probability = 0.9 if truth else 0.1
-                if self.mode == "bad":
-                    probability = 1 - probability
-                answer[qid] = BooleanAnswer(probability=probability)
-            elif question.type == "choice":
-                choice = "a" if truth else "b"
-                if self.mode == "bad":
-                    choice = "b" if truth else "a"
-                probabilities = None if self.mode == "choice-none" else {"a": 0.9 if choice == "a" else 0.1, "b": 0.9 if choice == "b" else 0.1}
-                answer[qid] = ChoiceAnswer(choice=choice, probabilities=probabilities)
-            else:
-                answer[qid] = BoxAnswer(box=TRUTH, confidence=None if self.mode == "box-none" else 0.8)
-        return Response(answers=answer, answered_by=self.id, usage=Usage(input_tokens=3, cost_usd=0.01, cost_source="billed"), latency_ms=4, retries=0)
-
-
-def fake(mode: str):
-    return lambda build: CompareFake(build, mode)
-
-
 def task_fixture(tmp_path: Path, *, question: Any, mode: str = "good", models: dict[str, Any] | None = None,
                  variants: bool = False, box_capability: bool = False) -> Task:
-    factories = models or {"fake": fake(mode)}
+    factories = models or {"fake": compare_fake(mode)}
     project = make_project(tmp_path, factories)
     if box_capability:
         config = project.root / "s1flow.toml"
@@ -99,7 +58,7 @@ def run_saved(task: Task, models: list[str], variants: list[str] = ["base"]) -> 
 
 def test_collects_model_variants_in_neutral_model_variant_order(tmp_path):
     task = task_fixture(tmp_path, question=Boolean(instructions="truth?"),
-                        models={"good": fake("good"), "bad": fake("bad")}, variants=True)
+                        models={"good": compare_fake("good"), "bad": compare_fake("bad")}, variants=True)
     run_saved(task, ["good", "bad"], ["base", "alt"])
     got = comparison.collect(task)
     assert {row.candidate for row in got.candidates} == {"good", "good/alt", "bad", "bad/alt"}
@@ -197,7 +156,7 @@ def test_measurement_ignores_historical_distribution_rows(tmp_path):
 def test_comparison_notices_unlike_latency_provenance(tmp_path):
     from s1flow.client import Boolean
 
-    task = task_fixture(tmp_path, question=Boolean(instructions="truth?"), models={"good": fake("good"), "bad": fake("bad")})
+    task = task_fixture(tmp_path, question=Boolean(instructions="truth?"), models={"good": compare_fake("good"), "bad": compare_fake("bad")})
     run_saved(task, ["good", "bad"])
     path = run.run_path(task, "base", "bad")
     rows = [record.model_copy(update={"concurrency": 4, "retries": None}) for record in records.read(path)]
