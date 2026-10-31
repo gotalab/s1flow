@@ -89,6 +89,23 @@ def test_an_answer_missing_a_question_is_the_providers_failure(toml):
         Client(toml).responses.create(model=Short(), state="x", questions={"bug": QS["bug"], "area": QS["area"]})
 
 
+def test_an_answer_that_skipped_validation_is_the_providers_failure(toml):
+    """A value set after construction never went through pydantic; it is a ProviderError, not a bug in s1flow."""
+    from s1flow.client import BooleanAnswer, Response
+
+    class Mutated:
+        id, concurrency = "mutated", 1
+        capabilities = Client(toml).connections.build("toy").capabilities
+
+        async def decide(self, state, questions, *, options=None):
+            answer = BooleanAnswer(probability=0.5)
+            answer.probability = "high"  # type: ignore[assignment]
+            return Response(answers={"bug": answer}, answered_by="mutated-1")
+
+    with pytest.raises(ProviderError, match="malformed response outside the contract"):
+        Client(toml).responses.create(model=Mutated(), state="x", questions={"bug": QS["bug"]})
+
+
 @pytest.mark.parametrize(
     ("qid", "question", "answer_kind", "detail"),
     [
