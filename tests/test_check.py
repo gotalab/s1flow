@@ -45,7 +45,7 @@ def fake(b: ModelBuild) -> Fake:
 
 
 @pytest.fixture
-def task(tmp_path, no_ci):
+def task(tmp_path):
     p = make_project(tmp_path)
     rows = [{"id": str(i), "text": CLASSES[i % 3]} for i in range(120)]
     (tmp_path / "data.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))

@@ -93,7 +93,7 @@ def test_a_file_changed_there_is_kept_unless_forced(repo, capsys):
     assert mine.read_text() == (skill.source() / "references" / "ship.md").read_text()
 
 
-def test_an_older_copy_is_updated_and_a_copy_made_by_hand_is_not_overwritten(repo):
+def test_a_copy_an_earlier_version_wrote_is_updated_and_a_copy_made_by_hand_is_not_overwritten(repo):
     copy = repo / ".claude/skills/s1flow"
     skill.install(repo / ".claude/skills")
     old = copy / "references" / "learn.md"

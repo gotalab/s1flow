@@ -47,8 +47,7 @@ def local_model():
         thread.join(timeout=5)
 
 
-def exercise_runtime(root: Path, python: str = sys.executable, *, evaluate: bool = True):
-    """Also callable from the development interpreter against an isolated base-only wheel install."""
+def exercise_runtime(root: Path):
     root.mkdir(parents=True, exist_ok=True)
     other = root / 'application'; other.mkdir()
     env = dict(os.environ, S1FLOW_TEST_API_KEY='local-test-only', NO_PROXY='127.0.0.1,localhost',
@@ -56,7 +55,7 @@ def exercise_runtime(root: Path, python: str = sys.executable, *, evaluate: bool
     env.pop('PYTHONPATH', None)
 
     def cli(*args, cwd=root, expected=0):
-        result = subprocess.run([str(Path(python).with_name('s1flow.exe' if os.name == 'nt' else 's1flow')), *map(str, args)], cwd=cwd, env=env,
+        result = subprocess.run([str(Path(sys.executable).with_name('s1flow.exe' if os.name == 'nt' else 's1flow')), *map(str, args)], cwd=cwd, env=env,
                                 capture_output=True, text=True, timeout=60)
         assert result.returncode == expected, (args, result.stdout, result.stderr)
         return result
@@ -107,7 +106,7 @@ def exercise_runtime(root: Path, python: str = sys.executable, *, evaluate: bool
         assert recorded[1]['decision_id'] == decisions[0]['decision_id']
         assert recorded[3]['decision_id'] == decisions[1]['decision_id']
 
-        sdk = subprocess.run([python, '-c', '''
+        sdk = subprocess.run([sys.executable, '-c', '''
 import json, sys
 from s1flow import Client, policies
 client = Client(connections=sys.argv[1])
@@ -127,14 +126,12 @@ print(json.dumps({"decision_id": decision.decision_id, "value": decision.value})
         assert len(calls) == 4
         bad = json.loads(source.read_text()); bad['provider'] = 'untrusted.module:factory'
         rejected = root / 'bad.json'; rejected.write_text(json.dumps(bad))
-        cli('policy', 'create', rejected, '--connections', models, '--check', expected=2)
+        assert 'provider: Extra inputs are not permitted' in cli('adopt', '--spec', rejected, '--connections', models, '--check', expected=2).stderr
         bad.pop('provider'); bad['model_id'] = 'not-allowed'; rejected.write_text(json.dumps(bad))
-        cli('policy', 'create', rejected, '--connections', models, '--check', expected=2)
+        assert "does not allow model_id 'not-allowed'" in cli('adopt', '--spec', rejected, '--connections', models, '--check', expected=2).stderr
         cli('decide', *common, '--state', '[{"type":"image","url":"http://127.0.0.1/secret"}]', expected=2)
         assert len(calls) == 4  # all three refusals above happen before network access
 
-        if not evaluate:
-            return {'runtime_calls': len(calls), 'decision_ids': [d['decision_id'] for d in decisions]}
         directory = root / 'tasks' / 'ticket-bug'; directory.mkdir(parents=True)
         directory.joinpath('task.py').write_text(
             'from s1flow.eval import Task\nfrom s1flow.questions import Boolean\n'

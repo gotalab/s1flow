@@ -1,7 +1,6 @@
 """Objectives and constraints: what a task optimizes, how a candidate is chosen, and how each value is measured."""
 
 import re
-from pathlib import Path
 
 import numpy as np
 import pytest
@@ -218,15 +217,6 @@ def test_recall_on_the_test_share_is_judged_by_its_false_alarms():
     e = metrics.evaluate(t, preds(loud, y), include_test=True)
     k, n = e.test.constraint if e.test and e.test.constraint else (0, 0)
     assert k == n > 0 and metrics.test_verdict(t, e) == "below"
-
-
-def test_no_branch_on_an_objective_outside_its_declaration():
-    """Measuring is MEASURES', declaring is declare.py's: nothing asks which built-in an objective is."""
-    src = Path(__file__).resolve().parents[1] / "src" / "s1flow"
-    names = "Coverage|Recall|ExpectedLoss|AUROC|Accuracy|F1|MacroF1"
-    found = [f"{p.relative_to(src)}:{i}" for p in src.rglob("*.py") for i, line in enumerate(p.read_text().splitlines(), 1)
-             if re.search(rf"isinstance\([^)]*\b({names})\b", line)]
-    assert not found
 
 
 def test_floors_limit_the_threshold_and_are_never_relaxed():

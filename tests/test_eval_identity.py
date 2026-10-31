@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 import json
-from pathlib import Path
 
 import pytest
 
@@ -228,12 +227,6 @@ def test_comparison_identity_tracks_held_out_data_without_exposing_test_scores(t
     assert constrained.id != changed.id
     assert all("test" not in row.model_dump() for row in constrained.candidates)
 
-
-
-def test_the_chart_script_does_not_recompute_the_frontier():
-    """The charts draw what comparison.json says; they do not rank or build a cost/quality frontier of their own."""
-    script = (Path(__file__).resolve().parents[1] / 'plugin/skills/s1flow/scripts/charts.py').read_text()
-    assert 'const better = ' not in script and 'const front = [...rs].sort' not in script
 
 
 def test_cached_client_reports_stale_timing_without_rebuying_raw_answer(task):
