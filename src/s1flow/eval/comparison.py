@@ -95,7 +95,7 @@ class Comparison(BaseModel):
     source: str = ""
     at: str
     scope: Literal['dev'] = 'dev'
-    question_type: Literal['boolean', 'choice', 'box']
+    question_type: Literal['boolean', 'choice', 'score', 'box']
     kind_params: KindParams
     objective: Objective
     constraints: Constraints
@@ -187,8 +187,8 @@ def _measurement(item: _CandidateInput, pr: metrics.Preds | None) -> Measurement
 
 def _adoption_blocked(task: Task, item: _CandidateInput) -> list[str]:
     blocked: list[str] = []
-    if task.kind.type == "box":
-        blocked.append("box questions are comparable but cannot be adopted as runtime policies")
+    if not task.kind.adoptable:
+        blocked.append(f"{task.kind.type} questions are comparable but cannot be adopted as runtime policies")
     spec = item.spec
     if spec is not None and spec.versions is not None and spec.version is None:
         blocked.append("model is an alias; adopt a pinned model version")
@@ -230,18 +230,20 @@ _KNOWN_METRIC_LABELS = {
     "f1": "F1",
     "macro_f1": "macro-F1",
     "mean_iou": "mean IoU",
+    "mae": "MAE (levels)",
+    "qwk": "QWK",
     "auroc": "AUROC",
     "brier": "Brier score",
     "ece": "ECE",
 }
 _KNOWN_METRIC_UNITS: dict[str, Literal["share", "number"]] = {
     "accuracy": "share", "precision": "share", "recall": "share",
-    "f1": "number", "macro_f1": "number", "mean_iou": "number",
+    "f1": "number", "macro_f1": "number", "mean_iou": "number", "mae": "number", "qwk": "number",
     "auroc": "number", "brier": "number", "ece": "number",
 }
 _KNOWN_METRIC_DIRECTIONS: dict[str, Literal["max", "min"]] = {
     "accuracy": "max", "precision": "max", "recall": "max", "f1": "max",
-    "macro_f1": "max", "mean_iou": "max", "auroc": "max", "brier": "min", "ece": "min",
+    "macro_f1": "max", "mean_iou": "max", "mae": "min", "qwk": "max", "auroc": "max", "brier": "min", "ece": "min",
 }
 
 
@@ -273,6 +275,8 @@ def _plain_reading_basis(task: Task) -> str:
         return "plain choice reading: selected option with highest probability (default rule)"
     if kind.type == "box":
         return f"plain box reading: correct at IoU >= {kind.iou:g}"
+    if kind.type == "score":
+        return "plain score reading: the expected level, rounded (.5 up)"
     return "plain reading"
 
 
@@ -295,6 +299,8 @@ def _metric_definitions(task: Task, evaluations: Sequence[Evaluation]) -> list[M
         "f1": f"{reading}; harmonic mean of precision and recall over answered labelled dev cases",
         "macro_f1": f"{reading}; mean of per-class F1 over answered labelled dev cases",
         "mean_iou": f"{reading}; mean IoU over answered labelled dev cases",
+        "mae": "expected level; mean absolute error in levels over answered labelled dev cases",
+        "qwk": f"{reading}; quadratic weighted kappa over answered labelled dev cases",
     }
     add("accuracy", "accuracy", "share", plain_bases["accuracy"], "max")
     for key in task.kind.report:
@@ -310,6 +316,13 @@ def _metric_definitions(task: Task, evaluations: Sequence[Evaluation]) -> list[M
                 "recorded box confidence; hit-ranking AUROC over answered labelled dev cases", "max")
             add("ece", "ECE", "number",
                 "recorded box confidence; calibration of hit correctness over answered labelled dev cases", "min")
+        elif task.kind.type == "score":
+            add("auroc", "AUROC", "number",
+                "genuine model probabilities; mean over the cuts k of AUROC(label >= k, P(level >= k)) over answered labelled dev cases", "max")
+            add("brier", "Brier score", "number",
+                "genuine model probabilities; ranked probability score over (levels - 1), over answered labelled dev cases", "min")
+            add("ece", "ECE", "number",
+                "genuine model probabilities; calibration of the rounded level's correctness over answered labelled dev cases", "min")
         elif task.kind.binary:
             add("auroc", "AUROC", "number",
                 "genuine model probabilities; binary positive-vs-negative AUROC over answered labelled dev cases", "max")
@@ -459,8 +472,6 @@ def collect(task: Task, *, variants: Sequence[str] | None = None, only: Sequence
     Chart series are opt-in because an agent summary should stay bounded.  The
     evidence identity and metric values are identical with or without them.
     """
-    if task.kind.type == "score":
-        raise ConfigError(f"{task.id}: score questions are not supported by comparison yet")
     data_digest = task.data_digest
     contract_digest = task.evaluation_contract_digest
     adapter_digest = task.input_adapter_digest

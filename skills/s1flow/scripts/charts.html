@@ -295,7 +295,7 @@ try {
   const configured=definitions.find(d=>(D.objective.name==='coverage'&&d.key.startsWith('coverage:')&&Number(d.key.slice(9))===params.target_accuracy)
     ||(d.key.startsWith(objectivePrefix+'{')&&canonical(JSON.parse(d.key.slice(objectivePrefix.length)))===canonical(params)));
   const primary=configured||definitions.find(d=>d.key===D.objective.name)||definitions[0];
-  const defaultKeys=[primary?.key,...(D.objective.name==='coverage'?['accepted_accuracy:'+params.target_accuracy]:[]),'accuracy','precision','recall','macro_f1','mean_iou'];
+  const defaultKeys=[primary?.key,...(D.objective.name==='coverage'?['accepted_accuracy:'+params.target_accuracy]:[]),'accuracy','precision','recall','macro_f1','mean_iou','mae','qwk'];
   for(const d of definitions){if(defaultKeys.includes(d.key))selected.add(d.key);const label=el('label'),input=el('input');input.type='checkbox';input.value=d.key;input.checked=selected.has(d.key);input.addEventListener('change',()=>{input.checked?selected.add(d.key):selected.delete(d.key);renderTable();});label.append(input,document.createTextNode(d.label));$('metric-options').appendChild(label);}
   for(const id of ['x-axis','y-axis','second-axis'])for(const d of axes){const option=el('option',d.label);option.value=d.key;$(id).appendChild(option);}
   $('x-axis').value='api-cost';$('y-axis').value=primary.key;

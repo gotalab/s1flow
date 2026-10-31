@@ -50,7 +50,8 @@ def test_objectives_must_fit_the_task():
              label=lambda r: r, objective=Recall(max_false_alarm=0.01))
     assert task([]).objectives == [Accuracy().model_copy(update={"sets": "threshold"})]  # none listed: accuracy, at the cut it chooses
     with pytest.raises(ConfigError, match="score"):
-        Task(id="t", cases="x", state=lambda r: r, question=Score(instructions="?", criteria=["low", "high"]), label=lambda r: r)
+        Task(id="t", cases="x", state=lambda r: r, question=Score(instructions="?", criteria=["low", "high"]), label=lambda r: r,
+             objective=Recall(max_false_alarm=0.01))
     task([Recall(max_false_alarm=0.01), ExpectedLoss()])  # a boolean task takes them
 
 

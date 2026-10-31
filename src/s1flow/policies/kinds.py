@@ -248,7 +248,7 @@ class ChoiceKind(_Kind):
 
 
 class ScoreKind(_Kind):
-    """Levels 0..L-1 in the order of the question's criteria. Not evaluated yet (no metric scores it)."""
+    """Levels 0..L-1 in the order of the question's criteria. Evaluated, not adoptable: no policy holds a score."""
 
     type: ClassVar[QuestionType] = "score"
     answer: ClassVar[tuple[Any, ...]] = (ScoreAnswer,)

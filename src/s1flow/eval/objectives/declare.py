@@ -23,6 +23,8 @@ read from the call records (Evaluation.calls) in two places only, the limits a m
 | `AUROC()`                   | does the probability put right answers first             | set      | —               | max       | —                                  |
 | `F1()`                      | F1 of the positive (binary)                              | set      | threshold       | max       | —                                  |
 | `MacroF1()`                 | the mean F1 over a choice's options                      | set      | —               | max       | —                                  |
+| `MAE()`                     | levels between a score's expected level and its label    | per case | —               | min       | —                                  |
+| `QWK()`                     | quadratic weighted kappa of a score's level and label    | set      | —               | max       | —                                  |
 | `Loss(default, losses, unsure)` | the table's loss for the answer given on the label  | per case | see below       | min       | —                                  |
 
 `Loss` is a table of what each answer loses on each label (0 when right); `Accuracy` (every error 1, read
@@ -116,6 +118,16 @@ def MacroF1() -> Objective:
     return Objective(name="macro_f1", direction="max", sets=None, unit="number", label="macro-F1")
 
 
+def MAE() -> Objective:
+    """The mean absolute error of a score question's expected level, in levels (a failed call is as far off as its label can be)."""
+    return Objective(name="mae", direction="min", sets=None, unit="number", label="MAE (levels)")
+
+
+def QWK() -> Objective:
+    """Quadratic weighted kappa of a score question's level (the expected level, rounded) against its label: 1 agrees, 0 is chance."""
+    return Objective(name="qwk", direction="max", sets=None, unit="number", label="QWK")
+
+
 def Loss(default: float = 1.0, losses: dict[str, dict[str, float]] | None = None, unsure: float | None = None) -> Objective:
     """The mean loss per case of a table: `losses[label][answer]` (a choice's options, or "true" / "false" for a
     binary question), `default` for every other error, 0 when right. A failed call loses `unsure`, else the most
@@ -135,7 +147,7 @@ def Loss(default: float = 1.0, losses: dict[str, dict[str, float]] | None = None
 
 BUILT_IN: dict[str, Callable[..., Objective]] = {
     "coverage": Coverage, "recall": Recall, "expected_loss": ExpectedLoss, "auroc": AUROC, "accuracy": Accuracy, "f1": F1, "macro_f1": MacroF1,
-    "loss": Loss,
+    "mae": MAE, "qwk": QWK, "loss": Loss,
 }
 
 

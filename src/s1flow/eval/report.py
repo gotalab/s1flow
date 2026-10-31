@@ -188,7 +188,7 @@ def pareto(o0: Objective, ranked: list[Ranked], by: dict[str, Evaluation]) -> se
     return {m for m, a in pts.items() if not any(beats(b, a) for b in pts.values())}
 
 
-REPORTED = {"f1": "F1", "macro_f1": "macro-F1", "mean_iou": "mean IoU"}  # a kind's own number, as the comparison heads it
+REPORTED = {"f1": "F1", "macro_f1": "macro-F1", "mean_iou": "mean IoU", "mae": "MAE"}  # a kind's own number, as the comparison heads it
 
 
 def render(task: Task, variant: str, evs: list[Evaluation], preds: dict[str, metrics.Preds]) -> str:

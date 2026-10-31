@@ -22,8 +22,8 @@ def test_each_question_has_its_kind():
     assert [k.adoptable for k in (b, c, p, s, x)] == [True, True, True, False, False]
     assert b.binary and p.binary and not c.binary and not s.binary and not x.binary
     assert b.sets == p.sets == {"threshold", "min_probability"} and c.sets == s.sets == x.sets == {"min_probability"}
-    assert [k.objectives[0] if k.objectives else None for k in (b, c, p, s, x)] == ["accuracy", "accuracy", "accuracy", None, "accuracy"]
-    assert [k.report for k in (b, c, p, s, x)] == [("f1", "precision", "recall"), ("macro_f1",), ("f1", "precision", "recall"), (), ("mean_iou",)]
+    assert [k.objectives[0] if k.objectives else None for k in (b, c, p, s, x)] == ["accuracy", "accuracy", "accuracy", "mae", "accuracy"]
+    assert [k.report for k in (b, c, p, s, x)] == [("f1", "precision", "recall"), ("macro_f1",), ("f1", "precision", "recall"), ("mae", "qwk"), ("mean_iou",)]
     assert c.options == p.options == ["yes", "no", "maybe"] and x.iou == 0.7
 
 
