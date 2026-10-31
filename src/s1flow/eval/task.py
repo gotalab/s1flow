@@ -202,9 +202,9 @@ class Task:
     @property
     def policies(self) -> Store:
         """The project's policies, with their evidence (eval/policy.py)."""
-        from .policy import store
+        from .policy import Store
 
-        return store(self.where)
+        return Store(self.where.policies_dir)
 
     @property
     def primary(self) -> Objective:

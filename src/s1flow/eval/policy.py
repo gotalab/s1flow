@@ -1,13 +1,12 @@
 """Evaluation records compose with, and reference, separately stored runtime specs."""
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 from ..client.models import ModelSpec
 from ..core.errors import ConfigError, NotFound
 from ..project import Project
-from ..policies.file import Policies, PolicySpec, Ref
+from ..policies.file import Policies, PolicySpec
 from ..policies.history import Switch
 from .candidate import Candidate
 from .evaluation import Evaluation
@@ -97,41 +96,13 @@ class EvaluationRecord(BaseModel):
         return self.model_dump_json(by_alias=True, indent=1) + '\n'
 
 
-class Store:
-    """Evaluated policy store. Runtime storage owns locks, publication and the current version."""
+class Store(Policies):
+    """The runtime store with evaluation records. Policies owns locks, publication and the current version; read and
+    get return the runtime spec, evaluated the policy with the evaluation that selected it."""
 
-    def __init__(self, root: Path):
-        self.runtime = Policies(root)
-        self.root = self.runtime.root
-
-    def dir(self, task: str) -> Path:
-        return self.runtime.dir(task)
-
-    def versions(self, task: str) -> list[int]:
-        return self.runtime.versions(task)
-
-    def next_version(self, task: str) -> int:
-        return self.runtime.next_version(task)
-
-    def current(self, task: str) -> int | None:
-        return self.runtime.current(task)
-
-    def log(self, task: str, entry: Switch) -> None:
-        self.runtime.log(task, entry)
-
-    def history(self, task: str) -> list[Switch]:
-        return self.runtime.history(task)
-
-    def tasks(self) -> list[str]:
-        return self.runtime.tasks()
-
-    def get(self, ref: Ref) -> EvaluatedPolicy:
-        return self.read(ref.task, version=ref.version)
-
-
-    def read(self, task: str, version: int | None = None) -> EvaluatedPolicy:
-        spec = self.runtime.read(task, version=version)
-        path = self.runtime.evaluation_path(spec.task, spec.version)
+    def evaluated(self, task: str, version: int | None = None) -> EvaluatedPolicy:
+        spec = self.read(task, version=version)
+        path = self.evaluation_path(spec.task, spec.version)
         if not path.is_file():
             raise NotFound(f'{spec.ref} has no evaluation record; the runtime specification is usable explicitly')
         try:
@@ -141,17 +112,13 @@ class Store:
 
     def record(self, spec: PolicySpec) -> EvaluatedPolicy | None:
         """The evaluation `spec` was adopted on; None for a version adopted without one (adopt --spec)."""
-        return self.read(spec.task, version=spec.version) if self.runtime.evaluation_path(spec.task, spec.version).exists() else None
+        return self.evaluated(spec.task, version=spec.version) if self.evaluation_path(spec.task, spec.version).exists() else None
 
-    def write_new(self, policy: EvaluatedPolicy, *, adopted: Switch | None = None) -> None:
+    def write_evaluated(self, policy: EvaluatedPolicy, *, adopted: Switch | None = None) -> None:
         """Save the policy and its evaluation record; `adopted` (s1flow adopt's) also makes it the version that runs."""
         # Validate before any write, including values copied with model_copy(update=...).
         policy = EvaluatedPolicy.model_validate_json(policy.model_dump_json())
-        self.runtime.write_new(policy.spec, adopted=adopted, evaluation=EvaluationRecord.from_policy(policy).dump())
-
-
-def store(project: Project) -> Store:
-    return Store(project.policies_dir)
+        self.write_new(policy.spec, adopted=adopted, evaluation=EvaluationRecord.from_policy(policy).dump())
 
 
 class Shipped(BaseModel):
@@ -176,7 +143,7 @@ class TaskPolicies(BaseModel):
 
 
 def overview(project: Project, tasks: list[str] | None = None) -> list[TaskPolicies]:
-    saved = store(project)
+    saved = Store(project.policies_dir)
     known = sorted({*project.task_ids(), *saved.tasks()})
     if unknown := [t for t in tasks or [] if t not in known]:
         raise NotFound(f'no task {unknown[0]!r}; tasks: {", ".join(known) or "none"}')
@@ -186,7 +153,7 @@ def overview(project: Project, tasks: list[str] | None = None) -> list[TaskPolic
         current = saved.current(task)
         shipped = []
         for version in reversed(saved.versions(task)):
-            spec = saved.runtime.read(task, version=version)
+            spec = saved.read(task, version=version)
             record = saved.record(spec)
             model, _, requested = spec.connection.partition(':')
             configured = lineup.models.get(model)

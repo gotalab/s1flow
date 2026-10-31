@@ -71,7 +71,7 @@ def adopted(task, objective):
                              selection=Selection(by="test", reason="test", tied=["m"]),
                              evidence=Evidence(data_sha256="data", execution_digest="exec", evaluation=evaluation,
                                                test=None, compared=["m"]))
-    task.policies.write_new(policy)
+    task.policies.write_evaluated(policy)
     return policy
 
 
