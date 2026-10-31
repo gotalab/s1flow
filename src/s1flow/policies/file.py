@@ -5,8 +5,6 @@ owned by s1flow.eval; reading a policy never reads those records.
 """
 from __future__ import annotations
 
-import hashlib
-import json
 import os
 import re
 import sys
@@ -14,13 +12,14 @@ import tempfile
 from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
-from importlib.metadata import PackageNotFoundError, version as installed_version
 from pathlib import Path
-from typing import Annotated, Any, Literal
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
+from ..client.identity import SDK_VERSION, digest
 from ..client.lineup import NAME
+from ..client.models import VERSION as VERSION_NAME
 from ..client.questions import Boolean, Choice, Question
 from ..core import clock, place
 from ..core.errors import ConfigError, NotFound, invalid
@@ -78,22 +77,6 @@ class Ref:
         return policy_id(self.task, self.version) if self.version is not None else self.task
 
 
-def digest(data: Any) -> str:
-    return hashlib.sha256(json.dumps(data, sort_keys=True, separators=(',', ':'), ensure_ascii=False, allow_nan=False).encode()).hexdigest()
-
-
-def policy_digest(content: dict[str, Any]) -> str:
-    """Hash the complete runtime specification; evaluation never enters this content."""
-    return digest(content)
-
-
-def _sdk_version() -> str:
-    try:
-        return installed_version('s1flow')
-    except PackageNotFoundError:
-        return 'source'
-
-
 PolicyQuestion = Annotated[Boolean | Choice, Field(discriminator='type')]
 
 
@@ -131,7 +114,7 @@ class PolicySpec(BaseModel):
     model_id: str = Field(min_length=1)
     questions: dict[str, Asked] = Field(min_length=1, max_length=1)
     at: str = Field(default_factory=clock.now)
-    s1flow_version: str = Field(default_factory=_sdk_version)
+    s1flow_version: str = Field(default_factory=lambda: SDK_VERSION)
     state_schema: JSONSchema | None = None
 
     @model_validator(mode='after')
@@ -141,7 +124,7 @@ class PolicySpec(BaseModel):
                 validate_schema(self.state_schema)
             identifier(self.task)
             base, colon, version = self.connection.partition(':')
-            if not NAME.fullmatch(base) or (colon and (not version or re.search(r'[\s:/,]', version))):
+            if not NAME.fullmatch(base) or (colon and not VERSION_NAME.fullmatch(version)):
                 raise ConfigError('connection is a registered model name, optionally followed by :version')
             for qid in self.questions:
                 identifier(qid, 'question id')
@@ -175,7 +158,8 @@ class PolicySpec(BaseModel):
 
     @property
     def digest(self) -> str:
-        return policy_digest(self.model_dump(mode='json', by_alias=True))
+        """Hash the complete runtime specification; evaluation never enters this content."""
+        return digest(self.model_dump(mode='json', by_alias=True))
 
     def with_question(self, question: Question) -> PolicySpec:
         data = self.model_dump(mode='python', by_alias=True)
@@ -358,8 +342,8 @@ class Policies:
 
     def _switch(self, task: str, entry: Switch) -> None:
         """The one writer of channels.json: points current at entry.version, after saying why in history.jsonl (a
-        line whose switch did not happen is told apart by channels.json; a switch with no why could not be)."""
-        self._may_switch(task, entry)
+        line whose switch did not happen is told apart by channels.json; a switch with no why could not be).
+        write_new calls it under the lock, after _may_switch."""
         self.read(task, version=entry.version)
         self._log(task, entry)
         atomic_write(self._file(task, 'channels.json'), ChannelsFile(channels={CURRENT: entry.version}).dump())

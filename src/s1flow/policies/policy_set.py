@@ -1,6 +1,5 @@
 """A portable set of v2 execution specifications, without evaluation records."""
 from __future__ import annotations
-import json
 from pathlib import Path
 from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
@@ -59,9 +58,8 @@ def is_policy_set(data: Any) -> bool:
 def read(path: Path, data: Any, ref: Ref | None) -> PolicySpec:
     try:
         bundle = PolicySet.model_validate(data)
-    except (ValidationError, ConfigError) as e:
-        detail = invalid(e) if isinstance(e, ValidationError) else str(e)
-        raise ConfigError(f'{path} is not a v2 policy set: {detail}') from None
+    except ValidationError as e:
+        raise ConfigError(f'{path} is not a v2 policy set: {invalid(e)}') from None
     if ref is None:
         raise ConfigError(f'{path} holds multiple policies; name a task')
     if ref.task not in bundle.policies:
