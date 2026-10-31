@@ -188,9 +188,10 @@ def test_halving_and_doubling_the_weights_shows_they_make_the_choice():
     assert [(r.factor, r.objective.params["fn"], r.tied) for r in moved] == [(0.5, 0.5, ["a", "b"]), (2.0, 2.0, ["a"])]
     assert decides(["a", "b"], moved) and not decides(["a", "b"], moved[:1])
     evs = [metrics.evaluate(t, pr) for pr in preds.values()]
-    text = "\n".join(report.weights_table(t, evs, preds))
+    text = "\n".join(report.weights_table(t, *report.compared(t, evs), preds))
     assert "## With other weights" in text and "The candidates tied at the top change" in text and "halved: loss per case (miss 0.5, false alarm 1)" in text
-    assert sensitivity(labelled(task([Accuracy()]), y), preds) == [] and report.weights_table(task([Coverage()]), evs, preds) == []
+    unweighted = task([Coverage()])
+    assert sensitivity(labelled(task([Accuracy()]), y), preds) == [] and report.weights_table(unweighted, *report.compared(unweighted, evs), preds) == []
     table = sensitivity(labelled(task([Loss(losses={"true": {"false": 1}, "false": {"true": 1}})]), y), preds)
     assert [r.objective.params["losses"] for r in table] == [{"true": {"false": 0.5}, "false": {"true": 0.5}}, {"true": {"false": 2.0}, "false": {"true": 2.0}}]
 

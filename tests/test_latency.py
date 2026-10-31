@@ -55,6 +55,11 @@ def test_latency_stats_show_the_tail_and_what_is_unknown():
     assert t.retried == 2 and t.unrecorded == 1 and t.concurrency == [8] and t.n == 100
 
 
+def headline(t, evs):
+    """The report's headline on these evaluations, ranked as report.render ranks them."""
+    return report.headline(t, evs, *report.compared(t, evs))
+
+
 def test_a_time_budget_takes_slow_models_out_of_the_headline(tmp_path):
     from s1flow.client import Choice
     from s1flow.eval import Task
@@ -63,9 +68,9 @@ def test_a_time_budget_takes_slow_models_out_of_the_headline(tmp_path):
     fast, slow = (e.model_copy(update={"answered_ids": [str(i) for i in range(e.n)]})
                   for e in (cov("fast", 0.6, p99=150.0), cov("slow", 0.9, p99=900.0)))
     budgeted = t.copy(constraints=Constraints(latency_p99_ms=200))
-    text = report.headline(budgeted, [fast, slow])
+    text = headline(budgeted, [fast, slow])
     assert "**fast**" in text and "slow breaks a constraint and is left out (p99 900ms > 200ms)" in text
-    assert "**slow**" in report.headline(t, [fast, slow])
+    assert "**slow**" in headline(t, [fast, slow])
 
 
 def test_llm_retries_are_ours_and_left_out_of_the_latency(monkeypatch):

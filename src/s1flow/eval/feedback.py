@@ -27,7 +27,7 @@ from .evaluation import Estimate
 from .kinds import kind_of
 from .objectives import measure
 from .objectives.declare import Objective
-from .objectives.measure import bound, cp_lower
+from .objectives.measure import bound, cp_interval
 from .shown import band, pct
 from .task import Task
 
@@ -214,7 +214,7 @@ class InProduction(BaseModel):
 def _rate(k: int, n: int, show_interval: bool) -> Estimate:
     if not n:
         return Estimate(value=None)
-    ci = (cp_lower(k, n, 0.975), 1 - cp_lower(n - k, n, 0.975)) if show_interval else None
+    ci = cp_interval(k, n) if show_interval else None
     return Estimate(value=k / n, interval=ci)
 
 

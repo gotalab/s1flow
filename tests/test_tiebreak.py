@@ -7,10 +7,10 @@ import json
 import numpy as np
 import pytest
 from conftest import binary_preds, labelled, make_project
-from test_latency import Timed
+from test_latency import Timed, headline
 from test_objectives import ev, scored, task
 
-from s1flow.eval import metrics, report
+from s1flow.eval import metrics
 from s1flow.eval import run as running
 from s1flow.core.errors import ConfigError
 from s1flow.eval.evaluation import Estimate
@@ -96,7 +96,7 @@ def test_the_faster_of_the_tied_comes_first_when_measured_alike():
 def test_without_a_tiebreak_the_tied_are_listed_by_name():
     first, second = timed("zz-best", 0.80, 100, cost=0.1), timed("aa-close", 0.79, 300, cost=5.0)
     assert order([first, second]) == ["aa-close", "zz-best"]  # nothing orders them: not by value, latency or cost
-    said = report.headline(task([Coverage()]), [first, second])
+    said = headline(task([Coverage()]), [first, second])
     assert "task.py names no tiebreak, so they are listed by name, unordered" in said and "comes first" not in said
 
 
@@ -129,10 +129,10 @@ def test_latency_measured_unalike_is_skipped_and_says_how_to_measure_again():
 def test_the_report_names_what_ordered_the_tie_and_what_was_skipped():
     t = task([Coverage(), "latency", "cost"])
     a, b = timed("a", 0.80, 300, cost=5.0), timed("b", 0.79, 100, cost=0.1)
-    alike = report.headline(t, [a, b])
+    alike = headline(t, [a, b])
     assert "Ordered by task.py's tiebreak (p90 latency, then API cost), **b** comes first" in alike and "latency not compared" not in alike
     a8 = timed("a", 0.80, 300, cost=5.0, concurrency=8)
-    unalike = report.headline(t, [a8, b])
+    unalike = headline(t, [a8, b])
     assert "Ordered by task.py's tiebreak (API cost), **b** comes first" in unalike and "Latency not compared (concurrency 4, 8)" in unalike
     assert "chosen" not in alike + unalike and "recommend" not in alike + unalike  # it shows the order; a person picks
 
@@ -147,8 +147,8 @@ def test_tiebreak_says_where_latency_and_cost_go():
     t = task([Coverage(), AUROC()])
     assert t.ties == [AUROC()] and t.objectives == [Coverage(), AUROC()]  # nothing added after it
     unalike = [timed("a", 0.80, 300, cost=5.0, concurrency=8), timed("b", 0.79, 100, cost=0.1)]
-    assert "latency not compared" not in report.headline(task([Coverage(), "cost"]), unalike)  # not asked for: not warned of
-    assert "Ordered by task.py's tiebreak (API cost, then p90 latency)" in report.headline(task([Coverage(), "cost", "latency"]),
+    assert "latency not compared" not in headline(task([Coverage(), "cost"]), unalike)  # not asked for: not warned of
+    assert "Ordered by task.py's tiebreak (API cost, then p90 latency)" in headline(task([Coverage(), "cost", "latency"]),
                                                                        [timed("a", 0.80, 300, cost=5.0), timed("b", 0.79, 100, cost=0.1)])
 
 

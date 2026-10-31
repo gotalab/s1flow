@@ -125,6 +125,7 @@ def test_missing_and_stale_candidates_remain_visible(tmp_path):
     stale = comparison.collect(task)
     stale_row = next(row for row in stale.candidates if row.candidate == "fake")
     assert stale_row.value is None and any("stale" in reason for reason in stale_row.excluded)
+    assert "1 cases never asked" in stale_row.excluded  # the words report and adopt use (evaluation.why_missing)
     assert stale_row.metrics["accuracy"].value is None
     assert not missing_path.exists()
 
