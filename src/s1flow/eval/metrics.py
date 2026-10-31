@@ -472,7 +472,7 @@ def calls(pr: Preds, dev: np.ndarray, resamples: list[np.ndarray]) -> Calls:
     return Calls(
         latency=latency(timing), throughput=_throughput(timing),
         case_latency_p90_ms=None if p90 is None else Estimate(
-            value=p90, interval=measure.interval([v for bm in resamples if (v := _percentile(lat[bm], 90)) is not None])),
+            value=p90, interval=measure.interval(_p90s(lat, resamples))),
         cost_per_10k_usd=float(costs.mean() * 10_000) if costs.size else None, cost_total_usd=float(costs.sum()) if costs.size else None,
         cost_source=spend.source, cost_unknown=spend.unknown, price=pr.price,
     )
@@ -543,6 +543,22 @@ def _percentile(ms: np.ndarray, at: float) -> float | None:
     """The latency at percentile `at` of these cases, each its slowest answered call; None when none was recorded."""
     known = ms[~np.isnan(ms)]
     return float(np.percentile(known, at)) if known.size else None
+
+
+def _p90s(ms: np.ndarray, resamples: list[np.ndarray]) -> list[float]:
+    """`_percentile(ms[r], 90)` of each resample `r` that has a recorded latency, the ones of a size computed together
+    (a batch of resamples at a time, about a million values, so a large evaluation needs no matrix of them all)."""
+    out: list[float] = []
+    batch = max(1, 2**20 // max(1, len(resamples[0]) if resamples else 1))
+    for start in range(0, len(resamples), batch):
+        drawn = np.sort(ms[np.stack(resamples[start:start + batch])], axis=1)  # the unrecorded (nan) last
+        known = (~np.isnan(drawn)).sum(axis=1)
+        values = np.full(len(drawn), np.nan)
+        for k in np.unique(known[known > 0]):
+            rows = known == k
+            values[rows] = np.percentile(drawn[rows, :k], 90, axis=1)
+        out += [float(v) for v in values[known > 0]]
+    return out
 
 
 def latency(pr: Preds) -> Latency | None:
