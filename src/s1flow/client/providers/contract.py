@@ -47,6 +47,10 @@ def validate_response(response: object, questions: Questions, provider: str) -> 
     """Validate the provider's typed response against the questions it was asked."""
     if not isinstance(response, Response):
         raise ProviderError(f"{provider} returned a malformed response outside the contract")
+    try:  # once more from its values: model_construct and model_copy(update=...) skip the types this relies on
+        Response.model_validate(response.model_dump(warnings=False))
+    except ValidationError as e:
+        raise ProviderError(f"{provider} returned a malformed response outside the contract: {e}") from None
     if not response.answered_by.strip():
         raise ProviderError(f"{provider} returned blank answered_by outside the contract")
     missing = [qid for qid in questions if qid not in response.answers]

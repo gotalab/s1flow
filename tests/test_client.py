@@ -94,7 +94,7 @@ def test_an_answer_cannot_be_changed_past_validation(toml):
     that tries fails as a ProviderError, not later as a bug in s1flow."""
     from pydantic import ValidationError
 
-    from s1flow.client import BooleanAnswer, BoxAnswer, BoxEdges, Response
+    from s1flow.client import BooleanAnswer, Box, BoxAnswer, BoxEdges, Capabilities, Response
 
     class Mutated:
         id, concurrency = "mutated", 1
@@ -107,6 +107,14 @@ def test_an_answer_cannot_be_changed_past_validation(toml):
 
     with pytest.raises(ProviderError, match="malformed response outside the contract"):
         Client(toml).responses.create(model=Mutated(), state="x", questions={"bug": QS["bug"]})
+    class Constructed(Mutated):
+        capabilities = Capabilities(question_types=frozenset({"box"}))
+
+        async def decide(self, state, questions, *, options=None):  # model_construct skips validation and frozen
+            return Response(answers={"spot": BoxAnswer.model_construct(box={"top": 5})}, answered_by="constructed-1")
+
+    with pytest.raises(ProviderError, match="malformed response outside the contract"):
+        Client(toml).responses.create(model=Constructed(), state="x", questions={"spot": Box(instructions="the cat")})
     box = BoxAnswer(box=BoxEdges(top=0, bottom=1, left=0, right=1))
     for model, field in ((box, "box"), (Response(answers={"b": box}, answered_by="m"), "answered_by")):
         with pytest.raises(ValidationError, match="frozen"):
