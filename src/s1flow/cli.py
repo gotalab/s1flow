@@ -45,12 +45,14 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, NoReturn, TypeVar, cast
 
 from .core import envfile, place
-from .core.errors import ConfigError, S1flowError
+from .core.errors import ConfigError, NotFound, S1flowError
 
 if TYPE_CHECKING:
     from .client import Client, Response
     from .client.answers import Answer
     from .client.state import State
+    from .policies import Policies
+    from .policies.file import PolicySpec
     from .project import Project
 
 EXITS = "Exit codes: 0 done; 1 a gate failed or something was found (check fails, doctor or models --verify finds a problem); 2 usage, configuration, could not run, or check pending."
