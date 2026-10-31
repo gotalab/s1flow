@@ -121,8 +121,6 @@ class _Kind(BaseModel):
         """The answers to one case (one, or an LLM's samples), averaged and read."""
         return self.reading(self.average(answers), rule)
 
-
-
     def _given(self, answers: Sequence[Answer]) -> list[Any]:
         if not answers:
             raise ValueError("no answers to read")
@@ -170,7 +168,6 @@ class _Binary(_Kind):
         return Reading(value=value, probability=prob, below_min_probability=_below_min_probability(rule, prob), p_positive=p)
 
 
-
 class BooleanKind(_Binary):
     type: ClassVar[QuestionType] = "boolean"
     answer: ClassVar[tuple[Any, ...]] = (BooleanAnswer,)
@@ -183,7 +180,7 @@ class PositiveChoiceKind(_Binary):
     """A choice scored as binary: P(positive) against a true / false label."""
 
     type: ClassVar[QuestionType] = "choice"
-    answer: ClassVar[tuple[Any, ...]] = (BooleanAnswer, ChoiceAnswer)
+    answer: ClassVar[tuple[Any, ...]] = (ChoiceAnswer,)
     keys: list[str]
     positive: str
 
@@ -195,10 +192,8 @@ class PositiveChoiceKind(_Binary):
         return answer == self.positive if isinstance(answer, str) else answer
 
     def p_positive(self, a: Any) -> tuple[float, bool]:
-        """A boolean's P(true), or the choice's share on `positive`; the flag says whether it came from a
-        distribution (False: a single answer read as 0 or 1)."""
-        if isinstance(a, BooleanAnswer):
-            return float(a.probability), True
+        """The choice's share on `positive`; the flag says whether it came from a distribution (False: a
+        single answer read as 0 or 1)."""
         probs = a.probabilities
         if not probs:
             return (1.0 if a.choice == self.positive else 0.0), False
@@ -244,7 +239,6 @@ class ChoiceKind(_Kind):
         assert dist is not None
         i = max(range(len(dist)), key=lambda j: dist[j])
         return Reading(value=self.keys[i], probability=dist[i], below_min_probability=_below_min_probability(rule, dist[i]), distribution=dist)
-
 
 
 class ScoreKind(_Kind):
@@ -316,7 +310,6 @@ class BoxKind(_Kind):
     def reading(self, average: Average, rule: DecisionRule) -> Reading:
         assert average.box is not None and average.confidence is not None
         return Reading(value=average.box, below_min_probability=_below_min_probability(rule, average.confidence), confidence=average.confidence)
-
 
 
 class KindParams(BaseModel):

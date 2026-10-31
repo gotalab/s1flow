@@ -10,7 +10,6 @@ from ..client.state import Image
 JSONSchema = dict[str, Any]  # a JSON Schema document is free-form by definition
 
 
-
 def schema_of(values: list[Any]) -> JSONSchema:
     """A small JSON Schema that every value fits: types, object keys always present, list items."""
     kinds = {_kind(v) for v in values}
@@ -50,7 +49,7 @@ def mismatch(schema: JSONSchema, value: Any, at: str = "state") -> list[str]:
         return [] if any(not t for t in tries) else min(tries, key=len)
     want = schema.get("type")
     if want == "image":
-        return [] if isinstance(value, dict) and value.get("type") == "image" or type(value).__name__ == "Image" else [f"{at}: expected an image"]
+        return [] if _kind(value) == "image" else [f"{at}: expected an image"]
     got = _kind(value)
     if want == "integer" and isinstance(value, int) and not isinstance(value, bool):
         return []
