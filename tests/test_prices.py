@@ -15,7 +15,8 @@ from s1flow.client.answers import Usage
 from s1flow.client.cost import Spend, estimate, recorded
 from s1flow import Client
 from s1flow.client.models import ModelSpec, Price
-from s1flow.eval import metrics, report, verify
+from s1flow.eval import metrics, report
+from s1flow.project import verify
 from s1flow.eval import run as running
 from s1flow.eval.evaluation import cost_note
 from s1flow.eval.task import load

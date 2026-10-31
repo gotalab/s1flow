@@ -7,7 +7,7 @@
     @declares(needs)
     def build(b: ModelBuild) -> MyModel: ...
 
-`s1flow models --verify` compares s1flow.toml's `price` with it (eval/verify.py). The declaration is optional:
+`s1flow models --verify` compares s1flow.toml's `price` with it (project/verify.py). The declaration is optional:
 for a provider without one, --verify says the price cannot be checked. Nothing here runs on a call.
 """
 

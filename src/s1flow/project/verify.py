@@ -35,10 +35,8 @@ import os
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal, TypeVar
+from typing import TYPE_CHECKING, Literal, TypeVar
 
-from PIL import Image as PILImage
-from PIL import ImageDraw
 from pydantic import BaseModel, ConfigDict, Field
 
 from ..client import AsyncClient, images
@@ -51,8 +49,10 @@ from ..client.providers.needs import where_to_get
 from ..client.questions import Boolean, Box, Choice, Questions, Score
 from ..client.state import Image, Part, State
 from ..core.errors import ProviderError, S1flowError
-from ..project import Project
-from .shown import num
+from . import Project
+
+if TYPE_CHECKING:
+    from PIL import Image as PILImage
 
 PASS = 0.6
 BOX_PASS = 0.5
@@ -133,12 +133,16 @@ def _png(im: PILImage.Image) -> Image:
 
 
 def disc(rgb: tuple[int, int, int]) -> Image:
+    from PIL import Image as PILImage, ImageDraw  # s1flow[images], only when a model declares it reads images
+
     im = PILImage.new("RGB", (320, 320), "white")
     ImageDraw.Draw(im).ellipse((60, 60, 260, 260), fill=rgb)
     return _png(im)
 
 
 def box_image() -> Image:
+    from PIL import Image as PILImage, ImageDraw
+
     im = PILImage.new("RGB", (400, 300), "white")
     ImageDraw.Draw(im).ellipse((40, 40, 160, 160), fill=COLOURS["red"])
     return _png(im)
@@ -158,6 +162,10 @@ def _as(kind: type[A], a: Answer) -> A:
 
 def _p(a: ChoiceAnswer, want: str) -> float:
     return (a.probabilities or {}).get(want, 1.0 if a.choice == want else 0.0)
+
+
+def _level(x: float | None) -> str:
+    return "none" if x is None else f"{x:.2f}"
 
 
 def _picked(answer: Answer, want: str) -> tuple[bool, str]:
@@ -204,7 +212,7 @@ class _Probe:
         three = _as(ScoreAnswer, (await self.ask("Mia picked three apples from the tree.", APPLES)).answers["apples"]).score
         one = _as(ScoreAnswer, (await self.ask("Mia picked one apple from the tree.", APPLES)).answers["apples"]).score
         ok = abs(three - 3) <= 0.5 and abs(one - 1) <= 0.5
-        return ok, f"{num(three, none='none')} / {num(one, none='none')} (want 3 / 1)"
+        return ok, f"{_level(three)} / {_level(one)} (want 3 / 1)"
 
     async def _image(self) -> tuple[bool, str]:
         got = [_picked((await self.ask(["A picture:", disc(rgb)], COLOUR)).answers["colour"], c) for c, rgb in COLOURS.items()]
@@ -224,6 +232,10 @@ class _Probe:
 
 
 async def probe(client: AsyncClient, name: str) -> Verification:
+    # Every model is asked about images (s1flow[images] draws them). Without a working Pillow this stops before
+    # anything is asked; inside a check the error would read as a model that cannot see. Listing needs no extra.
+    import PIL.Image, PIL.ImageDraw  # noqa: F401, E401
+
     model = client.connections.build(name)  # its own object: the declared capabilities are set aside for the probe
     model.capabilities = EVERYTHING.model_copy(update={"max_options": model.capabilities.max_options})
     p = _Probe(client, model)

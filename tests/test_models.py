@@ -1,6 +1,10 @@
 """The line-up in s1flow.toml: what a spec may say, how it builds, and what `models --verify` finds (no network)."""
 
 import asyncio
+import os
+import shutil
+import subprocess
+import sys
 
 import pytest
 from conftest import PROJECT, cli, make_project
@@ -8,8 +12,7 @@ from conftest import PROJECT, cli, make_project
 from s1flow import Client
 from s1flow.core.errors import ConfigError, NotFound
 from s1flow.client import BooleanAnswer, Capabilities, ChoiceAnswer, Response, ModelBuild, ScoreAnswer
-from s1flow.eval import verify
-from s1flow.project import Project
+from s1flow.project import Project, verify
 from s1flow.client.lineup import Lineup
 from s1flow.project.scaffold import LINEUP as INIT_LINEUP
 from s1flow.client.providers.typesafe import TypeSafeModel
@@ -275,3 +278,32 @@ def test_verify_without_a_key_checks_nothing_and_records_nothing(tmp_path, monke
     verify.verified_path(p).unlink()
     got = cli("models", "--verify", "--models", "kev@openrouter")
     assert got.exit_code == 2 and "nothing checked" in got.output and not verify.verified_path(p).exists()
+
+
+NO_EXTRAS = """\
+import importlib.abc, sys
+blocked = ("s1flow.eval", "numpy", "scipy", "sklearn", "litellm", "PIL")
+class NoExtras(importlib.abc.MetaPathFinder):
+    def find_spec(self, name, path=None, target=None):
+        if any(name == b or name.startswith(b + ".") for b in blocked):
+            raise ModuleNotFoundError(name, name=name)
+sys.meta_path.insert(0, NoExtras())
+sys.argv = ["s1flow", *sys.argv[1:]]
+from s1flow.cli import main
+main()
+"""
+
+
+def test_models_runs_on_the_base_install_and_verify_names_the_images_extra(tmp_path):
+    """`s1flow models` needs no extra and not the evaluation stack. --verify draws images, so without Pillow it
+    stops with the images extra before asking anything: a model is not recorded as one that cannot see."""
+    shutil.copytree(PROJECT, tmp_path / "p")
+    run = lambda *a, **env: subprocess.run([sys.executable, "-c", NO_EXTRAS, *a], cwd=tmp_path / "p", capture_output=True,
+                                           text=True, env={**os.environ, **env})
+    listed = run("models")
+    assert listed.returncode == 0, listed.stderr
+    assert "declared in" in listed.stdout
+    nowhere = "http://127.0.0.1:9"  # should it ask after all, nothing leaves the machine
+    verified = run("models", "--verify", TYPESAFE_API_KEY="set", HTTPS_PROXY=nowhere, HTTP_PROXY=nowhere, ALL_PROXY=nowhere)
+    assert verified.returncode == 2 and "s1flow[images]" in verified.stderr
+    assert not (tmp_path / "p" / "models.verified.json").exists()
