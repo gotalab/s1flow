@@ -1,9 +1,14 @@
 name: package checks
 on:
   push:
+    branches: [main]  # a PR's commits are checked as the pull_request; pushing its branch again would repeat them
   pull_request:
+  workflow_call:  # publish.yml runs these on the tag it releases
 permissions:
   contents: read
+concurrency:  # a newer push to a PR cancels the checks of the one it replaces
+  group: package-checks-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -15,9 +20,17 @@ jobs:
         with:
           python-version: "3.13"
       - run: uv sync --frozen
-      - run: uv run pytest -q
+      - run: uv run pytest -q -n auto  # also checks schema/, plugin/skills/, the import contracts and the wheel
+  static:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+        with:
+          python-version: "3.13"
+      - run: uv sync --frozen
+      - run: uv run ruff check
       - run: uv run mypy src/s1flow
-      - run: uv run lint-imports --no-cache
-      - run: uv run python scripts/write_schemas.py --check
-      - run: uv run python scripts/sync_plugin.py --check
-      - run: uv build --wheel
+        if: ${{ !cancelled() }}  # a lint failure still shows the type errors in the same run
