@@ -121,7 +121,7 @@ strict_equality = true
 
 # The contract and the code that touches the wire are held to strict typing.
 [[tool.mypy.overrides]]
-module = ["s1flow.core.*", "s1flow.client.*", "s1flow.policies.*", "s1flow.cli", "s1flow.skill", "s1flow.eval.records", "s1flow.eval.run", "s1flow.eval.verify", "s1flow.project.*"]
+module = ["s1flow.core.*", "s1flow.client.*", "s1flow.policies.*", "s1flow.cli", "s1flow.cli.*", "s1flow.skill", "s1flow.eval.records", "s1flow.eval.run", "s1flow.eval.verify", "s1flow.project.*"]
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
 warn_return_any = true
@@ -179,7 +179,7 @@ ignore_imports = [
 ]
 
 [[tool.importlinter.contracts]]
-# The CLI (cli.py) imports each command's modules when the command runs: tests/test_cli.py runs the base install's.
+# The CLI (cli/) imports each command's modules when the command runs: tests/test_cli.py runs the base install's.
 name = "Policies, doctor and skill load no evaluation stack"
 type = "forbidden"
 source_modules = ["s1flow.policies", "s1flow.doctor", "s1flow.skill"]
