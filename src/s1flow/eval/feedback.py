@@ -243,7 +243,8 @@ def production(task: Task, cs: list[Answered], failed: list[FailedLog]) -> list[
         kind = task.kind
         adopted = None
         try:
-            adopted = task.policies.get(Ref.parse(ref))
+            parsed = Ref.parse(ref)
+            adopted = task.policies.evaluated(parsed.task, parsed.version)
             kind = kind_of(adopted.spec.question, adopted.spec.asked.kind)
         except (ConfigError, NotFound) as e:
             reason = f"adoption evidence unavailable: {e}"

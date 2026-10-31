@@ -5,6 +5,7 @@ import json
 import sys
 
 import pytest
+from pydantic import ValidationError
 from conftest import attach, make_project, ship
 
 from s1flow import policies
@@ -85,18 +86,31 @@ def store(tmp_path):
 
 
 def test_versions_are_never_rewritten_and_current_moves(store, tmp_path):
-    store.write_new(policy())
+    store.write_evaluated(policy())
     with pytest.raises(ConfigError, match="already has v1"):
-        store.write_new(policy())
+        store.write_evaluated(policy())
     assert store.current("t") is None
     ship(store, policy(version=2))
-    assert store.current("t") == 2 and store.read("t").spec.version == 2
+    assert store.current("t") == 2 and store.evaluated("t").spec.version == 2
     raw = json.loads((tmp_path / "policies" / "t" / "v1.json").read_text())
     assert raw["schema"] == "s1flow/policy@2" and "api_key" not in json.dumps(raw)
 
 
+def test_read_is_the_runtime_spec_and_evaluated_needs_its_record(store, tmp_path):
+    unchecked = policy().model_copy(update={"candidate": Candidate(model="other")})  # model_copy validates nothing
+    with pytest.raises(ValidationError, match="candidate"):
+        store.write_evaluated(unchecked)
+    assert not (tmp_path / "policies" / "t").exists()  # refused before anything is written
+    store.write_new(policy().spec)  # adopt --spec: the runtime spec alone
+    assert store.read("t", version=1) == policy().spec and store.record(store.read("t", version=1)) is None
+    with pytest.raises(NotFound, match="t@v1 has no evaluation record"):
+        store.evaluated("t", version=1)
+    store.write_evaluated(policy(version=2))
+    assert store.evaluated("t", version=2) == store.record(store.read("t", version=2)) == policy(version=2)
+
+
 def test_current_is_the_one_channel(store, tmp_path):
-    store.write_new(policy())
+    store.write_evaluated(policy())
     (tmp_path / "policies" / "t" / "channels.json").write_text('{"schema": "s1flow/channels@1", "channels": {"current": 1, "next": 1}}')
     with pytest.raises(ConfigError, match="the one channel is `current`"):
         store.current("t")
@@ -110,7 +124,7 @@ def test_a_broken_policy_file_is_a_config_error(store, tmp_path):
     (tmp_path / "policies" / "t" / "v1.json").write_text('{"schema": "s1flow/decision@1"}')
     (tmp_path / "policies" / "t" / "channels.json").write_text('{"current": 1}')
     with pytest.raises(ConfigError):
-        store.read("t")
+        store.evaluated("t")
 
 
 def test_the_rule():
@@ -446,7 +460,7 @@ def test_a_decision_names_the_content_that_made_it(store, tmp_path):
     raw["questions"]["kind"]["rule"]["min_probability"] = 0.5
     copied.write_text(json.dumps(raw))
     assert runtime_load(path=copied).spec.digest != want  # other content, another digest
-    r = store.read("t")
+    r = store.evaluated("t")
     assert r.spec.digest == want and r.spec.with_question(Choice(instructions="Other?", criteria={c: None for c in CLASSES})).digest != want
 
 
@@ -492,14 +506,14 @@ def test_a_policy_asks_its_questions_by_id(tmp_path):
 
 
 def test_a_name_that_is_not_there_lists_the_ones_that_are(store, tmp_path):
-    store.write_new(policy())
+    store.write_evaluated(policy())
     with pytest.raises(NotFound, match=r"t has no current version"):
-        store.read("t")
+        store.evaluated("t")
     ship(store, policy(version=2))
     with pytest.raises(NotFound, match=r"no policy of 'x'; tasks with policies: t"):
-        store.read("x")
+        store.evaluated("x")
     with pytest.raises(NotFound, match="no policy .*v9.json"):
-        store.read("t", version=9)
+        store.evaluated("t", version=9)
     log = tmp_path / "log.jsonl"
     d = policies.DecisionPolicy(policy().spec, client=policy_client(), log=log)
     with pytest.raises(ConfigError, match="label 'kind/nope' is not an answer to its question"):

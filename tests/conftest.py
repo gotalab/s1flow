@@ -141,7 +141,8 @@ def ship(store, item, reason: str = "t"):
     from s1flow.policies.history import Switch
 
     spec = getattr(item, "spec", item)
-    store.write_new(item, adopted=Switch(action="spec", version=spec.version, previous=store.current(spec.task), by="t", reason=reason))
+    write = store.write_new if spec is item else store.write_evaluated
+    write(item, adopted=Switch(action="spec", version=spec.version, previous=store.current(spec.task), by="t", reason=reason))
 
 
 def point(store, task: str, version: int):

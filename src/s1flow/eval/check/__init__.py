@@ -96,7 +96,7 @@ def pick(task: Task, spec: str) -> tuple[str, Version]:
         return "draft", Version(base.spec.with_question(q), base.record)
     if spec != CURRENT and version_number(spec) is None:
         raise ConfigError(f"{spec!r}: current, vN or draft")
-    runtime = store.runtime.read(task.id, version=version_number(spec))
+    runtime = store.read(task.id, version=version_number(spec))
     return spec, Version(runtime, store.record(runtime))
 
 

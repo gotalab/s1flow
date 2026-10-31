@@ -251,7 +251,7 @@ def adopt(
     entry = Switch(action="adopt", version=version, previous=policies.current(task.id), by=r.selection.by, reason=r.selection.reason,
                    candidate=name, test=r.evidence.test, forced=r.selection.forced)
     if r.evidence.test != "below" or force:
-        policies.write_new(r, adopted=entry)
+        policies.write_evaluated(r, adopted=entry)
     else:
         policies.log(task.id, entry.model_copy(update={"action": "refused"}))
     return r

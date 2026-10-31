@@ -422,7 +422,7 @@ def test_adopt_writes_no_version_below_on_the_held_out_test_unless_forced(tmp_pa
     assert held.evidence.test == "below" and task.policies.versions("toy") == [] and task.policies.current("toy") is None
     shipped = adopt.adopt(task, "m", "test", "shipped anyway", force=True)
     assert task.policies.versions("toy") == [shipped.spec.version] and task.policies.current("toy") == shipped.spec.version
-    stored = task.policies.read("toy", version=shipped.spec.version).selection  # the evidence says it was forced, and why
+    stored = task.policies.evaluated("toy", version=shipped.spec.version).selection  # the evidence says it was forced, and why
     assert stored.forced and stored.reason == "shipped anyway"
     tried = [(h.action, h.version, h.test, h.forced, h.reason) for h in task.policies.history("toy")]
     assert tried == [("refused", 1, "below", False, "below on test"), ("adopt", 1, "below", True, "shipped anyway")]  # the refusal leaves a trace
