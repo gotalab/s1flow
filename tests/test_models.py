@@ -49,28 +49,38 @@ def test_the_repo_lineup_keeps_its_cache_ids():
     want = {
         "jev": "typesafe:jev-latest",
         "jev:1.14": "typesafe:jev-1.14.0",
-        "jev@openrouter:1.14": "openrouter:typesafe/jev-1.14",
-        "jev@vercel:1.13": "gateway:typesafe-ai/jev-1.13.0",
-        "jev@vercel": "gateway:typesafe-ai/jev",
-        "mercury@openrouter": "openrouter:inception/mercury-decide:free",
+        "d1@vercel": "gateway:liquid/d1",
+        "mercury@openrouter": "openrouter:inception/mercury-decide",
         "clef": "cloudflare:clef",
         "luna@decisions": "openai-decisions:gpt-6-luna",
-        "haiku-k5@vercel": "llm:vercel_ai_gateway/anthropic/claude-haiku-4.5#k5",
     }
     assert {n: BENCH_LINEUP.build(n).id for n in want} == want
-    assert BENCH_LINEUP.build("mercury@openrouter").concurrency == 2
-    assert BENCH_LINEUP.build("haiku-k5@vercel").capabilities.distribution == "sampled"
-    assert BENCH_LINEUP.build("haiku@vercel").capabilities.distribution == "none"
+
+
+def test_concurrency_reaches_the_built_model(tmp_path):
+    lineup = load(tmp_path, BASE + '\n[models.slow]\nprovider = "openrouter"\nid = "x/slow"\nconcurrency = 2\n')
+    assert Client(connections=lineup).connections.build("slow").concurrency == 2
+
+
+def test_sampling_is_part_of_an_llm_id(tmp_path):
+    lineup = load(tmp_path, BASE + '\n[models.k5]\nprovider = "llm"\nid = "vercel_ai_gateway/x/m"\noptions.samples = 5\n')
+    m = Client(connections=lineup).connections.build("k5")
+    assert m.id == "llm:vercel_ai_gateway/x/m#k5" and m.capabilities.distribution == "sampled"
+
+
+def test_an_llm_asked_once_returns_no_distribution(tmp_path):
+    lineup = load(tmp_path, BASE + '\n[models.once]\nprovider = "llm"\nid = "vercel_ai_gateway/x/m"\n')
+    m = Client(connections=lineup).connections.build("once")
+    assert m.id == "llm:vercel_ai_gateway/x/m" and m.capabilities.distribution == "none"
 
 
 def test_box_follows_the_version_not_the_name():
     takes_box = lambda n: "box" in BENCH_LINEUP.build(n).capabilities.question_types
     assert not takes_box("jev") and takes_box("jev:1.14")  # jev-latest is 1.13
-    assert not takes_box("jev@openrouter") and not takes_box("jev@openrouter:1.13") and takes_box("jev@openrouter:1.14")
-    assert BENCH_LINEUP.build("jev@openrouter:1.14").capabilities.image  # the model's, kept under the version's own
+    assert BENCH_LINEUP.build("jev:1.14").capabilities.image  # the model's, kept under the version's own
     # `models --verify` holds each version to its own claims
-    assert verify.claims(BENCH_LINEUP.build("jev@openrouter:1.14").capabilities)["box"]
-    assert not verify.claims(BENCH_LINEUP.build("jev@openrouter:1.13").capabilities)["box"]
+    assert verify.claims(BENCH_LINEUP.build("jev:1.14").capabilities)["box"]
+    assert not verify.claims(BENCH_LINEUP.build("jev").capabilities)["box"]
 
 
 VERSIONED = BASE + """
@@ -183,10 +193,11 @@ def test_your_own_provider_by_import_path(tmp_path):
     assert m.id == "mine:m2" and m.capabilities.image and m.options == {"anything": 1}
 
 
-def test_optimize_reads_length_limits_from_capabilities():
+def test_optimize_reads_length_limits_from_capabilities(tmp_path):
     from s1flow.eval.gepa import DEFAULT_LIMITS, limits
 
-    assert limits(BENCH_LINEUP.build("laya@vercel")) == (300, 60)
+    short = BASE + '\n[models.short]\nprovider = "gateway"\nid = "x/s"\ncapabilities.max_instructions_chars = 300\ncapabilities.max_description_chars = 60\n'
+    assert limits(Client(connections=load(tmp_path, short)).connections.build("short")) == (300, 60)
     assert limits(BENCH_LINEUP.build("jev")) == DEFAULT_LIMITS
 
 

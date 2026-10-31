@@ -20,14 +20,15 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/automation-share-dark.svg">
-  <img alt="Share of cases each model can handle on its own while staying 95% accurate. JNLI: d1 97%, Jev 61%, Clef 60%, Claude Haiku 4.5 0%. MASSIVE: Clef 90%, Jev 78%, d1 61%, Haiku 0%. Overall accuracy is within 9 points across models on each task." src="docs/images/automation-share.svg">
+  <img alt="Share of Ruff issues each model can route on its own while staying 95% accurate: d1-ultra 88%, mammoth-1 86%, Decider 85%, Jev 1.14 75%. Accuracy over all 361 cases: 90%, 91%, 90%, 85%." src="docs/images/automation-share.svg">
 </picture>
 
-These four models are within 9 points of each other on accuracy, yet the share of cases each can handle while
-staying 95% accurate ranges from 0% to 97%, and the leader flips between tasks. Claude Haiku 4.5, an LLM asked
-once per case, gives every answer the same confidence, so no threshold gets it to 95%. The numbers are a snapshot
-of four of the 13 to 21 models in the [reports](apps/bench/reports), not a ranking of providers. Your own cases
-may tell a different story, which is exactly why you measure them.
+Routing Ruff's issues to the area they concern, these four models are within 6 points of each other on
+accuracy, yet the share of issues each can route on its own while staying 95% accurate ranges from 75% to 88%.
+That share needs a confidence with every answer, so the uncertain issues can go to a person while the rest are
+acted on. The numbers are a snapshot of four of the 17 decision models in the [reports](apps/bench/reports),
+each task scored by its own objective, not a ranking of providers. Your own cases may tell a different story,
+which is exactly why you measure them.
 
 ## Quick start
 
