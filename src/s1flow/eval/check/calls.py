@@ -6,7 +6,7 @@ import asyncio
 from dataclasses import dataclass, field
 
 from ... import policies
-from ...client import AsyncClient, cost
+from ...client import cost
 from ...core.errors import ProviderError
 from ...policies.file import PolicySpec
 from ..cases import Case
@@ -43,14 +43,9 @@ class Side:
     cached: int = 0
 
 
-def _client(task: Task) -> AsyncClient:
-    """The application-owned connections; the runtime binds and validates its reference."""
-    return task.where.client()
-
-
 async def ask(task: Task, name: str, r: Version, cases: list[Case]) -> Side:
     """Each case decided by the policy as in production (policies.Policy), through the evaluation's cache."""
-    client = CachedClient(_client(task), task.where.cache_dir)
+    client = CachedClient(task.where.client(), task.where.cache_dir)
     policy = policies.DecisionPolicy(r.spec, client=client)
     sem = asyncio.Semaphore(client.connections.build(policy.model_spec).concurrency)
     side = Side(name, r, measure.pairs(task.kind, [], []))
@@ -72,7 +67,7 @@ async def ask(task: Task, name: str, r: Version, cases: list[Case]) -> Side:
         # A cached answer keeps the cost it was made at; a list cost is priced again from the policy's price.
         u = cost.estimate(x.usage, policy.model_spec.price, cost.images_in(state))
         side.spend.add(u.cost_usd, u.cost_source)
-        if x.latency_ms is not None and client.responses.timing_current(x):
+        if client.responses.timing_current(x):
             side.latency_ms.append(x.latency_ms)
         else:
             side.latency_unknown += 1
@@ -87,6 +82,6 @@ async def ask(task: Task, name: str, r: Version, cases: list[Case]) -> Side:
 
 def missing(task: Task, r: Version, cases: list[Case]) -> int:
     """Calls this version would have to make: answers not in the cache."""
-    policy = policies.DecisionPolicy(r.spec, client=_client(task))
+    policy = policies.DecisionPolicy(r.spec, client=task.where.client())
     qs = {r.spec.question_id: r.spec.question}
     return sum(not cached(task.where.cache_dir, policy.model_spec, task.model_state(c), qs) for c in cases)

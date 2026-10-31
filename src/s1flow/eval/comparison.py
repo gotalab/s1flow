@@ -1,10 +1,6 @@
-"""One neutral development comparison for terminal readers and agents.
+"""One neutral development comparison of the current line-up's saved runs, for terminal readers and agents.
 
-The comparison is deliberately a read of the current line-up and saved run
-evidence.  It never builds a provider or asks a model.  ``metrics`` owns all
-numbers; this module assembles the common snapshot and bounded terminal views.
-Comparison itself does not rank or recommend candidates.  The explicit
-selection/adoption paths continue to use ``eval.select`` separately.
+It never asks a model, and it neither ranks nor recommends: ``metrics`` owns the numbers, ``eval.select`` the ranking.
 """
 from __future__ import annotations
 
@@ -177,9 +173,7 @@ def _measurement(item: _CandidateInput, pr: metrics.Preds | None) -> Measurement
     model_id = "unknown" if spec is None else spec.id
     declared = None if spec is None else spec.concurrency
     distribution: DistributionEvidence = "unknown"
-    # ``metrics.load`` has already selected the current prompt, request
-    # identity and answering model.  Use that aggregate rather than reading
-    # append-only history here: old generations must not change this display.
+    # From the records metrics.load selected, never the append-only history: older rows must not change this display.
     if pr is not None and pr.distribution is not None:
         distribution = pr.distribution
     return Measurement(provider=provider, model_id=model_id, distribution=distribution, declared_concurrency=declared)
@@ -195,13 +189,7 @@ def _adoption_blocked(task: Task, item: _CandidateInput) -> list[str]:
     return blocked
 
 
-def _missing_reason(item: _CandidateInput, pr: metrics.Preds | None, error: Exception | None = None) -> list[str]:
-    if error is not None:
-        return [str(error)]
-    if not item.path.exists():
-        return [f"missing run evidence for {item.candidate.name}"]
-    if pr is None:
-        return [f"could not read run evidence for {item.candidate.name}"]
+def _missing_reason(pr: metrics.Preds) -> list[str]:
     reasons: list[str] = []
     if pr.never_asked:
         reasons.append(f"{len(pr.never_asked)} labelled dev cases never asked")
@@ -275,9 +263,7 @@ def _plain_reading_basis(task: Task) -> str:
         return "plain choice reading: selected option with highest probability (default rule)"
     if kind.type == "box":
         return f"plain box reading: correct at IoU >= {kind.iou:g}"
-    if kind.type == "score":
-        return "plain score reading: the expected level, rounded (.5 up)"
-    return "plain reading"
+    return "plain score reading: the expected level, rounded (.5 up)"
 
 
 def _metric_definitions(task: Task, evaluations: Sequence[Evaluation]) -> list[MetricDefinition]:
@@ -308,8 +294,6 @@ def _metric_definitions(task: Task, evaluations: Sequence[Evaluation]) -> list[M
             add(key, _KNOWN_METRIC_LABELS[key], _KNOWN_METRIC_UNITS[key],
                 plain_bases.get(key, "plain answers over answered labelled dev cases"), _KNOWN_METRIC_DIRECTIONS[key])
 
-    # Probability-derived metrics are included only when at least one current
-    # evaluation has genuine probability support. Rows without it remain null.
     if any(e.probabilities for e in evaluations):
         if task.kind.type == "box":
             add("auroc", "AUROC", "number",
@@ -348,10 +332,7 @@ def _metric_definitions(task: Task, evaluations: Sequence[Evaluation]) -> list[M
                 for s in evaluation.selective
             )
         ):
-            # The primary Coverage score is the same configured target as the
-            # selective coverage/accepted-accuracy pair. Keep row.value/rule
-            # as primary context, but expose one neutral metric projection.
-            continue
+            continue  # the selective coverage:<target> metric already shows it
         if i == 0:
             where = "configured primary objective"
             reading_basis = (
@@ -435,7 +416,7 @@ def _actual_row(item: _CandidateInput, task: Task, total: int, *, include_charts
             error = exc
             reason.append(str(exc))
     if error is None and pr is not None:
-        reason.extend(_missing_reason(item, pr))
+        reason.extend(_missing_reason(pr))
     question = item.question
     failures = evaluation.failures if evaluation is not None else _empty_failures(total, reason[0] if reason else None)
     probabilities = bool(pr.probabilities) if pr is not None else False
@@ -446,8 +427,7 @@ def _actual_row(item: _CandidateInput, task: Task, total: int, *, include_charts
             assert pr is not None
             charts = metrics.chart_data(task, pr, evaluation)
         except (S1flowError, ValueError, OSError) as exc:
-            # A renderer problem must not make a numerically eligible
-            # candidate ineligible.  Keep it as snapshot metadata instead.
+            # a chart failure is a notice, never an exclusion
             chart_notice = f"charts unavailable for {item.candidate.name}: {exc}"
     infeasible = _primary_rule_infeasible(evaluation)
     objective = None if evaluation is None or incomplete or infeasible else evaluation.objective
@@ -475,8 +455,7 @@ def collect(task: Task, *, variants: Sequence[str] | None = None, only: Sequence
     data_digest = task.data_digest
     contract_digest = task.evaluation_contract_digest
     adapter_digest = task.input_adapter_digest
-    # A neutral comparison has a stable, human-readable order independent of
-    # objective direction, constraints, intervals, or API cost.
+    # by name, never by how well a candidate did
     inputs = sorted(
         _inputs(task, variants, only),
         key=lambda x: (x.candidate.model, x.candidate.variant != "base", x.candidate.variant),
@@ -517,7 +496,6 @@ def collect(task: Task, *, variants: Sequence[str] | None = None, only: Sequence
             definitions,
             incomplete=incomplete.get(item.candidate.name, False),
         )
-    ordered = rows
 
     if len({tuple(sorted(e.answered_ids)) for e in population_evaluations}) > 1:
         notices.append("answered populations differ across candidates; each candidate remains visible and no candidate is selected")
@@ -541,7 +519,7 @@ def collect(task: Task, *, variants: Sequence[str] | None = None, only: Sequence
         "data_digest": data_digest, "evaluation_contract_digest": contract_digest,
         "input_adapter_digest": adapter_digest, "binding_digests": binding_digests, "run_digests": run_digests,
     })
-    excluded_count = sum(bool(row.excluded) for row in ordered)
+    excluded_count = sum(bool(row.excluded) for row in rows)
     if excluded_count:
         notices.append(f"{excluded_count} candidates have missing or ineligible evidence; see each candidate's excluded reasons")
     return Comparison(
@@ -550,7 +528,7 @@ def collect(task: Task, *, variants: Sequence[str] | None = None, only: Sequence
         objective=task.primary, constraints=task.constraints,
         data_digest=data_digest, evaluation_contract_digest=contract_digest, input_adapter_digest=adapter_digest,
         binding_digests=binding_digests, run_digests=run_digests,
-        n=total, metric_definitions=definitions, notices=notices, candidates=ordered,
+        n=total, metric_definitions=definitions, notices=notices, candidates=rows,
     )
 
 
@@ -581,10 +559,7 @@ def _row_summary(row: ComparisonRow) -> dict[str, Any]:
         "excluded": row.excluded, "adoption_blocked": row.adoption_blocked,
         "probabilities": row.probabilities,
         "selection_basis": ("box confidence" if row.question.type == "box" else "selected-answer probability") if row.probabilities else None,
-        "failures": {"calls": row.failures.calls, "failed": row.failures.failed, "unsupported": row.failures.unsupported,
-                      "data_errors": row.failures.data_errors, "unlabeled": row.failures.unlabeled,
-                      "never_asked": row.failures.never_asked, "failed_cases": row.failures.failed_cases,
-                      "refused_cases": row.failures.refused_cases},
+        "failures": row.failures.model_dump(),
         "calls": {"latency": latency, "cost_per_10k_usd": calls.cost_per_10k_usd,
                   "cost_total_usd": calls.cost_total_usd, "cost_source": calls.cost_source,
                   "cost_unknown": calls.cost_unknown},

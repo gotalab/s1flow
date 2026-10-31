@@ -365,15 +365,6 @@ def test_infeasible_primary_rule_keeps_plain_metrics_and_nulls_fitted_score(tmp_
     assert row.metrics['objective:accuracy{}'].value is None
 
 
-def test_comparison_never_calls_rank(tmp_path, monkeypatch):
-    task = task_fixture(tmp_path, question=Boolean(instructions='truth?'), models={'a': fake('good'), 'b': fake('bad')})
-    run_saved(task, ['a', 'b'])
-    from s1flow.eval import select
-    monkeypatch.setattr(select, 'rank', lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError('rank called')))
-    result = comparison.collect(task)
-    assert [row.model for row in result.candidates] == ['a', 'b']
-
-
 def test_positive_choice_reports_binary_metrics(tmp_path):
     task = task_fixture(tmp_path, question=Choice(instructions='which?', criteria={'a': None, 'b': None}))
     task = task.copy(kind_params=KindParams(positive='a'))

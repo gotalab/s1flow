@@ -193,10 +193,6 @@ def cases(task: Task, logs: Logs) -> list[Answered]:
     return out
 
 
-def valid(task: Task, label: Any) -> bool:
-    return task.kind.label_error(label) is None
-
-
 class InProduction(BaseModel):
     """Descriptive metrics only on the observed labelled decisions, with the adopted primary objective."""
     policy: str
@@ -259,7 +255,7 @@ def production(task: Task, cs: list[Answered], failed: list[FailedLog]) -> list[
         acc = _rate(correct, len(known), show_interval)
         sure_acc = _rate(int((p.sure & p.correct).sum()), sure, show_interval)
         if adopted is not None:
-            score = adopted.evidence.evaluation.primary
+            score = adopted.evidence.evaluation.objective
             primary = score.objective if score is not None else None
             if primary is None:
                 reason = "adoption evidence has no primary objective"
@@ -310,7 +306,7 @@ def add(task: Task, cs: list[Answered], *, write: bool = True) -> Added:
         cid = f"prod:{c.decision.decision_id}"
         if c.label is MISSING:
             counts["no_label"] += 1
-        elif not valid(task, c.label):
+        elif task.kind.label_error(c.label) is not None:
             counts["invalid_label"] += 1
         elif c.state is None:
             counts["no_state"] += 1

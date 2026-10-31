@@ -1,12 +1,8 @@
 """`s1flow report` lists the candidates by the task's objectives and constraints; `s1flow adopt` writes the one a
 person picks as the next policy. Nothing is called: the runs are already scored.
 
-The list (select.rank) orders by the primary objective, then, among the candidates it cannot tell apart, by
-the task's `tiebreak` (objectives, latency, API cost), and leaves them unordered without one. It marks no pick.
-A person or an agent picks from the list,
-since a free tier's rate limit, how long a model is served and whether its version can be pinned
-count too, and the policy reaches production. The policy records who picked and why. The list
-shows the objectives and what the calls took (latency, API cost) as two groups.
+The list (select.rank) marks no pick: a free tier's rate limit, how long a model is served and whether its
+version can be pinned count too, so a person or an agent picks, and the policy records who picked and why.
 
 A policy names the version that answers. An alias model (s1flow.toml `versions`, with an `id` that is
 none of theirs: `jev-latest`) runs and compares, but cannot be adopted: which version answered its runs
@@ -15,8 +11,7 @@ Its versions, run by name (`jev:1.14`), are candidates of their own.
 
 Candidates are every model with runs on the task's question and on each of its variants (an
 optimized question competes with the original). The policy's rule is the one the primary objective sets
-(`Objective.sets`: Coverage a min probability, Recall and ExpectedLoss a P(positive) threshold), as
-chosen on all the dev cases; the others read the plain answer.
+(`Objective.sets`), as chosen on all the dev cases.
 """
 
 from __future__ import annotations
@@ -245,7 +240,7 @@ def adopt(
         raise S1flowError("a policy records who adopted it and why: give both by and reason")
     picked = s.pickable(pick)
     name, model, variant = next(c for c in s.cands if c[0] == pick)
-    e, pr = s.evaluations[name], s.preds[name]
+    pr = s.preds[name]
     models = task.where.client().connections
     adoptable(models.retrieve(model).spec, model)
     spec = models.resolved(model)  # the model at the version picked: its id, its own capabilities

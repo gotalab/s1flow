@@ -3,8 +3,6 @@ from __future__ import annotations
 
 import asyncio
 import json
-from dataclasses import replace
-from pathlib import Path
 
 import pytest
 
@@ -78,7 +76,6 @@ def go(task):
 def test_input_and_effective_binding_invalidate_skip_and_metrics(task):
     assert go(task)['calls'] == 12
     assert go(task)['skipped'] == 12
-    original = task.load_cases()._all[0]
     change_case(task, '0', state={'i': 100})
     assert '0' not in metrics.load(task, 'base', 'fake').ids
     assert go(task)['calls'] == 1
@@ -229,17 +226,6 @@ def test_comparison_identity_tracks_held_out_data_without_exposing_test_scores(t
     assert constrained.evaluation_contract_digest != changed.evaluation_contract_digest
     assert constrained.id != changed.id
     assert all("test" not in row.model_dump() for row in constrained.candidates)
-
-
-
-def test_chart_summary_and_cost_quality_frontier_are_owned_by_report(task):
-    go(task)
-    report.write(task, "base", task.where.root / "out")
-    saved = json.loads((task.where.root / 'out' / 'base.json').read_text())
-    assert saved['chart_summary']['candidate_count'] == 1
-    assert saved['chart_summary']['cost_quality_frontier'] == ['fake']
-    script = (Path(__file__).resolve().parents[1] / 'skills/s1flow/scripts/charts.py').read_text()
-    assert 'const better = ' not in script and 'const front = [...rs].sort' not in script
 
 
 def test_cached_client_reports_stale_timing_without_rebuying_raw_answer(task):

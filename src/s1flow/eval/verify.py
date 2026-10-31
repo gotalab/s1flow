@@ -57,7 +57,6 @@ from .shown import num
 PASS = 0.6
 BOX_PASS = 0.5
 CheckName = Literal["boolean", "choice", "score", "image", "images", "box"]
-CHECKS: tuple[CheckName, ...] = ("boolean", "choice", "score", "image", "images", "box")
 EVERYTHING = Capabilities(image=True, question_types=frozenset({"boolean", "choice", "score", "box"}))
 
 

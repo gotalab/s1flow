@@ -226,8 +226,6 @@ def _ious(p: Pairs) -> np.ndarray:
 
 # ---------- the loss table (Loss; Accuracy and ExpectedLoss are fixed forms of it) ----------
 
-BINARY_KEYS = {"true": True, "false": False}
-
 
 @dataclass(frozen=True)
 class Table:
