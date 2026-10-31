@@ -176,12 +176,12 @@ def test_old_shortlist_cannot_ship_a_rule_for_a_changed_loss(tmp_path, monkeypat
     before = adopt.shortlist(task)
     changed = task.copy(objective=ExpectedLoss(fn=5, fp=1))
     fresh = adopt.shortlist(changed)
-    assert before.evaluations["m"].primary.rule != fresh.evaluations["m"].primary.rule
+    assert before.evaluations["m"].objective.rule != fresh.evaluations["m"].objective.rule
     with pytest.raises(ConfigError, match="evaluation contract changed"):
         adopt.adopt(changed, "m", "test", "changed losses", listed=before)
     # Raw requests have not changed. Current rescoring needs no model run.
     adopted = adopt.adopt(changed, "m", "test", "rescored losses", listed=fresh)
-    assert adopted.spec.rule == fresh.evaluations["m"].primary.rule
+    assert adopted.spec.rule == fresh.evaluations["m"].objective.rule
 
 
 @pytest.mark.parametrize("change", ["objective", "cost", "floor", "tiebreak", "split_config", "split_assignment"])

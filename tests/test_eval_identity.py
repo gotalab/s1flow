@@ -230,12 +230,8 @@ def test_comparison_identity_tracks_held_out_data_without_exposing_test_scores(t
 
 
 
-def test_chart_summary_and_cost_quality_frontier_are_owned_by_report(task):
-    go(task)
-    report.write(task, "base", task.where.root / "out")
-    saved = json.loads((task.where.root / 'out' / 'base.json').read_text())
-    assert saved['chart_summary']['candidate_count'] == 1
-    assert saved['chart_summary']['cost_quality_frontier'] == ['fake']
+def test_the_chart_script_does_not_recompute_the_frontier():
+    """The charts draw what comparison.json says; they do not rank or build a cost/quality frontier of their own."""
     script = (Path(__file__).resolve().parents[1] / 'plugin/skills/s1flow/scripts/charts.py').read_text()
     assert 'const better = ' not in script and 'const front = [...rs].sort' not in script
 

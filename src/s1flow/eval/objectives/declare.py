@@ -170,10 +170,9 @@ class Constraints(BaseModel):
         return {k: v for k, v in (("precision", self.min_precision), ("recall", self.min_recall)) if v is not None}
 
 
-def default_for(kind: Kind) -> Objective | None:
-    """The kind's default objective (the first it takes); None when s1flow has no such objective yet."""
-    make = BUILT_IN.get(kind.objectives[0]) if kind.objectives else None
-    return None if make is None else make()
+def default_for(kind: Kind) -> Objective:
+    """The kind's default objective: the first it takes."""
+    return BUILT_IN[kind.objectives[0]]()
 
 
 def reweighted(o: Objective, factor: float) -> Objective | None:

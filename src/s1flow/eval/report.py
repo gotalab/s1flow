@@ -10,7 +10,7 @@ from collections import Counter
 
 from ..core import clock
 from .kinds import Kind
-from .evaluation import ChartData, ChartSummary, Estimate, Evaluation, Floor, ObjectiveScore, cost_note
+from .evaluation import Estimate, Evaluation, Floor, ObjectiveScore, cost_note
 from .objectives import measure
 from .objectives.declare import Objective
 from .objectives.measure import bound
@@ -398,40 +398,6 @@ def time_table(evs: list[Evaluation]) -> list[str]:
 REPORT = "s1flow/report@1"  # <out>/<variant>.json
 
 
-def chart_summary(task: Task, evaluations: list[Evaluation], data: dict[str, ChartData]) -> ChartSummary:
-    """Summarize raw/CV change and the 2D cost-quality frontier on dev only.
-
-    The report's other Pareto view includes p99 latency. This explicitly named
-    projection ignores latency, so it can answer the cost-versus-quality question.
-    """
-    compared_evaluations = compared(evaluations)
-    eligible = [e for e in compared_evaluations if e.objective and e.objective.rule and e.objective.rule.threshold is not None
-                and data[e.candidate.name].raw_value is not None and data[e.candidate.name].cv_value is not None]
-    changes = [(e.candidate.name, data[e.candidate.name]) for e in eligible]
-    def gain(item: tuple[str, ChartData]) -> float:
-        row = item[1]
-        assert row.raw_value is not None and row.cv_value is not None
-        return (row.cv_value - row.raw_value) * (1 if task.primary.maximize else -1)
-    largest = max(changes, key=lambda item: abs(gain(item)), default=None)
-    points = [(e.candidate.name, e.calls.cost_per_10k_usd, e.objective.value)
-              for e in compared_evaluations if e.objective and e.objective.value is not None
-              and e.calls.cost_per_10k_usd is not None and e.calls.cost_per_10k_usd >= 0]
-    frontier = []
-    for name, price, value in sorted(points, key=lambda point: (point[1], point[0])):
-        assert price is not None and value is not None
-        quality = -value if task.primary.maximize else value
-        if not any(other_price is not None and other_value is not None and other_price <= price
-                   and (-other_value if task.primary.maximize else other_value) <= quality
-                   and (other_price < price or (-other_value if task.primary.maximize else other_value) < quality)
-                   for _, other_price, other_value in points):
-            frontier.append(name)
-    return ChartSummary(candidate_count=len(changes), improved_count=sum(gain(item) > 1e-9 for item in changes),
-                        largest_change_candidate=None if largest is None else largest[0],
-                        largest_change_raw=None if largest is None else largest[1].raw_value,
-                        largest_change_cv=None if largest is None else largest[1].cv_value,
-                        cost_quality_frontier=frontier)
-
-
 def write(task: Task, variant: str, out: Path) -> str:
     """<out>/<variant>.md and <variant>.json from every run on the variant's question; the Markdown is returned.
     """
@@ -447,8 +413,7 @@ def write(task: Task, variant: str, out: Path) -> str:
     saved = {"schema": REPORT, "task": task.id, "variant": variant, "at": clock.now(),
              "data_digest": data_digest, "evaluation_contract_digest": contract_digest, "input_adapter_digest": adapter_digest,
              "evaluations": [e.model_dump(mode="json") for e in evs],
-             "charts": {name: values.model_dump(mode="json") for name, values in charts.items()},
-             "chart_summary": chart_summary(task, evs, charts).model_dump(mode="json")}
+             "charts": {name: values.model_dump(mode="json") for name, values in charts.items()}}
 
     (out / f"{variant}.md").write_text(md)
     (out / f"{variant}.json").write_text(json.dumps(saved, ensure_ascii=False, indent=1))

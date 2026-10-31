@@ -197,10 +197,6 @@ class Evaluation(_Frozen):
     calls: Calls = Calls()
 
     @property
-    def primary(self) -> ObjectiveScore | None:
-        return self.objective
-
-    @property
     def scores(self) -> list[ObjectiveScore]:
         """The objective's score, then those of the objectives in `tiebreak`, in its order."""
         return [] if self.objective is None else [self.objective, *self.tiebreak]
@@ -288,14 +284,3 @@ class ChartData(_ChartModel):
     selection_basis: Literal["selected-answer probability", "box confidence"] | None = None
     selection_unavailable: str | None = None
     unavailable: str | None = None
-
-
-class ChartSummary(_ChartModel):
-    """Dev comparison findings computed by the report, not its renderer."""
-    candidate_count: int
-    improved_count: int
-    largest_change_candidate: str | None = None
-    largest_change_raw: float | None = None
-    largest_change_cv: float | None = None
-    cost_quality_frontier: list[str] = []
-    frontier_axes: Literal["objective,cost"] = "objective,cost"
