@@ -243,6 +243,9 @@ def _plain_reading_basis(task: Task) -> str:
     return "plain score reading: the expected level, rounded (.5 up)"
 
 
+CALIBRATION = ("auroc", "brier", "ece")  # what the probabilities say: defined and shown only when a candidate gave some
+
+
 def _metric_definitions(task: Task, evaluations: Sequence[Evaluation]) -> list[MetricDefinition]:
     """Build the shared metric vocabulary from the task and available evidence."""
     out: list[MetricDefinition] = []
@@ -266,7 +269,7 @@ def _metric_definitions(task: Task, evaluations: Sequence[Evaluation]) -> list[M
     for name in ("accuracy", *task.kind.report):
         add_metric(name)
     if any(e.probabilities for e in evaluations):
-        for name in ("auroc", "brier", "ece"):
+        for name in CALIBRATION:
             add_metric(name)
 
     for i, objective in enumerate(task.objectives):
@@ -319,12 +322,10 @@ def _row_metrics(evaluation: Evaluation | None, definitions: Sequence[MetricDefi
     for key, estimate in evaluation.measures.items():
         values[key] = estimate
     if evaluation.probabilities:
-        if evaluation.auroc is not None:
-            values["auroc"] = evaluation.auroc
-        if evaluation.brier is not None:
-            values["brier"] = Estimate(value=evaluation.brier)
-        if evaluation.ece is not None:
-            values["ece"] = Estimate(value=evaluation.ece)
+        for name in CALIBRATION:  # Evaluation's fields of the same names
+            got = getattr(evaluation, name)
+            if got is not None:
+                values[name] = got if isinstance(got, Estimate) else Estimate(value=got)
 
     primary_infeasible = _primary_rule_infeasible(evaluation)
     for score in evaluation.scores:

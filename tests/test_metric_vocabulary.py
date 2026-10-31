@@ -123,6 +123,9 @@ def test_each_kind_names_its_metrics_one_way(name):
     assert sorted(m for m, measured in MEASURES if measured == measured_as(kind)) == measures
     got = [(d.key, d.label, d.unit, d.direction, d.basis) for d in comparison._metric_definitions(task, [_evaluation()])]
     assert got == definitions
+    single = _evaluation().model_copy(update={"probabilities": False})  # single answers: nothing about probabilities
+    got = [d.key for d in comparison._metric_definitions(task, [single])]
+    assert got == [d[0] for d in definitions if d[0] not in comparison.CALIBRATION]
 
 
 @pytest.mark.parametrize("make, label, unit, direction", [
