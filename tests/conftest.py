@@ -83,15 +83,21 @@ def make_project(
     return Project(root)
 
 
-def labelled(task: Task, y: Any) -> Task:
-    """A task written in a test with no cases file: cases 0..n-1 with these labels, as binary_preds names them
-    (the task's evaluation set, eval/evalset.py, is made from them)."""
-    from s1flow.eval.cases import Case, Cases
-
-    cases = Cases(task.id, task.dir, task.cases, task.state, task.label)
-    cases._all = [Case(id=str(i), state={}, label=v.item() if hasattr(v, "item") else v) for i, v in enumerate(y)]
-    task._cases = cases
+def write_cases(task: Task, rows: list[dict[str, Any]]) -> Task:
+    """Write `rows` as the task's cases file (task.dir / task.cases: a .json array, else JSON lines) and read them
+    from it again, as a task.py's data is read."""
+    path = task.dir / task.cases
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(rows) if path.suffix == ".json" else "".join(json.dumps(r) + "\n" for r in rows))
+    task.load_cases().forget()
     return task
+
+
+def labelled(task: Task, y: Any, dir: Path) -> Task:
+    """The task reading cases 0..n-1 with these labels and empty states, as binary_preds names them, from a cases
+    file written in `dir` (the task's evaluation set, eval/evalset.py, is made from them)."""
+    task.dir, task.cases, task.state, task.label = dir, "cases.jsonl", lambda r: {}, lambda r: r["label"]
+    return write_cases(task, [{"id": str(i), "label": v.item() if hasattr(v, "item") else v} for i, v in enumerate(y)])
 
 
 def attach(task: Task, project: Project, dir: Path | None = None) -> Task:

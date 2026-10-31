@@ -58,11 +58,11 @@ def test_lower_is_better_for_expected_cost():
 preds = binary_preds
 
 
-def test_recall_and_cost_are_measured_out_of_fold():
+def test_recall_and_cost_are_measured_out_of_fold(tmp_path):
     rng = np.random.default_rng(0)
     y = np.array([True] * 100 + [False] * 100)
     p = np.clip(np.where(y, 0.8, 0.2) + rng.normal(0, 0.25, 200), 0, 1)
-    t = labelled(task([Recall(max_false_alarm=0.05), ExpectedLoss(fn=5, fp=1)]), y)
+    t = labelled(task([Recall(max_false_alarm=0.05), ExpectedLoss(fn=5, fp=1)]), y, tmp_path)
     e = metrics.evaluate(t, preds(p, y))
     rec, cost = e.scores
     assert rec.value is not None and rec.interval and rec.constraint is not None
@@ -73,7 +73,7 @@ def test_recall_and_cost_are_measured_out_of_fold():
     # chooses no rule of its own.
     assert cost.value is not None and cost.rule is None and 0 <= cost.value < 0.5
     assert e.error_loss_threshold is not None and e.error_loss_threshold.chosen < 0.5  # the error table's cut: misses cost 5x, so it moves down
-    both = metrics.evaluate(labelled(task([Coverage(), Coverage(target_accuracy=0.9)]), y), preds(p, y), target=0.95)  # a then Coverage adds its own
+    both = metrics.evaluate(labelled(task([Coverage(), Coverage(target_accuracy=0.9)]), y, tmp_path), preds(p, y), target=0.95)  # a then Coverage adds its own
     assert [s.target_accuracy for s in both.selective] == [0.95, 0.9]
     assert (both.selective[1].coverage.value or 0) >= (both.selective[0].coverage.value or 0)
 
@@ -86,9 +86,9 @@ def test_recall_threshold_keeps_the_false_alarm_rate():
     assert recall(0.2) == 0.7  # none
 
 
-def test_accuracy_as_an_objective_leaves_the_test_share_out():
+def test_accuracy_as_an_objective_leaves_the_test_share_out(tmp_path):
     y = np.array([True, False] * 100)
-    t = labelled(task([Accuracy(), AUROC()]), y)
+    t = labelled(task([Accuracy(), AUROC()]), y, tmp_path)
     test = np.array([int(i) for i in evalset.current(t).ids("test")])
     p = np.where(y, 0.9, 0.1)
     p[test] = 1 - p[test]  # every held-out case wrong: it must not count when candidates are ranked
@@ -164,21 +164,21 @@ def test_every_objective_a_kind_takes_is_measured():
         assert all((name, measured_as(k)) in MEASURES for name in (*k.report, "brier", "accuracy", "auroc"))
 
 
-def test_f1_has_an_interval_and_chooses_the_threshold():
+def test_f1_has_an_interval_and_chooses_the_threshold(tmp_path):
     rng = np.random.default_rng(0)
     y = np.array([True] * 100 + [False] * 100)
     p = np.clip(np.where(y, 0.7, 0.3) + rng.normal(0, 0.25, 200), 0, 1)
-    f1 = metrics.evaluate(labelled(task([F1()]), y), preds(p, y)).objective
+    f1 = metrics.evaluate(labelled(task([F1()]), y, tmp_path), preds(p, y)).objective
     assert f1.value is not None and f1.interval and f1.interval[0] <= f1.value <= f1.interval[1]
     assert f1.rule is not None and f1.rule.threshold is not None
 
 
-def test_recall_on_the_test_share_is_judged_by_its_false_alarms():
+def test_recall_on_the_test_share_is_judged_by_its_false_alarms(tmp_path):
     """The held-out share keeps the false-alarm bound, or shows it broken, whatever the recall."""
     rng = np.random.default_rng(0)
     y = np.array([True, False] * 150)
     p = np.clip(np.where(y, 0.8, 0.2) + rng.normal(0, 0.2, 300), 0, 1)
-    t = labelled(task([Recall(max_false_alarm=0.1)]), y)
+    t = labelled(task([Recall(max_false_alarm=0.1)]), y, tmp_path)
     test = np.array([int(i) for i in evalset.current(t).ids("test")])
     e = metrics.evaluate(t, preds(p, y), include_test=True)
     assert e.test is not None and e.test.constraint is not None and metrics.test_verdict(t, e) == "kept"
@@ -199,10 +199,10 @@ def test_floors_limit_the_threshold_and_are_never_relaxed():
     assert at(min_precision=0.8, min_recall=0.9) == np.inf  # no cut keeps both: none, not the nearest
 
 
-def test_a_model_no_threshold_lets_keep_the_floors_is_not_chosen():
+def test_a_model_no_threshold_lets_keep_the_floors_is_not_chosen(tmp_path):
     rng = np.random.default_rng(0)
     y = np.array([True, False] * 150)
-    t = labelled(task([ExpectedLoss()], constraints=Constraints(min_precision=0.8, min_recall=0.8)), y)
+    t = labelled(task([ExpectedLoss()], constraints=Constraints(min_precision=0.8, min_recall=0.8)), y, tmp_path)
     good = metrics.evaluate(t, preds(np.clip(np.where(y, 0.8, 0.2) + rng.normal(0, 0.1, 300), 0, 1), y), include_test=True)
     blind = metrics.evaluate(t, preds(rng.uniform(0, 1, 300), y), include_test=True).model_copy(update={"candidate": Candidate(model="blind")})
     assert good.objective is not None and good.objective.rule is not None
@@ -220,13 +220,13 @@ def test_floors_need_an_objective_that_sets_a_binary_threshold():
         declared([Coverage()], constraints=Constraints(min_precision=0.8))
 
 
-def test_floors_leave_the_error_losses_table_alone_and_the_evaluation_reads_back():
+def test_floors_leave_the_error_losses_table_alone_and_the_evaluation_reads_back(tmp_path):
     """With ExpectedLoss as the objective its cut is also the report's error-loss table: floors limit the first only,
     so a fold where no cut keeps them leaves no inf in the table (an inf is written as null and does not read back)."""
     rng = np.random.default_rng(0)
     y = np.array([True, False] * 150)
     p = np.clip(np.where(y, 0.65, 0.35) + rng.normal(0, 0.2, 300), 0, 1)
-    plain = metrics.evaluate(labelled(task([ExpectedLoss()]), y), preds(p, y))
-    floored = metrics.evaluate(labelled(task([ExpectedLoss()], constraints=Constraints(min_precision=0.85)), y), preds(p, y))
+    plain = metrics.evaluate(labelled(task([ExpectedLoss()]), y, tmp_path), preds(p, y))
+    floored = metrics.evaluate(labelled(task([ExpectedLoss()], constraints=Constraints(min_precision=0.85)), y, tmp_path), preds(p, y))
     assert floored.error_loss_threshold == plain.error_loss_threshold and floored.error_loss_threshold is not None and np.isfinite(floored.error_loss_threshold.median)
     assert Evaluation.model_validate_json(floored.model_dump_json()) == floored

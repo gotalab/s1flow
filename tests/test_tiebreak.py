@@ -25,12 +25,12 @@ def noisy(n=300, seed=0):
     return np.clip(np.where(y, 0.7, 0.3) + rng.normal(0, 0.25, n), 0, 1), y
 
 
-def test_tiebreak_is_read_at_the_rule_the_policy_uses():
+def test_tiebreak_is_read_at_the_rule_the_policy_uses(tmp_path):
     p, y = noisy()
     cost = ExpectedLoss(fn=3, fp=1)
-    under_coverage = metrics.evaluate(labelled(task([Coverage(target_accuracy=0.9), cost]), y), binary_preds(p, y)).tiebreak[0]
-    under_accuracy = metrics.evaluate(labelled(task([Accuracy(), cost]), y), binary_preds(p, y)).tiebreak[0]
-    as_primary = metrics.evaluate(labelled(task([cost]), y), binary_preds(p, y)).objective
+    under_coverage = metrics.evaluate(labelled(task([Coverage(target_accuracy=0.9), cost]), y, tmp_path), binary_preds(p, y)).tiebreak[0]
+    under_accuracy = metrics.evaluate(labelled(task([Accuracy(), cost]), y, tmp_path), binary_preds(p, y)).tiebreak[0]
+    as_primary = metrics.evaluate(labelled(task([cost]), y, tmp_path), binary_preds(p, y)).objective
     # Coverage sets a min probability and no threshold: the policy reads True at P >= 0.5, as Accuracy's does,
     # so the errors ExpectedLoss counts are the same; as the objective it picks its own cut, and costs less.
     assert under_coverage.value == under_accuracy.value and under_coverage.rule is None
@@ -62,11 +62,11 @@ def test_latency_is_each_cases_call_at_the_dev_p90(tmp_path):
     assert min(slowest.values()) <= lat.value <= max(slowest.values())
 
 
-def test_an_unrecorded_latency_is_left_out_not_zero():
+def test_an_unrecorded_latency_is_left_out_not_zero(tmp_path):
     assert metrics._percentile(np.array([np.nan, 100.0, 300.0]), 50) == 200.0
     assert metrics._percentile(np.array([np.nan]), 90) is None
     p, y = noisy(40)
-    e = metrics.evaluate(labelled(task([Accuracy()]), y), binary_preds(p, y))  # Preds with no latency at all
+    e = metrics.evaluate(labelled(task([Accuracy()]), y, tmp_path), binary_preds(p, y))  # Preds with no latency at all
     assert e.calls.case_latency_p90_ms is None and e.calls.latency is None
 
 

@@ -6,14 +6,13 @@ import json
 
 import pytest
 
-from conftest import Parity, make_project
+from conftest import Parity, make_project, write_cases
 from s1flow.client.identity import execution_digest, model_digest, request_digest, state_digest
 from s1flow.client.models import ModelSpec, Price
 from s1flow.client.questions import Boolean
 from s1flow.client.state import Image
 from s1flow.core.errors import ConfigError
 from s1flow.eval import evalset, metrics, records, report, run
-from s1flow.eval.cases import Case, Cases
 from s1flow.eval.evaluation import Calls
 from s1flow.eval.objectives.declare import Constraints
 from s1flow.eval.review import review
@@ -28,10 +27,7 @@ def task(tmp_path):
     d.mkdir(parents=True)
     t = Task(id='identity', cases='cases.json', state=lambda r: r['state'], label=lambda r: r['label'],
              question=Boolean(instructions='Is even?'), project=project, dir=d)
-    cs = Cases(t.id, d, t.cases, t.state, t.label)
-    cs._all = [Case(id=str(i), state={'i': i}, label=i % 2 == 0) for i in range(12)]
-    t._cases = cs
-    (d / t.cases).write_text(json.dumps([{'id': c.id, 'state': c.state, 'label': c.label} for c in cs._all]))
+    write_cases(t, [{'id': str(i), 'state': {'i': i}, 'label': i % 2 == 0} for i in range(12)])
     sf = evalset.SplitFile(seed=1, test_share=1/3, at='', source='test',
                            assign={str(i): 'test' if i >= 8 else 'train' for i in range(12)})
     (d / 'split.json').write_text(sf.model_dump_json(by_alias=True))
@@ -123,7 +119,7 @@ def test_comparison_binds_saved_fold_values_to_the_current_data(task):
     assert row.value == row.charts.cv_value
     assert len(row.charts.threshold_sweep) >= 101
     assert sum(b.positives + b.negatives for b in row.charts.distribution) == 8
-    c = task.load_cases()._all[0]
+    c = task.load_cases().all()[0]
     change_case(task, "0", label=not c.label)
     changed = comparison.collect(task, include_charts=True)
     assert changed.data_digest != original.data_digest and changed.id != original.id

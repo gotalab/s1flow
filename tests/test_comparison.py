@@ -5,13 +5,12 @@ from __future__ import annotations
 import asyncio
 import copy
 import json
-from dataclasses import replace
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
 import pytest
 
-from conftest import TRUTH, cli, compare_fake, make_project
+from conftest import TRUTH, cli, compare_fake, make_project, write_cases
 from s1flow.client import (
     Boolean,
     Box,
@@ -19,7 +18,6 @@ from s1flow.client import (
 )
 from s1flow.core.errors import ConfigError
 from s1flow.eval import comparison, evalset, metrics, records, run
-from s1flow.eval.cases import Case, Cases
 from s1flow.eval.objectives.declare import AUROC, Constraints, Coverage
 from s1flow.eval.task import Task
 from s1flow.policies.kinds import KindParams
@@ -37,14 +35,8 @@ def task_fixture(tmp_path: Path, *, question: Any, mode: str = "good", models: d
     variants_map = {"alt": question} if variants else {}
     task = Task(id="compare", cases="cases.json", state=lambda row: row["state"], label=lambda row: row["label"],
                 question=question, variants=variants_map, project=project, dir=directory)
-    cases = Cases(task.id, directory, task.cases, task.state, task.label)
-    cases._all = [Case(id=str(i), state={"truth": i % 2 == 1}, label=bool(i % 2 == 1)) for i in range(12)]
-    if question.type == "choice":
-        cases._all = [replace(c, label="a" if cast(dict[str, Any], c.state)["truth"] else "b") for c in cases._all]
-    if question.type == "box":
-        cases._all = [replace(c, label=TRUTH) for c in cases._all]
-    task._cases = cases
-    (directory / task.cases).write_text(json.dumps([{"id": c.id, "state": c.state, "label": c.label.model_dump() if hasattr(c.label, "model_dump") else c.label} for c in cases._all]))
+    label = {"choice": lambda truth: "a" if truth else "b", "box": lambda truth: TRUTH.model_dump()}.get(question.type, bool)
+    write_cases(task, [{"id": str(i), "state": {"truth": i % 2 == 1}, "label": label(i % 2 == 1)} for i in range(12)])
     split = evalset.SplitFile(seed=1, test_share=1 / 3, at="", source="test", assign={str(i): "test" if i >= 8 else "train" for i in range(12)})
     (directory / "split.json").write_text(split.model_dump_json(by_alias=True))
     return task
