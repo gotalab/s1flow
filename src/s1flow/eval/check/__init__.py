@@ -42,7 +42,7 @@ from pydantic import BaseModel
 from ...client.questions import Question
 from ...policies import DecisionPolicy
 from ...core.errors import ConfigError, DataError, S1flowError
-from ...policies.file import CURRENT, version_number
+from ...policies.file import CURRENT, Ref
 from .. import evalset
 from ..objectives import measure
 from ..objectives.measure import bound
@@ -94,8 +94,7 @@ def pick(task: Task, spec: str) -> tuple[str, Version]:
         if q is None:
             raise S1flowError(f"{base.spec.ref} was evaluated on the variant {base.variant}, which the task no longer has")
         return "draft", Version(base.spec.with_question(q), base.record)
-    n = version_number(spec)
-    runtime = store.runtime.read(task.id, version=n) if n is not None else store.runtime.read(task.id, channel=spec)
+    runtime = store.runtime.get(Ref.parse(f"{task.id}@{spec}"))
     return spec, Version(runtime, store.record(runtime))
 
 

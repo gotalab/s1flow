@@ -18,7 +18,7 @@ from s1flow.client import ModelBuild
 from s1flow.eval.task import Task
 from s1flow.project import Project
 
-BENCH = Path(__file__).resolve().parents[1] / "apps" / "bench"  # s1flow's own evaluation project: s1flow.toml, tasks/, runs/
+BENCH = Path(__file__).resolve().parents[1] / "apps" / "bench"  # s1flow's own evaluation project: s1flow.toml, tasks/, policies/
 
 # name -> factory(ModelBuild). `build` below is the provider every fake in a test project names.
 FAKES: dict[str, Callable[[ModelBuild], Any]] = {}

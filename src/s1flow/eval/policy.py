@@ -7,7 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_valida
 from ..client.models import ModelSpec
 from ..core.errors import ConfigError, NotFound
 from ..project import Project
-from ..policies.file import CURRENT, Policies, PolicySpec, Ref, atomic_write
+from ..policies.file import Policies, PolicySpec, Ref
 from ..policies.history import Switch
 from .candidate import Candidate
 from .evaluation import Evaluation
@@ -126,14 +126,12 @@ class Store:
         return self.runtime.tasks()
 
     def get(self, ref: Ref) -> EvaluatedPolicy:
-        return self.read(ref.task, version=ref.version, channel=ref.channel or CURRENT)
+        return self.read(ref.task, version=ref.version)
 
-    def _record_path(self, spec: PolicySpec) -> Path:
-        return self.runtime._file(spec.task, f'v{spec.version}.evaluation.json')
 
-    def read(self, task: str, version: int | None = None, channel: str = CURRENT) -> EvaluatedPolicy:
-        spec = self.runtime.read(task, version=version, channel=channel)
-        path = self._record_path(spec)
+    def read(self, task: str, version: int | None = None) -> EvaluatedPolicy:
+        spec = self.runtime.read(task, version=version)
+        path = self.runtime.evaluation_path(spec.task, spec.version)
         if not path.is_file():
             raise NotFound(f'{spec.ref} has no evaluation record; the runtime specification is usable explicitly')
         try:
@@ -143,20 +141,13 @@ class Store:
 
     def record(self, spec: PolicySpec) -> EvaluatedPolicy | None:
         """The evaluation `spec` was adopted on; None for a version adopted without one (adopt --spec)."""
-        return self.read(spec.task, version=spec.version) if self._record_path(spec).exists() else None
+        return self.read(spec.task, version=spec.version) if self.runtime.evaluation_path(spec.task, spec.version).exists() else None
 
     def write_new(self, policy: EvaluatedPolicy, *, adopted: Switch | None = None) -> None:
         """Save the policy and its evaluation record; `adopted` (s1flow adopt's) also makes it the version that runs."""
         # Validate before any write, including values copied with model_copy(update=...).
         policy = EvaluatedPolicy.model_validate_json(policy.model_dump_json())
-        record = EvaluationRecord.from_policy(policy)
-        with self.runtime.locked(policy.spec.task):
-            if adopted is not None:
-                self.runtime._may_switch(policy.spec.task, adopted)
-            self.runtime._write_new(policy.spec)
-            atomic_write(self._record_path(policy.spec), record.dump(), immutable=True)
-            if adopted is not None:
-                self.runtime._switch(policy.spec.task, adopted)
+        self.runtime.write_new(policy.spec, adopted=adopted, evaluation=EvaluationRecord.from_policy(policy).dump())
 
 
 def store(project: Project) -> Store:

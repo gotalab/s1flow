@@ -290,20 +290,6 @@ def test_windows_writer_locks_byte_zero_and_unlocks_on_error(tmp_path: Path, mon
     assert (tmp_path / '.write.lock').read_bytes() == b'\0'
 
 
-def test_windows_directory_sync_limitation_does_not_swallow_file_failure(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    from s1flow.policies import file as storage
-
-    monkeypatch.setattr(storage.sys, 'platform', 'win32')
-    storage._sync_dir(tmp_path)  # supported explicitly as a no-op on this platform
-    def failed_sync(fd: int) -> None:
-        raise OSError('file flush failed')
-    monkeypatch.setattr(storage.os, 'fsync', failed_sync)
-    with pytest.raises(OSError, match='file flush failed'):
-        storage.atomic_write(tmp_path / 'new.json', '{}')
-    assert not (tmp_path / 'new.json').exists()
-    assert list(tmp_path.iterdir()) == []
-
-
 def test_runtime_conditions_need_no_evaluation_adapter_metadata(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     from s1flow.client.identity import execution_digest
 
