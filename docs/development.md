@@ -20,9 +20,9 @@ makes them unreadable, rewrite them to the current shape in the same change.
 
 ## Release
 
-1. In one pull request, set the version in `pyproject.toml` and pin the Action at `v<version>` in `examples/` and
-   `skills/` (`tests/test_docs.py` fails until they agree; `uv run python scripts/sync_plugin.py` copies the
-   Skill to `plugin/`). Merge it.
+1. In one pull request, set the version in `pyproject.toml`, and in `examples/` and `skills/` pin the Action at
+   `v<version>` and the package at `==<version>` (`tests/test_docs.py` fails until they agree;
+   `uv run python scripts/sync_plugin.py` copies the Skill to `plugin/`). Merge it.
 2. Tag the merge commit `v<version>` and push the tag (`git tag -a v<version> <sha> -m v<version> && git push origin v<version>`).
    `s1flow init --ci` writes `gotalab/s1flow@v<version>` of the CLI that ran it, so every release needs its tag.
 3. Run the publish workflow from that tag (Actions → publish → Run workflow → Use workflow from: `v<version>`).

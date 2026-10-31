@@ -6,9 +6,9 @@ on:
   workflow_call:  # publish.yml runs these on the tag it releases
 permissions:
   contents: read
-concurrency:  # a newer push to a PR cancels the checks of the one it replaces
-  group: package-checks-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+concurrency:  # a newer push to a PR cancels the checks of the one it replaces; every other run has its own group
+  group: package-checks-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: true
 jobs:
   test:
     runs-on: ubuntu-latest
