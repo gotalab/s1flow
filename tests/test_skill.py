@@ -93,7 +93,7 @@ def test_a_file_changed_there_is_kept_unless_forced(repo, capsys):
     assert mine.read_text() == (skill.source() / "references" / "ship.md").read_text()
 
 
-def test_an_older_copy_is_updated_and_a_copy_made_by_hand_is_not_overwritten(repo):
+def test_a_copy_an_earlier_version_wrote_is_updated_and_a_copy_made_by_hand_is_not_overwritten(repo):
     copy = repo / ".claude/skills/s1flow"
     skill.install(repo / ".claude/skills")
     old = copy / "references" / "learn.md"
@@ -159,13 +159,12 @@ def test_the_wheel_carries_the_skill(tmp_path):
 def test_the_chart_page_draws_from_a_shared_snapshot_without_evaluation_dependencies(tmp_path):
     """Charts use a fresh fake-provider report, never certify bundled historical runs."""
     import asyncio
-    from conftest import make_project
-    from test_eval_identity import Fake
+    from conftest import Parity, make_project
     from s1flow.eval import metrics, comparison
     from s1flow.eval.run import run as run_models
     from s1flow.eval.task import load
 
-    project = make_project(tmp_path / "project", {"fake": Fake})
+    project = make_project(tmp_path / "project", {"fake": Parity})
     directory = project.tasks_dir / "chart-test"
     directory.mkdir(parents=True)
     (directory / "task.py").write_text(

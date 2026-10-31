@@ -1,58 +1,18 @@
 """The outcome contract: how a call's end becomes a run record (no network)."""
 
-import asyncio
 import json
 
-import httpx
 import pytest
-import respx
 
 from s1flow.core.errors import DataError, ProviderError, Rejected, Unsupported
 
 from s1flow.eval import records
 from s1flow.eval.records import PredictionRecord
-from s1flow.client.providers.http import classify, post_json
 from s1flow.client import BooleanAnswer, Response, Refusal, Boolean, ModelSpec
 from s1flow.client.identity import request_digest
 
-URL = "https://example.test/v1/systemone"
 BASE = {"id": "a", "model": "jev", "prompt": "p1", "at": "2026-10-16",
         "request_digest": request_digest(ModelSpec(provider="typesafe", id="jev"), {"text": "case a"}, {"q": Boolean(instructions="?")})}
-
-
-@pytest.mark.parametrize("status, text, kind", [
-    (422, "too long", Rejected),
-    (413, "payload too large", Rejected),
-    (400, '{"error":{"message":"Phala does not accept \\"image_url\\" parts in state"}}', Rejected),
-    (400, '{"detail":{"error_type":"api_usage_error","message":"Invalid request."}}', ProviderError),
-    (401, "unauthorized", ProviderError),
-])
-def test_classify(status, text, kind):
-    e = classify(status, text)
-    assert type(e) is kind and e.status == status
-
-
-@respx.mock
-def test_post_json_retries_then_fails_with_the_status():
-    route = respx.post(URL).mock(side_effect=[httpx.Response(503), httpx.Response(503), httpx.Response(503)])
-    with pytest.raises(ProviderError) as e:
-        asyncio.run(post_json(URL, {}, {}, attempts=3))
-    assert e.value.status == 503 and route.call_count == 3
-
-
-@respx.mock
-def test_post_json_does_not_retry_a_refusal():
-    route = respx.post(URL).mock(return_value=httpx.Response(422, text="nope"))
-    with pytest.raises(Rejected):
-        asyncio.run(post_json(URL, {}, {}))
-    assert route.call_count == 1
-
-
-@respx.mock
-def test_post_json_rejects_an_unreadable_body():
-    respx.post(URL).mock(return_value=httpx.Response(200, text="<html>"))
-    with pytest.raises(ProviderError, match="unreadable"):
-        asyncio.run(post_json(URL, {}, {}))
 
 
 @pytest.mark.parametrize("exc, outcome, status", [
@@ -87,10 +47,6 @@ def test_a_record_must_be_consistent():
 def test_numeric_ids_become_strings():
     assert PredictionRecord.model_validate(BASE | {"id": 5, "outcome": "failed", "reason": "x"}).id == "5"
     assert records.from_exception(BASE | {"id": 7}, ProviderError("boom")).id == "7"
-
-
-def test_a_bare_not_supported_400_stays_a_failure():
-    assert type(classify(400, '{"error":"response_format not supported"}')) is ProviderError
 
 
 def test_an_answer_needs_its_value():

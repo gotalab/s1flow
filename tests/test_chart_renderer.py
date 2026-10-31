@@ -50,12 +50,13 @@ def test_instructions_cannot_escape_embedded_json_or_title(tmp_path):
     assert json.loads(embedded) == data
 
 
-@pytest.mark.parametrize('content', [b'\xff', b'null', b'{"schema":"old"}', b'{"x":NaN}'])
+@pytest.mark.parametrize('content', [b'\xff', b'null', b'{"schema":"old"}', b'{"schema":"s1flow/comparison@1","scope":"dev"}', b'{"x":NaN}'])
 def test_bad_snapshot_is_a_clean_input_error(tmp_path, content):
     source = tmp_path / 'bad.json'; source.write_bytes(content)
     done = invoke(str(source))
     assert done.returncode == 2 and done.stderr.startswith('error:')
     assert 'Traceback' not in done.stderr and not source.with_suffix('.html').exists()
+    assert b'schema' not in content or 'regenerate' in done.stderr  # a snapshot of another shape says how to make one
 
 
 def test_renderer_cannot_overwrite_its_input(tmp_path):
@@ -64,10 +65,3 @@ def test_renderer_cannot_overwrite_its_input(tmp_path):
     done = invoke(str(source), '--out', str(source))
     assert done.returncode == 2 and source.read_bytes() == before
 
-
-def test_a_snapshot_that_is_not_v2_requires_regeneration(tmp_path):
-    source = tmp_path / 'old.json'
-    source.write_text(json.dumps({'schema': 's1flow/comparison@1', 'scope': 'dev'}))
-    done = invoke(str(source))
-    assert done.returncode == 2 and 'regenerate' in done.stderr
-    assert not source.with_suffix('.html').exists()

@@ -97,7 +97,7 @@ def test_a_missing_key_stops_the_run_instead_of_filling_it_with_failures(nod, mo
     assert not running.run_path(nod, "base", "fake").exists()
 
 
-def test_an_answer_cached_in_an_older_shape_stops_the_run_instead_of_failing_the_case(nod):
+def test_a_cached_answer_that_does_not_parse_stops_the_run_instead_of_failing_the_case(nod):
     go = lambda: asyncio.run(running.run_model(nod, "fake", limit=1, variant="base", fresh=False))  # noqa: E731
     go()
     entry = next((nod.where.cache_dir / "answers").glob("*/*.json"))

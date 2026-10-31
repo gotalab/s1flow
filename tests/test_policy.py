@@ -6,7 +6,7 @@ import sys
 
 import pytest
 from pydantic import ValidationError
-from conftest import attach, make_project, ship
+from conftest import Sharp, attach, make_project, ship
 
 from s1flow import policies
 from s1flow.core.errors import ConfigError, DataError, NotFound, ProviderError, S1flowError
@@ -15,7 +15,6 @@ from s1flow.eval.evaluation import Evaluation, Failures
 from s1flow.eval.policy import EvaluatedPolicy, Evidence, Selection, Store
 from s1flow.project import Project
 from s1flow.eval.candidate import Candidate
-from s1flow.eval.kinds import kind_of
 from s1flow.policies import DecisionRule
 from s1flow.policies import policy as loading
 from s1flow.policies import log as logs
@@ -26,7 +25,7 @@ from s1flow.client.lineup import Lineup
 from s1flow.client import identity
 from s1flow.client.identity import execution_digest
 from s1flow.policies.state_shape import mismatch, schema_of
-from s1flow.client import Boolean, BooleanAnswer, Capabilities, Choice, ChoiceAnswer, Response, ModelBuild, ModelSpec, Usage
+from s1flow.client import Boolean, Choice, ChoiceAnswer, Response, ModelBuild, ModelSpec
 from s1flow.policies.kinds import KindParams
 
 STATE = {"title": "Crash on start", "body": "It crashes."}
@@ -127,21 +126,14 @@ def test_a_broken_policy_file_is_a_config_error(store, tmp_path):
         store.evaluated("t")
 
 
-def test_the_rule():
-    yes = BooleanAnswer(probability=0.7)
-    b = kind_of(Boolean(instructions="?"))
-    assert b.read([yes], DecisionRule()).value is True
-    r = b.read([yes], DecisionRule(threshold=0.8))
-    assert (r.value, r.probability, r.p_positive) == (False, pytest.approx(0.3), 0.7)
-    assert b.read([yes], DecisionRule(min_probability=0.75)).below_min_probability
-    c = Choice(instructions="?", criteria={k: None for k in CLASSES})
-    a = ChoiceAnswer(choice="kind/bug", probabilities={"kind/bug": 0.5, "kind/question": 0.3, "kind/enhancement": 0.2})
-    r = kind_of(c).read([a, a], DecisionRule())
-    assert (r.value, r.probability, r.below_min_probability) == ("kind/bug", 0.5, None) and r.distribution == [0.5, 0.3, 0.2]
-    r = kind_of(c, KindParams(positive="kind/question")).read([a], DecisionRule(threshold=0.25))
-    assert (r.value, r.p_positive, r.distribution) == (True, pytest.approx(0.3), None)
-    with pytest.raises(ProviderError, match="outside the contract"):
-        kind_of(c).read([yes], DecisionRule())
+def test_policies_stay_light():
+    """What an app ships loads none of the evaluation stack, nor the evaluation's own shapes."""
+    import subprocess
+
+    code = ("import sys, s1flow.policies; print(sorted(m for m in ('numpy', 'litellm', 'sklearn', 'scipy', 'PIL', 's1flow.eval',"
+            " 's1flow.project') if m in sys.modules))")
+    out = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=True).stdout.strip()
+    assert out == "[]"
 
 
 def test_the_state_shape():
@@ -281,16 +273,6 @@ def test_decide_and_adecide_answer_alike(store):
     assert got == ["kind/bug"] * 4
 
 
-def test_policies_stay_light():
-    """What an app ships loads none of the evaluation stack, nor the evaluation's own shapes."""
-    import subprocess
-
-    code = ("import sys, s1flow.policies; print(sorted(m for m in ('numpy', 'litellm', 'sklearn', 'scipy', 'PIL', 's1flow.eval',"
-            " 's1flow.project') if m in sys.modules))")
-    out = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=True).stdout.strip()
-    assert out == "[]"
-
-
 def test_a_policy_decides_without_reading_why_it_was_chosen(store, tmp_path):
     """Runtime specs have no evaluation fields, and runtime never reads an evaluation sidecar."""
     path = tmp_path / "v1.json"
@@ -333,18 +315,6 @@ def test_the_packages_depend_downward_only():
     lint = Path(sys.executable).with_name("lint-imports")
     done = subprocess.run([str(lint)], cwd=Path(__file__).parents[1], capture_output=True, text=True)
     assert done.returncode == 0, done.stdout[-2000:]
-
-
-class Sharp:
-    """Right on every case, with the probability it was made with."""
-
-    def __init__(self, b: ModelBuild):
-        self.sure = {"good": 0.97, "vague": 0.6}[b.name]
-        self.id, self.concurrency, self.capabilities = f"sharp:{self.sure}", 4, Capabilities()
-
-    async def decide(self, state, questions, *, options=None):
-        p = self.sure if state["y"] else 1 - self.sure
-        return Response(answers={"q": BooleanAnswer(probability=p)}, answered_by=f"{self.id}-v2", usage=Usage(cost_usd=0.0001))
 
 
 def test_the_first_run_fixes_the_test_share_and_rank_and_report_write_nothing(tmp_path):

@@ -45,7 +45,7 @@ def fake(b: ModelBuild) -> Fake:
 
 
 @pytest.fixture
-def task(tmp_path, no_ci):
+def task(tmp_path):
     p = make_project(tmp_path)
     rows = [{"id": str(i), "text": CLASSES[i % 3]} for i in range(120)]
     (tmp_path / "data.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
@@ -102,14 +102,14 @@ def test_the_split_is_made_once_and_never_moves(task, tmp_path):
 
 
 @pytest.mark.parametrize("labels", [list("aabbcc"), [c for c in "abcde" for _ in range(2)], list("aab")])
-def test_a_small_task_still_gets_a_test_share(task, labels):
-    labelled(task, labels)  # more labels than test cases, or one case of a label: drawn at random instead of stratified
+def test_a_small_task_still_gets_a_test_share(tmp_path, task, labels):
+    labelled(task, labels, tmp_path)  # more labels than test cases, or one case of a label: drawn at random instead of stratified
     sp = evalset.initial(task, task.load_cases().labelled(), 1)
     assert len(sp["test"]) == math.ceil(0.3 * len(labels)) and len(sp["train"]) + len(sp["val"]) >= 2
 
 
-def test_too_few_cases_for_a_test_share_is_a_data_error(task):
-    labelled(task, ["a", "b"])
+def test_too_few_cases_for_a_test_share_is_a_data_error(tmp_path, task):
+    labelled(task, ["a", "b"], tmp_path)
     with pytest.raises(DataError, match="needs 3 or more"):
         evalset.initial(task, task.load_cases().labelled(), 1)
 

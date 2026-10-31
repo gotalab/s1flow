@@ -34,6 +34,12 @@ def test_a_min_probability_cuts_only_between_distinct_probabilities():
     assert metrics.search(cov(0.9), pairs) == np.inf  # none keeps it: nothing is answered
 
 
+def test_the_sweep_counts_a_positive_below_t_a_miss_and_a_negative_at_or_above_t_a_false_alarm():
+    y = np.array([True, True, False, False])
+    rows = metrics.sweep(y, np.array([0.4, 0.5, 0.5, 0.6]), [0.5, 0.6])
+    assert [(r.threshold, r.misses, r.positives, r.false_alarms, r.negatives) for r in rows] == [(0.5, 1, 2, 2, 2), (0.6, 2, 2, 1, 2)]
+
+
 def test_a_threshold_prefers_cheaper_errors():
     pairs = binary_preds([0.2, 0.9, 0.4, 0.1], [True, True, False, False]).pairs
     grid = np.array([0.1, 0.3, 0.5])

@@ -9,7 +9,8 @@ import respx
 from s1flow.client.providers.gateway import BASE_URL, GatewayModel
 from s1flow.client.providers.llm import json_schema, to_answers
 from s1flow.client.providers.openai_decisions import BASE_URL as OPENAI_URL, DecisionsModel
-from s1flow.core.errors import Unsupported
+from s1flow.client.providers.http import classify, post_json
+from s1flow.core.errors import ProviderError, Rejected, Unsupported
 from s1flow.client import Boolean, Capabilities, Choice, Image, Score
 
 QS = {
@@ -27,6 +28,45 @@ LAYA = {
     "usage": {"inputTokens": 82, "outputTokens": 0},
     "providerMetadata": {"typesafe": {"confidence": {"route": 0.9994}}, "gateway": {"cost": "0"}},
 }
+
+
+URL = "https://example.test/v1/systemone"
+
+
+@pytest.mark.parametrize("status, text, kind", [
+    (422, "too long", Rejected),
+    (413, "payload too large", Rejected),
+    (400, '{"error":{"message":"Phala does not accept \\"image_url\\" parts in state"}}', Rejected),
+    (400, '{"detail":{"error_type":"api_usage_error","message":"Invalid request."}}', ProviderError),
+    (400, '{"error":"response_format not supported"}', ProviderError),  # a bare "not supported" stays a failure
+    (401, "unauthorized", ProviderError),
+])
+def test_classify(status, text, kind):
+    e = classify(status, text)
+    assert type(e) is kind and e.status == status
+
+
+@respx.mock
+def test_post_json_retries_then_fails_with_the_status():
+    route = respx.post(URL).mock(side_effect=[httpx.Response(503), httpx.Response(503), httpx.Response(503)])
+    with pytest.raises(ProviderError) as e:
+        asyncio.run(post_json(URL, {}, {}, attempts=3))
+    assert e.value.status == 503 and route.call_count == 3
+
+
+@respx.mock
+def test_post_json_does_not_retry_a_refusal():
+    route = respx.post(URL).mock(return_value=httpx.Response(422, text="nope"))
+    with pytest.raises(Rejected):
+        asyncio.run(post_json(URL, {}, {}))
+    assert route.call_count == 1
+
+
+@respx.mock
+def test_post_json_rejects_an_unreadable_body():
+    respx.post(URL).mock(return_value=httpx.Response(200, text="<html>"))
+    with pytest.raises(ProviderError, match="unreadable"):
+        asyncio.run(post_json(URL, {}, {}))
 
 
 @respx.mock

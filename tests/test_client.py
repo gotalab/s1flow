@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 import pytest
-from conftest import PROJECT, ship
+from conftest import PROJECT, s1flow, ship
 
 from s1flow import AsyncClient, Client
 from s1flow.client import ModelSpec, Refusal
@@ -217,29 +217,7 @@ def test_an_extra_provider_answer_is_a_provider_failure(toml):
         Client(toml).responses.create(model=Extra(), state="x", questions={"bug": QS["bug"]})
 
 
-def test_the_client_loads_no_evaluation_stack(toml):
-    """Asking a provider of your own four types in one call loads none of numpy, scipy, sklearn, litellm, dotenv."""
-    code = (
-        "import sys\n"
-        "from s1flow import Client\n"
-        "from s1flow.questions import Boolean, Box, Choice, Score\n"
-        f"d = Client({str(toml)!r}).responses.create(model='toy', state='a bug', questions={{"
-        "'b': Boolean(instructions='?'), 'c': Choice(instructions='?', criteria={'x': None, 'y': None}),"
-        "'s': Score(instructions='?', criteria=['a', 'b', 'c']), 'x': Box(instructions='?')})\n"
-        "print(sorted(d.answers), sorted(m for m in ('numpy', 'scipy', 'sklearn', 'litellm', 'dotenv', 'PIL') if m in sys.modules))\n"
-    )
-    out = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=True, env={"PYTHONPATH": str(HERE), "PATH": ""}).stdout
-    assert out.strip() == "['b', 'c', 's', 'x'] []"
-
-
 # ---------- the base-install CLI ----------
-
-
-def s1flow(*args, cwd, env=None):
-    import os
-
-    e = {k: v for k, v in os.environ.items() if not k.startswith("S1FLOW_")} | {"PYTHONPATH": str(HERE)} | (env or {})
-    return subprocess.run([sys.executable, "-c", "from s1flow.cli import main; main()", *args], cwd=cwd, capture_output=True, text=True, env=e)
 
 
 def test_decide_with_a_model(toml):
@@ -256,6 +234,21 @@ def test_decide_with_a_model(toml):
     done = s1flow("decide", "--model", "toy", "--state", '"x"', "--choice", "Which?", cwd=cwd)  # one spelling: --questions
     assert done.returncode == 2 and "unrecognized arguments: --choice" in done.stderr
     assert s1flow("decide", "--state", "{}", "--boolean", "?", cwd=cwd).returncode == 2  # neither --model nor --policy
+
+
+def test_the_client_loads_no_evaluation_stack(toml):
+    """Asking a provider of your own four types in one call loads none of numpy, scipy, sklearn, litellm, dotenv."""
+    code = (
+        "import sys\n"
+        "from s1flow import Client\n"
+        "from s1flow.questions import Boolean, Box, Choice, Score\n"
+        f"d = Client({str(toml)!r}).responses.create(model='toy', state='a bug', questions={{"
+        "'b': Boolean(instructions='?'), 'c': Choice(instructions='?', criteria={'x': None, 'y': None}),"
+        "'s': Score(instructions='?', criteria=['a', 'b', 'c']), 'x': Box(instructions='?')})\n"
+        "print(sorted(d.answers), sorted(m for m in ('numpy', 'scipy', 'sklearn', 'litellm', 'dotenv', 'PIL') if m in sys.modules))\n"
+    )
+    out = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=True, env={"PYTHONPATH": str(HERE), "PATH": ""}).stdout
+    assert out.strip() == "['b', 'c', 's', 'x'] []"
 
 
 def test_decide_with_a_policy_and_record_feedback(tmp_path, monkeypatch):
@@ -342,23 +335,11 @@ def test_help_on_the_base_install_lists_what_it_runs():
         done = run(*args)
         assert done.returncode == code and "decide" in done.stdout and "feedback" in done.stdout and "s1flow[eval]" in done.stdout
     done = run("report", "x")
-    assert done.returncode == 2 and "needs s1flow[eval]" in done.stderr and "need only s1flow" in done.stderr
+    assert done.returncode == 2 and done.stdout == "" and done.stderr.count("\n") == 1
+    assert "needs s1flow[eval]" in done.stderr and "need only s1flow" in done.stderr
 
 
-@pytest.mark.parametrize('answered_by', ['', ' \t\n'])
-def test_blank_answering_model_is_a_provider_failure(toml, answered_by):
-    from s1flow.client import BooleanAnswer, Response
-
-    class BlankIdentity:
-        id, concurrency = 'blank', 1
-        capabilities = Client(toml).connections.build('toy').capabilities
-        async def decide(self, state, questions, *, options=None):
-            return Response(answers={'bug': BooleanAnswer(probability=.9)}, answered_by=answered_by)
-    with pytest.raises(ProviderError, match='answered_by'):
-        Client(toml).responses.create(model=BlankIdentity(), state='bug', questions={'bug': QS['bug']})
-
-
-def test_policy_validate_invalid_utf8_is_clean_cli_error(tmp_path):
+def test_a_spec_that_is_not_utf8_is_a_clean_cli_error(tmp_path):
     source = tmp_path / 'invalid.json'
     source.write_bytes(b'\xff\xfeinvalid')
     done = s1flow('adopt', '--spec', str(source), '--check', '--json', cwd=tmp_path)

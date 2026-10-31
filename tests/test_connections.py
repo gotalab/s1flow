@@ -3,13 +3,12 @@ from __future__ import annotations
 
 import asyncio
 import json
-import os
 import subprocess
-import sys
 from pathlib import Path
 
 import pytest
 
+from conftest import fake_client, runtime_spec, s1flow
 from s1flow import AsyncClient, Client, ConfigError, policies
 from s1flow.client import ModelSpec
 from s1flow.core import place
@@ -23,12 +22,6 @@ def connections(path: Path, model_id: str = "one") -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(f'default = ["toy"]\n[models.toy]\nprovider = "toy_provider:build"\nid = "{model_id}"\n')
     return path
-
-
-def cli(*args: str, cwd: Path, env: dict[str, str] | None = None) -> subprocess.CompletedProcess[str]:
-    clean = {k: v for k, v in os.environ.items() if not k.startswith("S1FLOW_")}
-    return subprocess.run([sys.executable, "-c", "from s1flow.cli import main; main()", *args], cwd=cwd,
-                          env={**clean, "PYTHONPATH": str(HERE), **(env or {})}, capture_output=True, text=True)
 
 
 @pytest.mark.parametrize("client_type", [Client, AsyncClient])
@@ -74,12 +67,10 @@ def test_missing_connection_file_names_absolute_location_and_remedy(tmp_path, mo
 
 
 def test_loaded_policy_and_log_keep_their_application_paths(tmp_path, monkeypatch):
-    from test_runtime import client as fake_client, policy as specification
-
     a, b = tmp_path / "a", tmp_path / "b"
     a.mkdir(); b.mkdir()
     store = policies.Policies(a / "policies")
-    store.write_new(specification())
+    store.write_new(runtime_spec())
     client, calls = fake_client(monkeypatch)
     monkeypatch.chdir(a)
     runtime = policies.load("ticket@v1", root=Path("policies"), client=client, log="logs/decisions.jsonl")
@@ -148,29 +139,27 @@ def test_cli_explicit_project_and_relative_connection_path(tmp_path, prefix):
     config = connections(tmp_path / "chosen.toml", "chosen")
     flags = ["--project", str(project.parent), "--connections", config.name]
     command = ["decide", "--model", "toy", "--boolean", "Is this a bug?", "--state", '"bug"', "--json"]
-    done = cli(*(flags + command if prefix else command + flags), cwd=tmp_path)
+    done = s1flow(*(flags + command if prefix else command + flags), cwd=tmp_path)
     assert done.returncode == 0, done.stderr
     assert json.loads(done.stdout)["answered_by"] == "toy:chosen-1"
 
 
 def test_missing_project_error_has_search_location_and_next_step(tmp_path):
     (tmp_path / ".git").mkdir()
-    done = cli("report", cwd=tmp_path)
+    done = s1flow("report", cwd=tmp_path)
     assert done.returncode == 2 and "Traceback" not in done.stderr
     assert str(tmp_path) in done.stderr and "--project" in done.stderr and "s1flow init" in done.stderr
 
 
 def test_nested_cli_options_and_missing_policy_authorization(tmp_path):
-    from test_runtime import policy as specification
-
     config = connections(tmp_path / "s1flow.toml")
     source = tmp_path / "policy.json"
-    source.write_text(specification().dump())
+    source.write_text(runtime_spec().dump())
     # A connection grant before a nested subcommand is retained, and binding errors stay readable.
-    done = cli("--connections", str(config), "adopt", "--spec", str(source), "--check", cwd=tmp_path)
+    done = s1flow("--connections", str(config), "adopt", "--spec", str(source), "--check", cwd=tmp_path)
     assert done.returncode == 2 and "unknown connection 'trusted'" in done.stderr
     assert "toy" in done.stderr and str(config) in done.stderr and "Traceback" not in done.stderr
-    done = cli("decide", "--policy", "ticket@v1", "--path", str(source), "--state", '"bug"',
+    done = s1flow("decide", "--policy", "ticket@v1", "--path", str(source), "--state", '"bug"',
                cwd=tmp_path)
     assert done.returncode == 2 and "needs --connections PATH" in done.stderr
 
@@ -178,7 +167,7 @@ def test_nested_cli_options_and_missing_policy_authorization(tmp_path):
 def test_explicit_missing_project_never_falls_back(tmp_path):
     connections(tmp_path / "s1flow.toml")
     missing = tmp_path / "wrong"
-    done = cli("report", "--project", str(missing), cwd=tmp_path)
+    done = s1flow("report", "--project", str(missing), cwd=tmp_path)
     assert done.returncode == 2 and str(missing) in done.stderr and "--project" in done.stderr
 
 
@@ -196,7 +185,7 @@ def test_adoption_identity_comes_from_selected_repository(tmp_path, monkeypatch)
 def test_invalid_encoding_in_connection_file_is_a_setup_error(tmp_path):
     config = tmp_path / "connections.toml"
     config.write_bytes(b"\xff")
-    done = cli("doctor", "--connections", str(config), cwd=tmp_path)
+    done = s1flow("doctor", "--connections", str(config), cwd=tmp_path)
     assert done.returncode == 2 and "Traceback" not in done.stderr
     assert str(config) in done.stderr and "--connections" in done.stderr
 
@@ -206,7 +195,7 @@ def test_invalid_dotenv_is_a_readable_setup_error(tmp_path, contents, hint):
     connections(tmp_path / "s1flow.toml")
     dotenv = tmp_path / ".env"
     dotenv.write_bytes(contents)
-    done = cli("doctor", cwd=tmp_path)
+    done = s1flow("doctor", cwd=tmp_path)
     assert done.returncode == 2 and "Traceback" not in done.stderr
     assert str(dotenv) in done.stderr and hint in done.stderr
 
@@ -265,32 +254,29 @@ def test_preloaded_lineup_is_data_and_client_alone_selects_cache(tmp_path, monke
 
 
 def test_an_app_without_a_project_adopts_with_root(tmp_path):
-    from test_runtime import policy as specification
-
     app = tmp_path / "app"
     config = app / "connections.toml"
     config.parent.mkdir()
     config.write_text('default = []\n[models.trusted]\nprovider = "toy_provider:build"\nid = "fixed-v1"\n')
     git = {"GIT_CONFIG_COUNT": "1", "GIT_CONFIG_KEY_0": "user.name", "GIT_CONFIG_VALUE_0": "App owner"}
     for v in (1, 2):
-        (app / f"v{v}.json").write_text(specification(version=v).dump())
-        done = cli("adopt", "--spec", f"v{v}.json", "--root", "policies", "--connections", "connections.toml", "--reason", f"rule {v}", cwd=app, env=git)
+        (app / f"v{v}.json").write_text(runtime_spec(version=v).dump())
+        done = s1flow("adopt", "--spec", f"v{v}.json", "--root", "policies", "--connections", "connections.toml", "--reason", f"rule {v}", cwd=app, env=git)
         assert done.returncode == 0, done.stderr
     store = policies.Policies(app / "policies")
     assert store.current("ticket") == 2 and [(h.action, h.version, h.by) for h in store.history("ticket")] == [
         ("spec", 1, "App owner"), ("spec", 2, "App owner")]
-    (app / "v3.json").write_text(specification(version=3).dump())
+    (app / "v3.json").write_text(runtime_spec(version=3).dump())
     for reason in ("", "  "):
-        done = cli("adopt", "--spec", "v3.json", "--root", "policies", "--connections", "connections.toml", "--reason", reason, cwd=app, env=git)
+        done = s1flow("adopt", "--spec", "v3.json", "--root", "policies", "--connections", "connections.toml", "--reason", reason, cwd=app, env=git)
         assert done.returncode == 2 and "give --reason a sentence" in done.stderr and "Traceback" not in done.stderr
 
 
 def test_a_switch_refused_for_a_stale_current_writes_nothing(tmp_path):
-    from test_runtime import policy as specification
     from s1flow.policies.history import Switch
 
     store = policies.Policies(tmp_path)
-    store.write_new(specification(), adopted=Switch(action="spec", version=1, previous=None, by="t", reason="t"))
+    store.write_new(runtime_spec(), adopted=Switch(action="spec", version=1, previous=None, by="t", reason="t"))
     with pytest.raises(ConfigError, match="current changed while adopting"):
-        store.write_new(specification(version=2), adopted=Switch(action="spec", version=2, previous=None, by="t", reason="t"))
+        store.write_new(runtime_spec(version=2), adopted=Switch(action="spec", version=2, previous=None, by="t", reason="t"))
     assert store.versions("ticket") == [1] and len(store.history("ticket")) == 1  # adopting again can still save v2

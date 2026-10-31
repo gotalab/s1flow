@@ -44,11 +44,19 @@ def test_the_answers_are_averaged_then_read():
     assert avg.distribution == [0.3, 0.7, 0.0] and not avg.distributed  # the second gave no distribution: one-hot
     r = c.reading(avg, DecisionRule(min_probability=0.8))
     assert (r.value, r.probability, r.below_min_probability) == ("no", 0.7, True) and r == c.read([a, b], DecisionRule(min_probability=0.8))
+    r = c.read([a], DecisionRule())
+    assert (r.value, r.probability, r.below_min_probability, r.distribution) == ("yes", 0.6, None, [0.6, 0.4, 0.0])  # no min: not judged
     p = kind_of(YES_NO, KindParams(positive="yes")).read([a, b], DecisionRule(threshold=0.25))
-    assert (p.value, p.p_positive, p.probability) == (True, 0.3, 0.3)
-    assert kind_of(Boolean(instructions="?")).read([BooleanAnswer(probability=0.2)] * 2, DecisionRule()).value is False
+    assert (p.value, p.p_positive, p.probability, p.distribution) == (True, 0.3, 0.3, None)  # read as binary: no distribution
+    b, yes = kind_of(Boolean(instructions="?")), BooleanAnswer(probability=0.7)
+    assert b.read([BooleanAnswer(probability=0.2)] * 2, DecisionRule()).value is False and b.read([yes], DecisionRule()).value is True
+    r = b.read([yes], DecisionRule(threshold=0.8))
+    assert (r.value, r.probability, r.p_positive) == (False, pytest.approx(0.3), 0.7)  # the probability of the value read
+    assert b.read([yes], DecisionRule(min_probability=0.75)).below_min_probability
     with pytest.raises(ProviderError, match="outside the contract"):
         kind_of(YES_NO).read([ChoiceAnswer(choice="bogus")], DecisionRule())
+    with pytest.raises(ProviderError, match="outside the contract"):
+        kind_of(YES_NO).read([yes], DecisionRule())  # another type's answer
     with pytest.raises(ProviderError, match="outside the contract"):
         kind_of(Boolean(instructions="?")).read([BooleanAnswer(probability=2)], DecisionRule())
 

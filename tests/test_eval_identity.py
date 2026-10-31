@@ -3,19 +3,16 @@ from __future__ import annotations
 
 import asyncio
 import json
-from pathlib import Path
 
 import pytest
 
-from conftest import make_project
-from s1flow.client.answers import BooleanAnswer, Response, Usage
+from conftest import Parity, make_project, write_cases
 from s1flow.client.identity import execution_digest, model_digest, request_digest, state_digest
 from s1flow.client.models import ModelSpec, Price
 from s1flow.client.questions import Boolean
 from s1flow.client.state import Image
 from s1flow.core.errors import ConfigError
 from s1flow.eval import evalset, metrics, records, report, run
-from s1flow.eval.cases import Case, Cases
 from s1flow.eval.evaluation import Calls
 from s1flow.eval.objectives.declare import Constraints
 from s1flow.eval.review import review
@@ -23,40 +20,18 @@ from s1flow.eval.select import rank, violations
 from s1flow.eval.task import Task
 
 
-class Fake:
-    calls = 0
-
-    def __init__(self, build):
-        self.id = 'wire:' + build.spec.id
-        self.capabilities = build.spec.capabilities
-        self.concurrency = build.spec.concurrency or 1
-
-    async def decide(self, state, questions, *, options=None):
-        Fake.calls += 1
-        # Dev is perfect; test deliberately wrong at high probability.
-        yes = state['i'] % 2 == 0
-        if state['i'] >= 8:
-            yes = not yes
-        return Response(answers={qid: BooleanAnswer(probability=.99 if yes else .01) for qid in questions},
-                        answered_by=self.id, latency_ms=10, retries=0,
-                        usage=Usage(cost_usd=.01, cost_source='billed'))
-
-
 @pytest.fixture
 def task(tmp_path):
-    project = make_project(tmp_path, {'fake': Fake})
+    project = make_project(tmp_path, {'fake': Parity})
     d = tmp_path / 'tasks' / 'identity'
     d.mkdir(parents=True)
     t = Task(id='identity', cases='cases.json', state=lambda r: r['state'], label=lambda r: r['label'],
              question=Boolean(instructions='Is even?'), project=project, dir=d)
-    cs = Cases(t.id, d, t.cases, t.state, t.label)
-    cs._all = [Case(id=str(i), state={'i': i}, label=i % 2 == 0) for i in range(12)]
-    t._cases = cs
-    (d / t.cases).write_text(json.dumps([{'id': c.id, 'state': c.state, 'label': c.label} for c in cs._all]))
+    write_cases(t, [{'id': str(i), 'state': {'i': i}, 'label': i % 2 == 0} for i in range(12)])
     sf = evalset.SplitFile(seed=1, test_share=1/3, at='', source='test',
                            assign={str(i): 'test' if i >= 8 else 'train' for i in range(12)})
     (d / 'split.json').write_text(sf.model_dump_json(by_alias=True))
-    Fake.calls = 0
+    Parity.calls = 0
     return t
 
 
@@ -144,7 +119,7 @@ def test_comparison_binds_saved_fold_values_to_the_current_data(task):
     assert row.value == row.charts.cv_value
     assert len(row.charts.threshold_sweep) >= 101
     assert sum(b.positives + b.negatives for b in row.charts.distribution) == 8
-    c = task.load_cases()._all[0]
+    c = task.load_cases().all()[0]
     change_case(task, "0", label=not c.label)
     changed = comparison.collect(task, include_charts=True)
     assert changed.data_digest != original.data_digest and changed.id != original.id
@@ -166,7 +141,7 @@ def test_unversioned_custom_code_cannot_reuse_or_create_evaluation_evidence(task
     assert go(task)['calls'] == 12
     spec = task.where.client().connections.lineup.models['fake']
     spec.provider_revision = None
-    before = Fake.calls
+    before = Parity.calls
     # Even with persisted genuine answers, unversioned custom code cannot be
     # cached, skipped, scored, or presented as a fresh measurement.
     with pytest.raises(ConfigError, match='needs provider_revision'):
@@ -177,12 +152,12 @@ def test_unversioned_custom_code_cannot_reuse_or_create_evaluation_evidence(task
     model = client.connections.build(spec, name='fake')
     with pytest.raises(ConfigError, match='needs provider_revision'):
         asyncio.run(run.call(task.where.cache_dir, client, model, {'i': 0}, task.questions(), spec=spec))
-    assert Fake.calls == before
+    assert Parity.calls == before
     # Raw historical reading remains possible without certifying its identity.
     assert len(records.read(run.run_path(task, 'base', 'fake'))) == 12
     # The direct Client remains available for unassessed application calls.
     asyncio.run(client.responses.create(model=spec, state={'i': 0}, questions=task.questions()))
-    assert Fake.calls == before + 1
+    assert Parity.calls == before + 1
 
 
 def test_cloudflare_relay_is_part_of_effective_identity(monkeypatch):
@@ -200,11 +175,11 @@ def test_concurrency_changes_invalidate_performance_without_rebuying_answers(tas
     first = execution_digest(spec, 'policy')
     assert asyncio.run(run.run_model(task, 'fake', limit=None, variant='base', concurrency=1))['calls'] == 12
     assert metrics.evaluate(task, metrics.load(task, 'base', 'fake')).calls.latency is not None
-    before = Fake.calls
+    before = Parity.calls
     assert asyncio.run(run.run_model(task, 'fake', limit=None, variant='base', concurrency=8))['skipped'] == 12
     current = metrics.evaluate(task, metrics.load(task, 'base', 'fake'))
     assert current.n == 8 and current.calls.latency is None and current.calls.case_latency_p90_ms is None
-    assert Fake.calls == before
+    assert Parity.calls == before
     task.where.lineup().models['fake'].concurrency = 8
     assert metrics.evaluate(task, metrics.load(task, 'base', 'fake')).calls.latency is None
     assert asyncio.run(run.run_model(task, 'fake', limit=None, variant='base', concurrency=8, fresh=True))['calls'] == 12
@@ -230,18 +205,12 @@ def test_comparison_identity_tracks_held_out_data_without_exposing_test_scores(t
 
 
 
-def test_the_chart_script_does_not_recompute_the_frontier():
-    """The charts draw what comparison.json says; they do not rank or build a cost/quality frontier of their own."""
-    script = (Path(__file__).resolve().parents[1] / 'plugin/skills/s1flow/scripts/charts.py').read_text()
-    assert 'const better = ' not in script and 'const front = [...rs].sort' not in script
-
-
 def test_cached_client_reports_stale_timing_without_rebuying_raw_answer(task):
     cached = run.CachedClient(task.where.client(), task.where.cache_dir)
     spec = task.where.lineup().resolved('fake').model_copy(update={'concurrency': 1})
-    before = Fake.calls
+    before = Parity.calls
     first = asyncio.run(cached.responses.create(model=spec, state={'i': 0}, questions=task.questions()))
     assert cached.responses.timing_current(first)
     response = asyncio.run(cached.responses.create(model=spec.model_copy(update={'concurrency': 8}), state={'i': 0}, questions=task.questions()))
     assert cached.responses.hit(response) and not cached.responses.timing_current(response)
-    assert Fake.calls == before + 1
+    assert Parity.calls == before + 1

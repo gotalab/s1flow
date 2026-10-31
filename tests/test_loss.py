@@ -6,9 +6,7 @@ import json
 
 import numpy as np
 import pytest
-from conftest import attach, binary_preds, labelled, make_project
-from test_objectives import declared, task
-from test_policy import Sharp
+from conftest import Sharp, attach, binary_preds, declared, labelled, make_project, task
 
 from s1flow.client import Boolean, Box
 from s1flow.core.errors import ConfigError
@@ -46,12 +44,12 @@ def test_the_table_chooses_the_rule_its_question_reads():
     assert binary.primary.sets == "threshold" and binary.primary.params == {"default": 1.0, "losses": {}, "unsure": None}
 
 
-def test_accuracy_and_expected_cost_are_the_table_by_name():
+def test_accuracy_and_expected_cost_are_the_table_by_name(tmp_path):
     rng = np.random.default_rng(3)
     y = np.array([True, False] * 150)
     p = np.clip(np.where(y, 0.65, 0.35) + rng.normal(0, 0.25, 300), 0, 1)
-    by_name = metrics.evaluate(labelled(task([ExpectedLoss(fn=5, fp=1)]), y), binary_preds(p, y)).objective
-    as_table = metrics.evaluate(labelled(task([Loss(default=0, losses={"true": {"false": 5}, "false": {"true": 1}})]), y), binary_preds(p, y)).objective
+    by_name = metrics.evaluate(labelled(task([ExpectedLoss(fn=5, fp=1)]), y, tmp_path), binary_preds(p, y)).objective
+    as_table = metrics.evaluate(labelled(task([Loss(default=0, losses={"true": {"false": 5}, "false": {"true": 1}})]), y, tmp_path), binary_preds(p, y)).objective
     assert by_name is not None and as_table is not None
     assert (by_name.value, by_name.interval, by_name.rule) == (as_table.value, as_table.interval, as_table.rule)  # bit for bit
     kind, cp = choice_pairs(["a", "b", "c", "a"] * 25, ["a", "b", "a", None] * 25)
@@ -179,11 +177,11 @@ def two_kinds_of_error():
     return y, {"a": binary_preds(a, y), "b": binary_preds(b, y)}
 
 
-def test_halving_and_doubling_the_weights_shows_they_make_the_choice():
+def test_halving_and_doubling_the_weights_shows_they_make_the_choice(tmp_path):
     y, preds = two_kinds_of_error()
     for name, pr in preds.items():
         pr.model = name
-    t = labelled(task([ExpectedLoss(fn=1, fp=1)]), y)
+    t = labelled(task([ExpectedLoss(fn=1, fp=1)]), y, tmp_path)
     moved = sensitivity(t, preds)
     assert [(r.factor, r.objective.params["fn"], r.tied) for r in moved] == [(0.5, 0.5, ["a", "b"]), (2.0, 2.0, ["a"])]
     assert decides(["a", "b"], moved) and not decides(["a", "b"], moved[:1])
@@ -191,8 +189,8 @@ def test_halving_and_doubling_the_weights_shows_they_make_the_choice():
     text = "\n".join(report.weights_table(t, *report.compared(t, evs), preds))
     assert "## With other weights" in text and "The candidates tied at the top change" in text and "halved: loss per case (miss 0.5, false alarm 1)" in text
     unweighted = task([Coverage()])
-    assert sensitivity(labelled(task([Accuracy()]), y), preds) == [] and report.weights_table(unweighted, *report.compared(unweighted, evs), preds) == []
-    table = sensitivity(labelled(task([Loss(losses={"true": {"false": 1}, "false": {"true": 1}})]), y), preds)
+    assert sensitivity(labelled(task([Accuracy()]), y, tmp_path), preds) == [] and report.weights_table(unweighted, *report.compared(unweighted, evs), preds) == []
+    table = sensitivity(labelled(task([Loss(losses={"true": {"false": 1}, "false": {"true": 1}})]), y, tmp_path), preds)
     assert [r.objective.params["losses"] for r in table] == [{"true": {"false": 0.5}, "false": {"true": 0.5}}, {"true": {"false": 2.0}, "false": {"true": 2.0}}]
 
 

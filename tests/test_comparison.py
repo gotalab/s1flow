@@ -5,70 +5,27 @@ from __future__ import annotations
 import asyncio
 import copy
 import json
-from dataclasses import replace
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
 import pytest
 
-from conftest import CONDITIONS, change_condition, cli, make_project
+from conftest import CONDITIONS, TRUTH, change_condition, cli, compare_fake, make_project, write_cases
 from s1flow.client import (
-    BooleanAnswer,
     Boolean,
     Box,
-    BoxAnswer,
-    BoxEdges,
     Choice,
-    ChoiceAnswer,
-    ModelBuild,
-    Response,
-    Usage,
 )
 from s1flow.core.errors import ConfigError
 from s1flow.eval import comparison, evalset, metrics, records, run
-from s1flow.eval.cases import Case, Cases
 from s1flow.eval.objectives.declare import AUROC, Constraints, Coverage
 from s1flow.eval.task import Task
 from s1flow.policies.kinds import KindParams
 
 
-TRUTH = BoxEdges(top=0.1, bottom=0.5, left=0.2, right=0.6)
-
-
-class CompareFake:
-    def __init__(self, build: ModelBuild, mode: str) -> None:
-        self.id = f"wire:{build.spec.id}"
-        self.capabilities = build.spec.capabilities
-        self.concurrency = 2
-        self.mode = mode
-
-    async def decide(self, state: dict[str, Any], questions: dict[str, Any], *, options: dict[str, Any] | None = None) -> Response:
-        answer: dict[str, Any] = {}
-        truth = bool(state.get("truth", False))
-        for qid, question in questions.items():
-            if question.type == "boolean":
-                probability = 0.9 if truth else 0.1
-                if self.mode == "bad":
-                    probability = 1 - probability
-                answer[qid] = BooleanAnswer(probability=probability)
-            elif question.type == "choice":
-                choice = "a" if truth else "b"
-                if self.mode == "bad":
-                    choice = "b" if truth else "a"
-                probabilities = None if self.mode == "choice-none" else {"a": 0.9 if choice == "a" else 0.1, "b": 0.9 if choice == "b" else 0.1}
-                answer[qid] = ChoiceAnswer(choice=choice, probabilities=probabilities)
-            else:
-                answer[qid] = BoxAnswer(box=TRUTH, confidence=None if self.mode == "box-none" else 0.8)
-        return Response(answers=answer, answered_by=self.id, usage=Usage(input_tokens=3, cost_usd=0.01, cost_source="billed"), latency_ms=4, retries=0)
-
-
-def fake(mode: str):
-    return lambda build: CompareFake(build, mode)
-
-
 def task_fixture(tmp_path: Path, *, question: Any, mode: str = "good", models: dict[str, Any] | None = None,
                  variants: bool = False, box_capability: bool = False) -> Task:
-    factories = models or {"fake": fake(mode)}
+    factories = models or {"fake": compare_fake(mode)}
     project = make_project(tmp_path, factories)
     if box_capability:
         config = project.root / "s1flow.toml"
@@ -78,14 +35,8 @@ def task_fixture(tmp_path: Path, *, question: Any, mode: str = "good", models: d
     variants_map = {"alt": question} if variants else {}
     task = Task(id="compare", cases="cases.json", state=lambda row: row["state"], label=lambda row: row["label"],
                 question=question, variants=variants_map, project=project, dir=directory)
-    cases = Cases(task.id, directory, task.cases, task.state, task.label)
-    cases._all = [Case(id=str(i), state={"truth": i % 2 == 1}, label=bool(i % 2 == 1)) for i in range(12)]
-    if question.type == "choice":
-        cases._all = [replace(c, label="a" if cast(dict[str, Any], c.state)["truth"] else "b") for c in cases._all]
-    if question.type == "box":
-        cases._all = [replace(c, label=TRUTH) for c in cases._all]
-    task._cases = cases
-    (directory / task.cases).write_text(json.dumps([{"id": c.id, "state": c.state, "label": c.label.model_dump() if hasattr(c.label, "model_dump") else c.label} for c in cases._all]))
+    label = {"choice": lambda truth: "a" if truth else "b", "box": lambda truth: TRUTH.model_dump()}.get(question.type, bool)
+    write_cases(task, [{"id": str(i), "state": {"truth": i % 2 == 1}, "label": label(i % 2 == 1)} for i in range(12)])
     split = evalset.SplitFile(seed=1, test_share=1 / 3, at="", source="test", assign={str(i): "test" if i >= 8 else "train" for i in range(12)})
     (directory / "split.json").write_text(split.model_dump_json(by_alias=True))
     return task
@@ -99,7 +50,7 @@ def run_saved(task: Task, models: list[str], variants: list[str] = ["base"]) -> 
 
 def test_collects_model_variants_in_neutral_model_variant_order(tmp_path):
     task = task_fixture(tmp_path, question=Boolean(instructions="truth?"),
-                        models={"good": fake("good"), "bad": fake("bad")}, variants=True)
+                        models={"good": compare_fake("good"), "bad": compare_fake("bad")}, variants=True)
     run_saved(task, ["good", "bad"], ["base", "alt"])
     got = comparison.collect(task)
     assert {row.candidate for row in got.candidates} == {"good", "good/alt", "bad", "bad/alt"}
@@ -198,7 +149,7 @@ def test_measurement_ignores_historical_distribution_rows(tmp_path):
 def test_comparison_notices_unlike_latency_provenance(tmp_path):
     from s1flow.client import Boolean
 
-    task = task_fixture(tmp_path, question=Boolean(instructions="truth?"), models={"good": fake("good"), "bad": fake("bad")})
+    task = task_fixture(tmp_path, question=Boolean(instructions="truth?"), models={"good": compare_fake("good"), "bad": compare_fake("bad")})
     run_saved(task, ["good", "bad"])
     path = run.run_path(task, "base", "bad")
     rows = [record.model_copy(update={"concurrency": 4, "retries": None}) for record in records.read(path)]
@@ -298,38 +249,25 @@ def test_a_condition_changed_while_comparing_refuses_the_comparison(tmp_path, mo
     assert str(refused.value) == f'compare: {named[0]} changed during the comparison; compare again'
 
 
-@pytest.mark.parametrize('bad_field', ['question_type', 'distribution', 'nan_curve'])
-def test_snapshot_rejects_unknown_contracts_and_nonfinite_chart_values(tmp_path, bad_field):
-    from s1flow.client import Boolean
+MUTATIONS = {
+    "unknown question type": lambda d: d.__setitem__("question_type", "score-ish"),
+    "unknown distribution": lambda d: d["candidates"][0]["measurement"].__setitem__("distribution", "bogus"),
+    "NaN in a chart": lambda d: d["candidates"][0]["charts"]["selection_sweep"][0].__setitem__("min_probability", float("nan")),
+    "NaN metric": lambda d: d["candidates"][0]["metrics"]["accuracy"].__setitem__("value", float("nan")),
+    "infinite interval": lambda d: d["candidates"][0]["metrics"]["accuracy"].__setitem__("interval", [0.0, float("inf")]),
+    "a metric without its row": lambda d: d["candidates"][0]["metrics"].pop("accuracy"),
+    "a metric defined twice": lambda d: d["metric_definitions"].append(copy.deepcopy(d["metric_definitions"][0])),
+}
 
-    task = task_fixture(tmp_path, question=Boolean(instructions='truth?'))
-    run_saved(task, ['fake'])
-    data = comparison.collect(task, include_charts=True).model_dump(mode='json', by_alias=True)
-    if bad_field == 'question_type':
-        data['question_type'] = 'score-ish'
-    elif bad_field == 'distribution':
-        data['candidates'][0]['measurement']['distribution'] = 'bogus'
-    else:
-        data['candidates'][0]['charts']['selection_sweep'][0]['min_probability'] = float('nan')
+
+@pytest.mark.parametrize("mutate", MUTATIONS.values(), ids=MUTATIONS.keys())
+def test_a_snapshot_with_unknown_contracts_nonfinite_values_or_mismatched_metric_keys_is_refused(tmp_path, mutate):
+    task = task_fixture(tmp_path, question=Boolean(instructions="truth?"))
+    run_saved(task, ["fake"])
+    data = comparison.collect(task, include_charts=True).model_dump(mode="json", by_alias=True)
+    mutate(data)
     with pytest.raises(ValueError):
         comparison.Comparison.model_validate(data)
-
-
-def test_v2_snapshot_rejects_nonfinite_metrics_and_metric_key_mismatches(tmp_path):
-    task = task_fixture(tmp_path, question=Boolean(instructions='truth?'))
-    run_saved(task, ['fake'])
-    data = comparison.collect(task).model_dump(mode='json', by_alias=True)
-    mutations = [
-        lambda value: value['candidates'][0]['metrics']['accuracy'].__setitem__('value', float('nan')),
-        lambda value: value['candidates'][0]['metrics']['accuracy'].__setitem__('interval', [0.0, float('inf')]),
-        lambda value: value['candidates'][0]['metrics'].pop('accuracy'),
-        lambda value: value['metric_definitions'].append(copy.deepcopy(value['metric_definitions'][0])),
-    ]
-    for mutate in mutations:
-        invalid = copy.deepcopy(data)
-        mutate(invalid)
-        with pytest.raises(ValueError):
-            comparison.Comparison.model_validate(invalid)
 
 
 def test_missing_run_has_unknown_actual_probability_evidence(tmp_path):

@@ -51,7 +51,7 @@ class ByQuestion:
 
 
 @pytest.fixture
-def task(tmp_path, no_ci):
+def task(tmp_path):
     p = make_project(tmp_path, {"m": ByQuestion})
     rows = [{"id": str(i), "text": CLASSES[i % 3]} for i in range(120)]
     (tmp_path / "data.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
@@ -181,7 +181,7 @@ class RefusesC(ByQuestion):
         return await super().decide(state, questions, options=options)
 
 
-def test_rank_leaves_out_a_candidate_whose_calls_failed_on_some_cases(tmp_path, no_ci):
+def test_rank_leaves_out_a_candidate_whose_calls_failed_on_some_cases(tmp_path):
     p = make_project(tmp_path, {"m": ByQuestion, "flaky": FailsOnC, "picky": RefusesC})
     rows = [{"id": str(i), "text": CLASSES[i % 3]} for i in range(120)]
     (tmp_path / "data.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
@@ -296,7 +296,7 @@ def test_production_measures_the_primarys_own_constraint(task, tmp_path):
     assert "(its lower bound is over the cap)" in md
 
 
-def test_a_log_line_in_an_older_shape_names_its_file_and_line(tmp_path):
+def test_an_invalid_log_line_names_its_file_and_line(tmp_path):
     from s1flow.core.errors import DataError
     from s1flow.eval import feedback
 

@@ -4,27 +4,12 @@ import asyncio
 import json
 
 import numpy as np
-from conftest import binary_preds, make_project
-from test_objectives import cov
+from conftest import Timed, binary_preds, cov, headline, make_project
 
 from s1flow.objectives import Constraints, Coverage
-from s1flow.client import Capabilities, ChoiceAnswer, Response
-from s1flow.eval import metrics, records, report
+from s1flow.eval import metrics, records
 from s1flow.eval import run as running
 from s1flow.eval.task import load
-
-
-class Timed:
-    """Answers right on every case after 120 ms, with one retry as a provider would report it."""
-
-    def __init__(self, b=None):
-        self.id, self.concurrency, self.capabilities = "fake:t", 4, Capabilities()
-        self.ms, self.retries = 120, 1
-
-    async def decide(self, state, questions, *, options=None):
-        q = next(iter(questions))
-        a = ChoiceAnswer(choice="wake", probabilities={"wake": 0.99, "sleep": 0.01})
-        return Response(answers={q: a}, answered_by=self.id, latency_ms=self.ms, retries=self.retries)
 
 
 def test_a_run_records_retries_and_the_concurrency_it_ran_at(tmp_path):
@@ -53,11 +38,6 @@ def test_latency_stats_show_the_tail_and_what_is_unknown():
     t = metrics.latency(preds(ms, retries=[0] * 97 + [2, None, 1]))
     assert t and t.p50_ms == 100 and t.max_ms == 1000 and t.p99_ms > 800 and (t.spread or 0) > 8
     assert t.retried == 2 and t.unrecorded == 1 and t.concurrency == [8] and t.n == 100
-
-
-def headline(t, evs):
-    """The report's headline on these evaluations, ranked as report.render ranks them."""
-    return report.headline(t, evs, *report.compared(t, evs))
 
 
 def test_a_time_budget_takes_slow_models_out_of_the_headline(tmp_path):
