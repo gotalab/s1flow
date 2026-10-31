@@ -44,10 +44,10 @@ resolved from where you ran it. Without `--project`, the CLI searches upward fro
 nearest Git root. Outside a Git repository, it only checks the current directory and `./s1flow`, so use
 `--project` when you run it from deeper inside.
 
-Evaluation commands use `--connections` when given, else the selected project's `s1flow.toml`. Running a policy
-and `feedback record` both require an explicit `--connections`.
+Evaluation commands use `--connections` when given, else the selected project's `s1flow.toml`. `decide --policy`, `feedback record`, `doctor --policy`, and `adopt --spec --root` need an explicit
+`--connections`.
 
-The CLI only loads `.env` files from the selected project or root and the directories above it, up to the
-nearest Git root. When it can't find a
+The CLI reads `.env` in the project directory (or cwd with no project) and every directory above it up to the
+Git root, nearest first; a variable already set wins. When it can't find a
 project, the error says where the search started and where it looked, and suggests `--project PATH` or
 `--connections PATH`.

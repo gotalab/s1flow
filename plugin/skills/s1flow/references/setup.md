@@ -30,8 +30,8 @@ request per host, without a key. A missing key or blocked host is a setup issue:
 `doctor` reports it as not set; leave the variable unset there and confirm with one `decide` call. s1flow sends
 without a key it cannot find, and a 401 or 403 names the key as missing.
 
-A local `.env` is a CLI convenience: it loads only from the selected project and its nearest Git ancestor, and
-never replaces a variable already set. The SDK never reads `.env`.
+A local `.env` is a CLI convenience: the CLI reads `.env` in the project directory (or cwd with no project) and
+every directory above it up to the Git root, nearest first; a variable already set wins. The SDK never reads `.env`.
 
 ## Models
 
@@ -51,8 +51,8 @@ does not change cwd, so `--connections`, `--log` and other relative paths start 
 the CLI searches upward from cwd to the nearest Git boundary; outside Git, only cwd and cwd/`s1flow`. The error
 for a missing project names where it searched and which option to pass.
 
-Connections: `--connections` when given, else the project's `s1flow.toml`; never merged. `decide --policy`,
-`feedback record` and `doctor --policy` need explicit `--connections`. `report --from` takes neither option.
+Connections: `--connections` when given, else the project's `s1flow.toml`; never merged. `decide --policy`, `feedback record`, `doctor --policy`, and `adopt --spec --root` need an explicit
+`--connections`. `report --from` takes neither option.
 
 ## Names
 

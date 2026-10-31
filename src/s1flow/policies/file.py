@@ -51,15 +51,9 @@ def policy_id(task: str, version: int) -> str:
     return f'{task}@v{version}'
 
 
-def channel_name(name: str) -> str:
-    if name != CURRENT:
-        raise ConfigError(f'channel {name!r}: the one channel is `current`; name a version (TASK@v3) for another')
-    return name
-
-
 @dataclass(frozen=True)
 class Ref:
-    """TASK@vN, or TASK / TASK@current (version None): the version current names."""
+    """TASK@vN, or TASK (version None): the version current names."""
     task: str
     version: int | None = None
 
@@ -71,20 +65,17 @@ class Ref:
     @classmethod
     def parse(cls, text: str) -> Ref:
         task, at, which = text.partition('@')
-        if (at and not which) or '@' in which:
-            raise ConfigError(f'policy {text!r}: TASK, TASK@current or TASK@vN')
+        n = version_number(which) if at else None
+        if at and n is None:
+            raise ConfigError(f'policy {text!r}: TASK (its current version) or TASK@vN')
         identifier(task)
-        if (n := version_number(which)) is not None:
-            return cls(task, version=n)
-        if which:
-            channel_name(which)
-        return cls(task)
+        return cls(task, version=n)
 
     def names(self, task: str, version: int) -> bool:
         return task == self.task and self.version in (None, version)
 
     def __str__(self) -> str:
-        return policy_id(self.task, self.version) if self.version is not None else f'{self.task}@{CURRENT}'
+        return policy_id(self.task, self.version) if self.version is not None else self.task
 
 
 def digest(data: Any) -> str:

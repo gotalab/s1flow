@@ -10,8 +10,8 @@ Ask before passing `--ci` or `--skill` (`setup.md`). A task's directory is named
 
 ## Agree on the decision
 
-Read `tasks/<id>/criteria.md` first, if it exists. One task is one decision: a boolean, or one of at most 20
-options. Write down with the person:
+Read `tasks/<id>/criteria.md` first, if it exists. One task is one decision: a boolean, or one of as many options as the
+model takes (often about 20). Write down with the person:
 
 - the question in one sentence, and for a choice, each option's meaning in one line under about 100 characters
   (it becomes the option's criteria word for word);
