@@ -1,171 +1,210 @@
 {
  "schema": "s1flow/policy-evaluation@3",
- "policy_digest": "bc99e26f75ec5ad10ba9f435c457636a9419e87321e95275cf0fc10046d5c178",
+ "policy_digest": "524b941b2c7042607516a20bd1e20279b22f46c516eb2d650418f771b8946092",
  "candidate": {
   "model": "d1@vercel",
-  "variant": "short"
+  "variant": "base"
  },
  "selection": {
-  "by": "s1flow propose",
-  "reason": "written before a person picked releases (2026-10-17): the rule's choice, kept as it was",
-  "tied": [],
+  "by": "Claude",
+  "reason": "Rebuilt on 2026-10-31 with full evidence after the legacy evaluation fields became required",
+  "tied": [
+   "d1@vercel"
+  ],
   "forced": false
  },
  "evidence": {
-  "data_sha256": "7c51e3b1536708a67b187ca111a006962bf64727e3d59368218aebe1ee482c97",
-  "execution_digest": null,
-  "input_adapter_digest": "",
-  "evaluation_contract_digest": null,
-  "git_sha": "56fe7e35d48eed1bb2e9f2c70be495ca13b6a94d",
+  "data_sha256": "2cf9c7143e5fb396d2f6756e8d9a33f9ec871b0310e51e20cb220fc64a4479c8",
+  "execution_digest": "35887170d6c22506f891ffe342ebbac3ccdf2cd41fd7f1a6afb15e535e7efb4e",
+  "input_adapter_digest": "a04f25a24d116295d0c41ed7f5ad83820938fc637801db1444d7d7f85166267c",
+  "evaluation_contract_digest": "37c020110bd52765a0c9a9cf70db4c9472b0748368141a062a89b4cd7a288b72",
+  "git_sha": "e9e4856f33e7ea2c2e6383c7e0a484016a64e95b",
   "evaluation": {
    "candidate": {
     "model": "d1@vercel",
-    "variant": "short"
+    "variant": "base"
    },
    "answered_by": "liquid/d1",
    "answered_by_all": [
     "liquid/d1"
    ],
-   "answered_ids": [],
-   "n": 65,
+   "answered_ids": [
+    "add-milk",
+    "atode-yomu",
+    "book-yes-un",
+    "cancel-scheduled-draft",
+    "change-to-three",
+    "digits-nohist",
+    "digits-verification-code",
+    "email-send-ok",
+    "haai-while-working",
+    "hotel-jaa-yasui",
+    "hungry-pending-restaurant",
+    "maaiika-accept-20h",
+    "maaiika-coupon",
+    "madaa",
+    "mouiiyo-thanks-decline",
+    "nohist-koyo-question",
+    "nohist-urgent-room",
+    "ok-ambiguous-choice",
+    "ok-info",
+    "oyasumi",
+    "plan-a-sorede",
+    "rain-bbq-musing",
+    "restaurant-iine-hold",
+    "ryokai-to-cancel-fee",
+    "ryokai-user-action",
+    "self-correct-train-date",
+    "sw-deploy-thanks",
+    "sw-dont-touch-file",
+    "sw-fix-tests-un",
+    "sw-migration-wait",
+    "sw-naming-change",
+    "tashikani-no-change",
+    "tasukaru",
+    "thanks-after-booking",
+    "thanks-plus-bus",
+    "thumbs-to-send-question",
+    "thumbs-to-sent",
+    "tickets-kaatte",
+    "un-to-checkin-info",
+    "wait-before-submit",
+    "yappari-iiya-decline-offer",
+    "yoroshiku-already-agreed"
+   ],
+   "n": 42,
    "probabilities": true,
    "failures": {
-    "calls": 240,
+    "calls": 80,
     "failed": 0,
     "unsupported": 0,
     "data_errors": 0,
     "unlabeled": 15,
-    "never_asked": null,
-    "failed_cases": null,
-    "refused_cases": null
+    "never_asked": 0,
+    "failed_cases": 0,
+    "refused_cases": 0
    },
-   "split": "stratified k-fold (65 cases, so no test set; cross-validation figures only)",
-   "split_method": "stratified-kfold",
+   "split": "leave-one-out (23 test cases of the fixed evaluation set held out)",
+   "split_method": "loo",
    "accuracy": {
-    "value": 0.9692307692307692,
+    "value": 0.9285714285714286,
     "interval": [
-     0.9230769230769231,
+     0.856547619047619,
      1.0
     ]
    },
    "measures": {
     "f1": {
-     "value": 0.975609756097561,
+     "value": 0.9454545454545454,
+     "interval": null
+    },
+    "precision": {
+     "value": 0.896551724137931,
+     "interval": null
+    },
+    "recall": {
+     "value": 1.0,
      "interval": null
     }
    },
    "auroc": {
-    "value": 0.998,
+    "value": 1.0,
     "interval": [
-     0.9906696007448517,
+     1.0,
      1.0
     ]
    },
-   "brier": 0.03314486132791392,
-   "ece": 0.0695672699309419,
+   "brier": 0.04418986898374085,
+   "ece": 0.10425263307273369,
    "selective": [
     {
      "target_accuracy": 0.95,
      "coverage": {
-      "value": 0.9846153846153847,
+      "value": 0.9761904761904762,
       "interval": [
-       0.9538461538461539,
+       0.9285714285714286,
        1.0
       ]
      },
-     "accuracy": 0.96875,
-     "n": 64,
+     "accuracy": 0.9512195121951219,
+     "n": 41,
      "errors": 2,
-     "lower": 0.9048782806496608,
-     "labels_needed": 328,
-     "min_probability": 0.5240097692949388
+     "lower": 0.85429449660857,
+     "labels_needed": 88749,
+     "min_probability": 0.5494277078760351
     }
    ],
    "error_loss_threshold": {
-    "accuracy": 0.9692307692307692,
+    "accuracy": 1.0,
     "misses": 0,
-    "false_alarms": 2,
-    "median": 0.55,
-    "chosen": 0.55
+    "false_alarms": 0,
+    "median": 0.7,
+    "chosen": 0.7
    },
    "floors": [],
    "sweep": [
     {
-     "threshold": 0.05,
-     "misses": 0,
-     "positives": 120,
-     "false_alarms": 59,
-     "negatives": 75
-    },
-    {
      "threshold": 0.1,
      "misses": 0,
-     "positives": 120,
-     "false_alarms": 40,
-     "negatives": 75
-    },
-    {
-     "threshold": 0.15,
-     "misses": 0,
-     "positives": 120,
-     "false_alarms": 25,
-     "negatives": 75
+     "positives": 26,
+     "false_alarms": 15,
+     "negatives": 16
     },
     {
      "threshold": 0.2,
      "misses": 0,
-     "positives": 120,
-     "false_alarms": 17,
-     "negatives": 75
-    },
-    {
-     "threshold": 0.25,
-     "misses": 0,
-     "positives": 120,
-     "false_alarms": 14,
-     "negatives": 75
+     "positives": 26,
+     "false_alarms": 12,
+     "negatives": 16
     },
     {
      "threshold": 0.3,
      "misses": 0,
-     "positives": 120,
-     "false_alarms": 12,
-     "negatives": 75
-    },
-    {
-     "threshold": 0.35,
-     "misses": 0,
-     "positives": 120,
-     "false_alarms": 12,
-     "negatives": 75
+     "positives": 26,
+     "false_alarms": 8,
+     "negatives": 16
     },
     {
      "threshold": 0.4,
      "misses": 0,
-     "positives": 120,
-     "false_alarms": 12,
-     "negatives": 75
+     "positives": 26,
+     "false_alarms": 4,
+     "negatives": 16
     },
     {
      "threshold": 0.5,
-     "misses": 2,
-     "positives": 120,
-     "false_alarms": 7,
-     "negatives": 75
+     "misses": 0,
+     "positives": 26,
+     "false_alarms": 3,
+     "negatives": 16
     },
     {
      "threshold": 0.6,
-     "misses": 2,
-     "positives": 120,
-     "false_alarms": 3,
-     "negatives": 75
+     "misses": 0,
+     "positives": 26,
+     "false_alarms": 0,
+     "negatives": 16
     },
     {
      "threshold": 0.7,
-     "misses": 5,
-     "positives": 120,
-     "false_alarms": 3,
-     "negatives": 75
+     "misses": 0,
+     "positives": 26,
+     "false_alarms": 0,
+     "negatives": 16
+    },
+    {
+     "threshold": 0.8,
+     "misses": 1,
+     "positives": 26,
+     "false_alarms": 0,
+     "negatives": 16
+    },
+    {
+     "threshold": 0.9,
+     "misses": 2,
+     "positives": 26,
+     "false_alarms": 0,
+     "negatives": 16
     }
    ],
    "objective": {
@@ -180,16 +219,16 @@
      "label": "coverage at 95% accuracy",
      "code_sha256": null
     },
-    "value": 0.9846153846153847,
+    "value": 0.9761904761904762,
     "interval": [
-     0.9538461538461539,
+     0.9285714285714286,
      1.0
     ],
     "rule": {
      "threshold": null,
-     "min_probability": 0.5240097692949388
+     "min_probability": 0.5494277078760351
     },
-    "constraint": 0.96875
+    "constraint": 0.9512195121951219
    },
    "tiebreak": [
     {
@@ -202,80 +241,76 @@
       "direction": "min",
       "sets": "threshold",
       "unit": "number",
-      "label": "error cost per case (miss 10, false alarm 1)",
+      "label": "loss per case (miss 10, false alarm 1)",
       "code_sha256": null
      },
-     "value": 0.03076923076923077,
+     "value": 0.07142857142857142,
      "interval": [
       0.0,
-      0.07692307692307693
+      0.14345238095238041
      ],
-     "rule": {
-      "threshold": 0.55,
-      "min_probability": null
-     },
+     "rule": null,
      "constraint": null
     }
    ],
-   "test": null,
+   "test": {
+    "n": 23,
+    "accuracy": 0.8695652173913043,
+    "coverage": 1.0,
+    "sure_accuracy": 0.8695652173913043,
+    "tuned_accuracy": 0.9565217391304348,
+    "primary": {
+     "value": 1.0,
+     "interval": [
+      1.0,
+      1.0
+     ]
+    },
+    "constraint": [
+     20,
+     23
+    ]
+   },
    "high_confidence_errors": [],
    "calls": {
     "latency": {
-     "n": 240,
-     "p50_ms": 715.85,
-     "p90_ms": 1331.2199999999998,
-     "p95_ms": 1881.794999999999,
-     "p99_ms": 3687.0089999999996,
-     "max_ms": 3857.1,
-     "spread": 5.150532932876999,
+     "n": 42,
+     "p50_ms": 238.5,
+     "p90_ms": 511.53,
+     "p95_ms": 523.3299999999999,
+     "p99_ms": 709.6809999999994,
+     "max_ms": 777.7,
+     "spread": 2.9756016771488443,
      "retried": 0,
-     "unrecorded": 240,
-     "concurrency": [],
-     "concurrency_unknown": 240
+     "concurrency": [
+      8
+     ],
+     "concurrency_unknown": 0
     },
     "case_latency_p90_ms": {
-     "value": 1331.2199999999998,
-     "interval": null
+     "value": 511.53,
+     "interval": [
+      341.81,
+      602.9999999999998
+     ]
     },
-    "throughput": null,
-    "cost_per_10k_usd": 0.09680000000000001,
-    "cost_total_usd": 0.0023232,
-    "cost_source": null,
+    "throughput": {
+     "per_min": 1624.3000443137412,
+     "seconds": 1.5514375000000002,
+     "calls": 42,
+     "concurrency": 8,
+     "measured": false
+    },
+    "cost_per_10k_usd": 0.06412380952380951,
+    "cost_total_usd": 0.00026932,
+    "cost_source": "billed",
     "cost_unknown": 0,
     "price": null
    }
   },
-  "test": null,
+  "test": "inconclusive",
   "compared": [
-   "clef-flash",
-   "clef",
-   "d1@vercel",
-   "decisions",
-   "flash-lite@vercel",
-   "haiku@vercel",
-   "jev",
-   "jev@vercel",
-   "kev@openrouter",
-   "laya@vercel",
-   "mercury@openrouter",
-   "solar@openrouter",
-   "tev1@openrouter",
-   "clef-flash · short",
-   "clef · short",
-   "d1@vercel · short",
-   "decisions · short",
-   "flash-lite@vercel · short",
-   "haiku@vercel · short",
-   "jev@vercel · short",
-   "laya@vercel · short",
-   "clef-flash · gepa-d1",
-   "clef · gepa-d1",
-   "d1@vercel · gepa-d1",
-   "decisions · gepa-d1",
-   "clef-flash · gepa-jev",
-   "clef · gepa-jev",
-   "decisions · gepa-jev",
-   "jev@vercel · gepa-jev"
+   "d1@vercel"
   ]
  },
  "answered_by": "liquid/d1"

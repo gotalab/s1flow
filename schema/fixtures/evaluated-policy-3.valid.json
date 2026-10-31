@@ -54,8 +54,9 @@
  },
  "evidence": {
   "data_sha256": "c6f1e1197c4c106c6200e817a5e92c37f814cc039d507b60a7a19341a02355f5",
-  "execution_digest": null,
-  "input_adapter_digest": "",
+  "execution_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "input_adapter_digest": "5a75b846c5a61fdba5acd7948bec8ae773e46d13783ff2cb75bebc21d2e3239f",
+  "evaluation_contract_digest": "adc48f019b8832ad754321567da8e3c78a1276be8d63cbcac95231facc98c5a8",
   "git_sha": "56fe7e35d48eed1bb2e9f2c70be495ca13b6a94d",
   "evaluation": {
    "candidate": {
@@ -75,9 +76,9 @@
     "unsupported": 0,
     "data_errors": 0,
     "unlabeled": 0,
-    "never_asked": null,
-    "failed_cases": null,
-    "refused_cases": null
+    "never_asked": 0,
+    "failed_cases": 0,
+    "refused_cases": 0
    },
    "split": "stratified k-fold (159 test cases held out from the fixed evaluation set)",
    "split_method": "stratified-kfold",
@@ -289,7 +290,6 @@
      "max_ms": 1164.9,
      "spread": 2.572065548780484,
      "retried": 0,
-     "unrecorded": 300,
      "concurrency": [
       8
      ],

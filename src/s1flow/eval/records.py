@@ -48,7 +48,7 @@ class PredictionRecord(BaseModel):
     # is what the price gave that day.
     usage: Usage | None = None
     latency_ms: float | None = None  # the answering attempt alone (Response.latency_ms)
-    retries: int | None = None  # None: not recorded (lines before 2026-10-16)
+    retries: int | None = None  # attempts before the answering one (Response.retries); on every answered record
     concurrency: int | None = None  # calls in flight to the model when this one was made
     cached: bool | None = None
     # anything else
@@ -70,6 +70,8 @@ class PredictionRecord(BaseModel):
             raise ValueError("a refusal is recorded as rejected, not answered")
         if self.outcome == "answered" and self.answered_by is None:
             raise ValueError("an answered record needs answered_by")
+        if self.outcome == "answered" and self.retries is None:
+            raise ValueError("an answered record needs retries")
         return self
 
     @property

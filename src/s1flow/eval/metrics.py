@@ -63,7 +63,7 @@ class Preds:
     distribution: DistributionEvidence | None = None  # actual current answer evidence
     latency_ms: np.ndarray = field(default_factory=lambda: np.array([]))
     case_latency_ms: np.ndarray = field(default_factory=lambda: np.array([]))  # per scored case (as ids): its call's latency, nan unrecorded
-    retries: list[int | None] = field(default_factory=list)  # per answered record, like latency_ms
+    retries: list[int] = field(default_factory=list)  # per answered record, like latency_ms
     concurrency: list[int | None] = field(default_factory=list)
     spend: cost.Spend = field(default_factory=cost.Spend)  # the answered calls' API cost
     call_ids: list[str] = field(default_factory=list)  # answered records, aligned with call timing/usage
@@ -141,7 +141,7 @@ def load(task: Task, variant: str, model: str, *, include_test: bool = False) ->
     # Reuse a genuine raw answer while refusing to carry its timing into a
     # different measurement configuration. Only --fresh can measure that width.
     if expected_concurrency is not None:
-        lines = [r if r.concurrency == expected_concurrency else r.model_copy(update={"latency_ms": None, "retries": None, "concurrency": None})
+        lines = [r if r.concurrency == expected_concurrency else r.model_copy(update={"latency_ms": None, "concurrency": None})
                  for r in lines]
     recs, chosen, versions = select(lines, prompt)
     asked = {r.id for r in lines if r.prompt == prompt}
@@ -156,7 +156,7 @@ def load(task: Task, variant: str, model: str, *, include_test: bool = False) ->
     pr = Preds(
         model=model, ids=[], pairs=measure.pairs(kind, [], []), probabilities=False,
         latency_ms=np.array([np.nan if r.latency_ms is None else r.latency_ms for r in ok]),
-        retries=[r.retries for r in ok],
+        retries=[r.retries for r in ok if r.retries is not None],  # every answered record has them
         concurrency=[r.concurrency for r in ok],
         spend=spend, call_ids=[r.id for r in ok], call_costs=[cost.recorded(r.usage, price) for r in ok],
         price=price if "list" in spend.sources else None,
@@ -556,7 +556,7 @@ def latency(pr: Preds) -> Latency | None:
     return Latency(
         n=int(ms.size), p50_ms=q[50], p90_ms=q[90], p95_ms=q[95], p99_ms=q[99], max_ms=float(ms.max()),
         spread=q[99] / q[50] if q[50] > 0 else None, retried=sum(1 for r in pr.retries if r),
-        unrecorded=sum(1 for r in pr.retries if r is None), concurrency=sorted(set(known)),
+        concurrency=sorted(set(known)),
         concurrency_unknown=len(pr.concurrency) - len(known),
     )
 

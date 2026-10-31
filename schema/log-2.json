@@ -540,16 +540,9 @@
      "type": "number"
     },
     "retries": {
-     "anyOf": [
-      {
-       "type": "integer"
-      },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "title": "Retries"
+     "default": 0,
+     "title": "Retries",
+     "type": "integer"
     },
     "provider_metadata": {
      "additionalProperties": true,

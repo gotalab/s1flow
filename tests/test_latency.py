@@ -35,9 +35,9 @@ def preds(ms, retries=None, concurrency=8):
 
 def test_latency_stats_show_the_tail_and_what_is_unknown():
     ms = [100.0] * 98 + [900.0, 1000.0]
-    t = metrics.latency(preds(ms, retries=[0] * 97 + [2, None, 1]))
+    t = metrics.latency(preds(ms, retries=[0] * 97 + [2, 0, 1]))
     assert t and t.p50_ms == 100 and t.max_ms == 1000 and t.p99_ms > 800 and (t.spread or 0) > 8
-    assert t.retried == 2 and t.unrecorded == 1 and t.concurrency == [8] and t.n == 100
+    assert t.retried == 2 and t.concurrency == [8] and t.n == 100
 
 
 def test_a_time_budget_takes_slow_models_out_of_the_headline(tmp_path):

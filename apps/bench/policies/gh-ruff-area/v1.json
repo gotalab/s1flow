@@ -19,12 +19,12 @@
    "kind": {},
    "rule": {
     "threshold": null,
-    "min_probability": 0.8717000534493162
+    "min_probability": 0.8868580450030623
    }
   }
  },
- "at": "2026-10-15T21:46:14Z",
- "s1flow_version": "0.1.0",
+ "at": "2026-10-31T13:26:41Z",
+ "s1flow_version": "0.1.0a1",
  "state_schema": {
   "type": "object",
   "properties": {
@@ -38,6 +38,7 @@
   "required": [
    "body",
    "title"
-  ]
+  ],
+  "additionalProperties": false
  }
 }

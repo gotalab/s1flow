@@ -70,9 +70,9 @@ def test_an_unrecorded_latency_is_left_out_not_zero(tmp_path):
     assert e.calls.case_latency_p90_ms is None and e.calls.latency is None
 
 
-def timed(model, cov, p90, half=10.0, cost=1.0, concurrency=4, unrecorded=0, auroc=None):
+def timed(model, cov, p90, half=10.0, cost=1.0, concurrency=4, auroc=None):
     lat = LatencyStats(n=100, p50_ms=p90 / 2, p90_ms=p90, p95_ms=p90, p99_ms=p90, max_ms=p90, spread=2.0, retried=0,
-                       unrecorded=unrecorded, concurrency=[concurrency], concurrency_unknown=0)
+                       concurrency=[concurrency], concurrency_unknown=0)
     e = ev(model, [scored(Coverage(), cov), *([] if auroc is None else [scored(AUROC(), auroc, 0.01)])], cost=cost)
     return e.model_copy(update={"answered_ids": [str(i) for i in range(e.n)], "calls": e.calls.model_copy(update={"latency": lat, "case_latency_p90_ms": Estimate(value=p90, interval=(p90 - half, p90 + half))})})
 
@@ -120,8 +120,6 @@ def test_latency_measured_unalike_is_skipped_and_says_how_to_measure_again():
     why = unlike_among_tied(ranked, [a, b])
     assert why is not None and why.concurrencies == [1, 8]
     assert "concurrency 1, 8" in why.en("t") and "--concurrency N" in why.en("t") and "same N for all" in why.en("t")
-    old = timed("old", 0.79, 100, cost=5.0, unrecorded=3)  # saved before retries were recorded
-    assert order([timed("a", 0.80, 300, cost=0.1), old], ["latency", "cost"]) == ["a", "old"] and unlike([a, old]).unrecorded == ["old"]  # type: ignore[union-attr]
 
 
 def test_the_report_names_what_ordered_the_tie_and_what_was_skipped():

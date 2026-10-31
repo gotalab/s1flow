@@ -54,14 +54,15 @@ def task(tmp_path):
 
 
 def policy(version: int, model: str, question=QUESTION) -> EvaluatedPolicy:
-    e = Evaluation(candidate=Candidate(model=model), answered_by=model, answered_by_all=[model], n=120, probabilities=True,
-                   failures=Failures(calls=120, failed=0, unsupported=0, data_errors=0, unlabeled=0))
+    e = Evaluation(candidate=Candidate(model=model), answered_by=model, answered_by_all=[model], answered_ids=[], n=120, probabilities=True,
+                   failures=Failures(calls=120, failed=0, unsupported=0, data_errors=0, unlabeled=0, never_asked=0, failed_cases=0, refused_cases=0))
     return EvaluatedPolicy(
         spec=PolicySpec(task="toy", version=version, connection=model, model_id=model,
                         questions={"q": asked(question, DecisionRule(min_probability=0.9))}, state_schema=schema_of([{"text": "a"}])),
         candidate=Candidate(model=model), answered_by=model,
         selection=Selection(by="t", reason="t", tied=[model]),
-        evidence=Evidence(data_sha256="0", execution_digest=None, evaluation=e, test=None, compared=[model]),
+        evidence=Evidence(data_sha256="0", execution_digest="", input_adapter_digest="", evaluation_contract_digest="",  # set by ship
+                          evaluation=e, test=None, compared=[model]),
     )
 
 

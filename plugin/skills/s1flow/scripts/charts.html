@@ -262,7 +262,7 @@ function renderTable() {
 function conditionNotes() {
   const parts=[];const all=rows.filter(r=>r.calls?.latency).map(r=>r.calls.latency);const concurrencies=new Set(all.flatMap(l=>l.concurrency||[]));
   if(concurrencies.size>1)parts.push('Different recorded concurrency levels; latency is not a controlled speed comparison.');
-  if(all.some(l=>l.unrecorded||l.concurrency_unknown))parts.push('Some retry or concurrency records are missing.');
+  if(all.some(l=>l.concurrency_unknown))parts.push('Some concurrency records are missing.');
   return parts.join(' ');
 }
 function renderDiagnostics() {

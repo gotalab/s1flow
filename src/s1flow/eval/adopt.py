@@ -56,7 +56,7 @@ def validate_evidence(task: Task, policy: EvaluatedPolicy) -> None:
     if policy.evidence.input_adapter_digest != task.input_adapter_digest:
         raise ConfigError(f"{policy.spec.ref}: input adapter changed; measure and adopt again")
     if policy.evidence.evaluation_contract_digest != task.evaluation_contract_digest:
-        raise ConfigError(f"{policy.spec.ref}: evaluation contract changed or is unknown; rescore and adopt again")
+        raise ConfigError(f"{policy.spec.ref}: evaluation contract changed; rescore and adopt again")
     if task.data_digest != policy.evidence.data_sha256:
         raise ConfigError(f"{policy.spec.ref}: input data or labels changed; measure and adopt again")
 
@@ -153,7 +153,7 @@ class Shortlist:
             e, model = self.evaluations[x.candidate], next(c[1] for c in self.cands if c[0] == x.candidate)
             spec = models.retrieve(model).spec
             out.append(Row(
-                candidate=x.candidate, n=e.n, refused=e.failures.refused_cases or 0, tied=x.tied_with_best,
+                candidate=x.candidate, n=e.n, refused=e.failures.refused_cases, tied=x.tied_with_best,
                 excluded=x.excluded if x.excluded or x.candidate in fits else ["no value on the primary objective"],
                 scores=x.scores, calls=e.calls,
                 pin=pin(spec, model), per_minute=models.resolved(model).capabilities.per_minute,

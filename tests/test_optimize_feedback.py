@@ -205,13 +205,13 @@ def production_policy(task):
     spec = PolicySpec(task="toy", version=1, connection="m", model_id="m",
                       questions={"q": asked(task.question, DecisionRule(threshold=0.5) if task.kind.binary else DecisionRule(min_probability=0.9), task.kind_params)})
     runtime = DecisionPolicy(spec, client=task.where.client())
-    e = Evaluation(candidate=Candidate(model="m"), answered_by="byq-1", answered_by_all=["byq-1"], n=120, probabilities=True,
-                   failures=Failures(calls=120, failed=0, unsupported=0, data_errors=0, unlabeled=0),
+    e = Evaluation(candidate=Candidate(model="m"), answered_by="byq-1", answered_by_all=["byq-1"], answered_ids=[], n=120, probabilities=True,
+                   failures=Failures(calls=120, failed=0, unsupported=0, data_errors=0, unlabeled=0, never_asked=0, failed_cases=0, refused_cases=0),
                    objective=ObjectiveScore(objective=task.primary, value=0.8, interval=(0.7, 0.9)))
     r = EvaluatedPolicy(spec=spec, candidate=Candidate(model="m"), answered_by="byq-1",
                         selection=Selection(by="t", reason="t", tied=["m"]),
-                        evidence=Evidence(data_sha256=task.data_digest, execution_digest=runtime.execution_digest,
-                                          evaluation=e, test=None, compared=["m"]))
+                        evidence=Evidence(data_sha256=task.data_digest, execution_digest=runtime.execution_digest, input_adapter_digest=task.input_adapter_digest,
+                                          evaluation_contract_digest=task.evaluation_contract_digest, evaluation=e, test=None, compared=["m"]))
     task.policies.write_evaluated(r)
     return r
 

@@ -50,7 +50,7 @@ held-out test share and never marks a pick. Text, JSON and the chart page read t
   used, such as latency measured at different concurrency) and `why`. With no tiebreak, the tied are listed by
   name, unordered.
 - Scores use answered cases only. Refusals are counted apart; read the answered count beside the score.
-- Latency compares only between candidates run at one concurrency with retries recorded; otherwise `report` says
+- Latency compares only between candidates run at one concurrency; otherwise `report` says
   so and how to run them again.
 
 ### Showing tied candidates

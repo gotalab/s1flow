@@ -236,7 +236,7 @@ def test_custom_code_change_invalidates_adoption_evidence(tmp_path):
         adopt.adopt(changed, "m", "test", "edited code", listed=listed)
 
 
-def test_evaluation_contract_ignores_usage_history_but_rejects_unknown_evidence(tmp_path):
+def test_evaluation_contract_ignores_usage_history_but_rejects_changed_evidence(tmp_path):
     from s1flow.core.errors import ConfigError
     from s1flow.eval import adopt, evalset
     from s1flow.eval.objectives.declare import ExpectedLoss
@@ -249,9 +249,9 @@ def test_evaluation_contract_ignores_usage_history_but_rejects_unknown_evidence(
     evalset.path(task).write_text(json.dumps(saved))
     assert task.evaluation_contract_digest == before
     adopt.validate_evidence(task, policy)
-    unknown = policy.model_copy(update={"evidence": policy.evidence.model_copy(update={"evaluation_contract_digest": None})})
-    with pytest.raises(ConfigError, match="evaluation contract changed or is unknown"):
-        adopt.validate_evidence(task, unknown)
+    changed = policy.model_copy(update={"evidence": policy.evidence.model_copy(update={"evaluation_contract_digest": "another"})})
+    with pytest.raises(ConfigError, match="evaluation contract changed"):
+        adopt.validate_evidence(task, changed)
 
 
 def test_evaluation_implementation_change_invalidates_shortlist_and_evidence(tmp_path, monkeypatch):

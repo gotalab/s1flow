@@ -13,9 +13,9 @@
  },
  "evidence": {
   "data_sha256": "7c51e3b1536708a67b187ca111a006962bf64727e3d59368218aebe1ee482c97",
-  "execution_digest": null,
-  "input_adapter_digest": "",
-  "evaluation_contract_digest": null,
+  "execution_digest": "53cc66f036d7509b44b975bd799eff4152b085fc64bd9ac28e557b3a146f96b5",
+  "input_adapter_digest": "a04f25a24d116295d0c41ed7f5ad83820938fc637801db1444d7d7f85166267c",
+  "evaluation_contract_digest": "29e5cf1bd801be6c882a3b796e14f99497706f624d4dcdcc94f71683740da317",
   "git_sha": "56fe7e35d48eed1bb2e9f2c70be495ca13b6a94d",
   "evaluation": {
    "candidate": {
@@ -35,9 +35,9 @@
     "unsupported": 0,
     "data_errors": 0,
     "unlabeled": 15,
-    "never_asked": null,
-    "failed_cases": null,
-    "refused_cases": null
+    "never_asked": 0,
+    "failed_cases": 0,
+    "refused_cases": 0
    },
    "split": "stratified k-fold (65 cases, so no test set; cross-validation figures only)",
    "split_method": "stratified-kfold",
@@ -229,7 +229,6 @@
      "max_ms": 3857.1,
      "spread": 5.150532932876999,
      "retried": 0,
-     "unrecorded": 240,
      "concurrency": [],
      "concurrency_unknown": 240
     },

@@ -55,8 +55,8 @@ def fake(b: ModelBuild) -> Fake:
 
 
 def evaluation(model: str = "fake") -> Evaluation:
-    return Evaluation(candidate=Candidate(model=model), answered_by="fake-1", answered_by_all=["fake-1"], n=10, probabilities=True,
-                      failures=Failures(calls=10, failed=0, unsupported=0, data_errors=0, unlabeled=0))
+    return Evaluation(candidate=Candidate(model=model), answered_by="fake-1", answered_by_all=["fake-1"], answered_ids=[], n=10, probabilities=True,
+                      failures=Failures(calls=10, failed=0, unsupported=0, data_errors=0, unlabeled=0, never_asked=0, failed_cases=0, refused_cases=0))
 
 
 def policy_client():
@@ -74,7 +74,7 @@ def policy(task="t", version=1, rule=DecisionRule(min_probability=0.8), test=Non
         spec=spec, candidate=Candidate(model="fake"), answered_by="fake-1",
         selection=Selection(by="t", reason="t", tied=["fake"]),
         evidence=Evidence(data_sha256="0", execution_digest=execution_digest(policy_client().connections.resolved("fake"), spec.digest),
-                          evaluation=evaluation(), test=test, compared=["fake"]),
+                          input_adapter_digest="adapter", evaluation_contract_digest="contract", evaluation=evaluation(), test=test, compared=["fake"]),
     )
 
 

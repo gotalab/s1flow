@@ -1,6 +1,7 @@
 # The showcase of the s1flow check Action on s1flow's own evaluation project (apps/bench): a PR that changes
 # gh-ruff-area's question, policies or the model line-up checks 40 of its test cases and keeps one comment on
-# the PR; after the merge, main checks every test case. gh-ruff-area is the one task with a current policy.
+# the PR; after the merge, main checks every test case. It checks gh-ruff-area alone (on AI Gateway); the other
+# tasks with a current policy, gh-ruff-kind and nod-wake, are not checked here.
 # The weekly and manual runs keep main's answer cache warm, which PRs and s1flow-guard.yml read.
 name: s1flow check
 on:

@@ -20,6 +20,8 @@
 - `feedback measure` only measures; `--add` also adds the cases.
 - `optimize` runs the optimizer task.py names (`Gepa` by default).
 - Files now read only as `s1flow/policy-evaluation@3`, `s1flow/split@2`, `s1flow/optimized@2` and `s1flow/run@2`.
+- Evaluation records, runs and cached answers written before retries, case counts and evidence digests were
+  recorded are no longer read.
 - `S1FLOW_CONNECTIONS` is gone: pass `--connections PATH`, else the project's `s1flow.toml` is read.
 - `s1flow init` inside a project adds to it. The Agent Skill is one `SKILL.md` and six references by stage.
 

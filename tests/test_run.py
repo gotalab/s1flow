@@ -20,7 +20,7 @@ def line(id, answered_by="jev-1.13.0", at="2026-10-07", prompt="p1", **kw):
     if kw:
         r |= {"outcome": "failed"}
     else:
-        r |= {"outcome": "answered", "answer": {"type": "choice", "choice": "a"}, "answered_by": answered_by, "request_digest": "d"}
+        r |= {"outcome": "answered", "answer": {"type": "choice", "choice": "a"}, "answered_by": answered_by, "request_digest": "d", "retries": 0}
     return PredictionRecord.model_validate(r)
 
 
