@@ -10,12 +10,6 @@ def run(code: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run([sys.executable, "-c", code], capture_output=True, text=True)
 
 
-def test_the_cli_without_eval_says_what_to_install():
-    done = run("import sys; sys.modules['numpy'] = None; sys.argv = ['s1flow', 'report', 'x']; from s1flow.cli import main; main()")
-    assert done.returncode == 2 and done.stdout == ""
-    assert done.stderr.count("\n") == 1 and "s1flow[eval]" in done.stderr
-
-
 def test_an_llm_model_without_litellm_is_a_config_error():
     done = run(
         "import sys; sys.modules['litellm'] = None\n"
@@ -44,14 +38,15 @@ def test_decision_model_providers_build_without_litellm():
 
 
 def test_runtime_calls_and_logs_without_a_project_or_evaluation(tmp_path):
-    """Both runtime entry points work even when evaluation and every extra are unavailable."""
+    """Both runtime entry points work, all four question types in one call, even when evaluation and every extra
+    are unavailable: importing one of them fails."""
     code = dedent('''\
         import importlib.abc
         import json
         import sys
         from pathlib import Path
 
-        forbidden = ("s1flow.eval", "s1flow.project", "numpy", "scipy", "sklearn", "litellm", "gepa", "PIL", "opentelemetry")
+        forbidden = ("s1flow.eval", "s1flow.project", "numpy", "scipy", "sklearn", "litellm", "gepa", "PIL", "opentelemetry", "dotenv")
         class NoExtras(importlib.abc.MetaPathFinder):
             def find_spec(self, fullname, path=None, target=None):
                 if any(fullname == p or fullname.startswith(p + ".") for p in forbidden):
@@ -62,13 +57,15 @@ def test_runtime_calls_and_logs_without_a_project_or_evaluation(tmp_path):
         from s1flow import Client, policies
         from s1flow.client import ModelSpec
         from s1flow.client.lineup import Lineup
-        from s1flow.questions import Boolean
+        from s1flow.questions import Boolean, Box, Choice, Score
 
         model = ModelSpec(provider="toy_provider:build", id="standalone")
         question = Boolean(instructions="Is this a bug?")
         client = Client(connections=Lineup(default=[], models={"standalone": model}))
-        result = client.responses.create(model=model, state="a bug", questions={"bug": question})
-        assert result.answers["bug"].probability == 0.9
+        result = client.responses.create(model=model, state="a bug", questions={
+            "bug": question, "area": Choice(instructions="?", criteria={"x": None, "y": None}),
+            "level": Score(instructions="?", criteria=["a", "b", "c"]), "where": Box(instructions="?")})
+        assert sorted(result.answers) == ["area", "bug", "level", "where"] and result.answers["bug"].probability == 0.9
 
         file = policies.PolicySpec(
             s1flow_version="0.1.0", task="bug", version=1, at="2026-10-24",

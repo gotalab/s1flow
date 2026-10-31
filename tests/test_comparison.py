@@ -279,38 +279,25 @@ def test_comparison_identity_changes_with_effective_connection_conditions(tmp_pa
     assert after.id != before.id
 
 
-@pytest.mark.parametrize('bad_field', ['question_type', 'distribution', 'nan_curve'])
-def test_snapshot_rejects_unknown_contracts_and_nonfinite_chart_values(tmp_path, bad_field):
-    from s1flow.client import Boolean
+MUTATIONS = {
+    "unknown question type": lambda d: d.__setitem__("question_type", "score-ish"),
+    "unknown distribution": lambda d: d["candidates"][0]["measurement"].__setitem__("distribution", "bogus"),
+    "NaN in a chart": lambda d: d["candidates"][0]["charts"]["selection_sweep"][0].__setitem__("min_probability", float("nan")),
+    "NaN metric": lambda d: d["candidates"][0]["metrics"]["accuracy"].__setitem__("value", float("nan")),
+    "infinite interval": lambda d: d["candidates"][0]["metrics"]["accuracy"].__setitem__("interval", [0.0, float("inf")]),
+    "a metric without its row": lambda d: d["candidates"][0]["metrics"].pop("accuracy"),
+    "a metric defined twice": lambda d: d["metric_definitions"].append(copy.deepcopy(d["metric_definitions"][0])),
+}
 
-    task = task_fixture(tmp_path, question=Boolean(instructions='truth?'))
-    run_saved(task, ['fake'])
-    data = comparison.collect(task, include_charts=True).model_dump(mode='json', by_alias=True)
-    if bad_field == 'question_type':
-        data['question_type'] = 'score-ish'
-    elif bad_field == 'distribution':
-        data['candidates'][0]['measurement']['distribution'] = 'bogus'
-    else:
-        data['candidates'][0]['charts']['selection_sweep'][0]['min_probability'] = float('nan')
+
+@pytest.mark.parametrize("mutate", MUTATIONS.values(), ids=MUTATIONS.keys())
+def test_a_snapshot_with_unknown_contracts_nonfinite_values_or_mismatched_metric_keys_is_refused(tmp_path, mutate):
+    task = task_fixture(tmp_path, question=Boolean(instructions="truth?"))
+    run_saved(task, ["fake"])
+    data = comparison.collect(task, include_charts=True).model_dump(mode="json", by_alias=True)
+    mutate(data)
     with pytest.raises(ValueError):
         comparison.Comparison.model_validate(data)
-
-
-def test_v2_snapshot_rejects_nonfinite_metrics_and_metric_key_mismatches(tmp_path):
-    task = task_fixture(tmp_path, question=Boolean(instructions='truth?'))
-    run_saved(task, ['fake'])
-    data = comparison.collect(task).model_dump(mode='json', by_alias=True)
-    mutations = [
-        lambda value: value['candidates'][0]['metrics']['accuracy'].__setitem__('value', float('nan')),
-        lambda value: value['candidates'][0]['metrics']['accuracy'].__setitem__('interval', [0.0, float('inf')]),
-        lambda value: value['candidates'][0]['metrics'].pop('accuracy'),
-        lambda value: value['metric_definitions'].append(copy.deepcopy(value['metric_definitions'][0])),
-    ]
-    for mutate in mutations:
-        invalid = copy.deepcopy(data)
-        mutate(invalid)
-        with pytest.raises(ValueError):
-            comparison.Comparison.model_validate(invalid)
 
 
 def test_missing_run_has_unknown_actual_probability_evidence(tmp_path):

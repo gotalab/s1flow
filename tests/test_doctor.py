@@ -203,17 +203,20 @@ def test_doctor_runs_on_the_base_install(project):
     assert done.stderr.splitlines() == ["problem: flash needs litellm: install s1flow[llm]"]
 
 
-def test_doctor_names_a_project_skill_an_older_s1flow_wrote(project):
+def test_doctor_names_a_project_skill_an_older_s1flow_wrote(project, monkeypatch):
+    """What skill.stale says (test_skill pins its text), one `skill:` line each."""
     from s1flow import skill
 
     (project / ".git").mkdir()
     copy = project / ".claude" / "skills" / "s1flow"
     copy.mkdir(parents=True)
     (copy / skill.MARKER).write_text(json.dumps({"schema": "s1flow/skill-marker@1", "s1flow_version": "0.0.1", "files": {}}))
+    monkeypatch.chdir(project)
+    stale = skill.stale()
     done = s1flow("doctor", "--models", "toy", cwd=project)
-    assert done.returncode == 0
-    assert done.stdout.splitlines()[-1] == f"skill: .claude/skills/s1flow is from s1flow 0.0.1, this is {skill.version()}: s1flow init --skill --force updates it"
-    assert json.loads(s1flow("doctor", "--models", "toy", "--json", cwd=project).stdout)["skill"] == [done.stdout.splitlines()[-1].removeprefix("skill: ")]
+    assert done.returncode == 0 and stale
+    assert [line for line in done.stdout.splitlines() if line.startswith("skill: ")] == [f"skill: {line}" for line in stale]
+    assert json.loads(s1flow("doctor", "--models", "toy", "--json", cwd=project).stdout)["skill"] == stale
 
 
 def test_a_missing_key_says_where_to_get_it():

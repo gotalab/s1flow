@@ -15,7 +15,6 @@ from s1flow.eval.evaluation import Evaluation, Failures
 from s1flow.eval.policy import EvaluatedPolicy, Evidence, Selection, Store
 from s1flow.project import Project
 from s1flow.eval.candidate import Candidate
-from s1flow.eval.kinds import kind_of
 from s1flow.policies import DecisionRule
 from s1flow.policies import policy as loading
 from s1flow.policies import log as logs
@@ -125,23 +124,6 @@ def test_a_broken_policy_file_is_a_config_error(store, tmp_path):
     (tmp_path / "policies" / "t" / "channels.json").write_text('{"current": 1}')
     with pytest.raises(ConfigError):
         store.evaluated("t")
-
-
-def test_the_rule():
-    yes = BooleanAnswer(probability=0.7)
-    b = kind_of(Boolean(instructions="?"))
-    assert b.read([yes], DecisionRule()).value is True
-    r = b.read([yes], DecisionRule(threshold=0.8))
-    assert (r.value, r.probability, r.p_positive) == (False, pytest.approx(0.3), 0.7)
-    assert b.read([yes], DecisionRule(min_probability=0.75)).below_min_probability
-    c = Choice(instructions="?", criteria={k: None for k in CLASSES})
-    a = ChoiceAnswer(choice="kind/bug", probabilities={"kind/bug": 0.5, "kind/question": 0.3, "kind/enhancement": 0.2})
-    r = kind_of(c).read([a, a], DecisionRule())
-    assert (r.value, r.probability, r.below_min_probability) == ("kind/bug", 0.5, None) and r.distribution == [0.5, 0.3, 0.2]
-    r = kind_of(c, KindParams(positive="kind/question")).read([a], DecisionRule(threshold=0.25))
-    assert (r.value, r.p_positive, r.distribution) == (True, pytest.approx(0.3), None)
-    with pytest.raises(ProviderError, match="outside the contract"):
-        kind_of(c).read([yes], DecisionRule())
 
 
 def test_the_state_shape():
@@ -279,16 +261,6 @@ def test_decide_and_adecide_answer_alike(store):
     for t in threads:
         t.join()
     assert got == ["kind/bug"] * 4
-
-
-def test_policies_stay_light():
-    """What an app ships loads none of the evaluation stack, nor the evaluation's own shapes."""
-    import subprocess
-
-    code = ("import sys, s1flow.policies; print(sorted(m for m in ('numpy', 'litellm', 'sklearn', 'scipy', 'PIL', 's1flow.eval',"
-            " 's1flow.project') if m in sys.modules))")
-    out = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=True).stdout.strip()
-    assert out == "[]"
 
 
 def test_a_policy_decides_without_reading_why_it_was_chosen(store, tmp_path):

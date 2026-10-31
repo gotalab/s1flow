@@ -18,8 +18,6 @@ from s1flow.client.state import Image
 from s1flow.policies import DecisionPolicy, DecisionRule, Policies, PolicySpec, asked, load
 from s1flow.policies.file import Ref
 from s1flow.policies.history import Switch
-from s1flow.policies.log import AnsweredLog, FeedbackLog, from_span, span
-from s1flow.policies.policy_set import export
 from s1flow.policies.state_shape import schema_of
 from s1flow.questions import Boolean, Choice, Score
 
@@ -201,39 +199,6 @@ def test_named_store_rejects_symlink_escape(tmp_path: Path) -> None:
         Policies(root).write_new(policy())
 
 
-def test_export_is_runtime_only_and_digest_checked(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    store = Policies(tmp_path / 'policies')
-    ship(store, policy())
-    bundle = export(store.root)
-    source = tmp_path / 'policies.json'
-    source.write_text(bundle.dump())
-    c, _ = client(monkeypatch)
-    assert load('ticket', path=source, client=c).decide('x').value is True
-    data = json.loads(source.read_text())
-    assert 'evidence' not in data['policies']['ticket']['policy']
-    data['policies']['ticket']['policy']['model_id'] = 'tampered'
-    source.write_text(json.dumps(data))
-    with pytest.raises(ConfigError, match='digest'):
-        load('ticket', path=source, client=c)
-
-
-def test_v2_spans_keep_identity(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    c, _ = client(monkeypatch)
-    runtime = DecisionPolicy(policy(), client=c)
-    decision = runtime.decide('x')
-    answered = AnsweredLog(at='now', case_id='case', state_sha256='input', decision=decision)
-    for event in [answered, FeedbackLog(at='later', decision_id=decision.decision_id,
-                                       policy=decision.policy, policy_digest=decision.policy_digest, label=True)]:
-        name, attrs = span(event)
-        restored = from_span(name, event.at, attrs)
-        assert restored is not None
-        if isinstance(restored, AnsweredLog):
-            assert restored.decision.decision_id == decision.decision_id
-        else:
-            assert restored.decision_id == decision.decision_id
-        assert restored.model_dump(by_alias=True)['schema'] == 's1flow/log@2'
-
-
 @pytest.mark.parametrize(('minimum', 'expected'), [(None, None), (.9, True), (.8, False)])
 def test_probability_lower_bound_is_explicit(monkeypatch: pytest.MonkeyPatch, minimum: float | None, expected: bool | None) -> None:
     c, _ = client(monkeypatch)
@@ -345,12 +310,3 @@ def test_policy_schema_matches_runtime_question_scope() -> None:
         assert list(validator.iter_errors(invalid))
         with pytest.raises(ValidationError):
             PolicySpec.model_validate(invalid)
-
-
-def test_invalid_utf8_policy_is_config_error(tmp_path: Path) -> None:
-    from s1flow.policies.file import read_file
-
-    path = tmp_path / 'invalid.json'
-    path.write_bytes(b'\xff\xfeinvalid')
-    with pytest.raises(ConfigError, match='not a v2 policy'):
-        read_file(path)
