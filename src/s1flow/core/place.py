@@ -32,13 +32,15 @@ def absolute(path: str | Path, what: str) -> Path:
         raise ConfigError(f"cannot resolve {what} path {path!s}: {e}") from None
 
 
+def git_root(start: Path) -> Path | None:
+    """The nearest directory at or above the absolute path `start` that holds .git; None outside Git."""
+    return next((d for d in [start, *start.parents] if (d / ".git").exists()), None)
+
+
 def search_dirs(start: Path) -> list[Path]:
     """Directories inside the nearest Git root; without Git, just start."""
-    parents = [start, *start.parents]
-    for i, directory in enumerate(parents):
-        if (directory / ".git").exists():
-            return parents[:i + 1]
-    return [start]
+    top = git_root(start)
+    return [start] if top is None else [d for d in [start, *start.parents] if d.is_relative_to(top)]
 
 
 def _at(directory: Path) -> Path | None:
@@ -51,11 +53,6 @@ def _at(directory: Path) -> Path | None:
 def find(start: Path | None = None) -> Path | None:
     here = absolute(start or Path.cwd(), "project")
     return next((found for directory in search_dirs(here) if (found := _at(directory)) is not None), None)
-
-
-def root(start: Path | None = None) -> Path | None:
-    """Bounded discovery, for callers that can operate without a project."""
-    return find(start)
 
 
 def project(path: Path | None = None, *, required: bool = True) -> Path | None:

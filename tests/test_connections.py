@@ -129,16 +129,16 @@ def test_project_search_stops_at_git_boundary(tmp_path):
     (repository / ".git").mkdir(parents=True)
     nested = repository / "src" / "feature"
     nested.mkdir(parents=True)
-    assert place.root(nested) is None
+    assert place.find(nested) is None
     connections(repository / "s1flow" / "s1flow.toml", "inside")
-    assert place.root(nested) == repository / "s1flow"
+    assert place.find(nested) == repository / "s1flow"
 
 
 def test_without_git_discovery_does_not_take_parent_settings(tmp_path):
     connections(tmp_path / "s1flow.toml")
     child = tmp_path / "another-app"
     child.mkdir()
-    assert place.root(child) is None
+    assert place.find(child) is None
 
 
 @pytest.mark.parametrize("prefix", [True, False])
@@ -212,19 +212,20 @@ def test_invalid_dotenv_is_a_readable_setup_error(tmp_path, contents, hint):
 
 
 def test_supplied_lineup_uses_each_clients_fixed_cache_path(tmp_path, monkeypatch):
+    from s1flow.client import _client
     from s1flow.client import lineup as connection_files
-    from s1flow.client import providers
+    from s1flow.client.models import ModelBuild
     from toy_provider import build
 
     a, b = tmp_path / "a", tmp_path / "b"
     a.mkdir(); b.mkdir()
     seen = []
 
-    def factory(request):
-        seen.append(request.cache_dir)
-        return build(request)
+    def build_one(name, spec, cache_dir):
+        seen.append(cache_dir)
+        return build(ModelBuild(name, spec, cache_dir))
 
-    monkeypatch.setattr(providers, "build_model", factory)
+    monkeypatch.setattr(_client, "build_one", build_one)
     supplied = connection_files.Lineup(default=["toy"], models={"toy": ModelSpec(provider="toy_provider:build", id="one")})
     monkeypatch.chdir(a)
     first = Client(connections=supplied, cache_dir=Path("cache"))
@@ -238,8 +239,9 @@ def test_supplied_lineup_uses_each_clients_fixed_cache_path(tmp_path, monkeypatc
 
 
 def test_preloaded_lineup_is_data_and_client_alone_selects_cache(tmp_path, monkeypatch):
+    from s1flow.client import _client
     from s1flow.client import lineup as connection_files
-    from s1flow.client import providers
+    from s1flow.client.models import ModelBuild
     from toy_provider import build
 
     a, b = tmp_path / "a", tmp_path / "b"
@@ -247,11 +249,11 @@ def test_preloaded_lineup_is_data_and_client_alone_selects_cache(tmp_path, monke
     b.mkdir()
     seen = []
 
-    def factory(request):
-        seen.append(request.cache_dir)
-        return build(request)
+    def build_one(name, spec, cache_dir):
+        seen.append(cache_dir)
+        return build(ModelBuild(name, spec, cache_dir))
 
-    monkeypatch.setattr(providers, "build_model", factory)
+    monkeypatch.setattr(_client, "build_one", build_one)
     monkeypatch.chdir(a)
     supplied = connection_files.Lineup.read(config)
     monkeypatch.chdir(b)

@@ -1,12 +1,31 @@
 # Publishes to PyPI by trusted publishing: PyPI trusts this workflow, so no token is stored.
-# Run it by hand (Actions → publish → Run workflow) once pyproject.toml has the version to release.
+# Run it from the release's tag (Actions → publish → Run workflow → Use workflow from: v<version>), after the
+# steps in docs/development.md. It refuses any other ref, so every version on PyPI has the tag `s1flow init --ci`
+# points new projects at, and it publishes only what passed the package checks on that tag.
 name: publish
 on:
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: The ref is the tag of pyproject.toml's version
+        run: |
+          version=$(python3 -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')
+          if [ "$GITHUB_REF" != "refs/tags/v$version" ]; then
+            echo "::error::publish runs from the tag v$version, not $GITHUB_REF: tag the commit that set the version (git tag -a v$version <sha> -m v$version && git push origin v$version), then run this workflow from that tag"
+            exit 1
+          fi
+  checks:
+    needs: tag
+    uses: ./.github/workflows/tests.yml
   pypi:
+    needs: checks
     runs-on: ubuntu-latest
     environment: pypi
     permissions:

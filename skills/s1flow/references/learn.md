@@ -5,7 +5,7 @@
 When the right label is learned, record it with the exact `decision_id` the decision returned:
 
 ```python
-runtime.feedback(decision.decision_id, label)
+policy.feedback(decision.decision_id, label)
 ```
 
 From a workflow or another process:
@@ -26,7 +26,7 @@ s1flow feedback measure <task> logs/*.jsonl          # measure only; adds nothin
 s1flow feedback measure <task> logs/*.jsonl --add    # also add cases to tasks/<task>/feedback.jsonl
 ```
 
-It reads v2 decision and feedback logs (or OpenTelemetry JSON exports) and measures each policy version on the
+It reads decision and feedback logs (or OpenTelemetry JSON exports) and measures each policy version on the
 decisions that got a label. Exit 1 when production is shown below. Any other line stops it with the file and line.
 
 `--add` adds only decisions whose state was kept (`keep_state=True`, `decide --keep-state`, the Action's

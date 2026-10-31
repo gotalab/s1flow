@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 import pytest
-from conftest import BENCH, ship
+from conftest import PROJECT, ship
 
 from s1flow import AsyncClient, Client
 from s1flow.client import ModelSpec, Refusal
@@ -89,6 +89,38 @@ def test_an_answer_missing_a_question_is_the_providers_failure(toml):
         Client(toml).responses.create(model=Short(), state="x", questions={"bug": QS["bug"], "area": QS["area"]})
 
 
+def test_an_answer_cannot_be_changed_past_validation(toml):
+    """Answers and responses are frozen, so a value set after construction cannot skip pydantic: a provider
+    that tries fails as a ProviderError, not later as a bug in s1flow."""
+    from pydantic import ValidationError
+
+    from s1flow.client import BooleanAnswer, Box, BoxAnswer, BoxEdges, Capabilities, Response
+
+    class Mutated:
+        id, concurrency = "mutated", 1
+        capabilities = Client(toml).connections.build("toy").capabilities
+
+        async def decide(self, state, questions, *, options=None):
+            answer = BooleanAnswer(probability=0.5)
+            answer.probability = "high"  # type: ignore[misc]
+            return Response(answers={"bug": answer}, answered_by="mutated-1")
+
+    with pytest.raises(ProviderError, match="malformed response outside the contract"):
+        Client(toml).responses.create(model=Mutated(), state="x", questions={"bug": QS["bug"]})
+    class Constructed(Mutated):
+        capabilities = Capabilities(question_types=frozenset({"box"}))
+
+        async def decide(self, state, questions, *, options=None):  # model_construct skips validation and frozen
+            return Response(answers={"spot": BoxAnswer.model_construct(box={"top": 5})}, answered_by="constructed-1")
+
+    with pytest.raises(ProviderError, match="malformed response outside the contract"):
+        Client(toml).responses.create(model=Constructed(), state="x", questions={"spot": Box(instructions="the cat")})
+    box = BoxAnswer(box=BoxEdges(top=0, bottom=1, left=0, right=1))
+    for model, field in ((box, "box"), (Response(answers={"b": box}, answered_by="m"), "answered_by")):
+        with pytest.raises(ValidationError, match="frozen"):
+            setattr(model, field, None)
+
+
 @pytest.mark.parametrize(
     ("qid", "question", "answer_kind", "detail"),
     [
@@ -97,10 +129,11 @@ def test_an_answer_missing_a_question_is_the_providers_failure(toml):
         ("area", QS["area"], "choice", "option"),
         ("area", QS["area"], "distribution", "probability"),
         ("area", QS["area"], "type", "type"),
+        ("severity", QS["severity"], "inf_score", "score must be finite"),
     ],
 )
 def test_a_provider_answer_stays_inside_the_question_contract(toml, qid, question, answer_kind, detail):
-    from s1flow.client import BooleanAnswer, ChoiceAnswer, Response
+    from s1flow.client import BooleanAnswer, ChoiceAnswer, Response, ScoreAnswer
 
     class Broken:
         id, concurrency = "broken", 1
@@ -113,6 +146,7 @@ def test_a_provider_answer_stays_inside_the_question_contract(toml, qid, questio
                 "choice": ChoiceAnswer(choice="bogus"),
                 "distribution": ChoiceAnswer(choice="formatter", probabilities={"formatter": 2}),
                 "type": BooleanAnswer(probability=0.5),
+                "inf_score": ScoreAnswer(score=float("inf")),
             }[answer_kind]
             return Response(answers={qid: answer}, answered_by="broken-1")
 
@@ -230,7 +264,7 @@ def test_decide_with_a_policy_and_record_feedback(tmp_path, monkeypatch):
 
     from s1flow.policies import Policies, PolicySpec
     # Make a runtime-only copy, binding its model through a trusted application connection.
-    legacy = json.loads((BENCH / "policies/gh-ruff-area/v1.json").read_text())
+    legacy = json.loads((PROJECT / "policies/gh-ruff-area/v1.json").read_text())
     questions = legacy["questions"]
     spec = PolicySpec(task="gh-ruff-area", version=1, connection="toy", model_id="t1", questions=questions,
                       state_schema={"type": "object", "properties": {"title": {"type": "string"}, "body": {"type": "string"}}, "required": ["title", "body"]})

@@ -80,6 +80,13 @@ def where_to_get(key: str) -> str:
     return f"get one at {KEY_PAGES[key]}" if key in KEY_PAGES else ""
 
 
+def how_to_set(env: str) -> str:
+    """The end of a missing key's error: where to get it, then where to set it."""
+    get = where_to_get(env)
+    return (f"{get + ', then ' if get else ''}set it in the environment or in a .env in the project "
+            "or above it (s1flow doctor lists what each model needs)")
+
+
 # LiteLLM's providers by the id's prefix: the key LiteLLM reads and the host it calls.
 LITELLM: dict[str, tuple[str, str]] = {
     "vercel_ai_gateway/": ("AI_GATEWAY_API_KEY", "https://ai-gateway.vercel.sh"),

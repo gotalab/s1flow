@@ -25,7 +25,6 @@ from .needs import Needs, declares, origin
 from . import systemone
 
 
-
 def safe_options(questions: Questions) -> tuple[Questions, dict[str, dict[str, str]]]:
     """Workers AI rejects option names with "/" ("kind/bug", 2026-10-07): send safe names, keep the way back."""
     out: Questions = {}
@@ -46,7 +45,7 @@ class CloudflareModel:
         self.model = model
         self.id = f"cloudflare:{model}"
         self.concurrency = concurrency
-        self.capabilities = capabilities or Capabilities(context_tokens=65_536)
+        self.capabilities = capabilities or Capabilities()
 
     def request(self, state: State, questions: Questions, *, options: dict[str, Any] | None = None) -> Request:
         sent, _ = safe_options(questions)

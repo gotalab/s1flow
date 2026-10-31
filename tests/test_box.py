@@ -9,7 +9,7 @@ import pytest
 import respx
 from PIL import Image as PILImage
 
-from conftest import BENCH, attach, make_project
+from conftest import PROJECT, attach, make_project
 
 from s1flow.client.boxes import iou
 from s1flow.core.errors import DataError, Unsupported
@@ -20,7 +20,7 @@ from s1flow.project import Project
 from s1flow.client.providers.llm import box_answer, to_answers, user_content
 from s1flow.client.providers.typesafe import BASE_URL as TS_URL
 
-LINEUP = Project(BENCH).client().connections
+LINEUP = Project(PROJECT).client().connections
 
 Q = {"disc": Box(instructions="the red disc")}
 TRUTH = BoxEdges(top=0.1, bottom=0.5, left=0.2, right=0.6)

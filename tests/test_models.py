@@ -3,17 +3,18 @@
 import asyncio
 
 import pytest
-from conftest import BENCH, cli, make_project
+from conftest import PROJECT, cli, make_project
 
 from s1flow import Client
 from s1flow.core.errors import ConfigError, NotFound
 from s1flow.client import BooleanAnswer, Capabilities, ChoiceAnswer, Response, ModelBuild, ScoreAnswer
 from s1flow.eval import verify
 from s1flow.project import Project
-from s1flow.client.lineup import BUILTIN_LINEUP, Lineup
+from s1flow.client.lineup import Lineup
+from s1flow.project.scaffold import LINEUP as INIT_LINEUP
 from s1flow.client.providers.typesafe import TypeSafeModel
 
-BENCH_LINEUP = Project(BENCH).client().connections
+LINEUP = Project(PROJECT).client().connections
 
 BASE = """
 default = ["a"]
@@ -44,8 +45,8 @@ def test_reading_checks_the_shape_and_builds_nothing(tmp_path):
         Lineup.read(p)
 
 
-def test_the_repo_lineup_keeps_its_cache_ids():
-    """A model's id is its cache key: moving the line-up to s1flow.toml must not change one."""
+def test_a_lineup_keeps_its_cache_ids():
+    """A model's id is its cache key: the same line-up entry must keep building the same id."""
     want = {
         "jev": "typesafe:jev-latest",
         "jev:1.14": "typesafe:jev-1.14.0",
@@ -54,7 +55,7 @@ def test_the_repo_lineup_keeps_its_cache_ids():
         "clef": "cloudflare:clef",
         "luna@decisions": "openai-decisions:gpt-6-luna",
     }
-    assert {n: BENCH_LINEUP.build(n).id for n in want} == want
+    assert {n: LINEUP.build(n).id for n in want} == want
 
 
 def test_concurrency_reaches_the_built_model(tmp_path):
@@ -75,12 +76,12 @@ def test_an_llm_asked_once_returns_no_distribution(tmp_path):
 
 
 def test_box_follows_the_version_not_the_name():
-    takes_box = lambda n: "box" in BENCH_LINEUP.build(n).capabilities.question_types
+    takes_box = lambda n: "box" in LINEUP.build(n).capabilities.question_types
     assert not takes_box("jev") and takes_box("jev:1.14")  # jev-latest is 1.13
-    assert BENCH_LINEUP.build("jev:1.14").capabilities.image  # the model's, kept under the version's own
+    assert LINEUP.build("jev:1.14").capabilities.image  # the model's, kept under the version's own
     # `models --verify` holds each version to its own claims
-    assert verify.claims(BENCH_LINEUP.build("jev:1.14").capabilities)["box"]
-    assert not verify.claims(BENCH_LINEUP.build("jev").capabilities)["box"]
+    assert verify.claims(LINEUP.build("jev:1.14").capabilities)["box"]
+    assert not verify.claims(LINEUP.build("jev").capabilities)["box"]
 
 
 VERSIONED = BASE + """
@@ -198,7 +199,7 @@ def test_optimize_reads_length_limits_from_capabilities(tmp_path):
 
     short = BASE + '\n[models.short]\nprovider = "gateway"\nid = "x/s"\ncapabilities.max_instructions_chars = 300\ncapabilities.max_description_chars = 60\n'
     assert limits(Client(connections=load(tmp_path, short)).connections.build("short")) == (300, 60)
-    assert limits(BENCH_LINEUP.build("jev")) == DEFAULT_LIMITS
+    assert limits(LINEUP.build("jev")) == DEFAULT_LIMITS
 
 
 # ---------- models --verify ----------
@@ -252,12 +253,12 @@ def test_the_line_up_init_writes_runs_on_one_key():
     or serving one, and none of this repository's own notes (apps/bench/s1flow.toml is s1flow's own line-up)."""
     from s1flow.client.providers import needs
 
-    lineup = Lineup.read(BUILTIN_LINEUP)
+    lineup = Lineup.read(INIT_LINEUP)
     Client(connections=lineup).connections.check()
     assert 2 <= len(lineup.models) <= 3 and lineup.default == list(lineup.models)
     assert {k for s in lineup.models.values() for k in needs(s).keys} == {"OPENROUTER_API_KEY"}
     assert not any(s.alias for s in lineup.models.values())
-    text = BUILTIN_LINEUP.read_text()
+    text = INIT_LINEUP.read_text()
     assert not any(x in text for x in ("DESIGN.md", "clef-proxy", "apps/bench", "note ="))
 
 
