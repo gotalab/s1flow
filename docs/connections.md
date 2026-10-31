@@ -29,18 +29,15 @@ client or policy is created. The SDK never loads dotenv files. `policies.load` n
 
 `cache_dir` is optional and only applies to `Client` and `AsyncClient`. Providers use it for supporting data
 such as price lists. s1flow never uses it to reuse model answers at runtime; evaluation has its own answer
-cache. `s1flow.client.lineup.Lineup.read(path)` only reads configuration: pass cache settings to the client, and use
-`client.connections.build()` or `.check()` to build or check providers.
+cache. Reading a connection file builds nothing: use `client.connections.build()` or `.check()` to build or check
+providers.
 
 ## The CLI
 
-The CLI accepts `--project PATH` and `--connections PATH` only on commands that list them in `--help`. On those
-commands, the option can go before or after the subcommand. An option a command doesn't take is an error before
-anything runs: `export`, for example, takes `--project` but not `--connections`.
+`s1flow COMMAND --help` lists whether the command takes `--project PATH` and `--connections PATH`.
 
 `--project` must point exactly at a directory that contains `s1flow.toml`, or at a repository that contains
-`s1flow/s1flow.toml`; it doesn't search upward. It doesn't change the working directory, so other relative paths in the command are still
-resolved from where you ran it. Without `--project`, the CLI searches upward from the current directory to the
+`s1flow/s1flow.toml`; it doesn't search upward. Without `--project`, the CLI searches upward from the current directory to the
 nearest Git root. Outside a Git repository, it only checks the current directory and `./s1flow`, so use
 `--project` when you run it from deeper inside.
 
