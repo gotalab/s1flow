@@ -25,9 +25,8 @@
 # cloudflare, openai-decisions, llm) or your own as "package.module:factory".
 
 # What `s1flow run` compares without --models. The LLMs are references: name them with --models.
-# Each needs only a key: Clef (strongest on many-option routing) needs the clef-proxy relay running, so it
-# is named with --models; Kev-4B trailed every Japanese task.
-default = ["jev", "d1@vercel", "luna@decisions"]
+# Each needs only a key. The full comparison names its models with --models (the bench's reports list them).
+default = ["jev", "d1.1@openrouter", "luna@decisions"]
 
 [models.jev]
 provider = "typesafe"
@@ -43,41 +42,6 @@ price.source = "TypeSafe's list price for jev (output free); the API returns no 
 id = "jev-1.14.0"
 capabilities.question_types = ["boolean", "choice", "score", "box"]  # box from 1.14 on: 1.13 answers a bare 400
 
-[models."jev@vercel"]
-provider = "gateway"
-id = "typesafe-ai/jev"
-# `typesafe-ai/jev` follows the latest jev and answers under that alias (it moved from 1.13 to 1.14 around
-# 2026-10-14), so its runs cannot say which jev answered: a policy names `jev@vercel:1.14` instead (both
-# versions listed on the gateway, 2026-10-19).
-note = "Same answers as jev, ~190ms slower (2026-10-07). Text only: the gateway does not pass images to TypeSafe (2026-10-16)."
-
-[models."jev@vercel".versions."1.13"]
-id = "typesafe-ai/jev-1.13.0"
-
-[models."jev@vercel".versions."1.14"]
-id = "typesafe-ai/jev-1.14.0"
-
-[models."jev@openrouter"]
-provider = "openrouter"
-id = "typesafe/jev-1.13"  # version 1.13 below, so not an alias
-# Each jev version is its own slug on OpenRouter (2026-10-19).
-capabilities.image = true
-
-[models."jev@openrouter".versions."1.13"]
-id = "typesafe/jev-1.13"  # no box: it answers 400
-
-[models."jev@openrouter".versions."1.14"]
-id = "typesafe/jev-1.14"
-capabilities.question_types = ["boolean", "choice", "score", "box"]  # IoU 0.88 (2026-10-19)
-
-[models."laya@vercel"]
-provider = "gateway"
-id = "convaiinnovations/laya"
-capabilities.context_tokens = 8192
-capabilities.max_instructions_chars = 300
-capabilities.max_description_chars = 60
-note = "422 on long inputs: an option description of ~100 Japanese characters, or a state of a few thousand (2026-10-03)."
-
 [models."d1@vercel"]
 provider = "gateway"
 id = "liquid/d1"
@@ -90,25 +54,11 @@ provider = "openrouter"
 id = "jaredpalmer/kev-4b"
 capabilities.context_tokens = 8192
 
-[models."tev1@openrouter"]
-provider = "openrouter"
-id = "togethercomputer/tev1-4b-experimental"
-capabilities.context_tokens = 32768
-capabilities.max_options = 20
-
 [models."mercury@openrouter"]
 provider = "openrouter"
-id = "inception/mercury-decide:free"
-concurrency = 2
+id = "inception/mercury-decide"  # the paid slug: the :free one is held to 18 calls a minute
 capabilities.context_tokens = 32768
 capabilities.image = true
-capabilities.per_minute = 18
-
-[models."solar@openrouter"]
-provider = "openrouter"
-id = "upstage/solar-decide"
-capabilities.context_tokens = 524288
-capabilities.max_options = 26
 
 # Added 2026-10-17 from OpenRouter's decision models (GET /api/v1/models?output_modalities=decisions).
 # `s1flow models --verify` on 2026-10-17: all but classify-1 take boolean, choice and score; none takes box.
@@ -139,36 +89,12 @@ capabilities.context_tokens = 32768
 capabilities.image = true
 note = "Liquid d1-ultra (2026-10-15)."
 
-[models."solar-flash@openrouter"]
-provider = "openrouter"
-id = "upstage/solar-decide-flash"
-capabilities.context_tokens = 524288
-capabilities.max_options = 26  # 422 on 60 options (2026-10-17), as solar-decide
-
-[models."drex@openrouter"]
-provider = "openrouter"
-id = "nace-ai/drex-v2.0"
-capabilities.context_tokens = 131072
-
-[models."clef-omni@openrouter"]
-provider = "openrouter"
-id = "cloudflare/clef-omni"
-capabilities.context_tokens = 65536
-capabilities.image = true
-note = "Clef-omni (2026-10-09): audio and video too, which s1flow does not send."
-
 [models."span@openrouter"]
 provider = "openrouter"
 id = "respan/span-02"
 capabilities.context_tokens = 131072
 capabilities.image = true
-note = "Span-02 (2026-10-16) answers present / absent / cannot tell about a conversation: may not fit every question."
-
-[models."classify@openrouter"]
-provider = "openrouter"
-id = "scaledown/classify-1"
-capabilities.context_tokens = 1000000
-note = "ScaleDown classify-1 (2026-10-13). 429 'max queue length' on every call on 2026-10-17: not verified."
+note = "Span-02 (2026-10-16)."
 
 [models.clef]
 provider = "cloudflare"
@@ -198,21 +124,10 @@ price.as_of = "2026-10-09"
 price.source = "https://openai.com/api/pricing/ (Decisions API, no output charge)"
 note = "OpenAI Decisions API, public beta (2026-10-06)."
 
-# LLMs. Box units are each LLM's own: Claude answers in pixels, Gemini on a 0-1000 scale (2026-10-16).
+# LLMs, as references. Box units are each LLM's own: Claude answers in pixels, Gemini on a 0-1000 scale (2026-10-16).
 [models."haiku@vercel"]
 provider = "llm"
-id = "vercel_ai_gateway/anthropic/claude-haiku-4.5"
-options.box_units = "pixels"
-capabilities.context_tokens = 128000
-capabilities.image = true
-capabilities.question_types = ["boolean", "choice", "score", "box"]
-
-# Claude on Anthropic's own API. The key is read from S1FLOW_ANTHROPIC_API_KEY: Claude Code's cloud environments
-# drop ANTHROPIC_API_KEY (the session's own login), so the bench's environment keeps it under this name.
-[models.haiku]
-provider = "llm"
-id = "anthropic/claude-haiku-4-5"
-options.api_key_env = "S1FLOW_ANTHROPIC_API_KEY"
+id = "vercel_ai_gateway/anthropic/claude-haiku-5.5"
 options.box_units = "pixels"
 capabilities.context_tokens = 128000
 capabilities.image = true
@@ -220,17 +135,49 @@ capabilities.question_types = ["boolean", "choice", "score", "box"]
 
 [models."flash-lite@vercel"]
 provider = "llm"
-id = "vercel_ai_gateway/google/gemini-3.1-flash-lite"
+id = "vercel_ai_gateway/google/gemini-3.5-flash-lite"
 options.box_units = "k1000"
 capabilities.context_tokens = 128000
 capabilities.image = true
 capabilities.question_types = ["boolean", "choice", "score", "box"]
 
-[models."haiku-k5@vercel"]
-provider = "llm"
-id = "vercel_ai_gateway/anthropic/claude-haiku-4.5"
-options.samples = 5
-options.box_units = "pixels"
-capabilities.context_tokens = 128000
+# Added 2026-10-31 from OpenRouter's decision models.
+[models."d1.1@openrouter"]
+provider = "openrouter"
+id = "liquid/d1.1"
 capabilities.image = true
-capabilities.question_types = ["boolean", "choice", "score", "box"]
+
+[models."drex-max@openrouter"]
+provider = "openrouter"
+id = "nace-ai/drex-max"
+capabilities.image = true
+
+[models."clef@openrouter"]
+provider = "openrouter"
+id = "cloudflare/clef"
+capabilities.image = true
+note = "Clef without the clef-proxy relay."
+
+[models."clef-flash@openrouter"]
+provider = "openrouter"
+id = "cloudflare/clef-flash"
+capabilities.image = true
+capabilities.max_options = 26  # 400 on 60 options through OpenRouter (2026-10-31); Workers AI takes them
+
+[models."joey@openrouter"]
+provider = "openrouter"
+id = "baseten/joey-1"
+capabilities.image = true
+note = "Baseten joey-1, 2B (2026-10-29)."
+
+[models."elephant@openrouter"]
+provider = "openrouter"
+id = "baseten/elephant-1"
+capabilities.image = true
+note = "Baseten elephant-1, 9B (2026-10-21)."
+
+[models."mammoth@openrouter"]
+provider = "openrouter"
+id = "baseten/mammoth-1"
+capabilities.image = true
+note = "Baseten mammoth-1, 27B (2026-10-21)."

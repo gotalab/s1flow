@@ -47,7 +47,7 @@ def test_typesafe_box_answer_and_header(monkeypatch):
 
 
 def test_box_only_where_declared():
-    for name in ("jev", "jev@openrouter:1.13", "jev@vercel:1.14", "luna@decisions", "clef"):
+    for name in ("jev", "d1@vercel", "luna@decisions", "clef"):
         with pytest.raises(Unsupported):
             asyncio.run(LINEUP.build(name).decide("text", Q))
 
@@ -128,4 +128,4 @@ def test_unprepared_images_are_a_data_error():
     with pytest.raises(DataError):
         asyncio.run(LINEUP.build("haiku@vercel").decide(["x", {"type": "image", "path": "a.png"}], Q))
     with pytest.raises(DataError):
-        asyncio.run(LINEUP.build("jev@vercel").decide({"shot": {"type": "image", "path": "a.png"}}, Q))
+        asyncio.run(LINEUP.build("d1@vercel").decide({"shot": {"type": "image", "path": "a.png"}}, Q))
