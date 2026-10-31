@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ..client.models import Price
 from .candidate import Candidate
@@ -204,6 +204,12 @@ class Evaluation(_Frozen):
     def scores(self) -> list[ObjectiveScore]:
         """The objective's score, then those of the objectives in `tiebreak`, in its order."""
         return [] if self.objective is None else [self.objective, *self.tiebreak]
+
+    @model_validator(mode="after")
+    def _population(self) -> Evaluation:
+        if len(self.answered_ids) != self.n:  # rank compares candidates only on the same answered cases
+            raise ValueError(f"answered_ids names {len(self.answered_ids)} cases, n is {self.n}")
+        return self
 
 
 COST_NOTE = "Where the API costs come from: "  # the line a report and a check write when an API cost is an estimate or not known

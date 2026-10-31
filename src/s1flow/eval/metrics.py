@@ -156,7 +156,7 @@ def load(task: Task, variant: str, model: str, *, include_test: bool = False) ->
     pr = Preds(
         model=model, ids=[], pairs=measure.pairs(kind, [], []), probabilities=False,
         latency_ms=np.array([np.nan if r.latency_ms is None else r.latency_ms for r in ok]),
-        retries=[r.retries for r in ok if r.retries is not None],  # every answered record has them
+        retries=_retries(ok),
         concurrency=[r.concurrency for r in ok],
         spend=spend, call_ids=[r.id for r in ok], call_costs=[cost.recorded(r.usage, price) for r in ok],
         price=price if "list" in spend.sources else None,
@@ -662,3 +662,11 @@ def chart_data(task: Task, pr: Preds, evaluation: Evaluation) -> ChartData:
 
 def _share(numerator: int, denominator: int) -> float | None:
     return numerator / denominator if denominator else None
+
+
+def _retries(ok: list[PredictionRecord]) -> list[int]:
+    """One per answered record, aligned with the other per-call lists (records.read refuses one without them)."""
+    got = [r.retries for r in ok]
+    if None in got:
+        raise AssertionError("an answered record without retries passed records.read")
+    return cast(list[int], got)

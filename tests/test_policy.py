@@ -55,7 +55,7 @@ def fake(b: ModelBuild) -> Fake:
 
 
 def evaluation(model: str = "fake") -> Evaluation:
-    return Evaluation(candidate=Candidate(model=model), answered_by="fake-1", answered_by_all=["fake-1"], answered_ids=[], n=10, probabilities=True,
+    return Evaluation(candidate=Candidate(model=model), answered_by="fake-1", answered_by_all=["fake-1"], answered_ids=[str(i) for i in range(10)], n=10, probabilities=True,
                       failures=Failures(calls=10, failed=0, unsupported=0, data_errors=0, unlabeled=0, never_asked=0, failed_cases=0, refused_cases=0))
 
 

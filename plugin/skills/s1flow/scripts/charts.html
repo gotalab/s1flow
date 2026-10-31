@@ -157,7 +157,7 @@ function newSvg(title,width) {const svg=document.createElementNS(NS,'svg');svg.s
 function finish(svg,width,height,caption) {const used=wrapped(svg,18,height,caption,width-36,11);svg.setAttribute('viewBox',`0 0 ${width} ${height+used+14}`);svg.setAttribute('width',width);svg.setAttribute('height',height+used+14);return svg;}
 const axes=[...definitions,
   {key:'api-cost',label:'API cost / 10,000 inputs',unit:'usd',direction:'min',basis:'Recorded billed or estimated API costs; unpriced calls remain unknown.',get:cost},
-  {key:'latency',label:'p90 latency (ms)',unit:'ms',direction:'min',basis:'Recorded answering-attempt latency. '+(conditionNotes()||'Retry delays are excluded when recorded.'),get:latency}];
+  {key:'latency',label:'p90 latency (ms)',unit:'ms',direction:'min',basis:'Recorded answering-attempt latency. '+(conditionNotes()||'Retry delays are excluded.'),get:latency}];
 const models=[...new Set(rows.map(r=>r.model))];
 const palette=['#3268a8','#b65328','#258274','#8653a3','#8b731c','#ae4473'];
 const color=r=>palette[models.indexOf(r.model)%palette.length];

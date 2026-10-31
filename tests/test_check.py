@@ -54,7 +54,7 @@ def task(tmp_path):
 
 
 def policy(version: int, model: str, question=QUESTION) -> EvaluatedPolicy:
-    e = Evaluation(candidate=Candidate(model=model), answered_by=model, answered_by_all=[model], answered_ids=[], n=120, probabilities=True,
+    e = Evaluation(candidate=Candidate(model=model), answered_by=model, answered_by_all=[model], answered_ids=[str(i) for i in range(120)], n=120, probabilities=True,
                    failures=Failures(calls=120, failed=0, unsupported=0, data_errors=0, unlabeled=0, never_asked=0, failed_cases=0, refused_cases=0))
     return EvaluatedPolicy(
         spec=PolicySpec(task="toy", version=version, connection=model, model_id=model,

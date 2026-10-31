@@ -64,7 +64,7 @@ def test_wrong_retained_input_is_never_added(tmp_path):
 
 def adopted(task, objective):
     spec = PolicySpec(task="toy", version=1, connection="m", model_id="model", questions={"q": asked(task.question, DecisionRule(threshold=0.5))})
-    evaluation = Evaluation(candidate=Candidate(model="m"), answered_by="model", answered_by_all=["model"], answered_ids=[], n=20,
+    evaluation = Evaluation(candidate=Candidate(model="m"), answered_by="model", answered_by_all=["model"], answered_ids=[str(i) for i in range(20)], n=20,
                             probabilities=True, failures=Failures(calls=20, failed=0, unsupported=0, data_errors=0, unlabeled=0, never_asked=0, failed_cases=0, refused_cases=0),
                             objective=ObjectiveScore(objective=objective, value=0, interval=(0, 1)))
     policy = EvaluatedPolicy(spec=spec, candidate=Candidate(model="m"), answered_by="model",
