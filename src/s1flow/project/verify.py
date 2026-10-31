@@ -232,6 +232,10 @@ class _Probe:
 
 
 async def probe(client: AsyncClient, name: str) -> Verification:
+    # Every model is asked about images (s1flow[images] draws them). Without a working Pillow this stops before
+    # anything is asked; inside a check the error would read as a model that cannot see. Listing needs no extra.
+    import PIL.Image, PIL.ImageDraw  # noqa: F401, E401
+
     model = client.connections.build(name)  # its own object: the declared capabilities are set aside for the probe
     model.capabilities = EVERYTHING.model_copy(update={"max_options": model.capabilities.max_options})
     p = _Probe(client, model)
@@ -254,10 +258,6 @@ def unset_keys(name: str, resolve: Callable[[str], ModelSpec], env: Mapping[str,
 
 
 async def run(client: AsyncClient, names: list[str]) -> dict[str, Verification]:
-    # Every model is asked about images (s1flow[images] draws them): missing, it must stop here, not read as a
-    # model that cannot see. Listing the line-up (`lineup`) needs no extra.
-    import PIL  # noqa: F401
-
     return dict(zip(names, await asyncio.gather(*(probe(client, n) for n in names))))
 
 

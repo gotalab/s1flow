@@ -11,8 +11,8 @@ s1flow init --skill                    # also write this Skill where agents read
 
 `init` writes nothing outside the project unless asked. Ask the person before `--ci` (a PR check that calls
 models on every PR that changes a task, a policy or `s1flow.toml`, with `on-pending: fail`) and before `--skill`.
-The base install runs `init`, `decide`, `feedback record`, `adopt --spec`, `export` and
-`doctor`; the rest need `s1flow[eval]`. The SDK never installs packages at runtime.
+The base install runs `init`, `decide`, `feedback record`, `adopt --spec`, `export`, `doctor` and
+`models`; `models --verify` needs `s1flow[images]`, and the rest need `s1flow[eval]`. The SDK never installs packages at runtime.
 
 ## Keys and hosts: doctor
 
