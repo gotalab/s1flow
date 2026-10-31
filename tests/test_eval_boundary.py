@@ -347,20 +347,22 @@ def test_a_condition_changed_while_ranking_refuses_the_list(tmp_path, monkeypatc
 
 
 @pytest.mark.parametrize("what", CONDITIONS)
-def test_a_condition_changed_while_adopting_refuses_the_policy(tmp_path, monkeypatch, what):
+@pytest.mark.parametrize("reading", ["evalset.fixed", "metrics.load"])  # the test cases, then the picked run (the last read)
+def test_a_condition_changed_while_adopting_refuses_the_policy(tmp_path, monkeypatch, what, reading):
     from s1flow.core.errors import ConfigError
-    from s1flow.eval import adopt, evalset
+    from s1flow.eval import adopt, evalset, metrics
     from s1flow.eval.objectives.declare import ExpectedLoss
 
     task = scoring_task(tmp_path, ExpectedLoss())
     listed = adopt.shortlist(task)
-    named, fixed = [], evalset.fixed
+    module, name = {"evalset": evalset, "metrics": metrics}[reading.split(".")[0]], reading.split(".")[1]
+    named, read = [], getattr(module, name)
 
-    def fixed_while_it_changes(task_):
-        named.append(change_condition(task, what, "m"))  # before adopt reads the test cases and the picked run
-        return fixed(task_)
+    def read_while_it_changes(*a, **k):
+        named.append(change_condition(task, what, "m"))
+        return read(*a, **k)
 
-    monkeypatch.setattr(evalset, "fixed", fixed_while_it_changes)
+    monkeypatch.setattr(module, name, read_while_it_changes)
     with pytest.raises(ConfigError) as refused:
         adopt.adopt(task, "m", "test", "changed meanwhile", listed=listed)
     assert str(refused.value) == f"toy: {named[0]} changed during adoption; rank again before adopting"
