@@ -83,14 +83,15 @@ pattern = '\]\((?!https?:|#)([^)]+)\)'
 replacement = '](https://github.com/gotalab/s1flow/blob/main/\1)'
 
 [tool.hatch.build.targets.sdist]
-only-include = ["src", "skills", "README.md"]
+only-include = ["src", "plugin/skills", "README.md"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/s1flow"]
 
-# The Agent Skill travels with the package, so a base install can write it (s1flow init --skill).
+# The Agent Skill lives once, inside the plugin (Claude Code refuses a plugin symlink to a path outside it), and
+# travels with the package so a base install can write it (s1flow init --skill).
 [tool.hatch.build.targets.wheel.force-include]
-"skills/s1flow" = "s1flow/skills/s1flow"
+"plugin/skills/s1flow" = "s1flow/skills/s1flow"
 
 [dependency-groups]
 dev = [
@@ -101,7 +102,13 @@ dev = [
     "respx>=0.23.1",
     "import-linter>=2.5",
     "jsonschema>=4.26",
+    "ruff>=0.17.2",
+    "pytest-xdist>=3.8.0",
 ]
+
+# Pyflakes alone: unused imports and variables, undefined names, redefinitions. Formatting is not checked.
+[tool.ruff.lint]
+select = ["F"]
 
 [tool.mypy]
 python_version = "3.13"

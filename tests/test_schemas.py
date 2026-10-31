@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from conftest import PROJECT
 from jsonschema import Draft202012Validator
 from pydantic import TypeAdapter, ValidationError
 
@@ -76,10 +77,11 @@ def test_every_stored_policy_fits():
         spec = json.loads(path.read_text())
         sidecar = path.with_name(path.stem + ".evaluation.json")
         assert errors(runtime, spec) == [], path
-        assert errors(evidence, json.loads(sidecar.read_text())) == [], sidecar
+        record = json.loads(sidecar.read_text())
+        assert errors(evidence, record) == [], sidecar
         evaluated = store.read(spec["task"], version=spec["version"])
-        assert evaluated.spec.digest == json.loads(sidecar.read_text())["policy_digest"]
-        assert evaluated.evidence.execution_digest is None  # historical provenance is not invented
+        assert evaluated.spec.digest == record["policy_digest"]
+        assert evaluated.evidence.execution_digest == record["evidence"]["execution_digest"]  # as stored: none is invented for an old record
 
 
 def task_files(pattern: str) -> list[Path]:
@@ -108,7 +110,7 @@ def test_every_case_feedback_correction_and_split_fits():
 
 
 def test_a_log_written_by_a_policy_fits(tmp_path):
-    r = read_file(ROOT / "apps" / "bench" / "policies" / "gh-ruff-kind" / "v1.json")
+    r = read_file(PROJECT / "policies" / "gh-ruff-kind" / "v1.json")
     r = r.model_copy(update={"connection": "toy", "model_id": "t1"})
     from s1flow.client.lineup import Lineup
     client = Client(Lineup(default=["toy"], models={"toy": ModelSpec(provider="toy_provider:build", id="t1")}))
@@ -146,7 +148,7 @@ def test_a_record_that_is_no_object_is_an_invalid_record(tmp_path, text):
     from s1flow.core.errors import ConfigError
     from s1flow.eval.policy import Store
 
-    src = ROOT / "apps/bench/policies/nod-wake"
+    src = PROJECT / "policies" / "nod-wake"
     (tmp_path / "nod-wake").mkdir()
     (tmp_path / "nod-wake" / "v1.json").write_text((src / "v1.json").read_text())
     (tmp_path / "nod-wake" / "v1.evaluation.json").write_text(text)

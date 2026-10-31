@@ -1,0 +1,240 @@
+{
+ "schema": "s1flow/policy-evaluation@3",
+ "policy_digest": "a1cff7a0820509297c68d33e2cc097317cb27881e73afec484d169c9c6af9ab8",
+ "candidate": {
+  "model": "clef-flash",
+  "variant": "base"
+ },
+ "selection": {
+  "by": "s1flow propose",
+  "reason": "written before a person picked releases (2026-10-17): the rule's choice, kept as it was",
+  "tied": [],
+  "forced": false
+ },
+ "evidence": {
+  "data_sha256": "385f829878a00e5e628098ba19e9f9e460dc6ced16337ebe68207b853f6bfb45",
+  "execution_digest": null,
+  "input_adapter_digest": "",
+  "evaluation_contract_digest": null,
+  "git_sha": "56fe7e35d48eed1bb2e9f2c70be495ca13b6a94d",
+  "evaluation": {
+   "candidate": {
+    "model": "clef-flash",
+    "variant": "base"
+   },
+   "answered_by": "clef-flash",
+   "answered_by_all": [
+    "clef-flash"
+   ],
+   "answered_ids": [],
+   "n": 300,
+   "probabilities": true,
+   "failures": {
+    "calls": 300,
+    "failed": 0,
+    "unsupported": 0,
+    "data_errors": 0,
+    "unlabeled": 0,
+    "never_asked": null,
+    "failed_cases": null,
+    "refused_cases": null
+   },
+   "split": "stratified k-fold (90 test cases held out to the end)",
+   "split_method": "stratified-kfold",
+   "accuracy": {
+    "value": 0.5633333333333334,
+    "interval": [
+     0.5065833333333334,
+     0.6166666666666667
+    ]
+   },
+   "measures": {
+    "macro_f1": {
+     "value": 0.49539557549059504,
+     "interval": null
+    }
+   },
+   "auroc": {
+    "value": 0.813046553162932,
+    "interval": [
+     0.7758201339356722,
+     0.8557280564726052
+    ]
+   },
+   "brier": 0.6222926526666667,
+   "ece": 0.23222366666666666,
+   "selective": [
+    {
+     "target_accuracy": 0.95,
+     "coverage": {
+      "value": 0.20476190476190476,
+      "interval": [
+       0.14761904761904762,
+       0.2619047619047619
+      ]
+     },
+     "accuracy": 0.9302325581395349,
+     "n": 43,
+     "errors": 3,
+     "lower": 0.8294368731116152,
+     "labels_needed": null,
+     "min_probability": 0.9207
+    }
+   ],
+   "error_loss_threshold": null,
+   "floors": [],
+   "sweep": null,
+   "objective": {
+    "objective": {
+     "name": "coverage",
+     "params": {
+      "target_accuracy": 0.95
+     },
+     "direction": "max",
+     "sets": "min_probability",
+     "unit": "share",
+     "label": "coverage at 95% accuracy",
+     "code_sha256": null
+    },
+    "value": 0.20476190476190476,
+    "interval": [
+     0.14761904761904762,
+     0.2619047619047619
+    ],
+    "rule": {
+     "threshold": null,
+     "min_probability": 0.9207
+    },
+    "constraint": 0.9302325581395349
+   },
+   "tiebreak": [],
+   "test": {
+    "n": 90,
+    "accuracy": 0.5666666666666667,
+    "coverage": 0.2,
+    "sure_accuracy": 0.8333333333333334,
+    "tuned_accuracy": null,
+    "primary": {
+     "value": 0.2,
+     "interval": [
+      0.12222222222222222,
+      0.2777777777777778
+     ]
+    },
+    "constraint": null
+   },
+   "high_confidence_errors": [
+    {
+     "id": "#27411",
+     "label": "question",
+     "predicted": "documentation",
+     "probability": 0.947
+    },
+    {
+     "id": "#26850",
+     "label": "question",
+     "predicted": "feature",
+     "probability": 0.9356
+    },
+    {
+     "id": "#24784",
+     "label": "question",
+     "predicted": "feature",
+     "probability": 0.9298
+    },
+    {
+     "id": "#28998",
+     "label": "question",
+     "predicted": "bug",
+     "probability": 0.9256
+    },
+    {
+     "id": "#27982",
+     "label": "question",
+     "predicted": "documentation",
+     "probability": 0.9223
+    },
+    {
+     "id": "#24887",
+     "label": "question",
+     "predicted": "bug",
+     "probability": 0.9157
+    },
+    {
+     "id": "#27552",
+     "label": "question",
+     "predicted": "bug",
+     "probability": 0.9105
+    },
+    {
+     "id": "#27775",
+     "label": "question",
+     "predicted": "bug",
+     "probability": 0.9092
+    },
+    {
+     "id": "#27578",
+     "label": "feature",
+     "predicted": "bug",
+     "probability": 0.9092
+    },
+    {
+     "id": "#24559",
+     "label": "question",
+     "predicted": "bug",
+     "probability": 0.9079
+    },
+    {
+     "id": "#25140",
+     "label": "question",
+     "predicted": "feature",
+     "probability": 0.9023
+    }
+   ],
+   "calls": {
+    "latency": {
+     "n": 300,
+     "p50_ms": 238.10000000000002,
+     "p90_ms": 515.9700000000001,
+     "p95_ms": 557.1500000000001,
+     "p99_ms": 912.5809999999972,
+     "max_ms": 1267.7,
+     "spread": 3.8327635447290933,
+     "retried": 0,
+     "unrecorded": 300,
+     "concurrency": [],
+     "concurrency_unknown": 300
+    },
+    "case_latency_p90_ms": {
+     "value": 515.9700000000001,
+     "interval": null
+    },
+    "throughput": {
+     "per_min": 1500.0,
+     "seconds": 12.0,
+     "calls": 300,
+     "concurrency": 8,
+     "measured": true
+    },
+    "cost_per_10k_usd": 0.47398199999999996,
+    "cost_total_usd": 0.01421946,
+    "cost_source": null,
+    "cost_unknown": 0,
+    "price": null
+   }
+  },
+  "test": "inconclusive",
+  "compared": [
+   "clef-flash",
+   "clef",
+   "d1@vercel",
+   "decisions",
+   "flash-lite@vercel",
+   "haiku@vercel",
+   "jev",
+   "jev@vercel",
+   "kev@openrouter"
+  ]
+ },
+ "answered_by": "clef-flash"
+}

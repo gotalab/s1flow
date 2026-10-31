@@ -9,7 +9,7 @@ import sys
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPT = ROOT / 'skills/s1flow/scripts/charts.py'
+SCRIPT = ROOT / 'plugin/skills/s1flow/scripts/charts.py'
 
 
 def invoke(*args: str):

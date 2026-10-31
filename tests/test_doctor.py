@@ -182,7 +182,7 @@ def test_doctor_on_a_policy(project):
         from test_policy import policy
     finally:
         sys.path.remove(str(HERE))
-    from s1flow.eval.policy import EvaluatedPolicy, Store
+    from s1flow.eval.policy import Store
 
     store = Store(project / "policies")
     r = policy(task="t")
@@ -216,12 +216,9 @@ def test_doctor_names_a_project_skill_an_older_s1flow_wrote(project):
     assert json.loads(s1flow("doctor", "--models", "toy", "--json", cwd=project).stdout)["skill"] == [done.stdout.splitlines()[-1].removeprefix("skill: ")]
 
 
-def test_a_missing_key_says_where_to_get_it(monkeypatch):
-    from s1flow.client.providers.keys import key
+def test_a_missing_key_says_where_to_get_it():
+    from s1flow.client.providers.needs import how_to_set
 
-    monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
-    with pytest.raises(ConfigError, match=r"OPENROUTER_API_KEY is not set: get one at https://openrouter\.ai/keys, then set it"):
-        key("OPENROUTER_API_KEY")
-    monkeypatch.delenv("MY_KEY", raising=False)
-    with pytest.raises(ConfigError, match=r"MY_KEY is not set: set it in the environment"):
-        key("MY_KEY")
+    assert how_to_set("OPENROUTER_API_KEY") == ("get one at https://openrouter.ai/keys, then set it in the environment or in a .env "
+                                                "in the project or above it (s1flow doctor lists what each model needs)")
+    assert how_to_set("MY_KEY").startswith("set it in the environment")

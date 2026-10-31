@@ -37,7 +37,9 @@ class BoxEdges(BaseModel):
 
 
 class _Answer(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    # Frozen, like Response: a value set after construction would skip validation, and the contract
+    # (providers/contract.py) relies on these types for everything but ranges and options.
+    model_config = ConfigDict(extra="forbid", frozen=True)
 
 
 class BooleanAnswer(_Answer):
@@ -94,7 +96,7 @@ class Usage(BaseModel):
 class Response(BaseModel):
     """One call's answers, keyed by question name."""
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", frozen=True)
     answers: dict[str, Answer]
     answered_by: str  # the model that actually answered (a version, where the model names one)
     usage: Usage = Field(default_factory=Usage)

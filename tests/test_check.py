@@ -4,19 +4,17 @@ import json
 import math
 
 import pytest
-from conftest import attach, cli, labelled, make_project, point
+from conftest import attach, labelled, make_project, point
 
 from s1flow.core.errors import ConfigError, DataError, NotFound, ProviderError, S1flowError
 from s1flow.eval.candidate import Candidate
 from s1flow.eval.evaluation import Evaluation, Failures
-from s1flow.client.identity import execution_digest
 from s1flow.objectives import Constraints, Coverage, Recall
 from s1flow.policies import DecisionPolicy, DecisionRule, PolicySpec
 from s1flow.eval.policy import EvaluatedPolicy, Evidence, Selection
 from s1flow.policies.file import asked
 from s1flow.policies.state_shape import schema_of
-from s1flow.client import Choice, ChoiceAnswer, Response, ModelBuild, ModelSpec, Usage
-from s1flow.client.models import Price
+from s1flow.client import Choice, ChoiceAnswer, Response, ModelBuild, Usage
 from s1flow.eval import Task, check, evalset
 from s1flow.eval.check import calls, comment
 from s1flow.eval.task import Optimized, Split
@@ -304,7 +302,6 @@ def test_a_cost_not_known_is_not_free_and_a_list_price_estimates_it(task):
     assert r.sides[0].cost_per_10k_usd is None and r.sides[0].cost_unknown == 20
     assert "calls whose API cost is not known" in comment.markdown(task, r)
     priced = policy(2, "tokens")
-    price = Price(input_per_mtok=1.0, as_of="2026-10-19", source="t")
     task.policies.write_new(priced)
     path = task.where.root / "s1flow.toml"
     path.write_text(path.read_text() + '\n[models.tokens.price]\ninput_per_mtok = 1.0\nas_of = "2026-10-19"\nsource = "t"\n')
