@@ -3,3 +3,5 @@
 data/raw/
 logs/
 runs/
+# Chart pages: charts.py draws them from comparison.json on demand.
+reports/*/comparison.html
