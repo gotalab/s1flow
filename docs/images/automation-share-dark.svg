@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 391" width="880" height="391" role="img" aria-labelledby="t d">
   <title id="t">Similar accuracy, very different share you can automate</title>
-  <desc id="d">For each model, a thin bar shows accuracy over all cases and a thick bar the share of cases it can handle automatically at a 95% accuracy target. Ruff issues (4 areas · English, 361 cases): d1-ultra (Liquid) 88% automatable at 90.0% accuracy, Decider v1.2 (Perplexity) 85% automatable at 90.3% accuracy, mammoth-1 (Baseten) 86% automatable at 90.9% accuracy, Jev 1.14 (TypeSafe) 75% automatable at 85.0% accuracy. MASSIVE (60 intents · Japanese, 201 cases): d1-ultra (Liquid) 76% automatable at 86.6% accuracy, Decider v1.2 (Perplexity) 94% automatable at 91.5% accuracy, mammoth-1 (Baseten) 91% automatable at 89.6% accuracy, Jev 1.14 (TypeSafe) 76% automatable at 84.1% accuracy. Source: apps/bench reports, 2026-10-31.</desc>
+  <desc id="d">For each model, a thin bar shows accuracy over all cases and a thick bar the share of cases it can handle automatically at a 95% accuracy target. Ruff issues (4 areas · English, 361 cases): d1-ultra (Liquid) 88% automatable at 90.0% accuracy, Decider v1.2 (Perplexity) 85% automatable at 90.3% accuracy, mammoth-1 (Baseten) 86% automatable at 90.9% accuracy, Jev 1.14 (TypeSafe) 75% automatable at 85.0% accuracy. Source: apps/bench reports, 2026-10-31.</desc>
   <style>
     text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; fill: #1f2328; }
     .bg { fill: #ffffff; }
@@ -32,57 +32,30 @@
   <rect class="bar" x="668" y="27" width="22" height="12" rx="4"/>
   <text class="lg" x="698" y="38">automatable at 95%</text>
   <text class="p" x="28" y="88">Ruff issues</text>
-  <text class="ps" x="120" y="88">4 areas · English · 361 cases</text>
+  <text class="ps" x="140" y="88">4 areas · English · 361 cases</text>
   <text class="n" x="28" y="137">d1-ultra</text>
-  <rect class="acc" x="120" y="112" width="225.1" height="5" rx="2.5"/>
-  <text class="a" x="380" y="118">90%</text>
-  <rect class="track" x="120" y="123" width="250" height="18" rx="5"/>
-  <rect class="bar" x="120" y="123" width="219.5" height="18" rx="5"/>
-  <text class="v" x="380" y="139">88%</text>
+  <rect class="acc" x="140" y="112" width="576.2" height="5" rx="2.5"/>
+  <text class="a" x="792" y="118">90%</text>
+  <rect class="track" x="140" y="123" width="640" height="18" rx="5"/>
+  <rect class="bar" x="140" y="123" width="562.0" height="18" rx="5"/>
+  <text class="v" x="792" y="139">88%</text>
   <text class="n" x="28" y="189">Decider</text>
-  <rect class="acc" x="120" y="164" width="225.8" height="5" rx="2.5"/>
-  <text class="a" x="380" y="170">90%</text>
-  <rect class="track" x="120" y="175" width="250" height="18" rx="5"/>
-  <rect class="bar" x="120" y="175" width="213.3" height="18" rx="5"/>
-  <text class="v" x="380" y="191">85%</text>
+  <rect class="acc" x="140" y="164" width="578.0" height="5" rx="2.5"/>
+  <text class="a" x="792" y="170">90%</text>
+  <rect class="track" x="140" y="175" width="640" height="18" rx="5"/>
+  <rect class="bar" x="140" y="175" width="546.0" height="18" rx="5"/>
+  <text class="v" x="792" y="191">85%</text>
   <text class="n" x="28" y="241">mammoth-1</text>
-  <rect class="acc" x="120" y="216" width="227.1" height="5" rx="2.5"/>
-  <text class="a" x="380" y="222">91%</text>
-  <rect class="track" x="120" y="227" width="250" height="18" rx="5"/>
-  <rect class="bar" x="120" y="227" width="214.7" height="18" rx="5"/>
-  <text class="v" x="380" y="243">86%</text>
+  <rect class="acc" x="140" y="216" width="581.5" height="5" rx="2.5"/>
+  <text class="a" x="792" y="222">91%</text>
+  <rect class="track" x="140" y="227" width="640" height="18" rx="5"/>
+  <rect class="bar" x="140" y="227" width="549.6" height="18" rx="5"/>
+  <text class="v" x="792" y="243">86%</text>
   <text class="n" x="28" y="293">Jev 1.14</text>
-  <rect class="acc" x="120" y="268" width="212.6" height="5" rx="2.5"/>
-  <text class="a" x="380" y="274">85%</text>
-  <rect class="track" x="120" y="279" width="250" height="18" rx="5"/>
-  <rect class="bar" x="120" y="279" width="188.4" height="18" rx="5"/>
-  <text class="v" x="380" y="295">75%</text>
-  <text class="p" x="468" y="88">MASSIVE</text>
-  <text class="ps" x="560" y="88">60 intents · Japanese · 201 cases</text>
-  <text class="n" x="468" y="137">d1-ultra</text>
-  <rect class="acc" x="560" y="112" width="216.4" height="5" rx="2.5"/>
-  <text class="a" x="820" y="118">87%</text>
-  <rect class="track" x="560" y="123" width="250" height="18" rx="5"/>
-  <rect class="bar" x="560" y="123" width="190.3" height="18" rx="5"/>
-  <text class="v" x="820" y="139">76%</text>
-  <text class="n" x="468" y="189">Decider</text>
-  <rect class="acc" x="560" y="164" width="228.9" height="5" rx="2.5"/>
-  <text class="a" x="820" y="170">92%</text>
-  <rect class="track" x="560" y="175" width="250" height="18" rx="5"/>
-  <rect class="bar" x="560" y="175" width="235.1" height="18" rx="5"/>
-  <text class="v" x="820" y="191">94%</text>
-  <text class="n" x="468" y="241">mammoth-1</text>
-  <rect class="acc" x="560" y="216" width="223.9" height="5" rx="2.5"/>
-  <text class="a" x="820" y="222">90%</text>
-  <rect class="track" x="560" y="227" width="250" height="18" rx="5"/>
-  <rect class="bar" x="560" y="227" width="227.6" height="18" rx="5"/>
-  <text class="v" x="820" y="243">91%</text>
-  <text class="n" x="468" y="293">Jev 1.14</text>
-  <rect class="acc" x="560" y="268" width="210.2" height="5" rx="2.5"/>
-  <text class="a" x="820" y="274">84%</text>
-  <rect class="track" x="560" y="279" width="250" height="18" rx="5"/>
-  <rect class="bar" x="560" y="279" width="190.3" height="18" rx="5"/>
-  <text class="v" x="820" y="295">76%</text>
-  <line class="rule" x1="440" x2="440" y1="72" y2="355"/>
+  <rect class="acc" x="140" y="268" width="544.3" height="5" rx="2.5"/>
+  <text class="a" x="792" y="274">85%</text>
+  <rect class="track" x="140" y="279" width="640" height="18" rx="5"/>
+  <rect class="bar" x="140" y="279" width="482.2" height="18" rx="5"/>
+  <text class="v" x="792" y="295">75%</text>
   <text class="f" x="28" y="375">apps/bench reports, 2026-10-31 · development cases · a dated snapshot, not a ranking of providers</text>
 </svg>
