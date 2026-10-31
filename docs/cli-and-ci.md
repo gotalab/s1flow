@@ -10,9 +10,9 @@ pending check. To tell a pending check from an error, read `verdict` in `check -
 
 Install the Skill as step 2 of the [quick start](../README.md#quick-start) shows. The plugin also carries a Cursor
 manifest and follows the Agent Plugins format, for teams that import it into a Cursor team marketplace. `SKILL.md`
-says which of its six references (collect, measure, ship, app, learn, setup) to read at each stage. The source
-lives in `skills/s1flow/`, and `scripts/sync_plugin.py` writes the plugin copy. The Skill drives collecting cases,
-comparing, reviewing and improving through the same CLI; it isn't a second implementation.
+says which of its six references (collect, measure, ship, app, learn, setup) to read at each stage. It lives in
+`plugin/skills/s1flow/`, which the plugin and the package both carry. The Skill drives collecting cases, comparing,
+reviewing and improving through the same CLI; it isn't a second implementation.
 
 Given a request like the one in the quick start, the Skill fetches the issues with its `github.py` script, then
 runs `cases check`, `run` and `report`, and leaves the choice of candidate to you.

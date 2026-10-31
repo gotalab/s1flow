@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPT = ROOT / "skills/s1flow/scripts/github.py"
+SCRIPT = ROOT / "plugin/skills/s1flow/scripts/github.py"
 spec = importlib.util.spec_from_file_location("skill_github", SCRIPT)
 github = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(github)

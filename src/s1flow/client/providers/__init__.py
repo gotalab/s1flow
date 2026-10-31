@@ -17,7 +17,7 @@ from ..models import DecisionModel, ModelBuild, ModelSpec, ProviderFactory
 from .needs import Needs, NeedsOf, declares, needs_of
 from .published import PublishedOf, published_of, publishes
 
-__all__ = ["BUILTIN", "Needs", "NeedsOf", "PublishedOf", "build_model", "build_one", "declares", "needs", "published", "publishes", "resolve"]
+__all__ = ["BUILTIN", "Needs", "NeedsOf", "PublishedOf", "build_one", "declares", "needs", "published", "publishes", "resolve"]
 
 # The `provider` names s1flow.toml can use without code, as "module:factory" under s1flow.client.providers.
 # Your own: "package.module:factory", or an entry point in the `s1flow.providers` group.
@@ -52,14 +52,11 @@ def resolve(kind: str) -> ProviderFactory:
     raise ConfigError(f"unknown provider {kind!r}; built in: {', '.join(BUILTIN)}; or name your own as package.module:factory")
 
 
-def build_model(b: ModelBuild) -> DecisionModel:
-    """The spec's provider builds the model; its calls are priced from the spec's list price, if it has one (client/cost.py)."""
-    return listed(resolve(b.spec.provider)(b), b.spec.price)
-
-
 def build_one(name: str, spec: ModelSpec, cache_dir: Path | None = None) -> DecisionModel:
-    """Build the application-supplied model specification without line-up lookup."""
-    return build_model(ModelBuild(name, spec.resolved(), cache_dir))
+    """The spec's provider builds the model (no line-up lookup); its calls are priced from the spec's list price,
+    if it has one (client/cost.py)."""
+    spec = spec.resolved()
+    return listed(resolve(spec.provider)(ModelBuild(name, spec, cache_dir)), spec.price)
 
 
 def needs(spec: ModelSpec) -> Needs | None:

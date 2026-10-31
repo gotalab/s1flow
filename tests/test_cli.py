@@ -108,10 +108,10 @@ def test_report_with_no_task_is_the_overview_of_what_runs(tmp_path):
     import json
     import shutil
 
-    from conftest import BENCH
+    from conftest import PROJECT
 
-    (tmp_path / "s1flow.toml").write_text((BENCH / "s1flow.toml").read_text())
-    shutil.copytree(BENCH / "policies", tmp_path / "policies")
+    (tmp_path / "s1flow.toml").write_text((PROJECT / "s1flow.toml").read_text())
+    shutil.copytree(PROJECT / "policies", tmp_path / "policies")
     (tmp_path / "policies" / "gh-ruff-area" / "channels.json").write_text('{"schema": "s1flow/channels@1", "channels": {"current": 1}}\n')
     done = s1flow("report", "--json", cwd=tmp_path)
     assert done.returncode == 0, done.stderr
