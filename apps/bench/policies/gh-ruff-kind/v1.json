@@ -2,8 +2,8 @@
  "schema": "s1flow/policy@2",
  "task": "gh-ruff-kind",
  "version": 1,
- "connection": "clef-flash",
- "model_id": "clef-flash",
+ "connection": "clef-flash@openrouter",
+ "model_id": "cloudflare/clef-flash",
  "questions": {
   "kind": {
    "question": {
@@ -19,12 +19,12 @@
    "kind": {},
    "rule": {
     "threshold": null,
-    "min_probability": 0.9207
+    "min_probability": 0.9118684255348425
    }
   }
  },
- "at": "2026-10-15T21:46:11Z",
- "s1flow_version": "0.1.0",
+ "at": "2026-10-31T13:27:41Z",
+ "s1flow_version": "0.1.0a1",
  "state_schema": {
   "type": "object",
   "properties": {
@@ -38,6 +38,7 @@
   "required": [
    "body",
    "title"
-  ]
+  ],
+  "additionalProperties": false
  }
 }

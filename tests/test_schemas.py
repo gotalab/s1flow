@@ -81,7 +81,7 @@ def test_every_stored_policy_fits():
         assert errors(evidence, record) == [], sidecar
         evaluated = store.evaluated(spec["task"], version=spec["version"])
         assert evaluated.spec.digest == record["policy_digest"]
-        assert evaluated.evidence.execution_digest == record["evidence"]["execution_digest"]  # as stored: none is invented for an old record
+        assert evaluated.evidence.execution_digest == record["evidence"]["execution_digest"]
 
 
 def task_files(pattern: str) -> list[Path]:

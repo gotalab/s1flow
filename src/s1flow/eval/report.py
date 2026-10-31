@@ -67,7 +67,7 @@ def left_out(task: Task, evs: list[Evaluation]) -> list[str]:
     gaps = [e for e in evs if e.n and e.failures.missing]
     if not gaps:
         return []
-    return ["", "Not compared: " + "; ".join(f"{e.candidate.name} ({why_missing(e.failures.never_asked or 0, e.failures.failed_cases or 0)})" for e in gaps)
+    return ["", "Not compared: " + "; ".join(f"{e.candidate.name} ({why_missing(e.failures.never_asked, e.failures.failed_cases)})" for e in gaps)
             + ". With cases it has no answer to, a candidate is measured on the rest only, not on the cases the others answered,"
             + " so it is not ranked. Ask them again: "
             + f"`{ask_again(task, [(e.candidate.model, e.candidate.variant) for e in gaps])}`"]
@@ -343,9 +343,6 @@ def calls_table(task: Task, evs: list[Evaluation], ranked: list[Ranked]) -> list
         conc = ", ".join(map(str, t.concurrency)) or "unknown"
         if t.concurrency_unknown and t.concurrency:
             conc += f" ({t.concurrency_unknown} unknown)"
-        retried = "not recorded" if t.unrecorded == t.n else f"{t.retried}" + (f" ({t.unrecorded} not recorded)" if t.unrecorded else "")
-        if t.unrecorded:
-            caveats.add("unrecorded")
         if t.n < 100:
             caveats.add("few")
         if len(t.concurrency) > 1 or t.concurrency_unknown:
@@ -353,7 +350,7 @@ def calls_table(task: Task, evs: list[Evaluation], ranked: list[Ranked]) -> list
         fit = "" if budget is None else " ✓ |" if t.p99_ms <= budget else " ✗ |"
         L.append(
             f"| {e.candidate.name} | {t.n} | {t.p50_ms:.0f} ms | {t.p90_ms:.0f} ms | {t.p99_ms:.0f} ms | {t.max_ms:.0f} ms "
-            f"| {num(t.spread, 1)} | {retried} | {conc} |{fit}{spent}"
+            f"| {num(t.spread, 1)} | {t.retried} | {conc} |{fit}{spent}"
         )
     L += ["", "Measured on the calls, not the answers: never an objective, only the constraints and the order of candidates the "
           "objectives tie (the p90 of each case's slowest call, then API cost). Frontier ○: no other model beats it on all three of "
@@ -366,8 +363,6 @@ def calls_table(task: Task, evs: list[Evaluation], ranked: list[Ranked]) -> list
         L.append("Under 100 calls, a model's p99 means little more than its max.")
     if "mixed" in caveats:
         L.append("Some calls were made at another concurrency, or at one not recorded.")
-    if "unrecorded" in caveats:
-        L.append("\"not recorded\": calls made before 2026-10-16, whose time may include a retry's wait.")
     if note := cost_note([(e.candidate.name, e.calls.cost_source, e.calls.price.as_of if e.calls.price else None, e.calls.cost_unknown) for e in rows]):
         L.append(note)
     return L

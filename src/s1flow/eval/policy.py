@@ -24,9 +24,9 @@ def pin(spec: ModelSpec, model: str) -> Pin:
 class Evidence(BaseModel):
     model_config = ConfigDict(extra='forbid')
     data_sha256: str
-    execution_digest: str | None
-    input_adapter_digest: str = ''
-    evaluation_contract_digest: str | None = None  # unknown for historical evidence; never inferred
+    execution_digest: str
+    input_adapter_digest: str
+    evaluation_contract_digest: str
     git_sha: str | None = None
     evaluation: Evaluation
     test: TestVerdict | None

@@ -20,8 +20,17 @@ def line(id, answered_by="jev-1.13.0", at="2026-10-07", prompt="p1", **kw):
     if kw:
         r |= {"outcome": "failed"}
     else:
-        r |= {"outcome": "answered", "answer": {"type": "choice", "choice": "a"}, "answered_by": answered_by, "request_digest": "d"}
+        r |= {"outcome": "answered", "answer": {"type": "choice", "choice": "a"}, "answered_by": answered_by, "request_digest": "d", "retries": 0}
     return PredictionRecord.model_validate(r)
+
+
+def test_an_answered_line_without_retries_or_answered_by_is_refused():
+    """Every answered call records who answered and how many retries it took; a failed one need not."""
+    good = line("a").model_dump(mode="json")
+    for field in ("retries", "answered_by"):
+        with pytest.raises(ValueError, match=f"an answered record needs {field}"):
+            PredictionRecord.model_validate({k: v for k, v in good.items() if k != field})
+    assert line("b", reason="timeout").retries is None
 
 
 def ids(lines):

@@ -239,10 +239,10 @@ def scored(o: Objective, v: float, half: float = 0.05) -> ObjectiveScore:
 
 def ev(model: str, scores: list[ObjectiveScore], cost: float = 1.0, p99: float = 100.0, n: int = 100) -> Evaluation:
     """An evaluation of `model` on n cases: these objective scores, this cost per 10,000 cases and latency."""
-    lat = Latency(n=n, p50_ms=p99 / 2, p90_ms=p99, p95_ms=p99, p99_ms=p99, max_ms=p99, spread=2.0, retried=0, unrecorded=0, concurrency=[4], concurrency_unknown=0)
+    lat = Latency(n=n, p50_ms=p99 / 2, p90_ms=p99, p95_ms=p99, p99_ms=p99, max_ms=p99, spread=2.0, retried=0, concurrency=[4], concurrency_unknown=0)
     return Evaluation(
         candidate=Candidate(model=model), answered_by=model, answered_by_all=[model], answered_ids=[str(i) for i in range(n)], n=n, probabilities=True,
-        failures=Failures(calls=n, failed=0, unsupported=0, data_errors=0, unlabeled=0), accuracy=Estimate(value=0.9, interval=(0.85, 0.95)),
+        failures=Failures(calls=n, failed=0, unsupported=0, data_errors=0, unlabeled=0, never_asked=0, failed_cases=0, refused_cases=0), accuracy=Estimate(value=0.9, interval=(0.85, 0.95)),
         objective=scores[0], tiebreak=scores[1:], calls=Calls(cost_per_10k_usd=cost, latency=lat),
     )
 

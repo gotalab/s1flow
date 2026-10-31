@@ -108,6 +108,8 @@ def test_unknown_constraints_and_different_populations_refuse_recommendation(tas
     second = e.model_copy(update={'candidate': e.candidate.model_copy(update={'model': 'second'}), 'answered_ids': e.answered_ids[:-1]})
     ranked = rank(task.primary, [], task.constraints, [e, second])
     assert all(any('different answered' in reason for reason in r.excluded) for r in ranked)
+    with pytest.raises(ValueError, match=f"answered_ids names {e.n - 1} cases, n is {e.n}"):  # a stored one cannot hide its population
+        type(e).model_validate(second.model_dump())
 
 
 def test_comparison_binds_saved_fold_values_to_the_current_data(task):

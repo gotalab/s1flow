@@ -8,8 +8,7 @@ What the calls took (Evaluation.calls) is used in two places only, both here: th
 latency and API cost, and "latency" (p90 per case) and "cost" (API cost per 10,000 cases, unknown
 last) where `tiebreak` names them (Task.ties). With no tiebreak, the candidates the objective cannot tell apart
 are listed by name: nothing orders them, and the list says so. Latency orders candidates only when they
-were all measured alike: at one concurrency, with their retries recorded (a call saved before
-2026-10-16 may include the backoff). Otherwise it is skipped and `unlike` says why;
+were all measured alike, at one concurrency. Otherwise it is skipped and `unlike` says why;
 `s1flow run --fresh --concurrency N` with one N for every candidate measures them again.
 Candidates whose latency intervals overlap the fastest's are not told apart by it.
 """
@@ -68,12 +67,10 @@ class Unlike:
 
     concurrencies: list[int]  # every concurrency they were measured at
     unknown: list[str]  # candidates with calls whose concurrency was not recorded (or no latency at all)
-    unrecorded: list[str]  # candidates with calls saved before retries were recorded
 
     def en(self, task: str) -> str:
         why = [f"concurrency {', '.join(map(str, self.concurrencies))}"] if len(self.concurrencies) > 1 else []
         why += [f"{len(self.unknown)} with no concurrency recorded"] if self.unknown else []
-        why += [f"{len(self.unrecorded)} with no retries recorded"] if self.unrecorded else []
         return (f"latency not compared ({'; '.join(why)}): measure every candidate again at one concurrency, "
                 f"s1flow run {task} --fresh --concurrency N (the same N for all)")
 
@@ -83,18 +80,16 @@ def unlike(evaluations: list[Evaluation]) -> Unlike | None:
     if len(evaluations) < 2:
         return None
     seen: set[int] = set()
-    unknown, unrecorded = [], []
+    unknown = []
     for e in evaluations:
         lat, name = e.calls.latency, e.candidate.name
         if lat is None or lat.concurrency_unknown:
             unknown.append(name)
         if lat is not None:
             seen |= set(lat.concurrency)
-            if lat.unrecorded:
-                unrecorded.append(name)
-    if len(seen) <= 1 and not unknown and not unrecorded:
+    if len(seen) <= 1 and not unknown:
         return None
-    return Unlike(sorted(seen), unknown, unrecorded)
+    return Unlike(sorted(seen), unknown)
 
 
 def _latency(group: list[Evaluation]) -> dict[str, float]:
@@ -123,10 +118,8 @@ def rank(objective: Objective, then: list[Objective | CallKey], constraints: Con
     scored = [e for e in evaluations if e.n and e.objective is not None]
     ranked = [Ranked(candidate=e.candidate.name, scores=e.scores, excluded=violations(constraints, e)) for e in scored]
     populations = {tuple(sorted(e.answered_ids)) for e in scored}
-    for item, e in zip(ranked, scored):
-        if not e.answered_ids:
-            item.excluded.append("answered population unverified")
-        elif len(populations) > 1:
+    if len(populations) > 1:
+        for item in ranked:
             item.excluded.append("different answered dev cases; automatic comparison refused")
     by = {e.candidate.name: e for e in scored}
 

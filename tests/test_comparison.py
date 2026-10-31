@@ -152,7 +152,7 @@ def test_comparison_notices_unlike_latency_provenance(tmp_path):
     task = task_fixture(tmp_path, question=Boolean(instructions="truth?"), models={"good": compare_fake("good"), "bad": compare_fake("bad")})
     run_saved(task, ["good", "bad"])
     path = run.run_path(task, "base", "bad")
-    rows = [record.model_copy(update={"concurrency": 4, "retries": None}) for record in records.read(path)]
+    rows = [record.model_copy(update={"concurrency": 4}) for record in records.read(path)]
     path.write_text("\n".join(record.line() for record in rows) + "\n")
     result = comparison.collect(task)
     assert any("latency not compared" in notice for notice in result.notices)

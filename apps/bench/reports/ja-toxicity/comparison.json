@@ -422,7 +422,6 @@
      "max_ms": 1517.1,
      "spread": 3.1045595341345553,
      "retried": 0,
-     "unrecorded": 0,
      "concurrency": [
       4
      ],
@@ -2341,7 +2340,6 @@
      "max_ms": 1471.1,
      "spread": 2.6168453699601235,
      "retried": 0,
-     "unrecorded": 0,
      "concurrency": [
       4
      ],
@@ -4242,7 +4240,6 @@
      "max_ms": 787.6,
      "spread": 2.1973879052655785,
      "retried": 0,
-     "unrecorded": 0,
      "concurrency": [
       4
      ],
@@ -6148,7 +6145,6 @@
      "max_ms": 785.9,
      "spread": 2.913865423827556,
      "retried": 0,
-     "unrecorded": 0,
      "concurrency": [
       4
      ],
@@ -8054,7 +8050,6 @@
      "max_ms": 517.2,
      "spread": 1.9259675721204463,
      "retried": 0,
-     "unrecorded": 0,
      "concurrency": [
       4
      ],
@@ -9950,7 +9945,6 @@
      "max_ms": 262.9,
      "spread": 1.4860028449502127,
      "retried": 0,
-     "unrecorded": 0,
      "concurrency": [
       4
      ],
@@ -11869,7 +11863,6 @@
      "max_ms": 1584.0,
      "spread": 2.9588673213062315,
      "retried": 0,
-     "unrecorded": 0,
      "concurrency": [
       4
      ],
@@ -13785,7 +13778,6 @@
      "max_ms": 663.0,
      "spread": 1.6479531307213473,
      "retried": 0,
-     "unrecorded": 0,
      "concurrency": [
       4
      ],
@@ -15696,7 +15688,6 @@
      "max_ms": 1196.1,
      "spread": 2.222305364511691,
      "retried": 1,
-     "unrecorded": 0,
      "concurrency": [
       4
      ],
@@ -17602,7 +17593,6 @@
      "max_ms": 459.0,
      "spread": 1.4220881174899866,
      "retried": 0,
-     "unrecorded": 0,
      "concurrency": [
       4
      ],
@@ -19611,7 +19601,6 @@
      "max_ms": 213.0,
      "spread": 1.4766852471200291,
      "retried": 0,
-     "unrecorded": 0,
      "concurrency": [
       4
      ],
@@ -21542,7 +21531,6 @@
      "max_ms": 297.1,
      "spread": 1.3718826815642455,
      "retried": 0,
-     "unrecorded": 0,
      "concurrency": [
       4
      ],
@@ -23478,7 +23466,6 @@
      "max_ms": 1686.2,
      "spread": 2.6481774729842056,
      "retried": 0,
-     "unrecorded": 0,
      "concurrency": [
       4
      ],
@@ -25409,7 +25396,6 @@
      "max_ms": 832.2,
      "spread": 3.1908050171037625,
      "retried": 0,
-     "unrecorded": 0,
      "concurrency": [
       4
      ],
@@ -27327,7 +27313,6 @@
      "max_ms": 2842.4,
      "spread": 9.592616171003709,
      "retried": 0,
-     "unrecorded": 0,
      "concurrency": [
       4
      ],
@@ -29238,7 +29223,6 @@
      "max_ms": 584.8,
      "spread": 1.6975487196005798,
      "retried": 0,
-     "unrecorded": 0,
      "concurrency": [
       4
      ],
@@ -31139,7 +31123,6 @@
      "max_ms": 952.4,
      "spread": 2.386482703987325,
      "retried": 0,
-     "unrecorded": 0,
      "concurrency": [
       4
      ],

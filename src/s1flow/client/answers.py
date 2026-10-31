@@ -102,5 +102,5 @@ class Response(BaseModel):
     usage: Usage = Field(default_factory=Usage)
     # The attempt that answered, request to response: retries and the backoff before them left out.
     latency_ms: float = 0.0
-    retries: int | None = None  # attempts before the answering one; None in answers saved before 2026-10-16
+    retries: int = 0  # attempts before the answering one
     provider_metadata: dict[str, Any] = Field(default_factory=dict)  # what the model adds (routing, samples)

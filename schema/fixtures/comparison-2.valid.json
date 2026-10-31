@@ -105,7 +105,6 @@
      "max_ms": 4.0,
      "spread": 1.0,
      "retried": 0,
-     "unrecorded": 0,
      "concurrency": [
       2
      ],

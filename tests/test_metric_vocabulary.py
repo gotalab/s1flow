@@ -109,8 +109,8 @@ def _evaluation() -> Evaluation:
     """Scored with probabilities, at the default coverage target: every metric a comparison can define."""
     selective = Selective(target_accuracy=0.95, coverage=Estimate(value=0.5), accuracy=0.96, n=5, errors=0, lower=0.9,
                           labels_needed=None, min_probability=0.9)
-    return Evaluation(candidate=Candidate(model="m"), answered_by="m", answered_by_all=["m"], n=10, probabilities=True,
-                      failures=Failures(calls=10, failed=0, unsupported=0, data_errors=0, unlabeled=0), selective=[selective])
+    return Evaluation(candidate=Candidate(model="m"), answered_by="m", answered_by_all=["m"], answered_ids=[str(i) for i in range(10)], n=10, probabilities=True,
+                      failures=Failures(calls=10, failed=0, unsupported=0, data_errors=0, unlabeled=0, never_asked=0, failed_cases=0, refused_cases=0), selective=[selective])
 
 
 @pytest.mark.parametrize("name", KINDS)

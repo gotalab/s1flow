@@ -258,7 +258,6 @@
      "type": "array"
     },
     "answered_ids": {
-     "default": [],
      "items": {
       "type": "string"
      },
@@ -452,6 +451,7 @@
     "candidate",
     "answered_by",
     "answered_by_all",
+    "answered_ids",
     "n",
     "probabilities",
     "failures"
@@ -467,32 +467,16 @@
      "type": "string"
     },
     "execution_digest": {
-     "anyOf": [
-      {
-       "type": "string"
-      },
-      {
-       "type": "null"
-      }
-     ],
-     "title": "Execution Digest"
+     "title": "Execution Digest",
+     "type": "string"
     },
     "input_adapter_digest": {
-     "default": "",
      "title": "Input Adapter Digest",
      "type": "string"
     },
     "evaluation_contract_digest": {
-     "anyOf": [
-      {
-       "type": "string"
-      },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "title": "Evaluation Contract Digest"
+     "title": "Evaluation Contract Digest",
+     "type": "string"
     },
     "git_sha": {
      "anyOf": [
@@ -536,6 +520,8 @@
    "required": [
     "data_sha256",
     "execution_digest",
+    "input_adapter_digest",
+    "evaluation_contract_digest",
     "evaluation",
     "test",
     "compared"
@@ -545,7 +531,7 @@
   },
   "Failures": {
    "additionalProperties": false,
-   "description": "`calls` to `unlabeled` count call records; the `*_cases` and `never_asked` count labelled cases.\nA case never asked or with every call failed has no answer the model gave: a candidate missing one is\nnot compared with the others (`missing`). A refused case is the model's limit, left out of its denominator.\nThe case counts are None in an evaluation stored before 2026-10-19 (not counted then).",
+   "description": "`calls` to `unlabeled` count call records; the `*_cases` and `never_asked` count labelled cases.\nA case never asked or with every call failed has no answer the model gave: a candidate missing one is\nnot compared with the others (`missing`). A refused case is the model's limit, left out of its denominator.",
    "properties": {
     "calls": {
      "title": "Calls",
@@ -568,40 +554,16 @@
      "type": "integer"
     },
     "never_asked": {
-     "anyOf": [
-      {
-       "type": "integer"
-      },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "title": "Never Asked"
+     "title": "Never Asked",
+     "type": "integer"
     },
     "failed_cases": {
-     "anyOf": [
-      {
-       "type": "integer"
-      },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "title": "Failed Cases"
+     "title": "Failed Cases",
+     "type": "integer"
     },
     "refused_cases": {
-     "anyOf": [
-      {
-       "type": "integer"
-      },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "title": "Refused Cases"
+     "title": "Refused Cases",
+     "type": "integer"
     }
    },
    "required": [
@@ -609,7 +571,10 @@
     "failed",
     "unsupported",
     "data_errors",
-    "unlabeled"
+    "unlabeled",
+    "never_asked",
+    "failed_cases",
+    "refused_cases"
    ],
    "title": "Failures",
    "type": "object"
@@ -755,10 +720,6 @@
      "title": "Retried",
      "type": "integer"
     },
-    "unrecorded": {
-     "title": "Unrecorded",
-     "type": "integer"
-    },
     "concurrency": {
      "items": {
       "type": "integer"
@@ -780,7 +741,6 @@
     "max_ms",
     "spread",
     "retried",
-    "unrecorded",
     "concurrency",
     "concurrency_unknown"
    ],

@@ -16,7 +16,7 @@
  "answered_by": "model-v1",
  "usage": null,
  "latency_ms": null,
- "retries": null,
+ "retries": 0,
  "concurrency": null,
  "cached": null,
  "reason": null,

@@ -647,7 +647,7 @@
   },
   "Failures": {
    "additionalProperties": false,
-   "description": "`calls` to `unlabeled` count call records; the `*_cases` and `never_asked` count labelled cases.\nA case never asked or with every call failed has no answer the model gave: a candidate missing one is\nnot compared with the others (`missing`). A refused case is the model's limit, left out of its denominator.\nThe case counts are None in an evaluation stored before 2026-10-19 (not counted then).",
+   "description": "`calls` to `unlabeled` count call records; the `*_cases` and `never_asked` count labelled cases.\nA case never asked or with every call failed has no answer the model gave: a candidate missing one is\nnot compared with the others (`missing`). A refused case is the model's limit, left out of its denominator.",
    "properties": {
     "calls": {
      "title": "Calls",
@@ -670,40 +670,16 @@
      "type": "integer"
     },
     "never_asked": {
-     "anyOf": [
-      {
-       "type": "integer"
-      },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "title": "Never Asked"
+     "title": "Never Asked",
+     "type": "integer"
     },
     "failed_cases": {
-     "anyOf": [
-      {
-       "type": "integer"
-      },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "title": "Failed Cases"
+     "title": "Failed Cases",
+     "type": "integer"
     },
     "refused_cases": {
-     "anyOf": [
-      {
-       "type": "integer"
-      },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "title": "Refused Cases"
+     "title": "Refused Cases",
+     "type": "integer"
     }
    },
    "required": [
@@ -711,7 +687,10 @@
     "failed",
     "unsupported",
     "data_errors",
-    "unlabeled"
+    "unlabeled",
+    "never_asked",
+    "failed_cases",
+    "refused_cases"
    ],
    "title": "Failures",
    "type": "object"
@@ -794,10 +773,6 @@
      "title": "Retried",
      "type": "integer"
     },
-    "unrecorded": {
-     "title": "Unrecorded",
-     "type": "integer"
-    },
     "concurrency": {
      "items": {
       "type": "integer"
@@ -819,7 +794,6 @@
     "max_ms",
     "spread",
     "retried",
-    "unrecorded",
     "concurrency",
     "concurrency_unknown"
    ],

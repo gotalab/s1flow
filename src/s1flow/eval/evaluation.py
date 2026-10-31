@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ..client.models import Price
 from .candidate import Candidate
@@ -37,22 +37,21 @@ class Estimate(_Frozen):
 class Failures(_Frozen):
     """`calls` to `unlabeled` count call records; the `*_cases` and `never_asked` count labelled cases.
     A case never asked or with every call failed has no answer the model gave: a candidate missing one is
-    not compared with the others (`missing`). A refused case is the model's limit, left out of its denominator.
-    The case counts are None in an evaluation stored before 2026-10-19 (not counted then)."""
+    not compared with the others (`missing`). A refused case is the model's limit, left out of its denominator."""
 
     calls: int  # call records scored, one per case
     failed: int
     unsupported: int  # refused before or by the provider
     data_errors: int  # the task's own errors
     unlabeled: int
-    never_asked: int | None = None  # labelled cases with no record under the question
-    failed_cases: int | None = None  # labelled cases asked whose every call failed
-    refused_cases: int | None = None  # labelled cases refused or unsupported, none answered
+    never_asked: int  # labelled cases with no record under the question
+    failed_cases: int  # labelled cases asked whose every call failed
+    refused_cases: int  # labelled cases refused or unsupported, none answered
 
     @property
     def missing(self) -> int:
         """Labelled cases this candidate has no answer to for want of a call: never asked, or every call failed."""
-        return (self.never_asked or 0) + (self.failed_cases or 0)
+        return self.never_asked + self.failed_cases
 
 
 def why_missing(never_asked: int, failed_cases: int) -> str:
@@ -147,7 +146,6 @@ class Latency(_Frozen):
     max_ms: float
     spread: float | None  # p99 / p50: 1 is steady, 3 has a long tail
     retried: int  # calls that needed a retry before answering
-    unrecorded: int  # saved before retries were kept: may include backoff
     concurrency: list[int]
     concurrency_unknown: int
 
@@ -181,7 +179,7 @@ class Evaluation(_Frozen):
     candidate: Candidate
     answered_by: str | None  # the answering model scored (Response.answered_by, as its run records name it)
     answered_by_all: list[str]  # every answering model on file, latest first
-    answered_ids: list[str] = []  # exact dev population for automatic comparisons
+    answered_ids: list[str]  # exact dev population for automatic comparisons
     n: int  # labelled dev cases scored
     probabilities: bool  # False when the model returned single answers only
     failures: Failures
@@ -206,6 +204,12 @@ class Evaluation(_Frozen):
     def scores(self) -> list[ObjectiveScore]:
         """The objective's score, then those of the objectives in `tiebreak`, in its order."""
         return [] if self.objective is None else [self.objective, *self.tiebreak]
+
+    @model_validator(mode="after")
+    def _population(self) -> Evaluation:
+        if len(self.answered_ids) != self.n:  # rank compares candidates only on the same answered cases
+            raise ValueError(f"answered_ids names {len(self.answered_ids)} cases, n is {self.n}")
+        return self
 
 
 COST_NOTE = "Where the API costs come from: "  # the line a report and a check write when an API cost is an estimate or not known
