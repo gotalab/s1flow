@@ -20,7 +20,8 @@ import hashlib
 import json
 import sys
 import time
-from collections.abc import Mapping
+from collections.abc import Callable, Iterable, Mapping
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
 
@@ -29,12 +30,12 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from ..client import AsyncClient
 from ..client._client import AsyncResponses, ModelRef, validate_questions
 from ..client.answers import Response
-from ..client.identity import request_digest, require_provider_revision, model_digest
+from ..client.identity import digest, execution_digest, request_digest, require_provider_revision, model_digest
 from ..client.models import DecisionModel, ModelSpec
 from ..client.questions import Question, Questions
 from ..client.state import State
 from ..core import clock
-from ..core.errors import ConfigError, NotFound
+from ..core.errors import ConfigError, NotFound, S1flowError
 from .candidate import Candidate
 from . import evalset, records
 from .records import PredictionRecord
@@ -151,6 +152,59 @@ class CachedClient(AsyncClient):
 
 def run_path(task: Task, variant: str, model_name: str) -> Path:
     return task.where.runs_dir / task.id / variant / f"{model_name}.jsonl"
+
+
+def _run_digest(task: Task, candidate: Candidate) -> str:
+    """The run's records and its .meta.json (the call conditions requested and measured), by file name: sha256, or None."""
+    path = run_path(task, candidate.variant, candidate.model)
+    return digest({file.name: hashlib.sha256(file.read_bytes()).hexdigest() if file.exists() else None
+                   for file in (path, path.with_suffix(".meta.json"))})
+
+
+def _binding(resolve: Callable[[str], ModelSpec], model: str) -> str:
+    try:
+        spec = resolve(model)
+    except S1flowError:
+        return "unresolved"  # no longer in the line-up
+    return execution_digest(spec, "")
+
+
+@dataclass(frozen=True)
+class Conditions:
+    """What scoring saved runs depends on, as digests. Taken before the runs are read (`now`) and again after
+    (`changed`), so a comparison or a ranking is not trusted when any of it moved in between. `resolve` reads a model
+    from the line-up the caller uses (Lineup.resolved, Connections.resolved)."""
+
+    candidates: tuple[Candidate, ...]
+    data: str  # Task.data_digest
+    input_adapter: str  # Task.input_adapter_digest
+    evaluation_contract: str  # Task.evaluation_contract_digest
+    bindings: dict[str, str]  # model -> execution_digest(spec, ""), or "unresolved"
+    runs: dict[str, str]  # candidate name -> its run's digest
+
+    @classmethod
+    def now(cls, task: Task, candidates: Iterable[Candidate], resolve: Callable[[str], ModelSpec]) -> Conditions:
+        cands = tuple(candidates)
+        return cls(
+            candidates=cands, data=task.data_digest, input_adapter=task.input_adapter_digest,
+            evaluation_contract=task.evaluation_contract_digest,
+            bindings={c.model: _binding(resolve, c.model) for c in cands},
+            runs={c.name: _run_digest(task, c) for c in cands},
+        )
+
+    def changed(self, task: Task, resolve: Callable[[str], ModelSpec]) -> str | None:
+        """What is no longer as it was, for a message ("input data or labels and the runs of m"); None: nothing."""
+        now = Conditions.now(task, self.candidates, resolve)
+        what = [label for label, was, is_ in (
+            ("input data or labels", self.data, now.data),
+            ("the input adapter", self.input_adapter, now.input_adapter),
+            ("the evaluation contract", self.evaluation_contract, now.evaluation_contract),
+        ) if was != is_]
+        if moved := [m for m, was in self.bindings.items() if now.bindings[m] != was]:
+            what.append(f"the execution conditions of {', '.join(moved)}")
+        if moved := [c for c, was in self.runs.items() if now.runs[c] != was]:
+            what.append(f"the runs of {', '.join(moved)}")
+        return " and ".join(what) or None
 
 
 def ask_again(task: Task, missing: list[tuple[str, str]]) -> str:

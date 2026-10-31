@@ -16,14 +16,13 @@ optimized question competes with the original). The policy's rule is the one the
 
 from __future__ import annotations
 
-import hashlib
 import warnings
 from dataclasses import dataclass, field
 
 from pydantic import BaseModel
 
 from ..client.models import ModelSpec
-from ..client.identity import digest, execution_digest, require_provider_revision
+from ..client.identity import execution_digest, require_provider_revision
 from ..core.errors import ConfigError, NotFound, S1flowError
 from ..policies import DecisionPolicy
 from ..policies.rule import DecisionRule
@@ -34,7 +33,7 @@ from ..policies.state_shape import schema_of
 from . import evalset, metrics, weights
 from .evaluation import Calls, Evaluation, ObjectiveScore
 from .policy import EvaluatedPolicy, Evidence, Pin, Selection, pin
-from .run import ask_again, run_path
+from .run import Conditions, ask_again
 from .select import Ranked, rank, unlike_among_tied
 from .task import Task
 
@@ -60,13 +59,6 @@ def validate_evidence(task: Task, policy: EvaluatedPolicy) -> None:
         raise ConfigError(f"{policy.spec.ref}: evaluation contract changed or is unknown; rescore and adopt again")
     if task.data_digest != policy.evidence.data_sha256:
         raise ConfigError(f"{policy.spec.ref}: input data or labels changed; measure and adopt again")
-
-
-def _run_digest(task: Task, model: str, variant: str) -> str:
-    """The prediction records and their requested/measured call conditions used for ranking."""
-    path = run_path(task, variant, model)
-    return digest({file.name: hashlib.sha256(file.read_bytes()).hexdigest() if file.exists() else None
-                   for file in (path, path.with_suffix(".meta.json"))})
 
 
 def candidates(task: Task, only: list[str] | None = None, variants: list[str] | None = None) -> list[Listed]:
@@ -129,11 +121,7 @@ class Shortlist:
     """Every candidate scored on train + val, best first. Building it writes nothing and shows no test result."""
 
     task: Task
-    data_digest: str
-    input_adapter_digest: str
-    evaluation_contract_digest: str
-    execution_digests: dict[str, str]
-    run_digests: dict[str, str]
+    measured: Conditions  # every candidate listed, the ones left out for missing cases too
     ranked: list[Ranked]
     evaluations: dict[str, Evaluation]
     preds: dict[str, metrics.Preds]
@@ -184,13 +172,10 @@ class Shortlist:
 def shortlist(task: Task, only: list[str] | None = None, variants: list[str] | None = None) -> Shortlist:
     if not task.kind.adoptable:
         raise S1flowError(f"a policy ships boolean and choice questions; {task.id} asks a {task.kind.type}")
-    data_digest = task.data_digest
-    input_adapter_digest = task.input_adapter_digest
-    evaluation_contract_digest = task.evaluation_contract_digest
     cands = candidates(task, only, variants)
     if not cands:
         raise NotFound(f"no runs for {task.id}; s1flow run {task.id} first")
-    run_digests = {name: _run_digest(task, model, variant) for name, model, variant in cands}
+    measured = Conditions.now(task, [Candidate(model=m, variant=v) for _, m, v in cands], task.where.declared_connections().resolved)
     preds = {name: metrics.load(task, variant, model) for name, model, variant in cands}
     gaps = {c: missing(preds[c[0]]) for c in cands if preds[c[0]].never_asked or preds[c[0]].failed_cases}
     if gaps:
@@ -208,15 +193,9 @@ def shortlist(task: Task, only: list[str] | None = None, variants: list[str] | N
     moved = weights.sensitivity(task, preds, {c[0]: c[2] for c in cands})
     if "latency" in task.ties and (unlike := unlike_among_tied(ranked, list(evaluations.values()))):
         warnings.warn(unlike.en(task.id), stacklevel=2)
-    if task.data_digest != data_digest or task.input_adapter_digest != input_adapter_digest:
-        raise ConfigError(f"{task.id}: comparison data or execution conditions changed during ranking")
-    if task.evaluation_contract_digest != evaluation_contract_digest:
-        raise ConfigError(f"{task.id}: evaluation contract changed during ranking; rescore before adoption")
-    if any(_run_digest(task, model, variant) != run_digests[name] for name, model, variant in cands):
-        raise ConfigError(f"{task.id}: run evidence changed during ranking; rescore before adoption")
-    return Shortlist(task=task, run_digests={name: run_digests[name] for name, _, _ in cands}, data_digest=data_digest, input_adapter_digest=input_adapter_digest,
-                     evaluation_contract_digest=evaluation_contract_digest,
-                     execution_digests={model: execution_digest(task.where.declared_connections().resolved(model), "") for _, model, _ in cands}, ranked=ranked, evaluations=evaluations, preds=preds, cands=cands, reweighted=moved)
+    if changed := measured.changed(task, task.where.declared_connections().resolved):
+        raise ConfigError(f"{task.id}: {changed} changed during ranking; rank again")
+    return Shortlist(task=task, measured=measured, ranked=ranked, evaluations=evaluations, preds=preds, cands=cands, reweighted=moved)
 
 
 def adopt(
@@ -227,15 +206,10 @@ def adopt(
     pull request that carries it ships it when it merges. One below on the held-out test is not stored unless
     `force`; history.jsonl records it either way (policies/history.py). `git_sha`: the commit it was made at (the
     CLI asks git, integrations/git.py)."""
-    before_data = task.data_digest
     s = listed or shortlist(task, only, variants)
-    if (s.data_digest != before_data or s.input_adapter_digest != task.input_adapter_digest or
-            any(execution_digest(task.where.client().connections.resolved(model), "") != expected for model, expected in s.execution_digests.items())):
-        raise ConfigError(f"{task.id}: comparison data or execution conditions changed; rank again before adopting")
-    if any(_run_digest(task, model, variant) != s.run_digests[name] for name, model, variant in s.cands):
-        raise ConfigError(f"{task.id}: run evidence changed; rescore before adopting")
-    if s.evaluation_contract_digest != task.evaluation_contract_digest:
-        raise ConfigError(f"{task.id}: evaluation contract changed; rescore before adopting")
+    current = task.where.client().connections.resolved
+    if changed := s.measured.changed(task, current):
+        raise ConfigError(f"{task.id}: {changed} changed since ranking; rank again before adopting")
     if not by.strip() or not reason.strip():
         raise S1flowError("a policy records who adopted it and why: give both by and reason")
     picked = s.pickable(pick)
@@ -258,17 +232,17 @@ def adopt(
         questions={task.question_id: one_question(task.questions(variant)[task.question_id], rule_for(task, picked.scores[0]), task.kind_params)},
         state_schema=schema_of([task.model_state(c) for c in task.load_cases().all()]),
     )
-    if task.data_digest != before_data:
-        raise ConfigError(f"{task.id}: data changed during adoption; rerun the comparison")
+    if changed := s.measured.changed(task, current):  # after the reads above: the test cases and the picked run
+        raise ConfigError(f"{task.id}: {changed} changed during adoption; rank again before adopting")
     test = metrics.test_verdict(task, e)
     r = EvaluatedPolicy(
         spec=runtime, candidate=e.candidate, answered_by=answered_by,
         selection=Selection(by=by.strip(), reason=reason.strip(), tied=s.tied, forced=test == "below" and force),
         evidence=Evidence(
-            data_sha256=before_data,
+            data_sha256=s.measured.data,
             execution_digest=execution_digest(spec, runtime.digest),
-            input_adapter_digest=task.input_adapter_digest,
-            evaluation_contract_digest=s.evaluation_contract_digest,
+            input_adapter_digest=s.measured.input_adapter,
+            evaluation_contract_digest=s.measured.evaluation_contract,
             evaluation=e, test=test,
             compared=[c[0] for c in s.cands], git_sha=git_sha,
         ),

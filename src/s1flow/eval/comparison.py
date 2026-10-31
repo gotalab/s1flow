@@ -4,7 +4,6 @@ It never asks a model, and it neither ranks nor recommends: ``metrics`` owns the
 """
 from __future__ import annotations
 
-import hashlib
 import json
 import math
 from collections.abc import Sequence
@@ -14,7 +13,7 @@ from typing import Any, Literal, cast
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from ..client.identity import digest, execution_digest
+from ..client.identity import digest
 from ..client.models import ModelSpec
 from ..client.questions import Choice, Question
 from ..core import clock
@@ -33,7 +32,7 @@ from .evaluation import (
 )
 from .objectives.declare import METRICS, Constraints, Objective
 from .objectives.measure import MEASURES, measured_as
-from .run import run_path
+from .run import Conditions, run_path
 from .task import Task
 
 
@@ -127,16 +126,6 @@ class _CandidateInput:
     question: Question
     spec: ModelSpec | None
     path: Path
-    run_digest: str
-
-
-def _run_digest(path: Path) -> str:
-    """Digest the saved run and metadata without embedding records in a snapshot."""
-    return digest({
-        path.name: hashlib.sha256(path.read_bytes()).hexdigest() if path.exists() else None,
-        path.with_suffix(".meta.json").name: hashlib.sha256(path.with_suffix(".meta.json").read_bytes()).hexdigest()
-        if path.with_suffix(".meta.json").exists() else None,
-    })
 
 
 def _variants(task: Task, variants: Sequence[str] | None = None) -> list[str]:
@@ -159,7 +148,7 @@ def _inputs(task: Task, variants: Sequence[str] | None = None, only: Sequence[st
                 spec = lineup.resolved(model)
             except S1flowError:
                 spec = None
-            out.append(_CandidateInput(candidate, task.questions(variant)[task.question_id], spec, path, _run_digest(path)))
+            out.append(_CandidateInput(candidate, task.questions(variant)[task.question_id], spec, path))
     return out
 
 
@@ -400,18 +389,12 @@ def collect(task: Task, *, variants: Sequence[str] | None = None, only: Sequence
     Chart series are opt-in because an agent summary should stay bounded.  The
     evidence identity and metric values are identical with or without them.
     """
-    data_digest = task.data_digest
-    contract_digest = task.evaluation_contract_digest
-    adapter_digest = task.input_adapter_digest
     # by name, never by how well a candidate did
     inputs = sorted(
         _inputs(task, variants, only),
         key=lambda x: (x.candidate.model, x.candidate.variant != "base", x.candidate.variant),
     )
-    binding_digests = {
-        item.candidate.model: execution_digest(item.spec, '') if item.spec is not None else 'unresolved'
-        for item in inputs
-    }
+    measured = Conditions.now(task, [item.candidate for item in inputs], task.where.lineup().resolved)
     total = _dev_n(task)
     rows: list[ComparisonRow] = []
     evaluations: dict[str, Evaluation] = {}
@@ -450,22 +433,12 @@ def collect(task: Task, *, variants: Sequence[str] | None = None, only: Sequence
     latency_notice = select.unlike(list(evaluations.values()))
     if latency_notice:
         notices.append(latency_notice.en(task.id))
-    run_digests = {item.candidate.name: item.run_digest for item in inputs}
-    if task.data_digest != data_digest or task.evaluation_contract_digest != contract_digest or task.input_adapter_digest != adapter_digest:
-        raise ConfigError(f"{task.id}: comparison data, adapter or evaluation contract changed during comparison")
-    current_run_digests = {item.candidate.name: _run_digest(item.path) for item in inputs}
-    if current_run_digests != run_digests:
-        raise ConfigError(f"{task.id}: run evidence changed during comparison; compare again")
-    current_bindings = {
-        item.candidate.model: execution_digest(task.where.lineup().resolved(item.candidate.model), '')
-        if item.spec is not None else 'unresolved' for item in inputs
-    }
-    if current_bindings != binding_digests:
-        raise ConfigError(f"{task.id}: model connection conditions changed during comparison; compare again")
+    if changed := measured.changed(task, task.where.lineup().resolved):
+        raise ConfigError(f"{task.id}: {changed} changed during the comparison; compare again")
     comparison_id = digest({
         "schema": "s1flow/comparison@2", "task": task.id, "variants": _variants(task, variants),
-        "data_digest": data_digest, "evaluation_contract_digest": contract_digest,
-        "input_adapter_digest": adapter_digest, "binding_digests": binding_digests, "run_digests": run_digests,
+        "data_digest": measured.data, "evaluation_contract_digest": measured.evaluation_contract,
+        "input_adapter_digest": measured.input_adapter, "binding_digests": measured.bindings, "run_digests": measured.runs,
     })
     excluded_count = sum(bool(row.excluded) for row in rows)
     if excluded_count:
@@ -474,8 +447,8 @@ def collect(task: Task, *, variants: Sequence[str] | None = None, only: Sequence
         id=comparison_id, task=task.id, source=task.source, at=clock.now(), scope="dev",
         question_type=task.kind.type, kind_params=task.kind_params,
         objective=task.primary, constraints=task.constraints,
-        data_digest=data_digest, evaluation_contract_digest=contract_digest, input_adapter_digest=adapter_digest,
-        binding_digests=binding_digests, run_digests=run_digests,
+        data_digest=measured.data, evaluation_contract_digest=measured.evaluation_contract,
+        input_adapter_digest=measured.input_adapter, binding_digests=measured.bindings, run_digests=measured.runs,
         n=total, metric_definitions=definitions, notices=notices, candidates=rows,
     )
 

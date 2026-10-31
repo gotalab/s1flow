@@ -11,7 +11,7 @@ from typing import Any, cast
 
 import pytest
 
-from conftest import cli, make_project
+from conftest import CONDITIONS, change_condition, cli, make_project
 from s1flow.client import (
     BooleanAnswer,
     Boolean,
@@ -277,6 +277,22 @@ def test_comparison_identity_changes_with_effective_connection_conditions(tmp_pa
         spec.id = 'different-concrete-model'
     after = comparison.collect(task)
     assert after.id != before.id
+
+
+@pytest.mark.parametrize('what', CONDITIONS)
+def test_a_condition_changed_while_comparing_refuses_the_comparison(tmp_path, monkeypatch, what):
+    task = task_fixture(tmp_path, question=Boolean(instructions='truth?'))
+    run_saved(task, ['fake'])
+    named, row = [], comparison._actual_row
+
+    def row_while_it_changes(*args, **kwargs):
+        named.append(change_condition(task, what, 'fake'))  # before the run is read and scored
+        return row(*args, **kwargs)
+
+    monkeypatch.setattr(comparison, '_actual_row', row_while_it_changes)
+    with pytest.raises(ConfigError) as refused:
+        comparison.collect(task)
+    assert str(refused.value) == f'compare: {named[0]} changed during the comparison; compare again'
 
 
 @pytest.mark.parametrize('bad_field', ['question_type', 'distribution', 'nan_curve'])
