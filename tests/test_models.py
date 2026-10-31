@@ -10,7 +10,8 @@ from s1flow.core.errors import ConfigError, NotFound
 from s1flow.client import BooleanAnswer, Capabilities, ChoiceAnswer, Response, ModelBuild, ScoreAnswer
 from s1flow.eval import verify
 from s1flow.project import Project
-from s1flow.client.lineup import BUILTIN_LINEUP, Lineup
+from s1flow.client.lineup import Lineup
+from s1flow.project.scaffold import LINEUP
 from s1flow.client.providers.typesafe import TypeSafeModel
 
 BENCH_LINEUP = Project(BENCH).client().connections
@@ -252,12 +253,12 @@ def test_the_line_up_init_writes_runs_on_one_key():
     or serving one, and none of this repository's own notes (apps/bench/s1flow.toml is s1flow's own line-up)."""
     from s1flow.client.providers import needs
 
-    lineup = Lineup.read(BUILTIN_LINEUP)
+    lineup = Lineup.read(LINEUP)
     Client(connections=lineup).connections.check()
     assert 2 <= len(lineup.models) <= 3 and lineup.default == list(lineup.models)
     assert {k for s in lineup.models.values() for k in needs(s).keys} == {"OPENROUTER_API_KEY"}
     assert not any(s.alias for s in lineup.models.values())
-    text = BUILTIN_LINEUP.read_text()
+    text = LINEUP.read_text()
     assert not any(x in text for x in ("DESIGN.md", "clef-proxy", "apps/bench", "note ="))
 
 
