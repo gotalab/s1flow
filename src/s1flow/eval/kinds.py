@@ -58,9 +58,19 @@ class ChoiceKind(_Scoring, runtime.ChoiceKind):
 
 
 class ScoreKind(_Scoring, runtime.ScoreKind):
-    # Client supports Score, but no scoring contract is implemented for Task.
-    objectives: ClassVar[tuple[str, ...]] = ()
-    report: ClassVar[tuple[str, ...]] = ()
+    """Right when the expected level, rounded, is the label; how far off is MAE, agreement over the levels QWK."""
+
+    objectives: ClassVar[tuple[str, ...]] = ("mae", "qwk", "accuracy", "coverage", "auroc")
+    report: ClassVar[tuple[str, ...]] = ("mae", "qwk")
+
+    def brier(self, label: Any, r: Reading) -> float:
+        """The ranked probability score: the squared gaps of the two cumulative distributions, over L - 1."""
+        assert r.distribution is not None
+        cum, gap = 0.0, 0.0
+        for j, p in enumerate(r.distribution[:-1]):
+            cum += p
+            gap += (cum - (1.0 if label <= j else 0.0)) ** 2
+        return gap / (self.levels - 1)
 
 
 class BoxKind(_Scoring, runtime.BoxKind):

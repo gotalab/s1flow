@@ -118,6 +118,8 @@ class Task:
             kind = self.kind
         except ValueError as e:
             raise ConfigError(f"{self.id}: kind_params: {e}") from None
+        if kind.type == "score" and getattr(kind, "levels", 0) < 2:
+            raise ConfigError(f"{self.id}: a score question needs two levels or more")
         default = default_for(kind)
         if default is None:
             raise ConfigError(f"{self.id}: {self.kind.type} questions are not evaluated yet (no metric scores them)")

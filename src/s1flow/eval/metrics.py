@@ -297,9 +297,9 @@ def sweep(y: np.ndarray, p: np.ndarray, thresholds: list[float]) -> list[SweepRo
 
 
 def _strata(y: np.ndarray) -> np.ndarray:
-    """The folds keep the label's shares; labels that are not one value each (a box) are not stratified, so
-    every model gets the same folds."""
-    if y.dtype == object and not all(isinstance(v, str) for v in y):
+    """The folds keep the label's shares (an option, a level); labels that are not one value each (a box) are not
+    stratified, so every model gets the same folds."""
+    if y.dtype == object and not all(isinstance(v, (str, int)) and not isinstance(v, bool) for v in y):
         return np.zeros(len(y), dtype=int).astype(str)
     return y.astype(str)
 

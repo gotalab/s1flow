@@ -1277,6 +1277,7 @@
    "enum": [
     "boolean",
     "choice",
+    "score",
     "box"
    ],
    "title": "Question Type",

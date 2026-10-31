@@ -8,7 +8,7 @@ one label and the reading of its answers (policies/kinds.py) per case. numpy and
 What is measured is the question type, except that a choice scored as P(positive) is measured as a
 boolean. A measure never chooses a rule and a rule never knows a measure: metrics finds the
 rule on a fold's fit side and measures the eval side read at it, check and feedback measure what
-a policy read. The kind's own numbers (`f1`, `mean_iou`, `brier`) are measures too.
+a policy read. The kind's own numbers (`f1`, `mean_iou`, `mae`, `qwk`, `brier`) are measures too.
 
 A constraint is a share an objective keeps on one side of a bound (Coverage: the accuracy of what is
 answered; Recall: the false alarms among the negatives). Only the built-ins hold one.
@@ -48,8 +48,10 @@ class Pairs:
     correct: np.ndarray  # kind.correct (a failed call is never right)
     probability: np.ndarray  # of the value, a box's confidence: what min_probability reads (0 when failed)
     p_positive: np.ndarray  # binary: P(positive) (0.5 when failed)
-    distribution: np.ndarray | None  # choice: (cases, options), uniform when failed
+    distribution: np.ndarray | None  # choice and score: (cases, options or levels), uniform when failed
     confidence: np.ndarray  # box (0 when failed)
+    expected: np.ndarray  # score: the expected level (nan when failed, and for the other kinds)
+    levels: int = 0  # score: L, its levels 0..L-1
 
     def __len__(self) -> int:
         return len(self.y)
@@ -58,7 +60,7 @@ class Pairs:
         return replace(
             self, y=self.y[idx], ok=self.ok[idx], value=self.value[idx], unsure=self.unsure[idx], min_probability_set=self.min_probability_set[idx], correct=self.correct[idx],
             probability=self.probability[idx], p_positive=self.p_positive[idx], confidence=self.confidence[idx],
-            distribution=None if self.distribution is None else self.distribution[idx],
+            distribution=None if self.distribution is None else self.distribution[idx], expected=self.expected[idx],
         )
 
     @property
@@ -90,6 +92,7 @@ class Pairs:
 def pairs(kind: Kind, labels: Sequence[Any], readings: Sequence[Reading | None]) -> Pairs:
     """Each label with the reading of its case (None: the call failed)."""
     n, options = len(labels), kind.options
+    levels = int(getattr(kind, "levels", 0)) if kind.type == "score" else 0
     # A choice with a positive option is measured as a boolean. Normalize its
     # labels once for both metric truth values and correctness.
     normalized = [kind.as_label(label) for label in labels]
@@ -99,7 +102,8 @@ def pairs(kind: Kind, labels: Sequence[Any], readings: Sequence[Reading | None])
         y = y.astype(bool)
     value = np.empty(n, dtype=object)
     value[:] = [None if r is None else r.value for r in readings]
-    flat = [1 / len(options)] * len(options) if options else []
+    width = len(options) or levels
+    flat = [1 / width] * width if width else []
     has_dist = any(r is not None and r.distribution is not None for r in readings)
     return Pairs(
         measured=measured_as(kind), options=options, y=y, value=value,
@@ -111,6 +115,7 @@ def pairs(kind: Kind, labels: Sequence[Any], readings: Sequence[Reading | None])
         p_positive=np.array([0.5 if r is None or r.p_positive is None else r.p_positive for r in readings], dtype=float),
         distribution=np.array([flat if r is None or r.distribution is None else r.distribution for r in readings], dtype=float) if has_dist else None,
         confidence=np.array([0.0 if r is None or r.confidence is None else r.confidence for r in readings], dtype=float),
+        expected=np.array([np.nan if r is None or r.expected is None else r.expected for r in readings], dtype=float), levels=levels,
     )
 
 
@@ -380,13 +385,70 @@ def _brier_box(p: Pairs, _: Params) -> float | None:
     return float(np.mean((p.confidence - p.correct) ** 2))
 
 
+def _gaps(p: Pairs) -> tuple[np.ndarray, np.ndarray]:
+    """A score's labels and levels said, as ints; a failed call said the level farthest from its label."""
+    y = p.y.astype(int)
+    far = np.where(y < (p.levels - 1) / 2, p.levels - 1, 0)
+    said = np.where(p.ok, np.array([-1 if v is None else v for v in p.value], dtype=int), far)
+    return y, said
+
+
+def _mae(p: Pairs, _: Params) -> float | None:
+    if not len(p):
+        return None
+    y, said = _gaps(p)
+    expected = np.where(p.ok, p.expected, said)
+    return float(np.mean(np.abs(expected - y)))
+
+
+def _qwk(p: Pairs, _: Params) -> float | None:
+    """Cohen's kappa with quadratic weights over the levels (as sklearn's cohen_kappa_score(weights="quadratic")).
+    None when chance agreement leaves nothing to explain (every label and every answer one level)."""
+    if not len(p):
+        return None
+    y, said = _gaps(p)
+    k = p.levels
+    observed = np.bincount(y * k + said, minlength=k * k).reshape(k, k).astype(float)
+    expected = np.outer(np.bincount(y, minlength=k), np.bincount(said, minlength=k)) / len(p)
+    w = (np.subtract.outer(np.arange(k), np.arange(k)) ** 2).astype(float)
+    chance = float((w * expected).sum())
+    return None if chance == 0 else 1 - float((w * observed).sum()) / chance
+
+
+def _cumulative(p: Pairs) -> np.ndarray:
+    """P(level >= k) for k = 1..L-1, per case: summed from the top, so equal tails stay equal floats (a tie for AUROC)."""
+    assert p.distribution is not None
+    return np.cumsum(p.distribution[:, ::-1], axis=1)[:, ::-1][:, 1:]
+
+
+def _auroc_score(p: Pairs, _: Params) -> float | None:
+    """The mean over the cuts k = 1..L-1 of AUROC(label >= k, P(level >= k)): does the distribution rank the cases
+    above each cut first, the reading a gate on "level k or more" uses."""
+    if p.distribution is None:
+        return None
+    y, above = p.y.astype(int), _cumulative(p)
+    scores = [a for k in range(1, p.levels) if (a := _auc(y >= k, above[:, k - 1])) is not None]
+    return float(np.mean(scores)) if scores else None
+
+
+def _brier_score(p: Pairs, _: Params) -> float | None:
+    """The ranked probability score (ScoreKind.brier), the mean over the cases."""
+    if p.distribution is None or not len(p):
+        return None
+    y, above = p.y.astype(int), _cumulative(p)
+    truth = (y[:, None] >= np.arange(1, p.levels)[None, :]).astype(float)
+    return float(np.mean(((above - truth) ** 2).sum(axis=1) / (p.levels - 1)))
+
+
 MEASURES: dict[tuple[str, str], Measure] = {
     ("accuracy", "boolean"): Measure(_accuracy),
     ("accuracy", "choice"): Measure(_accuracy),
     ("accuracy", "box"): Measure(_accuracy),
+    ("accuracy", "score"): Measure(_accuracy),
     ("coverage", "boolean"): Measure(_coverage, _sure_accuracy),
     ("coverage", "choice"): Measure(_coverage, _sure_accuracy),
     ("coverage", "box"): Measure(_coverage, _sure_accuracy),
+    ("coverage", "score"): Measure(_coverage, _sure_accuracy),
     ("recall", "boolean"): Measure(_recall, _false_alarms),
     ("precision", "boolean"): Measure(_precision),
     ("expected_loss", "boolean"): Measure(_expected_loss),
@@ -395,6 +457,9 @@ MEASURES: dict[tuple[str, str], Measure] = {
     ("auroc", "boolean"): Measure(_auroc_binary),
     ("auroc", "choice"): Measure(_auroc_choice, heavy=True),
     ("auroc", "box"): Measure(_auroc_box),
+    ("auroc", "score"): Measure(_auroc_score),
+    ("mae", "score"): Measure(_mae),
+    ("qwk", "score"): Measure(_qwk),
     ("f1", "boolean"): Measure(_f1_binary),
     ("macro_f1", "choice"): Measure(_f1_macro),
     # the kinds' own numbers (Kind.report), and the calibration every evaluation reports
@@ -402,6 +467,7 @@ MEASURES: dict[tuple[str, str], Measure] = {
     ("brier", "boolean"): Measure(_brier_binary),
     ("brier", "choice"): Measure(_brier_choice),
     ("brier", "box"): Measure(_brier_box),
+    ("brier", "score"): Measure(_brier_score),
 }
 
 

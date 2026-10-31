@@ -32,6 +32,8 @@ model takes (often about 20). Write down with the person:
 
 On a yes/no decision every objective here but Coverage chooses the P(yes) threshold from the data, and the policy
 keeps it. For a choice: `Accuracy()`, `MacroF1()` if the rare options matter as much, or Coverage.
+For a score (levels 0..L-1): `MAE()` (the default, levels off on average), `QWK()` for agreement over the levels,
+or `Accuracy()` for the exact level. A level is the expected level, rounded.
 
 - **The held-out test share.** Ask how many cases to hold out (`split=Split(test=0.3, k=5, seed=1)` is the
   default). The test share is never shown while choosing; `adopt` and `check` read it. Fewer than about 200
@@ -124,7 +126,7 @@ task = Task(
   `optimize` reads it, the model never does. `criteria.md` is for the person's decision criteria, not the model.
 
 Supported question types: the direct `Client` takes boolean, choice, score and box where the provider does;
-evaluation compares boolean, choice and box (score is unsupported); a policy holds one boolean or choice.
+evaluation compares all four; a policy holds one boolean or choice.
 
 ## Check the cases
 
