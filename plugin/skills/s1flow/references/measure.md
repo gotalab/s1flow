@@ -74,8 +74,7 @@ adoption. It opens on the objective against API cost; either axis can switch to 
 A candidate-by-metric table keeps every candidate. There is no pick, overall score or eligibility filter.
 Each figure carries its metric definition, population, source and snapshot id; SVG and PNG buttons save it.
 Probability diagnostics (acceptance curve, precision/recall, calibration) appear only where real probabilities
-or box confidence exist. A provider's own confidence is not the selected answer's probability. Regenerate an
-older v1 snapshot rather than reading its absent metrics as measured.
+or box confidence exist. A provider's own confidence is not the selected answer's probability.
 
 ## A new model version
 

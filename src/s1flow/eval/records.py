@@ -29,8 +29,8 @@ REFUSED: frozenset[Outcome] = frozenset({"unsupported", "rejected"})
 class PredictionRecord(BaseModel):
     model_config = ConfigDict(extra="forbid", populate_by_name=True, serialize_by_alias=True)
 
-    schema_: Literal["s1flow/run@1", "s1flow/run@2"] = Field(default="s1flow/run@2", alias="schema")
-    request_digest: str | None = None  # absent in legacy history; never inferred from today's input
+    schema_: Literal["s1flow/run@2"] = Field(default="s1flow/run@2", alias="schema")
+    request_digest: str | None = None  # absent on a failed call
     id: str
     label: Any = None
     model: str  # the name in s1flow.toml
@@ -62,10 +62,8 @@ class PredictionRecord(BaseModel):
 
     @model_validator(mode="after")
     def _consistent(self) -> PredictionRecord:
-        if self.schema_ == "s1flow/run@1" and self.request_digest is not None:
-            raise ValueError("legacy records cannot claim request_digest; preserve their unverified history")
-        if self.schema_ == "s1flow/run@2" and (self.answered or self.outcome in REFUSED) and not self.request_digest:
-            raise ValueError("v2 answered/refused records need request_digest")
+        if (self.answered or self.outcome in REFUSED) and not self.request_digest:
+            raise ValueError("answered/refused records need request_digest")
         if (self.outcome == "answered") != (self.answer is not None):
             raise ValueError(f"outcome {self.outcome} with answer={self.answer is not None}")
         if isinstance(self.answer, Refusal):

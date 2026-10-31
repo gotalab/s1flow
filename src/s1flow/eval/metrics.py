@@ -133,7 +133,7 @@ def load(task: Task, variant: str, model: str, *, include_test: bool = False) ->
             expected[c.id] = request_digest(effective, task.model_state(c), task.questions(variant))
         except Exception:
             continue  # unmaterializable input has no reusable answer
-    lines = [r for r in records.read(path) if r.schema_ == "s1flow/run@2" and r.request_digest and r.request_digest == expected.get(r.id)]
+    lines = [r for r in records.read(path) if r.request_digest and r.request_digest == expected.get(r.id)]
     meta_path = path.with_suffix(".meta.json")
     meta = json.loads(meta_path.read_text()) if meta_path.exists() else {}
     requested = meta.get("requested", {})

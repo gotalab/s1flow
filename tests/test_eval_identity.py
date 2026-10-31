@@ -88,24 +88,6 @@ def test_input_and_effective_binding_invalidate_skip_and_metrics(task):
     assert go(task)['calls'] == 12
 
 
-def test_legacy_history_is_not_certified_with_todays_hash(task):
-    go(task)
-    path = run.run_path(task, 'base', 'fake')
-    old = []
-    for row in records.read(path):
-        data = row.model_dump(mode='json', by_alias=True)
-        data['schema'] = 's1flow/run@1'
-        data.pop('request_digest')
-        old.append(json.dumps(data))
-    path.write_text('\n'.join(old) + '\n')
-    assert len(records.read(path)) == 12
-    assert metrics.load(task, 'base', 'fake').ids == []
-    result = go(task)
-    # It can reuse the genuine request cache, but never skip legacy records.
-    assert result['skipped'] == 0 and result['cached'] == 12
-    assert len(records.read(path)) == 24
-
-
 def test_digest_inputs_rules_secrets_and_images():
     spec = ModelSpec(provider='typesafe', id='v1', options={'base_url': 'https://example.test', 'api_key': 'one'})
     qs = {'q': Boolean(instructions='Yes?')}
@@ -232,14 +214,6 @@ def test_concurrency_changes_invalidate_performance_without_rebuying_answers(tas
     changed = spec.model_copy(update={'concurrency': 8})
     assert execution_digest(changed, 'policy') != first
     assert request_digest(spec.model_copy(update={'concurrency': 1}), {'i': 0}, task.questions()) == request_digest(changed, {'i': 0}, task.questions())
-
-
-def test_legacy_record_cannot_claim_v2_request_identity(task):
-    go(task)
-    row = records.read(run.run_path(task, 'base', 'fake'))[0].model_dump(mode='json', by_alias=True)
-    row['schema'] = 's1flow/run@1'
-    with pytest.raises(ValueError, match='legacy.*request_digest'):
-        records.PredictionRecord.model_validate(row)
 
 
 def test_comparison_identity_tracks_held_out_data_without_exposing_test_scores(task):

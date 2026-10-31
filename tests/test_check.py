@@ -103,13 +103,6 @@ def test_the_split_is_made_once_and_never_moves(task, tmp_path):
     assert 0 < sum(sf2.assign[f"n{i}"] == "test" for i in range(40)) < 40
 
 
-def test_a_split_from_before_reads_without_its_uses(task):
-    evalset.fix(task)
-    old = json.loads(evalset.path(task).read_text())
-    evalset.path(task).write_text(json.dumps({**old, "schema": "s1flow/split@1", "uses": [{"at": "t", "by": "check", "what": "v1"}]}))
-    assert evalset.read(task).assign == old["assign"] and evalset.current(task).assign == evalset.current(task).assign
-
-
 @pytest.mark.parametrize("labels", [list("aabbcc"), [c for c in "abcde" for _ in range(2)], list("aab")])
 def test_a_small_task_still_gets_a_test_share(task, labels):
     labelled(task, labels)  # more labels than test cases, or one case of a label: drawn at random instead of stratified

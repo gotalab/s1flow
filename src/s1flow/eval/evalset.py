@@ -17,7 +17,6 @@ CI, told nothing. `adopt` records each candidate it tried on it, refused or not,
 from __future__ import annotations
 
 import hashlib
-import json
 import math
 import random
 from pathlib import Path
@@ -33,24 +32,6 @@ from .task import Task
 
 Role = Literal["train", "val", "test"]
 TRAIN_SHARE = 0.6  # of the rest
-
-
-class Use(BaseModel):
-    at: str
-    by: str
-    what: str
-
-
-# split.json as s1flow wrote it before @2 (schema/split-1.json, kept as published): read as @2, its `uses` dropped.
-class SplitFileV1(BaseModel):
-    model_config = ConfigDict(extra="forbid", populate_by_name=True, serialize_by_alias=True, title="SplitFile")
-    schema_: Literal["s1flow/split@1"] = Field(default="s1flow/split@1", alias="schema")
-    seed: int
-    test_share: float
-    at: str
-    source: str
-    assign: dict[str, Role]
-    uses: list[Use] = Field(default_factory=list)
 
 
 class SplitFile(BaseModel):
@@ -71,16 +52,13 @@ def path(task: Task) -> Path:
 
 
 def read(task: Task) -> SplitFile | None:
-    """The file as written (an @1 file as @2), without the cases labelled since."""
+    """The file as written, without the cases labelled since."""
     p = path(task)
     if not p.exists():
         return None
-    text = p.read_text()
     try:
-        if json.loads(text).get("schema") == "s1flow/split@1":
-            return SplitFile.model_validate(SplitFileV1.model_validate_json(text).model_dump(by_alias=True, exclude={"uses", "schema_"}))
-        return SplitFile.model_validate_json(text)
-    except (ValueError, AttributeError) as e:
+        return SplitFile.model_validate_json(p.read_text())
+    except ValueError as e:
         raise DataError(f"{p}: not a split file: {e}") from None
 
 

@@ -108,7 +108,7 @@ def test_a_better_question_becomes_the_candidate(task):
     test = set(evalset.fixed(task).ids("test"))
     given = rewrite.seen[0]
     assert given.start == task.question and not test & {c.id for c in given.train + given.val} and o.split["test"]
-    saved = Optimized.read((task.dir / "optimized" / f"{r.variant}.json").read_text())
+    saved = Optimized.model_validate_json((task.dir / "optimized" / f"{r.variant}.json").read_text())
     assert saved == o and saved.schema_ == "s1flow/optimized@2"
 
 
@@ -139,15 +139,6 @@ def test_an_optimizer_is_named_by_an_entry_point(task, monkeypatch):
 
 def _made_factory():
     return globals()["_made"]
-
-
-def test_a_record_from_before_reads_as_the_common_one():
-    old = {"schema": "s1flow/optimized@1", "variant": "gepa-m", "model": "m", "method": "gepa", "at": "2026-10-16T00:00:00Z",
-           "question": q("Better?").model_dump(), "seed_question": q("Which?").model_dump(), "split": {"train": ["0"], "val": ["1"], "test": ["2"]},
-           "seed": 1, "budget": 50, "reflection_lm": "r", "reflection_calls": 3, "reflection_cost_usd": 0.02, "model_calls": 50,
-           "candidates": 2, "val_scores": [0.5, 0.9], "best_index": 1}
-    art = Optimized.read(json.dumps(old))
-    assert (art.optimizer, art.settings["budget"], art.cost_usd, art.detail["val_scores"]) == ("gepa", 50, 0.02, [0.5, 0.9])
 
 
 def test_a_question_that_does_not_win_is_still_only_a_candidate(task):
@@ -314,10 +305,3 @@ def test_a_log_line_in_an_older_shape_names_its_file_and_line(tmp_path):
     with pytest.raises(DataError, match=r"log.jsonl:1: invalid log record"):
         feedback.read([log])
 
-
-
-def test_a_malformed_record_is_a_validation_error():
-    from pydantic import ValidationError
-
-    with pytest.raises(ValidationError):  # what load() turns into a ConfigError naming the file
-        Optimized.read("{not json")

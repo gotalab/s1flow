@@ -16,11 +16,11 @@ from s1flow.project import scaffold
 
 def line(id, answered_by="jev-1.13.0", at="2026-10-07", prompt="p1", **kw):
     """A record as written to disk; `reason=` makes a failure line."""
-    r = {"schema": "s1flow/run@1", "id": id, "model": "jev", "prompt": prompt, "at": at, **kw}
+    r = {"schema": "s1flow/run@2", "id": id, "model": "jev", "prompt": prompt, "at": at, **kw}
     if kw:
         r |= {"outcome": "failed"}
     else:
-        r |= {"outcome": "answered", "answer": {"type": "choice", "choice": "a"}, "answered_by": answered_by}
+        r |= {"outcome": "answered", "answer": {"type": "choice", "choice": "a"}, "answered_by": answered_by, "request_digest": "d"}
     return PredictionRecord.model_validate(r)
 
 

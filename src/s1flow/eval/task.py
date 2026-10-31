@@ -62,63 +62,6 @@ class Optimized(BaseModel):
     cost_usd: float | None  # what it spent beside the model's calls (a reflection LM); None: not priced
     detail: dict[str, Any] = {}  # what only this optimizer records
 
-    @classmethod
-    def read(cls, text: str) -> Optimized:
-        """A record of either schema, as @2."""
-        import json
-
-        try:
-            data = json.loads(text)
-        except ValueError:
-            return cls.model_validate_json(text)  # malformed: pydantic says where, as a ValidationError
-        if isinstance(data, dict) and data.get("schema") == "s1flow/optimized@1":
-            return OptimizedV1.model_validate_json(text).upgrade()
-        return cls.model_validate_json(text)
-
-
-class OptimizedV1(BaseModel):
-    """tasks/<id>/optimized/<variant>.json before optimizers were pluggable: GEPA's alone. Read only."""
-
-    model_config = ConfigDict(extra="forbid", populate_by_name=True, serialize_by_alias=True)
-    schema_: Literal["s1flow/optimized@1"] = Field(default="s1flow/optimized@1", alias="schema")
-    variant: str
-    model: str  # the model it was optimized for
-    surrogate: str = "0.5 * correctness + 0.5 * (1 - per-case Brier); prompt-only search"
-    method: Literal["gepa"]
-    at: str
-    question: Question
-    seed_question: Question
-    start: str = "base"  # the question it began from
-    context: str | None = None  # the team's criteria file shown to the reflection LM
-    rationales: int | None = None  # train / val cases with a rationale
-    split: dict[Literal["train", "val", "test"], list[str]]  # the cases GEPA read from, selected on, never saw
-    seed: int
-    budget: int
-    merge: bool = False
-    patience: int | None = None
-    max_cost: float | None = None
-    reflection_lm: str
-    reflection_calls: int
-    reflection_cost_usd: float | None  # None: the reflection LM was not priced
-    model_calls: int
-    candidates: int
-    val_scores: list[float]
-    best_index: int
-
-    def upgrade(self) -> Optimized:
-        return Optimized(
-            variant=self.variant, model=self.model, optimizer="gepa", at=self.at, question=self.question,
-            seed_question=self.seed_question, start=self.start, split=self.split, model_calls=self.model_calls,
-            cost_usd=self.reflection_cost_usd,
-            # @1 kept the reflection LM only as resolved: the closest it has to what it was set to; minibatch went unrecorded
-            settings={"budget": self.budget, "reflection": self.reflection_lm, "patience": self.patience,
-                      "max_cost": self.max_cost, "merge": self.merge, "seed": self.seed},
-            detail={"surrogate": self.surrogate, "reflection_lm": self.reflection_lm, "context": self.context, "rationales": self.rationales,
-                    "reflection_calls": self.reflection_calls, "candidates": self.candidates,
-                    "val_scores": self.val_scores, "best_index": self.best_index},
-        )
-
-
 @dataclass
 class Split:
     """The test share held out (evalset.py), and the cross-validation over the rest, chosen by its size (split.py)."""
@@ -335,7 +278,7 @@ def load(project: Project, task_id: str) -> Task:
     task.project = project
     for f in sorted((task.dir / "optimized").glob("*.json")):
         try:
-            art = Optimized.read(f.read_text())
+            art = Optimized.model_validate_json(f.read_text())
         except ValidationError as e:
             raise ConfigError(f"{f}: {invalid(e)}") from None
         except (OSError, UnicodeDecodeError) as e:
