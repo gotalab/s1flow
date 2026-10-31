@@ -18,8 +18,6 @@
 | decision-1@openrouter | 361 | 86.7% [83, 90] | 0.86 | 0.98 | 0.05 | 75% [70, 79] | 94.8% (92.0%) | 0/361 | 0/361 |
 | drex-max@openrouter | 361 | 90.3% [87, 93] | 0.90 | 0.99 | 0.03 | 87% [83, 90] | 95.5% (93.1%) | 0/361 | 0/361 |
 | elephant@openrouter | 361 | 86.4% [83, 90] | 0.84 | 0.98 | 0.03 | 75% [70, 80] | 93.7% (90.7%) | 0/361 | 0/361 |
-| flash-lite@vercel ※ | 361 | 85.9% [82, 89] | 0.84 | 0.89 | 0.14 | 0% [0, 0] | — (0.0%) | 0/361 | 0/361 |
-| haiku@vercel ※ | 361 | 87.8% [84, 91] | 0.88 | 0.91 | 0.12 | 0% [0, 0] | — (0.0%) | 0/361 | 0/361 |
 | jev:1.14 | 361 | 85.0% [81, 88] | 0.82 | 0.97 | 0.07 | 75% [71, 80] | 94.9% (92.1%) | 0/361 | 0/361 |
 | joey@openrouter | 361 | 78.7% [74, 83] | 0.74 | 0.94 | 0.05 | 44% [39, 50] | 95.0% (91.2%) | 0/361 | 0/361 |
 | kev@openrouter | 361 | 80.3% [77, 84] | 0.77 | 0.96 | 0.16 | 64% [59, 69] | 94.4% (91.2%) | 0/361 | 0/361 |
@@ -28,7 +26,7 @@
 | mercury@openrouter | 361 | 85.3% [82, 89] | 0.84 | 0.98 | 0.10 | 72% [67, 76] | 95.4% (92.6%) | 0/361 | 0/361 |
 | span@openrouter | 361 | 88.4% [85, 91] | 0.87 | 0.98 | 0.06 | 80% [75, 84] | 94.4% (91.7%) | 0/361 | 0/361 |
 
-Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef@openrouter = cloudflare/clef; d1-ultra@openrouter = liquid/d1-ultra-20261015; d1.1@openrouter = liquid/d1.1-20261027; d1@vercel = liquid/d1; decider-flash@openrouter = perplexity/pplx-decider-flash-v1.2-20261016; decider@openrouter = perplexity/pplx-decider-v1.2-20261016; decision-1@openrouter = microsoft/microsoft-decision-1-20261009; drex-max@openrouter = nace-ai/drex-max-20261016; elephant@openrouter = baseten/elephant-1-20261021; flash-lite@vercel = vercel_ai_gateway/google/gemini-3.5-flash-lite; haiku@vercel = vercel_ai_gateway/anthropic/claude-haiku-5.5; jev:1.14 = jev-1.14.0; joey@openrouter = baseten/joey-1-20261029; kev@openrouter = jaredpalmer/kev-4b-20260924; luna@decisions = gpt-6-luna; mammoth@openrouter = baseten/mammoth-1-20261021; mercury@openrouter = inception/mercury-decide-20260930; span@openrouter = respan/span-02-20261015. To compare versions, run each by name: `s1flow run <task> --models jev:1.14`.
+Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef@openrouter = cloudflare/clef; d1-ultra@openrouter = liquid/d1-ultra-20261015; d1.1@openrouter = liquid/d1.1-20261027; d1@vercel = liquid/d1; decider-flash@openrouter = perplexity/pplx-decider-flash-v1.2-20261016; decider@openrouter = perplexity/pplx-decider-v1.2-20261016; decision-1@openrouter = microsoft/microsoft-decision-1-20261009; drex-max@openrouter = nace-ai/drex-max-20261016; elephant@openrouter = baseten/elephant-1-20261021; jev:1.14 = jev-1.14.0; joey@openrouter = baseten/joey-1-20261029; kev@openrouter = jaredpalmer/kev-4b-20260924; luna@decisions = gpt-6-luna; mammoth@openrouter = baseten/mammoth-1-20261021; mercury@openrouter = inception/mercury-decide-20260930; span@openrouter = respan/span-02-20261015. To compare versions, run each by name: `s1flow run <task> --models jev:1.14`.
 
 ## Objectives and constraints
 
@@ -51,8 +49,6 @@ Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef@openrouter = cl
 | decider-flash@openrouter | 68% [63, 73] | 0.91 | met |
 | kev@openrouter | 64% [59, 69] | 0.59 | met |
 | joey@openrouter | 44% [39, 50] | 0.87 | met |
-| flash-lite@vercel | 0% [0, 0] | — | met |
-| haiku@vercel | 0% [0, 0] | — | met |
 
 = marks the models whose interval on the primary objective (leftmost) overlaps the best one's; task.py's tiebreak orders them (its objectives read the way the primary sets; latency is p90, compared only when all were measured alike; API cost per 10k, the Calls section), and without one they are listed by name. Every objective is measured on the answers. The threshold is the min probability (Coverage) or P(positive) cut (on a yes/no question, every objective but Coverage and AUROC) the primary objective sets, among those that keep the task's floors (min_precision, min_recall) where it sets any; their shares are out of fold, so they can pass a floor a little.
 
@@ -70,8 +66,6 @@ Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef@openrouter = cl
 | decision-1@openrouter | 361 | 1434 ms | 2148 ms | 5293 ms | 6788 ms | 3.7 | 0 | 8 | $0.17 | billed |  |
 | drex-max@openrouter | 361 | 1566 ms | 2407 ms | 4441 ms | 5807 ms | 2.8 | 4 | 8 | $0.28 | billed | ○ |
 | elephant@openrouter | 361 | 1304 ms | 2359 ms | 6314 ms | 8254 ms | 4.8 | 0 | 8 | $0.16 | billed |  |
-| flash-lite@vercel | 361 | 1204 ms | 2259 ms | 5388 ms | 8489 ms | 4.5 | 0 | 8 | $1.87 | estimated |  |
-| haiku@vercel | 361 | 1297 ms | 2542 ms | 4667 ms | 6873 ms | 3.6 | 0 | 8 | $1.05 | estimated |  |
 | jev:1.14 | 361 | 1264 ms | 2186 ms | 6175 ms | 12074 ms | 4.9 | 0 | 8 | $0.29 | estimated |  |
 | joey@openrouter | 361 | 1318 ms | 2761 ms | 7095 ms | 11390 ms | 5.4 | 0 | 8 | $0.05 | billed |  |
 | kev@openrouter | 361 | 1489 ms | 2486 ms | 6103 ms | 11040 ms | 4.1 | 0 | 8 | $0.16 | billed |  |
@@ -82,7 +76,7 @@ Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef@openrouter = cl
 
 Measured on the calls, not the answers: never an objective, only the constraints and the order of candidates the objectives tie (the p90 of each case's slowest call, then API cost). Frontier ○: no other model beats it on all three of the primary objective, API cost per 10k and p99.
 Latency is the time from sending to receiving one call that answered (the round trip from here included), without retries or the wait before them. Many calls at once read slower, from the provider's load and this machine's connections: to compare models, measure every candidate again at the same concurrency (`s1flow run <task> --fresh --concurrency N`, the same N for all).
-Where the API costs come from: billed: clef-flash@openrouter, clef@openrouter, d1-ultra@openrouter, d1.1@openrouter, d1@vercel, decider-flash@openrouter, decider@openrouter, decision-1@openrouter, drex-max@openrouter, elephant@openrouter, joey@openrouter, kev@openrouter, mammoth@openrouter, mercury@openrouter, span@openrouter; estimated (recorded tokens times a list price: s1flow.toml's where dated, else the LLM price table's; not a bill): flash-lite@vercel, haiku@vercel, jev:1.14 (list price of 2026-10-03), luna@decisions (list price of 2026-10-09). Billed and estimated API costs sit side by side, so their differences do not compare as they are.
+Where the API costs come from: billed: clef-flash@openrouter, clef@openrouter, d1-ultra@openrouter, d1.1@openrouter, d1@vercel, decider-flash@openrouter, decider@openrouter, decision-1@openrouter, drex-max@openrouter, elephant@openrouter, joey@openrouter, kev@openrouter, mammoth@openrouter, mercury@openrouter, span@openrouter; estimated (recorded tokens times a list price: s1flow.toml's where dated, else the LLM price table's; not a bill): jev:1.14 (list price of 2026-10-03), luna@decisions (list price of 2026-10-09). Billed and estimated API costs sit side by side, so their differences do not compare as they are.
 
 ## API cost and time for these cases
 
@@ -98,8 +92,6 @@ Where the API costs come from: billed: clef-flash@openrouter, clef@openrouter, d
 | decision-1@openrouter | $0.0060 | 72 s (estimated, 361 calls) | 33 min | 8 |
 | drex-max@openrouter | $0.0100 | 74 s (estimated, 361 calls) | 34 min | 8 |
 | elephant@openrouter | $0.0059 | 72 s (estimated, 361 calls) | 33 min | 8 |
-| flash-lite@vercel | $0.07 | 66 s (estimated, 361 calls) | 30 min | 8 |
-| haiku@vercel | $0.04 | 72 s (estimated, 361 calls) | 33 min | 8 |
 | jev:1.14 | $0.01 | 68 s (estimated, 361 calls) | 32 min | 8 |
 | joey@openrouter | $0.0017 | 75 s (estimated, 361 calls) | 34 min | 8 |
 | kev@openrouter | $0.0057 | 76 s (estimated, 361 calls) | 35 min | 8 |
@@ -112,7 +104,6 @@ Measured: the wall time of a run that called every case. When every answer came 
 
 Coverage: answering the most probable first, the largest share whose sure accuracy keeps the target 95%. The cut is chosen on each CV fold's fit side and measured on its eval side. The lower bound is a one-sided 95% Clopper-Pearson; [ ] is a 95% bootstrap interval.
 Scored: answered dev cases only; held-out test results require an explicit final check. Refused / unsupported and failed both count calls.
-※ a model that returns no distribution (one answer): its probability is 1 for every answer, so the coverage is all or nothing.
 
 ## Wrong at a high probability (0.9 or more)
 
@@ -233,32 +224,6 @@ Scored: answered dev cases only; held-out test results require an explicit final
 | prod:#1773 | linter | configuration | 0.92 | {"title": "Human-friendly rule names", "body": "Pylint, ESLint and Cl… |
 | prod:#7804 | configuration | linter | 0.92 | {"title": "Bug: `ruff rule` shows `PLR6301` as non-preview", "body": … |
 
-**flash-lite@vercel** (51)
-
-| id | label | answer | probability | case |
-|---|---|---|---|---|
-| #28105 | configuration | linter | 1.00 | Stabilize categories |
-| #27759 | configuration | linter | 1.00 | ruff check --statistics --fix-only shows all errors, not just fixable… |
-| #27647 | configuration | linter | 1.00 | collapsible-if rule obscures conditional structure |
-| #27602 | configuration | formatter | 1.00 | `ruff format --check` uses same exit code for syntax errors in files,… |
-| #27224 | configuration | linter | 1.00 | SIM118 complains about .keys() even when the object isn't a dict |
-| #26766 | configuration | linter | 1.00 | Open the online doc for a rule from `ruff rule` |
-| #26625 | configuration | linter | 1.00 | Improve support for arbitrary functions accepting `TypeForm` arguments |
-| #26480 | configuration | linter | 1.00 | `ruff check --add-noqa` / `--fix` / `ruff format` truncate source fil… |
-
-**haiku@vercel** (44)
-
-| id | label | answer | probability | case |
-|---|---|---|---|---|
-| #28604 | linter | configuration | 1.00 | Add `import datetime as dt` as a conventional alias |
-| #27647 | configuration | linter | 1.00 | collapsible-if rule obscures conditional structure |
-| #27602 | configuration | formatter | 1.00 | `ruff format --check` uses same exit code for syntax errors in files,… |
-| #27224 | configuration | linter | 1.00 | SIM118 complains about .keys() even when the object isn't a dict |
-| #26625 | configuration | linter | 1.00 | Improve support for arbitrary functions accepting `TypeForm` arguments |
-| #26450 | configuration | linter | 1.00 | [Infinite loop] TID254 when an import statement has conflicting lazin… |
-| #26480 | configuration | linter | 1.00 | `ruff check --add-noqa` / `--fix` / `ruff format` truncate source fil… |
-| #26418 | formatter | linter | 1.00 | Ability to suppress PEP 758 check |
-
 **jev:1.14** (17)
 
 | id | label | answer | probability | case |
@@ -332,19 +297,19 @@ Scored: answered dev cases only; held-out test results require an explicit final
 | prod:#18310 | configuration | linter | 0.94 | {"title": "Add `torch.nn.functional as F` to flake8-import-convention… |
 
 
-## Cases the models disagree on (12 of 115)
+## Cases the models disagree on (12 of 113)
 
-| id | label | clef-flash@openrouter | clef@openrouter | d1-ultra@openrouter | d1.1@openrouter | d1@vercel | decider-flash@openrouter | decider@openrouter | decision-1@openrouter | drex-max@openrouter | elephant@openrouter | flash-lite@vercel | haiku@vercel | jev:1.14 | joey@openrouter | kev@openrouter | luna@decisions | mammoth@openrouter | mercury@openrouter | span@openrouter | case |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| #28861 | linter | linter (0.80) | linter (0.97) | linter (0.97) | linter (0.97) | linter (1.00) | formatter (0.70) | linter (0.99) | linter (0.99) | linter (0.99) | linter (0.94) | linter (1.00) | linter (1.00) | linter (0.99) | linter (0.77) | formatter (0.39) | linter (0.91) | linter (0.99) | linter (1.00) | linter (0.53) | PLR1711 useless-return removes comments |
-| #28604 | linter | linter (0.73) | linter (0.81) | linter (0.71) | linter (0.80) | configuration (0.56) | linter (0.73) | linter (0.81) | linter (0.50) | linter (0.80) | configuration (0.72) | linter (1.00) | configuration (1.00) | configuration (0.72) | linter (0.81) | linter (0.55) | configuration (0.77) | linter (0.60) | linter (0.96) | linter (0.87) | Add `import datetime as dt` as a conventional alias |
-| #28519 | formatter | formatter (0.99) | formatter (0.99) | formatter (0.86) | formatter (0.97) | formatter (0.99) | formatter (0.90) | formatter (0.93) | formatter (0.85) | formatter (0.92) | formatter (0.89) | formatter (1.00) | formatter (1.00) | formatter (0.99) | configuration (0.65) | formatter (0.84) | formatter (1.00) | formatter (0.92) | formatter (0.99) | formatter (0.98) | [Formatter feature request] Config option for trailing comma |
-| #28273 | configuration | linter (0.58) | configuration (0.66) | configuration (0.60) | linter (0.57) | linter (0.86) | linter (0.66) | configuration (0.84) | linter (0.56) | configuration (0.85) | linter (0.70) | configuration (1.00) | configuration (1.00) | linter (0.75) | linter (0.76) | linter (0.53) | linter (0.83) | configuration (0.65) | configuration (0.53) | linter (0.64) | Please add "is `default` rule" info to the rule json data |
-| #28105 | configuration | linter (0.84) | linter (0.61) | linter (0.62) | linter (0.69) | linter (0.92) | linter (0.76) | configuration (0.51) | linter (0.77) | linter (0.53) | linter (0.76) | linter (1.00) | configuration (1.00) | linter (0.94) | linter (0.72) | linter (0.59) | linter (0.93) | configuration (0.59) | linter (0.99) | linter (0.81) | Stabilize categories |
-| #27759 | configuration | configuration (0.64) | linter (0.52) | configuration (0.77) | configuration (0.79) | configuration (0.65) | configuration (0.59) | configuration (0.79) | configuration (0.82) | configuration (0.90) | configuration (0.80) | linter (1.00) | configuration (1.00) | linter (0.57) | linter (0.61) | configuration (0.45) | configuration (0.75) | configuration (0.81) | linter (0.78) | configuration (0.97) | ruff check --statistics --fix-only shows all errors, not just fixable… |
-| #27647 | configuration | linter (0.69) | linter (0.74) | linter (0.70) | linter (0.89) | linter (0.89) | linter (0.94) | linter (0.84) | linter (0.74) | linter (0.81) | linter (0.60) | linter (1.00) | linter (1.00) | linter (0.91) | linter (0.64) | linter (0.49) | linter (1.00) | linter (0.90) | linter (0.90) | formatter (0.78) | collapsible-if rule obscures conditional structure |
-| #27607 | configuration | formatter (0.64) | formatter (0.93) | configuration (0.59) | configuration (0.76) | formatter (0.56) | configuration (0.85) | configuration (0.54) | configuration (0.98) | configuration (0.51) | configuration (0.83) | configuration (1.00) | configuration (1.00) | configuration (0.70) | configuration (0.47) | formatter (0.45) | formatter (0.67) | configuration (0.76) | configuration (0.59) | formatter (0.93) | ruff rejects documented `indent-width` setting |
-| #27177 | configuration | configuration (0.86) | linter (0.56) | configuration (0.57) | linter (0.70) | linter (0.62) | linter (0.60) | configuration (0.57) | linter (0.50) | linter (0.69) | linter (0.57) | configuration (1.00) | configuration (1.00) | configuration (0.54) | linter (0.77) | linter (0.52) | linter (0.66) | configuration (0.68) | linter (0.96) | linter (0.98) | Please remove all rules without an automated fix from default rules |
-| #27012 | linter | linter (0.78) | linter (0.88) | configuration (0.56) | linter (0.66) | linter (0.97) | linter (0.94) | linter (0.72) | linter (0.81) | linter (0.75) | linter (0.92) | linter (1.00) | linter (1.00) | linter (0.99) | linter (0.80) | linter (0.57) | linter (1.00) | linter (0.87) | linter (0.98) | linter (0.95) | Check for uses of rule codes in warnings |
-| #26766 | configuration | configuration (0.74) | configuration (0.93) | configuration (0.80) | configuration (0.89) | configuration (0.88) | configuration (0.51) | configuration (0.94) | configuration (0.92) | configuration (0.98) | configuration (0.81) | linter (1.00) | configuration (1.00) | configuration (0.85) | linter (0.64) | linter (0.38) | configuration (0.92) | configuration (0.96) | configuration (0.92) | configuration (0.93) | Open the online doc for a rule from `ruff rule` |
-| #26625 | configuration | linter (0.65) | linter (0.71) | configuration (0.64) | linter (0.78) | linter (0.76) | configuration (0.82) | linter (0.60) | linter (0.59) | configuration (0.62) | configuration (0.69) | linter (1.00) | linter (1.00) | linter (0.61) | linter (0.55) | linter (0.62) | configuration (0.52) | configuration (0.51) | linter (0.92) | linter (0.56) | Improve support for arbitrary functions accepting `TypeForm` arguments |
+| id | label | clef-flash@openrouter | clef@openrouter | d1-ultra@openrouter | d1.1@openrouter | d1@vercel | decider-flash@openrouter | decider@openrouter | decision-1@openrouter | drex-max@openrouter | elephant@openrouter | jev:1.14 | joey@openrouter | kev@openrouter | luna@decisions | mammoth@openrouter | mercury@openrouter | span@openrouter | case |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| #28519 | formatter | formatter (0.99) | formatter (0.99) | formatter (0.86) | formatter (0.97) | formatter (0.99) | formatter (0.90) | formatter (0.93) | formatter (0.85) | formatter (0.92) | formatter (0.89) | formatter (0.99) | configuration (0.65) | formatter (0.84) | formatter (1.00) | formatter (0.92) | formatter (0.99) | formatter (0.98) | [Formatter feature request] Config option for trailing comma |
+| #27647 | configuration | linter (0.69) | linter (0.74) | linter (0.70) | linter (0.89) | linter (0.89) | linter (0.94) | linter (0.84) | linter (0.74) | linter (0.81) | linter (0.60) | linter (0.91) | linter (0.64) | linter (0.49) | linter (1.00) | linter (0.90) | linter (0.90) | formatter (0.78) | collapsible-if rule obscures conditional structure |
+| #27012 | linter | linter (0.78) | linter (0.88) | configuration (0.56) | linter (0.66) | linter (0.97) | linter (0.94) | linter (0.72) | linter (0.81) | linter (0.75) | linter (0.92) | linter (0.99) | linter (0.80) | linter (0.57) | linter (1.00) | linter (0.87) | linter (0.98) | linter (0.95) | Check for uses of rule codes in warnings |
+| #26320 | linter | linter (0.86) | linter (0.79) | configuration (0.50) | linter (0.66) | linter (0.82) | linter (0.93) | linter (0.53) | linter (0.75) | configuration (0.64) | linter (0.74) | linter (0.92) | linter (0.84) | linter (0.59) | linter (1.00) | configuration (0.50) | linter (0.94) | configuration (0.62) | Option to opt in to showing error codes or show error codes in additi… |
+| #26287 | linter | linter (0.70) | linter (0.91) | linter (0.78) | linter (0.90) | linter (0.97) | linter (0.95) | linter (0.71) | linter (0.94) | linter (0.63) | linter (0.70) | linter (0.99) | linter (0.95) | linter (0.56) | linter (1.00) | linter (0.89) | linter (0.98) | configuration (0.51) | `--add-noqa` deletes trailing content |
+| #26221 | linter | linter (0.65) | linter (0.96) | linter (0.97) | linter (0.98) | linter (0.98) | server (0.77) | linter (1.00) | linter (1.00) | linter (1.00) | linter (0.98) | server (0.80) | linter (0.62) | linter (0.41) | linter (1.00) | linter (1.00) | linter (1.00) | linter (0.94) | `PLC2801` gives suggestions differentially for the `__floor__`, `__ce… |
+| #25281 | formatter | formatter (0.91) | formatter (0.96) | formatter (0.68) | formatter (0.72) | formatter (0.89) | formatter (0.77) | formatter (0.95) | formatter (0.83) | formatter (0.97) | formatter (0.86) | formatter (0.94) | linter (0.55) | formatter (0.64) | formatter (1.00) | formatter (0.92) | formatter (1.00) | formatter (0.99) | Support pycon formatting in docstrings |
+| #25114 | configuration | configuration (0.83) | configuration (0.80) | configuration (0.91) | configuration (0.93) | configuration (0.96) | configuration (0.94) | configuration (0.98) | configuration (0.93) | configuration (0.99) | configuration (0.96) | configuration (0.99) | linter (0.72) | configuration (0.57) | configuration (1.00) | configuration (0.98) | configuration (0.99) | configuration (0.96) | `requires-python` discovery is inconsistent with config file discovery |
+| #24829 | configuration | configuration (0.81) | configuration (0.79) | configuration (0.91) | configuration (0.97) | configuration (0.84) | configuration (0.96) | configuration (0.97) | configuration (0.86) | configuration (0.98) | configuration (0.97) | configuration (0.96) | linter (0.56) | configuration (0.63) | configuration (1.00) | configuration (0.95) | configuration (0.94) | configuration (0.93) | ruff ignoring `requires-python` in `pyproject.toml` when missing `[to… |
+| #24420 | server | server (0.99) | server (0.99) | server (0.92) | server (0.97) | server (0.98) | server (0.97) | server (0.95) | server (0.99) | server (0.93) | server (0.95) | server (0.96) | configuration (0.50) | server (0.51) | server (1.00) | server (0.90) | server (0.99) | server (0.98) | [LSP] `"settings.configurationPreference: "filesystemFirst"` doesn't … |
+| #24389 | linter | linter (0.73) | linter (0.82) | linter (0.96) | linter (0.98) | linter (0.99) | formatter (0.72) | linter (0.97) | linter (0.96) | linter (0.98) | linter (0.76) | linter (0.97) | linter (0.48) | linter (0.44) | linter (1.00) | linter (0.90) | linter (0.97) | linter (0.94) | String ending with octal causes panic when `UP012` selected |
+| #24323 | linter | linter (0.81) | linter (0.93) | linter (0.80) | linter (0.92) | linter (0.95) | linter (0.79) | linter (0.91) | linter (0.89) | linter (0.84) | linter (0.64) | linter (0.94) | linter (0.70) | formatter (0.40) | linter (1.00) | linter (0.81) | linter (1.00) | linter (0.98) | `isort` options for profile compatibility |

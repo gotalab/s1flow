@@ -1,9 +1,9 @@
 {
  "schema": "s1flow/comparison@2",
- "id": "e32f24795a3315a69a5fe8ccf982d53f2a2a96d9b893aebcde27457bc83cbe5e",
+ "id": "59654904d9366e31e018129eacf115f58ae7cc8e84c50ae337b11642371b708b",
  "task": "gh-ruff-kind",
  "source": "GitHub issues of astral-sh/ruff (labels applied by maintainers)",
- "at": "2026-10-31T05:56:37Z",
+ "at": "2026-10-31T06:08:36Z",
  "scope": "dev",
  "question_type": "choice",
  "kind_params": {},
@@ -26,7 +26,7 @@
   "min_recall": null
  },
  "data_digest": "865d51e55ce9de9ba4444d13c8095bbea63809e744d51454643e940e34075702",
- "evaluation_contract_digest": "de08a7437558daaf3d84bf5b7b08e4ad2226dd9242a24e7d342ed5aee1344155",
+ "evaluation_contract_digest": "41f7abe473080a003969b265bdc5a8258b11a4898dcb0d011019d5a758e30d5e",
  "input_adapter_digest": "4460f5e92f59030226004608d21c55e06c43ea6b49a906a7ff5d63dce1c6da4c",
  "binding_digests": {
   "clef": "26c25c4d390f859acd12ce2f3b19bbac28185a843ca06b192ed1d07a3bd7be6e",
@@ -41,8 +41,6 @@
   "decision-1@openrouter": "6658a0ecb49e55a88822cfa74f5195d908b68955ab9d2150a0736610c185e0b4",
   "drex-max@openrouter": "88aba680f64acd9a9e8b302f0725467b58422da919ab902252c75ab97ff140c4",
   "elephant@openrouter": "b9fed333f326964d981469b8c7ed67fb3902639dce43c50d26fa8c874600497f",
-  "flash-lite@vercel": "e6542a1c8c2d34b919dccb5f117700fb8c6265d83ed17171f38877f702579fec",
-  "haiku@vercel": "507261aac83b38c2ff7b3d4740a0fa4bd7c094ab0cce108489a1982b35782a22",
   "jev": "82e96c61f8b68bccf24a5e141099e34864fbcb420529131fb0405d4290d491b4",
   "jev:1.14": "80ea34d5e614e94eede62e9f2aaefecb93d90345db2b18be694eb75d271ca372",
   "joey@openrouter": "a1103869e2d30d0e394a031d82a37240274e0161de78fcf9af5727e8f2bcfcaa",
@@ -65,8 +63,6 @@
   "decision-1@openrouter": "23ed14b86e5ac3847f8b8a44ea3199e0f0cdc920bc0496f0a6f47393a08abc3b",
   "drex-max@openrouter": "1f9ea9c534a39d1bda6841c1114dbba79d08c08602fbd92e4587628e786c40cc",
   "elephant@openrouter": "49c700700945c1fd45649d262e446d76e23ab87d7fe8cbd661f3f5e6ad1e9438",
-  "flash-lite@vercel": "50ed87275d197cff71ef4d62ccda99252a403c0e891f6bba4d62d69e354107c7",
-  "haiku@vercel": "3a8a9845ee14c5ff63941c8e038bc97b121627db3d7f2df253be294593703a3e",
   "jev": "41b1f19ac4f46d379a12a95af2a680c259b5340288de133168016d594aec1332",
   "jev:1.14": "5cbedee96bb5f90ffa58ec2d9dd4fd2fe101f940e6ff821364cc2f7a5b391e53",
   "joey@openrouter": "74f86c3cd7e1f61ddb60806b38f3c6fd08cfbe7c2a703883b081ada463e5bc2b",
@@ -9793,254 +9789,6 @@
     ],
     "selection_basis": "selected-answer probability",
     "selection_unavailable": null,
-    "unavailable": null
-   }
-  },
-  {
-   "candidate": "flash-lite@vercel",
-   "model": "flash-lite@vercel",
-   "variant": "base",
-   "n": 210,
-   "value": null,
-   "interval": null,
-   "rule": null,
-   "metrics": {
-    "accuracy": {
-     "value": 0.580952380952381,
-     "interval": [
-      0.5094047619047619,
-      0.6476190476190476
-     ]
-    },
-    "macro_f1": {
-     "value": 0.5237517436888475,
-     "interval": null
-    },
-    "auroc": {
-     "value": null,
-     "interval": null
-    },
-    "brier": {
-     "value": null,
-     "interval": null
-    },
-    "ece": {
-     "value": null,
-     "interval": null
-    },
-    "coverage:0.95": {
-     "value": 0.0,
-     "interval": [
-      0.0,
-      0.0
-     ]
-    },
-    "accepted_accuracy:0.95": {
-     "value": null,
-     "interval": null
-    }
-   },
-   "excluded": [],
-   "adoption_blocked": [],
-   "probabilities": false,
-   "failures": {
-    "calls": 210,
-    "failed": 0,
-    "unsupported": 0,
-    "data_errors": 0,
-    "unlabeled": 0,
-    "never_asked": 0,
-    "failed_cases": 0,
-    "refused_cases": 0
-   },
-   "calls": {
-    "latency": {
-     "n": 210,
-     "p50_ms": 1215.9,
-     "p90_ms": 2069.9399999999996,
-     "p95_ms": 2724.099999999991,
-     "p99_ms": 5329.033999999997,
-     "max_ms": 6504.7,
-     "spread": 4.382789703100581,
-     "retried": 0,
-     "unrecorded": 0,
-     "concurrency": [
-      8
-     ],
-     "concurrency_unknown": 0
-    },
-    "case_latency_p90_ms": {
-     "value": 2069.9399999999996,
-     "interval": [
-      1945.27,
-      2375.6
-     ]
-    },
-    "throughput": {
-     "per_min": 337.87883155600576,
-     "seconds": 37.291475,
-     "calls": 210,
-     "concurrency": 8,
-     "measured": false
-    },
-    "cost_per_10k_usd": 1.8708476190476189,
-    "cost_total_usd": 0.0392878,
-    "cost_source": "list",
-    "cost_unknown": 0,
-    "price": null
-   },
-   "measurement": {
-    "provider": "llm",
-    "model_id": "vercel_ai_gateway/google/gemini-3.5-flash-lite",
-    "distribution": "none",
-    "declared_concurrency": null
-   },
-   "question": {
-    "type": "choice",
-    "instructions": "What kind of issue is this, filed against Ruff (a Python linter and formatter)?",
-    "criteria": {
-     "bug": "Something isn't working: a crash, a false positive or negative, a wrong fix, or output that differs from what is documented.",
-     "question": "Asking for support or clarification about how Ruff behaves or how to configure it.",
-     "documentation": "Improvements or additions to the documentation.",
-     "feature": "A request to implement a new lint rule, extend an existing one, or add a capability; nothing is broken."
-    }
-   },
-   "charts": {
-    "scope": "dev",
-    "rule": "out-of-fold",
-    "n": 210,
-    "raw_value": 1.0,
-    "cv_value": 0.0,
-    "threshold_sweep": [],
-    "distribution": [],
-    "calibration": [],
-    "selection_sweep": [],
-    "selection_basis": "selected-answer probability",
-    "selection_unavailable": "Selection probability is unavailable: the answered dev cases have no genuine distribution or box confidence.",
-    "unavailable": null
-   }
-  },
-  {
-   "candidate": "haiku@vercel",
-   "model": "haiku@vercel",
-   "variant": "base",
-   "n": 210,
-   "value": null,
-   "interval": null,
-   "rule": null,
-   "metrics": {
-    "accuracy": {
-     "value": 0.5904761904761905,
-     "interval": [
-      0.5190476190476191,
-      0.6571428571428571
-     ]
-    },
-    "macro_f1": {
-     "value": 0.52980050793981,
-     "interval": null
-    },
-    "auroc": {
-     "value": null,
-     "interval": null
-    },
-    "brier": {
-     "value": null,
-     "interval": null
-    },
-    "ece": {
-     "value": null,
-     "interval": null
-    },
-    "coverage:0.95": {
-     "value": 0.0,
-     "interval": [
-      0.0,
-      0.0
-     ]
-    },
-    "accepted_accuracy:0.95": {
-     "value": null,
-     "interval": null
-    }
-   },
-   "excluded": [],
-   "adoption_blocked": [],
-   "probabilities": false,
-   "failures": {
-    "calls": 210,
-    "failed": 0,
-    "unsupported": 0,
-    "data_errors": 0,
-    "unlabeled": 0,
-    "never_asked": 0,
-    "failed_cases": 0,
-    "refused_cases": 0
-   },
-   "calls": {
-    "latency": {
-     "n": 210,
-     "p50_ms": 1403.45,
-     "p90_ms": 3235.6099999999997,
-     "p95_ms": 3702.154999999998,
-     "p99_ms": 6440.600999999999,
-     "max_ms": 7229.8,
-     "spread": 4.589120381915992,
-     "retried": 0,
-     "unrecorded": 0,
-     "concurrency": [
-      8
-     ],
-     "concurrency_unknown": 0
-    },
-    "case_latency_p90_ms": {
-     "value": 3235.6099999999997,
-     "interval": [
-      2660.6699999999996,
-      3356.3775
-     ]
-    },
-    "throughput": {
-     "per_min": 273.8036708162772,
-     "seconds": 46.018375,
-     "calls": 210,
-     "concurrency": 8,
-     "measured": false
-    },
-    "cost_per_10k_usd": 1.1432523809523807,
-    "cost_total_usd": 0.024008299999999996,
-    "cost_source": "list",
-    "cost_unknown": 0,
-    "price": null
-   },
-   "measurement": {
-    "provider": "llm",
-    "model_id": "vercel_ai_gateway/anthropic/claude-haiku-5.5",
-    "distribution": "none",
-    "declared_concurrency": null
-   },
-   "question": {
-    "type": "choice",
-    "instructions": "What kind of issue is this, filed against Ruff (a Python linter and formatter)?",
-    "criteria": {
-     "bug": "Something isn't working: a crash, a false positive or negative, a wrong fix, or output that differs from what is documented.",
-     "question": "Asking for support or clarification about how Ruff behaves or how to configure it.",
-     "documentation": "Improvements or additions to the documentation.",
-     "feature": "A request to implement a new lint rule, extend an existing one, or add a capability; nothing is broken."
-    }
-   },
-   "charts": {
-    "scope": "dev",
-    "rule": "out-of-fold",
-    "n": 210,
-    "raw_value": 1.0,
-    "cv_value": 0.0,
-    "threshold_sweep": [],
-    "distribution": [],
-    "calibration": [],
-    "selection_sweep": [],
-    "selection_basis": "selected-answer probability",
-    "selection_unavailable": "Selection probability is unavailable: the answered dev cases have no genuine distribution or box confidence.",
     "unavailable": null
    }
   },

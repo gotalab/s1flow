@@ -24,7 +24,7 @@
 # `provider` is a built-in kind (s1flow/client/providers/__init__.py: typesafe, gateway, openrouter,
 # cloudflare, openai-decisions, llm) or your own as "package.module:factory".
 
-# What `s1flow run` compares without --models. The LLMs are references: name them with --models.
+# What `s1flow run` compares without --models.
 # Each needs only a key. The full comparison names its models with --models (the bench's reports list them).
 default = ["jev", "d1.1@openrouter", "luna@decisions"]
 
@@ -122,23 +122,6 @@ price.input_per_mtok = 0.10
 price.as_of = "2026-10-09"
 price.source = "https://openai.com/api/pricing/ (Decisions API, no output charge)"
 note = "OpenAI Decisions API, public beta (2026-10-06)."
-
-# LLMs, as references. Box units are each LLM's own: Claude answers in pixels, Gemini on a 0-1000 scale (2026-10-16).
-[models."haiku@vercel"]
-provider = "llm"
-id = "vercel_ai_gateway/anthropic/claude-haiku-5.5"
-options.box_units = "pixels"
-capabilities.context_tokens = 128000
-capabilities.image = true
-capabilities.question_types = ["boolean", "choice", "score", "box"]
-
-[models."flash-lite@vercel"]
-provider = "llm"
-id = "vercel_ai_gateway/google/gemini-3.5-flash-lite"
-options.box_units = "k1000"
-capabilities.context_tokens = 128000
-capabilities.image = true
-capabilities.question_types = ["boolean", "choice", "score", "box"]
 
 # Added 2026-10-31 from OpenRouter's decision models.
 [models."d1.1@openrouter"]

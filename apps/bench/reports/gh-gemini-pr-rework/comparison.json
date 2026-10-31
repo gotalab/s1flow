@@ -1,9 +1,9 @@
 {
  "schema": "s1flow/comparison@2",
- "id": "66bfd5a35eb84c25a1e1224a3495953cc4a4dcee33c2887f72c7056a43591ef0",
+ "id": "ab81fb0986c1ee09b86239a2fb16057aae3d6ba6e415ab1412db5590e82dd7dc",
  "task": "gh-gemini-pr-rework",
  "source": "Merged PRs of google-gemini/gemini-cli (review history via the GitHub API)",
- "at": "2026-10-31T05:56:20Z",
+ "at": "2026-10-31T06:09:27Z",
  "scope": "dev",
  "question_type": "boolean",
  "kind_params": {},
@@ -26,7 +26,7 @@
   "min_recall": null
  },
  "data_digest": "fca06a47194c6984e30f7be3b7f8b32f2320d7286371336c446df16b80416da5",
- "evaluation_contract_digest": "c451aa7e701cf764fc48577c80787b28a259efe5925ecb442e7e058950e32c93",
+ "evaluation_contract_digest": "c5a2dd84172100946797efcd2ec87e9f910cc73922faba0f35e3d756b45568bc",
  "input_adapter_digest": "035b3a8e770b350dfa12331b8d9abcbc83bf0a2cea1fd7bd55c8dccbda8dc0f2",
  "binding_digests": {
   "clef": "26c25c4d390f859acd12ce2f3b19bbac28185a843ca06b192ed1d07a3bd7be6e",
@@ -41,8 +41,6 @@
   "decision-1@openrouter": "6658a0ecb49e55a88822cfa74f5195d908b68955ab9d2150a0736610c185e0b4",
   "drex-max@openrouter": "88aba680f64acd9a9e8b302f0725467b58422da919ab902252c75ab97ff140c4",
   "elephant@openrouter": "b9fed333f326964d981469b8c7ed67fb3902639dce43c50d26fa8c874600497f",
-  "flash-lite@vercel": "e6542a1c8c2d34b919dccb5f117700fb8c6265d83ed17171f38877f702579fec",
-  "haiku@vercel": "507261aac83b38c2ff7b3d4740a0fa4bd7c094ab0cce108489a1982b35782a22",
   "jev": "82e96c61f8b68bccf24a5e141099e34864fbcb420529131fb0405d4290d491b4",
   "jev:1.14": "80ea34d5e614e94eede62e9f2aaefecb93d90345db2b18be694eb75d271ca372",
   "joey@openrouter": "a1103869e2d30d0e394a031d82a37240274e0161de78fcf9af5727e8f2bcfcaa",
@@ -65,8 +63,6 @@
   "decision-1@openrouter": "c86a9b931f86751c972828348f80940ad117a07173201743881672409253a74b",
   "drex-max@openrouter": "24817752769451b9b9d1f4babfb5322300bb155a07c0d7ef6de27d5b01037f11",
   "elephant@openrouter": "a2f99e2186341bcb30c8a48c4f8ee040b555cb707f4c4d183a84b3a8b34c78c6",
-  "flash-lite@vercel": "8e477475bd3cf2cc4305d5a9c8a2770865116c4c07ea90553ee74cadc51fd03a",
-  "haiku@vercel": "1bc9b9d689136fb4453e430e1bf1418be01cad529bd7429c74d9208827d3f4c1",
   "jev": "41b1f19ac4f46d379a12a95af2a680c259b5340288de133168016d594aec1332",
   "jev:1.14": "31d6be672f7760889daca467d2f76081a4ad41b48205a638f82872b84ef50bcb",
   "joey@openrouter": "d3cc0a8492f7d2463a5bae762034357615415e0e4a8415b5c951c2d74afad4c5",
@@ -19676,274 +19672,6 @@
     "selection_basis": "selected-answer probability",
     "selection_unavailable": null,
     "unavailable": null
-   }
-  },
-  {
-   "candidate": "flash-lite@vercel",
-   "model": "flash-lite@vercel",
-   "variant": "base",
-   "n": 338,
-   "value": null,
-   "interval": null,
-   "rule": null,
-   "metrics": {
-    "accuracy": {
-     "value": 0.727810650887574,
-     "interval": [
-      0.6804733727810651,
-      0.7751479289940828
-     ]
-    },
-    "f1": {
-     "value": 0.09803921568627451,
-     "interval": null
-    },
-    "precision": {
-     "value": 0.45454545454545453,
-     "interval": null
-    },
-    "recall": {
-     "value": 0.054945054945054944,
-     "interval": null
-    },
-    "auroc": {
-     "value": null,
-     "interval": null
-    },
-    "brier": {
-     "value": null,
-     "interval": null
-    },
-    "ece": {
-     "value": null,
-     "interval": null
-    },
-    "objective:expected_loss{\"fn\": 1.0, \"fp\": 1.0}": {
-     "value": null,
-     "interval": null
-    },
-    "coverage:0.95": {
-     "value": 0.0,
-     "interval": [
-      0.0,
-      0.0
-     ]
-    },
-    "accepted_accuracy:0.95": {
-     "value": null,
-     "interval": null
-    }
-   },
-   "excluded": [],
-   "adoption_blocked": [],
-   "probabilities": false,
-   "failures": {
-    "calls": 338,
-    "failed": 0,
-    "unsupported": 0,
-    "data_errors": 0,
-    "unlabeled": 0,
-    "never_asked": 0,
-    "failed_cases": 0,
-    "refused_cases": 0
-   },
-   "calls": {
-    "latency": {
-     "n": 338,
-     "p50_ms": 1195.8,
-     "p90_ms": 1792.380000000001,
-     "p95_ms": 2312.26,
-     "p99_ms": 3884.6839999999966,
-     "max_ms": 11362.5,
-     "spread": 3.24860679043318,
-     "retried": 0,
-     "unrecorded": 0,
-     "concurrency": [
-      8
-     ],
-     "concurrency_unknown": 0
-    },
-    "case_latency_p90_ms": {
-     "value": 1792.380000000001,
-     "interval": [
-      1586.1100000000001,
-      2108.7
-     ]
-    },
-    "throughput": {
-     "per_min": 354.2560731640107,
-     "seconds": 57.246725000000005,
-     "calls": 338,
-     "concurrency": 8,
-     "measured": false
-    },
-    "cost_per_10k_usd": 2.4036863905325445,
-    "cost_total_usd": 0.0812446,
-    "cost_source": "list",
-    "cost_unknown": 0,
-    "price": null
-   },
-   "measurement": {
-    "provider": "llm",
-    "model_id": "vercel_ai_gateway/google/gemini-3.5-flash-lite",
-    "distribution": "none",
-    "declared_concurrency": null
-   },
-   "question": {
-    "type": "boolean",
-    "instructions": "Will this pull request need further changes after a maintainer reviews it?",
-    "criteria": {
-     "true": "Likely to need rework: large or cross-cutting, touches core or risky areas, unclear description, no tests, or a first-time contributor.",
-     "false": "Likely to merge as is: small and focused, clear description, tests included, or routine changes."
-    }
-   },
-   "charts": {
-    "scope": "dev",
-    "rule": "out-of-fold",
-    "n": 338,
-    "raw_value": 1.0,
-    "cv_value": 0.0,
-    "threshold_sweep": [],
-    "distribution": [],
-    "calibration": [],
-    "selection_sweep": [],
-    "selection_basis": "selected-answer probability",
-    "selection_unavailable": "Selection probability is unavailable: the answered dev cases have no genuine distribution or box confidence.",
-    "unavailable": "Binary diagnostics require answered dev cases with a distribution."
-   }
-  },
-  {
-   "candidate": "haiku@vercel",
-   "model": "haiku@vercel",
-   "variant": "base",
-   "n": 338,
-   "value": null,
-   "interval": null,
-   "rule": null,
-   "metrics": {
-    "accuracy": {
-     "value": 0.6479289940828402,
-     "interval": [
-      0.5946745562130178,
-      0.6982248520710059
-     ]
-    },
-    "f1": {
-     "value": 0.4663677130044843,
-     "interval": null
-    },
-    "precision": {
-     "value": 0.3939393939393939,
-     "interval": null
-    },
-    "recall": {
-     "value": 0.5714285714285714,
-     "interval": null
-    },
-    "auroc": {
-     "value": null,
-     "interval": null
-    },
-    "brier": {
-     "value": null,
-     "interval": null
-    },
-    "ece": {
-     "value": null,
-     "interval": null
-    },
-    "objective:expected_loss{\"fn\": 1.0, \"fp\": 1.0}": {
-     "value": null,
-     "interval": null
-    },
-    "coverage:0.95": {
-     "value": 0.0,
-     "interval": [
-      0.0,
-      0.0
-     ]
-    },
-    "accepted_accuracy:0.95": {
-     "value": null,
-     "interval": null
-    }
-   },
-   "excluded": [],
-   "adoption_blocked": [],
-   "probabilities": false,
-   "failures": {
-    "calls": 338,
-    "failed": 0,
-    "unsupported": 0,
-    "data_errors": 0,
-    "unlabeled": 0,
-    "never_asked": 0,
-    "failed_cases": 0,
-    "refused_cases": 0
-   },
-   "calls": {
-    "latency": {
-     "n": 338,
-     "p50_ms": 1365.2,
-     "p90_ms": 2540.4300000000007,
-     "p95_ms": 3238.3199999999993,
-     "p99_ms": 4766.910999999996,
-     "max_ms": 10318.9,
-     "spread": 3.49173088192206,
-     "retried": 0,
-     "unrecorded": 0,
-     "concurrency": [
-      8
-     ],
-     "concurrency_unknown": 0
-    },
-    "case_latency_p90_ms": {
-     "value": 2540.4300000000007,
-     "interval": [
-      2338.93775,
-      2817.9167500000003
-     ]
-    },
-    "throughput": {
-     "per_min": 292.3389149332318,
-     "seconds": 69.3715375,
-     "calls": 338,
-     "concurrency": 8,
-     "measured": false
-    },
-    "cost_per_10k_usd": 1.4398047337278106,
-    "cost_total_usd": 0.0486654,
-    "cost_source": "list",
-    "cost_unknown": 0,
-    "price": null
-   },
-   "measurement": {
-    "provider": "llm",
-    "model_id": "vercel_ai_gateway/anthropic/claude-haiku-5.5",
-    "distribution": "none",
-    "declared_concurrency": null
-   },
-   "question": {
-    "type": "boolean",
-    "instructions": "Will this pull request need further changes after a maintainer reviews it?",
-    "criteria": {
-     "true": "Likely to need rework: large or cross-cutting, touches core or risky areas, unclear description, no tests, or a first-time contributor.",
-     "false": "Likely to merge as is: small and focused, clear description, tests included, or routine changes."
-    }
-   },
-   "charts": {
-    "scope": "dev",
-    "rule": "out-of-fold",
-    "n": 338,
-    "raw_value": 1.0,
-    "cv_value": 0.0,
-    "threshold_sweep": [],
-    "distribution": [],
-    "calibration": [],
-    "selection_sweep": [],
-    "selection_basis": "selected-answer probability",
-    "selection_unavailable": "Selection probability is unavailable: the answered dev cases have no genuine distribution or box confidence.",
-    "unavailable": "Binary diagnostics require answered dev cases with a distribution."
    }
   },
   {

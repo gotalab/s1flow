@@ -18,8 +18,6 @@
 | decision-1@openrouter | 210 | 60.0% [53, 67] | 0.55 | 0.86 | 0.33 | 2% [0, 4] | 75.0% (24.9%) | 0/210 | 0/210 |
 | drex-max@openrouter | 210 | 60.0% [53, 67] | 0.55 | 0.86 | 0.32 | 8% [5, 12] | 88.2% (67.4%) | 0/210 | 0/210 |
 | elephant@openrouter | 210 | 58.1% [51, 65] | 0.53 | 0.84 | 0.32 | 4% [1, 7] | 87.5% (52.9%) | 0/210 | 0/210 |
-| flash-lite@vercel ※ | 210 | 58.1% [51, 65] | 0.52 | 0.71 | 0.42 | 0% [0, 0] | — (0.0%) | 0/210 | 0/210 |
-| haiku@vercel ※ | 210 | 59.0% [52, 66] | 0.53 | 0.71 | 0.41 | 0% [0, 0] | — (0.0%) | 0/210 | 0/210 |
 | jev:1.14 | 210 | 58.6% [52, 66] | 0.52 | 0.78 | 0.33 | 0% [0, 0] | — (0.0%) | 0/210 | 0/210 |
 | joey@openrouter | 210 | 51.9% [45, 59] | 0.46 | 0.78 | 0.16 | 7% [4, 10] | 64.3% (39.0%) | 0/210 | 0/210 |
 | kev@openrouter | 210 | 61.0% [54, 68] | 0.57 | 0.83 | 0.04 | 3% [1, 6] | 85.7% (47.9%) | 0/210 | 0/210 |
@@ -28,7 +26,7 @@
 | mercury@openrouter | 210 | 57.1% [50, 64] | 0.51 | 0.83 | 0.40 | 0% [0, 0] | — (0.0%) | 0/210 | 0/210 |
 | span@openrouter | 210 | 59.0% [52, 66] | 0.50 | 0.83 | 0.33 | 17% [12, 22] | 94.3% (83.1%) | 0/210 | 0/210 |
 
-Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef@openrouter = cloudflare/clef; d1-ultra@openrouter = liquid/d1-ultra-20261015; d1.1@openrouter = liquid/d1.1-20261027; d1@vercel = liquid/d1; decider-flash@openrouter = perplexity/pplx-decider-flash-v1.2-20261016; decider@openrouter = perplexity/pplx-decider-v1.2-20261016; decision-1@openrouter = microsoft/microsoft-decision-1-20261009; drex-max@openrouter = nace-ai/drex-max-20261016; elephant@openrouter = baseten/elephant-1-20261021; flash-lite@vercel = vercel_ai_gateway/google/gemini-3.5-flash-lite; haiku@vercel = vercel_ai_gateway/anthropic/claude-haiku-5.5; jev:1.14 = jev-1.14.0; joey@openrouter = baseten/joey-1-20261029; kev@openrouter = jaredpalmer/kev-4b-20260924; luna@decisions = gpt-6-luna; mammoth@openrouter = baseten/mammoth-1-20261021; mercury@openrouter = inception/mercury-decide-20260930; span@openrouter = respan/span-02-20261015. To compare versions, run each by name: `s1flow run <task> --models jev:1.14`.
+Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef@openrouter = cloudflare/clef; d1-ultra@openrouter = liquid/d1-ultra-20261015; d1.1@openrouter = liquid/d1.1-20261027; d1@vercel = liquid/d1; decider-flash@openrouter = perplexity/pplx-decider-flash-v1.2-20261016; decider@openrouter = perplexity/pplx-decider-v1.2-20261016; decision-1@openrouter = microsoft/microsoft-decision-1-20261009; drex-max@openrouter = nace-ai/drex-max-20261016; elephant@openrouter = baseten/elephant-1-20261021; jev:1.14 = jev-1.14.0; joey@openrouter = baseten/joey-1-20261029; kev@openrouter = jaredpalmer/kev-4b-20260924; luna@decisions = gpt-6-luna; mammoth@openrouter = baseten/mammoth-1-20261021; mercury@openrouter = inception/mercury-decide-20260930; span@openrouter = respan/span-02-20261015. To compare versions, run each by name: `s1flow run <task> --models jev:1.14`.
 
 ## Objectives and constraints
 
@@ -48,8 +46,6 @@ Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef@openrouter = cl
 | kev@openrouter | 3% [1, 6] | 0.89 | met |
 | d1@vercel | 2% [0, 4] | 1.00 | met |
 | decision-1@openrouter | 2% [0, 4] | 1.00 | met |
-| flash-lite@vercel | 0% [0, 0] | — | met |
-| haiku@vercel | 0% [0, 0] | — | met |
 | jev:1.14 | 0% [0, 0] | — | met |
 | luna@decisions | 0% [0, 0] | — | met |
 | mercury@openrouter | 0% [0, 0] | — | met |
@@ -70,8 +66,6 @@ Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef@openrouter = cl
 | decision-1@openrouter | 210 | 1472 ms | 2329 ms | 4261 ms | 8719 ms | 2.9 | 0 | 8 | $0.17 | billed |  |
 | drex-max@openrouter | 210 | 1608 ms | 2362 ms | 5137 ms | 8641 ms | 3.2 | 0 | 8 | $0.28 | billed |  |
 | elephant@openrouter | 210 | 1375 ms | 2444 ms | 4960 ms | 6556 ms | 3.6 | 0 | 8 | $0.17 | billed |  |
-| flash-lite@vercel | 210 | 1216 ms | 2070 ms | 5329 ms | 6505 ms | 4.4 | 0 | 8 | $1.87 | estimated |  |
-| haiku@vercel | 210 | 1403 ms | 3236 ms | 6441 ms | 7230 ms | 4.6 | 0 | 8 | $1.14 | estimated |  |
 | jev:1.14 | 210 | 1295 ms | 2435 ms | 5306 ms | 8289 ms | 4.1 | 0 | 8 | $0.29 | estimated |  |
 | joey@openrouter | 210 | 1330 ms | 2315 ms | 4166 ms | 6376 ms | 3.1 | 0 | 8 | $0.05 | billed | ○ |
 | kev@openrouter | 210 | 1522 ms | 2385 ms | 4644 ms | 6511 ms | 3.1 | 0 | 8 | $0.16 | billed |  |
@@ -82,7 +76,7 @@ Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef@openrouter = cl
 
 Measured on the calls, not the answers: never an objective, only the constraints and the order of candidates the objectives tie (the p90 of each case's slowest call, then API cost). Frontier ○: no other model beats it on all three of the primary objective, API cost per 10k and p99.
 Latency is the time from sending to receiving one call that answered (the round trip from here included), without retries or the wait before them. Many calls at once read slower, from the provider's load and this machine's connections: to compare models, measure every candidate again at the same concurrency (`s1flow run <task> --fresh --concurrency N`, the same N for all).
-Where the API costs come from: billed: clef-flash@openrouter, clef@openrouter, d1-ultra@openrouter, d1.1@openrouter, d1@vercel, decider-flash@openrouter, decider@openrouter, decision-1@openrouter, drex-max@openrouter, elephant@openrouter, joey@openrouter, kev@openrouter, mammoth@openrouter, mercury@openrouter, span@openrouter; estimated (recorded tokens times a list price: s1flow.toml's where dated, else the LLM price table's; not a bill): flash-lite@vercel, haiku@vercel, jev:1.14 (list price of 2026-10-03), luna@decisions (list price of 2026-10-09). Billed and estimated API costs sit side by side, so their differences do not compare as they are.
+Where the API costs come from: billed: clef-flash@openrouter, clef@openrouter, d1-ultra@openrouter, d1.1@openrouter, d1@vercel, decider-flash@openrouter, decider@openrouter, decision-1@openrouter, drex-max@openrouter, elephant@openrouter, joey@openrouter, kev@openrouter, mammoth@openrouter, mercury@openrouter, span@openrouter; estimated (recorded tokens times a list price: s1flow.toml's where dated, else the LLM price table's; not a bill): jev:1.14 (list price of 2026-10-03), luna@decisions (list price of 2026-10-09). Billed and estimated API costs sit side by side, so their differences do not compare as they are.
 
 ## API cost and time for these cases
 
@@ -98,8 +92,6 @@ Where the API costs come from: billed: clef-flash@openrouter, clef@openrouter, d
 | decision-1@openrouter | $0.0036 | 43 s (estimated, 210 calls) | 34 min | 8 |
 | drex-max@openrouter | $0.0059 | 45 s (estimated, 210 calls) | 35 min | 8 |
 | elephant@openrouter | $0.0035 | 42 s (estimated, 210 calls) | 34 min | 8 |
-| flash-lite@vercel | $0.04 | 37 s (estimated, 210 calls) | 30 min | 8 |
-| haiku@vercel | $0.02 | 46 s (estimated, 210 calls) | 37 min | 8 |
 | jev:1.14 | $0.0062 | 42 s (estimated, 210 calls) | 33 min | 8 |
 | joey@openrouter | $0.0010 | 41 s (estimated, 210 calls) | 32 min | 8 |
 | kev@openrouter | $0.0034 | 44 s (estimated, 210 calls) | 35 min | 8 |
@@ -112,7 +104,6 @@ Measured: the wall time of a run that called every case. When every answer came 
 
 Coverage: answering the most probable first, the largest share whose sure accuracy keeps the target 95%. The cut is chosen on each CV fold's fit side and measured on its eval side. The lower bound is a one-sided 95% Clopper-Pearson; [ ] is a 95% bootstrap interval.
 Scored: answered dev cases only; held-out test results require an explicit final check. Refused / unsupported and failed both count calls.
-※ a model that returns no distribution (one answer): its probability is 1 for every answer, so the coverage is all or nothing.
 
 ## Wrong at a high probability (0.9 or more)
 
@@ -244,32 +235,6 @@ Scored: answered dev cases only; held-out test results require an explicit final
 | #27369 | feature | bug | 0.99 | TC001/TC002/TC003 false negative when using a type as generic paramet… |
 | #27775 | question | bug | 0.99 | False positive on TRY203 |
 
-**flash-lite@vercel** (88)
-
-| id | label | answer | probability | case |
-|---|---|---|---|---|
-| #29073 | feature | bug | 1.00 | B014 does not detect redundant built-in exception subclasses |
-| #29069 | feature | bug | 1.00 | `deprecated-import` - should suggest `typing.TypeForm` instead of `ty… |
-| #28998 | question | bug | 1.00 | PLW0108 False positive when lambda executes a list element |
-| #28922 | feature | documentation | 1.00 | B018: useless-expression one more example to document |
-| #28913 | question | bug | 1.00 | Current working directory alters check behavior |
-| #28872 | documentation | feature | 1.00 | F841 unused-variable should fix RUF047 needless-else |
-| #28675 | question | bug | 1.00 | ERA001 false positive on "# pytest: foo=bar" |
-| #28551 | bug | question | 1.00 | Use rule name with parenthesized rule code in warning messages |
-
-**haiku@vercel** (86)
-
-| id | label | answer | probability | case |
-|---|---|---|---|---|
-| #29073 | feature | bug | 1.00 | B014 does not detect redundant built-in exception subclasses |
-| #29069 | feature | bug | 1.00 | `deprecated-import` - should suggest `typing.TypeForm` instead of `ty… |
-| #28998 | question | bug | 1.00 | PLW0108 False positive when lambda executes a list element |
-| #28922 | feature | documentation | 1.00 | B018: useless-expression one more example to document |
-| #28913 | question | bug | 1.00 | Current working directory alters check behavior |
-| #28872 | documentation | feature | 1.00 | F841 unused-variable should fix RUF047 needless-else |
-| #28675 | question | bug | 1.00 | ERA001 false positive on "# pytest: foo=bar" |
-| #28519 | question | feature | 1.00 | [Formatter feature request] Config option for trailing comma |
-
 **jev:1.14** (60)
 
 | id | label | answer | probability | case |
@@ -344,17 +309,17 @@ Scored: answered dev cases only; held-out test results require an explicit final
 
 ## Cases the models disagree on (12 of 71)
 
-| id | label | clef-flash@openrouter | clef@openrouter | d1-ultra@openrouter | d1.1@openrouter | d1@vercel | decider-flash@openrouter | decider@openrouter | decision-1@openrouter | drex-max@openrouter | elephant@openrouter | flash-lite@vercel | haiku@vercel | jev:1.14 | joey@openrouter | kev@openrouter | luna@decisions | mammoth@openrouter | mercury@openrouter | span@openrouter | case |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| #29073 | feature | bug (0.64) | bug (0.56) | feature (0.50) | bug (0.65) | feature (0.59) | bug (0.88) | bug (0.80) | bug (0.70) | bug (0.83) | bug (0.93) | bug (1.00) | bug (1.00) | bug (0.90) | bug (0.61) | bug (0.62) | bug (0.96) | bug (0.62) | bug (0.95) | bug (0.93) | B014 does not detect redundant built-in exception subclasses |
-| #29069 | feature | bug (0.68) | bug (0.57) | feature (0.59) | bug (0.92) | bug (0.87) | bug (0.71) | feature (0.53) | bug (0.77) | feature (0.56) | bug (0.82) | bug (1.00) | bug (1.00) | bug (0.89) | bug (0.44) | feature (0.38) | bug (0.97) | bug (0.85) | bug (0.98) | feature (0.95) | `deprecated-import` - should suggest `typing.TypeForm` instead of `ty… |
-| #28939 | question | feature (0.58) | question (0.60) | question (0.79) | question (0.58) | question (0.35) | question (0.52) | question (0.74) | question (0.50) | question (0.84) | feature (0.36) | question (1.00) | question (1.00) | question (0.63) | question (0.52) | bug (0.30) | question (0.69) | question (0.67) | bug (0.31) | feature (0.46) | pt HOSP01 |
-| #28913 | question | question (0.52) | bug (0.33) | bug (0.60) | bug (0.58) | bug (0.56) | question (0.79) | bug (0.45) | question (0.69) | bug (0.43) | question (0.63) | bug (1.00) | bug (1.00) | bug (0.67) | question (0.59) | question (0.52) | bug (0.77) | bug (0.48) | question (0.67) | bug (0.85) | Current working directory alters check behavior |
-| #28872 | documentation | bug (0.65) | bug (0.73) | feature (0.51) | bug (0.69) | bug (0.64) | bug (0.49) | feature (0.58) | feature (0.67) | bug (0.57) | bug (0.76) | feature (1.00) | feature (1.00) | feature (0.51) | bug (0.65) | bug (0.36) | bug (0.87) | bug (0.53) | bug (1.00) | feature (0.70) | F841 unused-variable should fix RUF047 needless-else |
-| #28773 | feature | feature (0.90) | feature (0.87) | feature (0.65) | bug (0.50) | feature (0.90) | feature (0.79) | feature (0.78) | feature (0.96) | feature (0.82) | feature (0.95) | feature (1.00) | feature (1.00) | feature (0.85) | feature (0.64) | feature (0.45) | feature (0.93) | feature (0.71) | feature (0.91) | feature (1.00) | PLW1510 to review kwargs dictionary |
-| #28604 | feature | feature (0.72) | feature (0.93) | feature (0.95) | feature (0.89) | feature (0.96) | feature (0.98) | feature (0.98) | feature (1.00) | feature (0.98) | feature (0.95) | feature (1.00) | feature (1.00) | feature (1.00) | documentation (0.38) | feature (0.72) | feature (1.00) | feature (0.97) | feature (1.00) | feature (0.98) | Add `import datetime as dt` as a conventional alias |
-| #28567 | feature | feature (0.89) | feature (0.92) | feature (0.98) | feature (0.99) | feature (0.99) | feature (0.96) | feature (0.98) | feature (0.99) | feature (0.98) | feature (0.93) | feature (1.00) | feature (1.00) | feature (0.93) | bug (0.40) | feature (0.45) | feature (0.94) | feature (0.97) | feature (1.00) | feature (0.99) | Support flake8-if-expr |
-| #28551 | bug | feature (0.35) | documentation (0.33) | feature (0.62) | bug (0.39) | question (0.50) | feature (0.59) | question (0.50) | question (0.87) | question (0.62) | question (0.57) | question (1.00) | feature (1.00) | feature (0.54) | question (0.54) | bug (0.32) | question (0.97) | question (0.80) | feature (0.89) | bug (0.73) | Use rule name with parenthesized rule code in warning messages |
-| #28503 | question | feature (0.70) | feature (0.90) | feature (0.73) | feature (0.64) | feature (0.73) | feature (0.82) | feature (0.87) | feature (0.95) | feature (0.93) | feature (0.91) | feature (1.00) | feature (1.00) | feature (0.90) | bug (0.49) | feature (0.48) | feature (0.49) | feature (0.88) | feature (0.99) | feature (0.95) | No fix for `lazy-import-mismatch` (TID254) with multiple imported thi… |
-| #28483 | question | bug (0.55) | bug (0.56) | bug (0.71) | bug (0.78) | bug (0.85) | bug (0.55) | question (0.58) | bug (0.65) | bug (0.61) | bug (0.82) | bug (1.00) | bug (1.00) | bug (0.93) | bug (0.54) | bug (0.45) | bug (1.00) | bug (0.55) | bug (0.98) | bug (0.91) | The Ruff VS Code extension uses the wrong `ruff.toml` file |
-| #28415 | question | feature (0.51) | feature (0.69) | question (0.57) | question (0.52) | feature (0.50) | feature (0.69) | question (0.66) | feature (0.67) | question (0.75) | feature (0.65) | feature (1.00) | feature (1.00) | feature (0.66) | question (0.59) | feature (0.51) | feature (0.50) | question (0.71) | question (0.68) | feature (0.96) | Make `Lexer::current_range` and `Lexer::current_flags` public? |
+| id | label | clef-flash@openrouter | clef@openrouter | d1-ultra@openrouter | d1.1@openrouter | d1@vercel | decider-flash@openrouter | decider@openrouter | decision-1@openrouter | drex-max@openrouter | elephant@openrouter | jev:1.14 | joey@openrouter | kev@openrouter | luna@decisions | mammoth@openrouter | mercury@openrouter | span@openrouter | case |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| #28604 | feature | feature (0.72) | feature (0.93) | feature (0.95) | feature (0.89) | feature (0.96) | feature (0.98) | feature (0.98) | feature (1.00) | feature (0.98) | feature (0.95) | feature (1.00) | documentation (0.38) | feature (0.72) | feature (1.00) | feature (0.97) | feature (1.00) | feature (0.98) | Add `import datetime as dt` as a conventional alias |
+| #28483 | question | bug (0.55) | bug (0.56) | bug (0.71) | bug (0.78) | bug (0.85) | bug (0.55) | question (0.58) | bug (0.65) | bug (0.61) | bug (0.82) | bug (0.93) | bug (0.54) | bug (0.45) | bug (1.00) | bug (0.55) | bug (0.98) | bug (0.91) | The Ruff VS Code extension uses the wrong `ruff.toml` file |
+| #28097 | question | feature (0.82) | feature (0.92) | feature (0.93) | feature (0.96) | feature (0.99) | feature (0.98) | feature (0.98) | feature (1.00) | feature (0.99) | feature (0.99) | feature (1.00) | question (0.41) | feature (0.73) | feature (0.93) | feature (0.98) | feature (1.00) | feature (0.98) | Option to use `code:name` for rules and output |
+| #27748 | feature | feature (0.96) | feature (0.94) | feature (0.91) | feature (0.93) | feature (0.97) | feature (0.99) | feature (0.96) | feature (1.00) | feature (0.99) | feature (0.97) | feature (0.98) | bug (0.40) | feature (0.49) | feature (1.00) | feature (0.93) | feature (0.99) | feature (0.98) | Default value pop instead of if-else block |
+| #27171 | feature | feature (0.92) | feature (0.91) | feature (0.97) | feature (0.92) | feature (0.99) | feature (0.96) | feature (0.99) | feature (0.99) | feature (0.99) | feature (0.99) | feature (0.97) | bug (0.32) | feature (0.48) | feature (1.00) | feature (0.97) | feature (1.00) | feature (0.98) | Rule to flag identifiers that are not NFKC-normalized |
+| #26879 | feature | feature (0.83) | feature (0.85) | feature (0.68) | bug (0.67) | bug (0.50) | feature (0.63) | feature (0.71) | feature (0.91) | feature (0.83) | feature (0.91) | feature (0.72) | feature (0.30) | feature (0.49) | feature (1.00) | feature (0.91) | feature (0.98) | feature (0.95) | Widen accepted `__all__` and `__slots__` formats to include single-ch… |
+| #26783 | feature | question (0.52) | question (0.72) | question (0.71) | question (0.66) | feature (0.57) | question (0.66) | question (0.89) | question (0.92) | question (0.92) | question (0.61) | feature (0.48) | question (0.49) | question (0.61) | question (1.00) | question (0.58) | feature (0.73) | feature (0.79) | How to ensure all top-level imports are sorted globally |
+| #26656 | feature | feature (0.94) | feature (0.91) | feature (0.99) | feature (0.99) | feature (0.99) | feature (0.99) | feature (0.99) | feature (1.00) | feature (1.00) | feature (0.93) | feature (1.00) | question (0.35) | feature (0.56) | feature (0.92) | feature (0.99) | feature (1.00) | feature (1.00) | Rule suggestion: `functools.partial` call with singular argument |
+| #26456 | feature | feature (0.90) | feature (0.91) | feature (0.90) | feature (0.94) | feature (0.99) | feature (0.96) | feature (0.97) | feature (1.00) | feature (0.99) | feature (0.96) | feature (0.97) | question (0.43) | feature (0.58) | feature (1.00) | feature (0.95) | feature (1.00) | feature (1.00) | Detecting returning exception instead of raising |
+| #26524 | question | bug (0.80) | bug (0.93) | bug (0.95) | bug (0.97) | bug (0.98) | bug (0.90) | bug (0.98) | bug (0.93) | bug (0.99) | bug (0.94) | bug (1.00) | bug (0.53) | question (0.43) | bug (0.99) | bug (0.98) | bug (1.00) | bug (0.98) | Ruff check with --fix removes applicable noqa TRY400 |
+| #25296 | feature | feature (0.97) | feature (0.97) | feature (0.98) | feature (0.98) | feature (1.00) | feature (1.00) | feature (0.99) | feature (1.00) | feature (1.00) | feature (1.00) | feature (1.00) | bug (0.37) | feature (0.80) | feature (1.00) | feature (1.00) | feature (1.00) | feature (1.00) | Rule idea: class-level None can make runtime protocol checks slow |
+| #25025 | feature | feature (0.97) | feature (0.93) | feature (0.98) | feature (0.97) | feature (0.99) | feature (0.97) | feature (0.99) | feature (1.00) | feature (1.00) | feature (0.99) | feature (0.99) | bug (0.30) | bug (0.31) | feature (1.00) | feature (0.99) | feature (1.00) | feature (0.98) | new rule - useless `from` clause in `raise` statement |

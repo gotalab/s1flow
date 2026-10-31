@@ -20,14 +20,14 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/automation-share-dark.svg">
-  <img alt="Share of cases each model can handle on its own while staying 95% accurate. Ruff issues: d1-ultra 88%, mammoth-1 86%, Decider 85%, Jev 1.14 75%, Claude Haiku 5.5 0%. MASSIVE: Decider 94%, mammoth-1 91%, d1-ultra 76%, Jev 1.14 76%, Haiku 0%. Overall accuracy is within 8 points across models on each task." src="docs/images/automation-share.svg">
+  <img alt="Share of cases each model can handle on its own while staying 95% accurate. Ruff issues: d1-ultra 88%, mammoth-1 86%, Decider 85%, Jev 1.14 75%. MASSIVE: Decider 94%, mammoth-1 91%, d1-ultra 76%, Jev 1.14 76%. Overall accuracy is within 8 points across these models on each task." src="docs/images/automation-share.svg">
 </picture>
 
-These five models are within 8 points of each other on accuracy, yet the share of cases each can handle while
-staying 95% accurate ranges from 0% to 94%. Claude Haiku 5.5, an LLM asked once per case, answers without a
-probability, so no threshold gets it to 95%. The numbers are a snapshot of five of the 19 models in the
-[reports](apps/bench/reports), not a ranking of providers. Your own cases may tell a different story, which is
-exactly why you measure them.
+These four models are within 8 points of each other on accuracy, yet the share of cases each can handle on its
+own while staying 95% accurate ranges from 75% to 94%. That share needs a confidence with every answer, so the
+uncertain cases can go to a person while the rest are acted on. The numbers are a snapshot of four of the 17
+decision models in the [reports](apps/bench/reports), not a ranking of providers. Your own cases may tell a
+different story, which is exactly why you measure them.
 
 ## Quick start
 

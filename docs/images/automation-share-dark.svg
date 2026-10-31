@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 443" width="880" height="443" role="img" aria-labelledby="t d">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 391" width="880" height="391" role="img" aria-labelledby="t d">
   <title id="t">Similar accuracy, very different share you can automate</title>
-  <desc id="d">For each model, a thin bar shows accuracy over all cases and a thick bar the share of cases it can handle automatically at a 95% accuracy target. Ruff issues (4 areas · English, 361 cases): d1-ultra (Liquid) 88% automatable at 90.0% accuracy, Decider v1.2 (Perplexity) 85% automatable at 90.3% accuracy, mammoth-1 (Baseten) 86% automatable at 90.9% accuracy, Jev 1.14 (TypeSafe) 75% automatable at 85.0% accuracy, Claude Haiku 5.5 0% automatable at 87.8% accuracy. MASSIVE (60 intents · Japanese, 201 cases): d1-ultra (Liquid) 76% automatable at 86.6% accuracy, Decider v1.2 (Perplexity) 94% automatable at 91.5% accuracy, mammoth-1 (Baseten) 91% automatable at 89.6% accuracy, Jev 1.14 (TypeSafe) 76% automatable at 84.1% accuracy, Claude Haiku 5.5 0% automatable at 85.6% accuracy. Haiku, asked once per case, answers without a probability, so no threshold holds it at 95%. Source: apps/bench reports, 2026-10-31.</desc>
+  <desc id="d">For each model, a thin bar shows accuracy over all cases and a thick bar the share of cases it can handle automatically at a 95% accuracy target. Ruff issues (4 areas · English, 361 cases): d1-ultra (Liquid) 88% automatable at 90.0% accuracy, Decider v1.2 (Perplexity) 85% automatable at 90.3% accuracy, mammoth-1 (Baseten) 86% automatable at 90.9% accuracy, Jev 1.14 (TypeSafe) 75% automatable at 85.0% accuracy. MASSIVE (60 intents · Japanese, 201 cases): d1-ultra (Liquid) 76% automatable at 86.6% accuracy, Decider v1.2 (Perplexity) 94% automatable at 91.5% accuracy, mammoth-1 (Baseten) 91% automatable at 89.6% accuracy, Jev 1.14 (TypeSafe) 76% automatable at 84.1% accuracy. Source: apps/bench reports, 2026-10-31.</desc>
   <style>
     text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; fill: #1f2328; }
     .bg { fill: #ffffff; }
@@ -25,7 +25,7 @@
       .rule { stroke: #30363d; }
     }
   </style>
-  <rect class="bg" width="880" height="443" rx="16"/>
+  <rect class="bg" width="880" height="391" rx="16"/>
   <text class="h" x="28" y="44">Similar accuracy. Very different automation.</text>
   <rect class="acc" x="560" y="31" width="22" height="5" rx="2.5"/>
   <text class="lg" x="590" y="38">accuracy</text>
@@ -57,11 +57,6 @@
   <rect class="track" x="120" y="279" width="250" height="18" rx="5"/>
   <rect class="bar" x="120" y="279" width="188.4" height="18" rx="5"/>
   <text class="v" x="380" y="295">75%</text>
-  <text class="n" x="28" y="345">Haiku 5.5</text>
-  <rect class="acc" x="120" y="320" width="219.5" height="5" rx="2.5"/>
-  <text class="a" x="380" y="326">88%</text>
-  <rect class="track" x="120" y="331" width="250" height="18" rx="5"/>
-  <text class="v" x="380" y="347">0%</text>
   <text class="p" x="468" y="88">MASSIVE</text>
   <text class="ps" x="560" y="88">60 intents · Japanese · 201 cases</text>
   <text class="n" x="468" y="137">d1-ultra</text>
@@ -88,11 +83,6 @@
   <rect class="track" x="560" y="279" width="250" height="18" rx="5"/>
   <rect class="bar" x="560" y="279" width="190.3" height="18" rx="5"/>
   <text class="v" x="820" y="295">76%</text>
-  <text class="n" x="468" y="345">Haiku 5.5</text>
-  <rect class="acc" x="560" y="320" width="213.9" height="5" rx="2.5"/>
-  <text class="a" x="820" y="326">86%</text>
-  <rect class="track" x="560" y="331" width="250" height="18" rx="5"/>
-  <text class="v" x="820" y="347">0%</text>
-  <line class="rule" x1="440" x2="440" y1="72" y2="407"/>
-  <text class="f" x="28" y="427">apps/bench reports, 2026-10-31 · development cases · a dated snapshot, not a ranking of providers</text>
+  <line class="rule" x1="440" x2="440" y1="72" y2="355"/>
+  <text class="f" x="28" y="375">apps/bench reports, 2026-10-31 · development cases · a dated snapshot, not a ranking of providers</text>
 </svg>

@@ -124,8 +124,10 @@ def test_provider_boxes_are_clipped_and_ordered():
     assert a["d"].box == BoxEdges(top=0.1, bottom=0.5, left=0.0, right=1.0)
 
 
-def test_unprepared_images_are_a_data_error():
+def test_unprepared_images_are_a_data_error(tmp_path):
+    (tmp_path / "s1flow.toml").write_text('default = ["m"]\n[models.m]\nprovider = "llm"\nid = "vercel_ai_gateway/x/m"\ncapabilities.image = true\n')
+    llm = Project(tmp_path).client().connections.build("m")
     with pytest.raises(DataError):
-        asyncio.run(LINEUP.build("haiku@vercel").decide(["x", {"type": "image", "path": "a.png"}], Q))
+        asyncio.run(llm.decide(["x", {"type": "image", "path": "a.png"}], Q))
     with pytest.raises(DataError):
         asyncio.run(LINEUP.build("d1@vercel").decide({"shot": {"type": "image", "path": "a.png"}}, Q))

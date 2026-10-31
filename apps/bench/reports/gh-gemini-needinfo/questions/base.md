@@ -2,7 +2,7 @@
 
 2026-10-31 · 210 labelled dev cases (False 165, True 45) · split: stratified k-fold (no test case among these: CV numbers only) · source: GitHub issues of google-gemini/gemini-cli (labels applied by the repository's Gemini triage bot; see gh-audit)
 
-**span@openrouter** has the highest accuracy (all), 80% [75, 86] (API cost $0.06 per 10k, p99 6046ms). Its interval overlaps with clef-flash@openrouter, clef@openrouter, d1-ultra@openrouter, d1.1@openrouter, d1@vercel, decider-flash@openrouter, decider@openrouter, decision-1@openrouter, drex-max@openrouter, elephant@openrouter, flash-lite@vercel, haiku@vercel, jev:1.14, joey@openrouter, kev@openrouter, luna@decisions, mammoth@openrouter, mercury@openrouter: the objective cannot tell them apart; interval overlap does not establish equivalence. task.py names no tiebreak, so they are listed by name, unordered. The highest raw accuracy (dev) is kev@openrouter's, 79% [73, 85].
+**span@openrouter** has the highest accuracy (all), 80% [75, 86] (API cost $0.06 per 10k, p99 6046ms). Its interval overlaps with clef-flash@openrouter, clef@openrouter, d1-ultra@openrouter, d1.1@openrouter, d1@vercel, decider-flash@openrouter, decider@openrouter, decision-1@openrouter, drex-max@openrouter, elephant@openrouter, jev:1.14, joey@openrouter, kev@openrouter, luna@decisions, mammoth@openrouter, mercury@openrouter: the objective cannot tell them apart; interval overlap does not establish equivalence. task.py names no tiebreak, so they are listed by name, unordered. The highest raw accuracy (dev) is kev@openrouter's, 79% [73, 85].
 
 ## Comparison
 
@@ -18,8 +18,6 @@
 | decision-1@openrouter | 210 | 71.4% [65, 78] | 0.36 | 0.59 | 0.23 | 1% [0, 2] | 100.0% (22.4%) | 0/210 | 0/210 |
 | drex-max@openrouter | 210 | 76.7% [71, 82] | 0.38 | 0.56 | 0.19 | 2% [0, 5] | 80.0% (34.3%) | 0/210 | 0/210 |
 | elephant@openrouter | 210 | 71.0% [65, 77] | 0.33 | 0.59 | 0.15 | 4% [1, 6] | 87.5% (52.9%) | 0/210 | 0/210 |
-| flash-lite@vercel ※ | 210 | 77.6% [72, 83] | 0.34 | 0.59 | 0.22 | 0% [0, 0] | — (0.0%) | 0/210 | 0/210 |
-| haiku@vercel ※ | 210 | 76.2% [70, 82] | 0.40 | 0.62 | 0.24 | 0% [0, 0] | — (0.0%) | 0/210 | 0/210 |
 | jev:1.14 | 210 | 71.9% [66, 78] | 0.34 | 0.60 | 0.13 | 2% [0, 5] | 20.0% (1.0%) | 0/210 | 0/210 |
 | joey@openrouter | 210 | 78.1% [72, 83] | 0.34 | 0.58 | 0.07 | 1% [0, 3] | 66.7% (13.5%) | 0/210 | 0/210 |
 | kev@openrouter | 210 | 79.0% [73, 85] | 0.35 | 0.62 | 0.03 | 0% [0, 1] | 0.0% (0.0%) | 0/210 | 0/210 |
@@ -28,7 +26,7 @@
 | mercury@openrouter | 210 | 75.2% [70, 81] | 0.32 | 0.55 | 0.22 | 3% [1, 6] | 57.1% (22.5%) | 0/210 | 0/210 |
 | span@openrouter | 210 | 75.7% [70, 81] | 0.37 | 0.65 | 0.19 | 13% [9, 18] | 85.7% (70.2%) | 0/210 | 0/210 |
 
-Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef@openrouter = cloudflare/clef; d1-ultra@openrouter = liquid/d1-ultra-20261015; d1.1@openrouter = liquid/d1.1-20261027; d1@vercel = liquid/d1; decider-flash@openrouter = perplexity/pplx-decider-flash-v1.2-20261016; decider@openrouter = perplexity/pplx-decider-v1.2-20261016; decision-1@openrouter = microsoft/microsoft-decision-1-20261009; drex-max@openrouter = nace-ai/drex-max-20261016; elephant@openrouter = baseten/elephant-1-20261021; flash-lite@vercel = vercel_ai_gateway/google/gemini-3.5-flash-lite; haiku@vercel = vercel_ai_gateway/anthropic/claude-haiku-5.5; jev:1.14 = jev-1.14.0; joey@openrouter = baseten/joey-1-20261029; kev@openrouter = jaredpalmer/kev-4b-20260924; luna@decisions = gpt-6-luna; mammoth@openrouter = baseten/mammoth-1-20261021; mercury@openrouter = inception/mercury-decide-20260930; span@openrouter = respan/span-02-20261015. To compare versions, run each by name: `s1flow run <task> --models jev:1.14`.
+Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef@openrouter = cloudflare/clef; d1-ultra@openrouter = liquid/d1-ultra-20261015; d1.1@openrouter = liquid/d1.1-20261027; d1@vercel = liquid/d1; decider-flash@openrouter = perplexity/pplx-decider-flash-v1.2-20261016; decider@openrouter = perplexity/pplx-decider-v1.2-20261016; decision-1@openrouter = microsoft/microsoft-decision-1-20261009; drex-max@openrouter = nace-ai/drex-max-20261016; elephant@openrouter = baseten/elephant-1-20261021; jev:1.14 = jev-1.14.0; joey@openrouter = baseten/joey-1-20261029; kev@openrouter = jaredpalmer/kev-4b-20260924; luna@decisions = gpt-6-luna; mammoth@openrouter = baseten/mammoth-1-20261021; mercury@openrouter = inception/mercury-decide-20260930; span@openrouter = respan/span-02-20261015. To compare versions, run each by name: `s1flow run <task> --models jev:1.14`.
 
 ## Objectives and constraints
 
@@ -44,8 +42,6 @@ Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef@openrouter = cl
 | decision-1@openrouter = | 78% [72, 84] | 0.95 | met |
 | drex-max@openrouter = | 78% [72, 84] | 0.90 | met |
 | elephant@openrouter = | 79% [72, 84] | 0.95 | met |
-| flash-lite@vercel = | 78% [72, 83] | 0.50 | met |
-| haiku@vercel = | 76% [70, 82] | 0.50 | met |
 | jev:1.14 = | 77% [71, 83] | 0.90 | met |
 | joey@openrouter = | 77% [71, 82] | 0.80 | met |
 | kev@openrouter = | 79% [73, 84] | 0.70 | met |
@@ -70,8 +66,6 @@ Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef@openrouter = cl
 | decision-1@openrouter | 210 | 1418 ms | 2025 ms | 4599 ms | 5318 ms | 3.2 | 0 | 8 | $0.21 | billed |  |
 | drex-max@openrouter | 210 | 1482 ms | 2196 ms | 4241 ms | 6557 ms | 2.9 | 0 | 8 | $0.33 | billed |  |
 | elephant@openrouter | 210 | 1282 ms | 2180 ms | 5156 ms | 6166 ms | 4.0 | 0 | 8 | $0.20 | billed |  |
-| flash-lite@vercel | 210 | 1185 ms | 1993 ms | 4281 ms | 5319 ms | 3.6 | 0 | 8 | $2.15 | estimated |  |
-| haiku@vercel | 210 | 1215 ms | 2306 ms | 3596 ms | 8381 ms | 3.0 | 0 | 8 | $1.17 | estimated |  |
 | jev:1.14 | 210 | 1218 ms | 2679 ms | 6258 ms | 8086 ms | 5.1 | 0 | 8 | $0.32 | estimated |  |
 | joey@openrouter | 210 | 1282 ms | 2128 ms | 4850 ms | 5125 ms | 3.8 | 0 | 8 | $0.06 | billed | ○ |
 | kev@openrouter | 210 | 1474 ms | 2179 ms | 4230 ms | 5247 ms | 2.9 | 0 | 8 | $0.20 | billed |  |
@@ -82,7 +76,7 @@ Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef@openrouter = cl
 
 Measured on the calls, not the answers: never an objective, only the constraints and the order of candidates the objectives tie (the p90 of each case's slowest call, then API cost). Frontier ○: no other model beats it on all three of the primary objective, API cost per 10k and p99.
 Latency is the time from sending to receiving one call that answered (the round trip from here included), without retries or the wait before them. Many calls at once read slower, from the provider's load and this machine's connections: to compare models, measure every candidate again at the same concurrency (`s1flow run <task> --fresh --concurrency N`, the same N for all).
-Where the API costs come from: billed: clef-flash@openrouter, clef@openrouter, d1-ultra@openrouter, d1.1@openrouter, d1@vercel, decider-flash@openrouter, decider@openrouter, decision-1@openrouter, drex-max@openrouter, elephant@openrouter, joey@openrouter, kev@openrouter, mammoth@openrouter, mercury@openrouter, span@openrouter; estimated (recorded tokens times a list price: s1flow.toml's where dated, else the LLM price table's; not a bill): flash-lite@vercel, haiku@vercel, jev:1.14 (list price of 2026-10-03), luna@decisions (list price of 2026-10-09). Billed and estimated API costs sit side by side, so their differences do not compare as they are.
+Where the API costs come from: billed: clef-flash@openrouter, clef@openrouter, d1-ultra@openrouter, d1.1@openrouter, d1@vercel, decider-flash@openrouter, decider@openrouter, decision-1@openrouter, drex-max@openrouter, elephant@openrouter, joey@openrouter, kev@openrouter, mammoth@openrouter, mercury@openrouter, span@openrouter; estimated (recorded tokens times a list price: s1flow.toml's where dated, else the LLM price table's; not a bill): jev:1.14 (list price of 2026-10-03), luna@decisions (list price of 2026-10-09). Billed and estimated API costs sit side by side, so their differences do not compare as they are.
 
 ## API cost and time for these cases
 
@@ -98,8 +92,6 @@ Where the API costs come from: billed: clef-flash@openrouter, clef@openrouter, d
 | decision-1@openrouter | $0.0044 | 40 s (estimated, 210 calls) | 32 min | 8 |
 | drex-max@openrouter | $0.0070 | 43 s (estimated, 210 calls) | 34 min | 8 |
 | elephant@openrouter | $0.0041 | 39 s (estimated, 210 calls) | 31 min | 8 |
-| flash-lite@vercel | $0.05 | 36 s (estimated, 210 calls) | 28 min | 8 |
-| haiku@vercel | $0.02 | 39 s (estimated, 210 calls) | 31 min | 8 |
 | jev:1.14 | $0.0068 | 40 s (estimated, 210 calls) | 32 min | 8 |
 | joey@openrouter | $0.0012 | 38 s (estimated, 210 calls) | 30 min | 8 |
 | kev@openrouter | $0.0042 | 41 s (estimated, 210 calls) | 33 min | 8 |
@@ -112,7 +104,6 @@ Measured: the wall time of a run that called every case. When every answer came 
 
 Coverage: answering the most probable first, the largest share whose sure accuracy keeps the target 95%. The cut is chosen on each CV fold's fit side and measured on its eval side. The lower bound is a one-sided 95% Clopper-Pearson; [ ] is a 95% bootstrap interval.
 Scored: answered dev cases only; held-out test results require an explicit final check. Refused / unsupported and failed both count calls.
-※ a model that returns no distribution (one answer): its probability is 1 for every answer, so the coverage is all or nothing.
 
 ## Threshold
 
@@ -130,8 +121,6 @@ The threshold with the lowest total loss, chosen by CV, a miss (a positive read 
 | decision-1@openrouter | 71.4% | 78.1% | 32 | 14 | 0.95 | 0.95 |
 | drex-max@openrouter | 76.7% | 78.1% | 32 | 14 | 0.90 | 0.90 |
 | elephant@openrouter | 71.0% | 78.6% | 38 | 7 | 0.95 | 0.95 |
-| flash-lite@vercel | 77.6% | 77.6% | 33 | 14 | 0.50 | 0.50 |
-| haiku@vercel | 76.2% | 76.2% | 28 | 22 | 0.50 | 0.50 |
 | jev:1.14 | 71.9% | 77.1% | 31 | 17 | 0.90 | 0.90 |
 | joey@openrouter | 78.1% | 76.7% | 40 | 9 | 0.80 | 0.80 |
 | kev@openrouter | 79.0% | 79.0% | 37 | 7 | 0.70 | 0.70 |
@@ -284,34 +273,6 @@ The threshold with the lowest total loss, chosen by CV, a miss (a positive read 
 | 0.80 | 33 (73%) | 15 (9%) |
 | 0.90 | 34 (76%) | 11 (7%) |
 | 0.95 | 38 (84%) | 4 (2%) |
-
-## Misses and false alarms by threshold (flash-lite@vercel)
-
-| threshold | misses | false alarms |
-|---|---|---|
-| 0.10 | 33 (73%) | 14 (8%) |
-| 0.20 | 33 (73%) | 14 (8%) |
-| 0.30 | 33 (73%) | 14 (8%) |
-| 0.40 | 33 (73%) | 14 (8%) |
-| 0.50 | 33 (73%) | 14 (8%) |
-| 0.60 | 33 (73%) | 14 (8%) |
-| 0.70 | 33 (73%) | 14 (8%) |
-| 0.80 | 33 (73%) | 14 (8%) |
-| 0.90 | 33 (73%) | 14 (8%) |
-
-## Misses and false alarms by threshold (haiku@vercel)
-
-| threshold | misses | false alarms |
-|---|---|---|
-| 0.10 | 28 (62%) | 22 (13%) |
-| 0.20 | 28 (62%) | 22 (13%) |
-| 0.30 | 28 (62%) | 22 (13%) |
-| 0.40 | 28 (62%) | 22 (13%) |
-| 0.50 | 28 (62%) | 22 (13%) |
-| 0.60 | 28 (62%) | 22 (13%) |
-| 0.70 | 28 (62%) | 22 (13%) |
-| 0.80 | 28 (62%) | 22 (13%) |
-| 0.90 | 28 (62%) | 22 (13%) |
 
 ## Misses and false alarms by threshold (jev:1.14)
 
@@ -545,32 +506,6 @@ The threshold with the lowest total loss, chosen by CV, a miss (a positive read 
 | #29311 | True | False | 0.97 | bug(core): insecure user/workspace policy dirs skip permission checks… |
 | #29001 | True | False | 0.97 | security(a2a-server): HTTP API never enforces authentication, and the… |
 
-**flash-lite@vercel** (47)
-
-| id | label | answer | probability | case |
-|---|---|---|---|---|
-| #29610 | True | False | 1.00 | Gemini CLI extension gallery has not indexed suhaib81/url-shortener-b… |
-| #29526 | True | False | 1.00 | MCP tool answering in `structuredContent` is a success with an empty … |
-| #29500 | False | True | 1.00 | Docs: typo in README installation section |
-| #29424 | True | False | 1.00 | bug: Node process hangs on session exit, preventing terminal from ret… |
-| #29415 | True | False | 1.00 | gemini --help exits with code 5 after winget install on Windows 11 |
-| #29405 | True | False | 1.00 | [Bug Report] Background tasks enter indefinite 'Forever Running' hang… |
-| #29392 | False | True | 1.00 | GeminiCLI.com Feedback: [ISSUE] Generated files change automated exte… |
-| #29390 | False | True | 1.00 | GeminiCLI.com Feedback: [ISSUE] Post-analysis helper uses a stale imp… |
-
-**haiku@vercel** (50)
-
-| id | label | answer | probability | case |
-|---|---|---|---|---|
-| #29610 | True | False | 1.00 | Gemini CLI extension gallery has not indexed suhaib81/url-shortener-b… |
-| #29526 | True | False | 1.00 | MCP tool answering in `structuredContent` is a success with an empty … |
-| #29424 | True | False | 1.00 | bug: Node process hangs on session exit, preventing terminal from ret… |
-| #29414 | False | True | 1.00 | Issue classifier pipeline verification probe |
-| #29430 | False | True | 1.00 | Access Blocked: Authorization Error |
-| #29392 | False | True | 1.00 | GeminiCLI.com Feedback: [ISSUE] Generated files change automated exte… |
-| #29390 | False | True | 1.00 | GeminiCLI.com Feedback: [ISSUE] Post-analysis helper uses a stale imp… |
-| #29388 | False | True | 1.00 | GeminiCLI.com Feedback: [ISSUE] Post-analysis helper uses a stale imp… |
-
 **jev:1.14** (23)
 
 | id | label | answer | probability | case |
@@ -653,19 +588,19 @@ The threshold with the lowest total loss, chosen by CV, a miss (a positive read 
 | #29308 | True | False | 1.00 | bug(sdk): unguarded JSON.parse on tool-call args kills sendStream (se… |
 
 
-## Cases the models disagree on (12 of 55)
+## Cases the models disagree on (12 of 54)
 
-| id | label | clef-flash@openrouter | clef@openrouter | d1-ultra@openrouter | d1.1@openrouter | d1@vercel | decider-flash@openrouter | decider@openrouter | decision-1@openrouter | drex-max@openrouter | elephant@openrouter | flash-lite@vercel | haiku@vercel | jev:1.14 | joey@openrouter | kev@openrouter | luna@decisions | mammoth@openrouter | mercury@openrouter | span@openrouter | case |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| #29588 | False | False (0.84) | False (0.94) | True (0.50) | False (0.53) | False (0.72) | False (0.82) | False (0.56) | False (0.84) | False (0.55) | False (0.66) | False (1.00) | False (1.00) | False (0.69) | False (0.66) | False (0.56) | False (0.63) | False (0.71) | True (0.84) | False (0.64) | Ink raw mode Ctrl-C unawaited cancellation causes hung interrupts, st… |
-| #29518 | False | False (0.68) | False (0.82) | False (0.77) | False (0.72) | False (0.79) | False (0.81) | False (0.88) | False (0.53) | False (0.87) | True (0.63) | False (1.00) | False (1.00) | False (0.60) | False (0.54) | False (0.68) | False (0.69) | False (0.78) | False (0.89) | False (0.87) | gemini-3.8-flash is silently forwarded to gemini-3.7-flash for oauth … |
-| #29504 | False | False (0.80) | False (0.88) | True (0.50) | False (0.59) | False (0.73) | False (0.78) | False (0.76) | False (0.53) | False (0.56) | False (0.53) | False (1.00) | False (1.00) | True (0.74) | False (0.54) | False (0.63) | False (0.59) | False (0.66) | False (0.78) | False (0.83) | TUI hides 400/429 spend cap error behind 'high demand' infinite loop … |
-| #29500 | False | True (0.62) | False (0.78) | True (0.73) | True (0.68) | True (0.77) | True (0.59) | True (0.99) | True (0.98) | True (0.99) | True (0.87) | True (1.00) | False (1.00) | True (0.90) | False (0.71) | False (0.80) | True (0.83) | False (0.52) | True (1.00) | True (0.61) | Docs: typo in README installation section |
-| #29442 | False | False (0.83) | False (0.95) | False (0.92) | False (0.67) | False (0.96) | False (0.94) | False (0.95) | True (0.84) | False (0.85) | False (0.53) | False (1.00) | False (1.00) | False (0.77) | False (0.73) | False (0.82) | False (0.95) | False (0.88) | False (0.99) | False (0.95) | Create a kitten illustration with a lion-shaped shadow |
-| #29430 | False | False (0.63) | False (0.71) | False (0.52) | True (0.63) | True (0.59) | False (0.83) | False (0.69) | True (0.95) | False (0.72) | True (0.72) | False (1.00) | True (1.00) | True (0.73) | False (0.56) | False (0.68) | True (0.60) | True (0.56) | False (0.92) | False (0.70) | Access Blocked: Authorization Error |
-| #29418 | True | True (0.90) | True (0.93) | True (0.98) | True (0.97) | True (0.96) | True (0.81) | True (0.94) | True (1.00) | True (0.92) | True (0.97) | True (1.00) | True (1.00) | True (0.97) | True (0.63) | True (0.74) | True (0.99) | True (0.88) | False (0.73) | True (0.99) | GeminiCLI.com Feedback: [ISSUE] |
-| #29415 | True | False (0.90) | False (0.97) | False (0.82) | False (0.72) | False (0.97) | False (0.96) | False (0.97) | False (0.92) | False (0.97) | False (0.80) | False (1.00) | True (1.00) | False (0.73) | False (0.92) | False (0.72) | False (0.92) | False (0.94) | False (0.99) | False (0.96) | gemini --help exits with code 5 after winget install on Windows 11 |
-| #29414 | False | False (0.81) | False (0.62) | True (0.81) | True (0.85) | False (0.56) | False (0.94) | True (0.60) | False (0.68) | True (0.92) | True (0.60) | False (1.00) | True (1.00) | False (0.65) | False (0.70) | False (0.76) | True (0.96) | False (0.54) | False (0.71) | False (0.90) | Issue classifier pipeline verification probe |
-| #29410 | False | False (0.68) | False (0.70) | True (0.50) | False (0.58) | True (0.88) | False (0.82) | False (0.75) | False (0.53) | True (0.61) | False (0.62) | False (1.00) | False (1.00) | True (0.69) | False (0.79) | False (0.76) | False (0.72) | False (0.63) | False (0.98) | False (0.81) | resume latest reopens most recently started session, not most recentl… |
-| #29405 | True | False (0.83) | False (0.96) | False (0.83) | False (0.67) | False (0.95) | False (0.91) | False (0.94) | False (0.93) | False (0.90) | False (0.68) | False (1.00) | False (1.00) | False (0.77) | False (0.82) | False (0.74) | True (0.64) | False (0.90) | False (0.98) | False (0.91) | [Bug Report] Background tasks enter indefinite 'Forever Running' hang… |
-| #29390 | False | True (0.77) | True (0.66) | True (0.96) | True (0.98) | True (1.00) | True (0.95) | True (0.99) | True (1.00) | True (1.00) | True (0.92) | True (1.00) | True (1.00) | True (0.97) | True (0.56) | False (0.63) | True (0.87) | True (0.94) | True (1.00) | True (0.81) | GeminiCLI.com Feedback: [ISSUE] Post-analysis helper uses a stale imp… |
+| id | label | clef-flash@openrouter | clef@openrouter | d1-ultra@openrouter | d1.1@openrouter | d1@vercel | decider-flash@openrouter | decider@openrouter | decision-1@openrouter | drex-max@openrouter | elephant@openrouter | jev:1.14 | joey@openrouter | kev@openrouter | luna@decisions | mammoth@openrouter | mercury@openrouter | span@openrouter | case |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| #29418 | True | True (0.90) | True (0.93) | True (0.98) | True (0.97) | True (0.96) | True (0.81) | True (0.94) | True (1.00) | True (0.92) | True (0.97) | True (0.97) | True (0.63) | True (0.74) | True (0.99) | True (0.88) | False (0.73) | True (0.99) | GeminiCLI.com Feedback: [ISSUE] |
+| #28809 | False | False (0.92) | False (0.97) | False (0.95) | False (0.93) | False (0.94) | False (0.95) | False (0.98) | False (0.85) | False (0.97) | False (0.82) | False (0.86) | False (0.86) | False (0.90) | False (0.97) | False (0.95) | True (0.95) | False (1.00) | GeminiCLI.com Feedback: kyisaiah47/kynth-gemini-extension missing fro… |
+| #29390 | False | True (0.77) | True (0.66) | True (0.96) | True (0.98) | True (1.00) | True (0.95) | True (0.99) | True (1.00) | True (1.00) | True (0.92) | True (0.97) | True (0.56) | False (0.63) | True (0.87) | True (0.94) | True (1.00) | True (0.81) | GeminiCLI.com Feedback: [ISSUE] Post-analysis helper uses a stale imp… |
+| #29388 | False | True (0.77) | True (0.60) | True (0.98) | True (0.96) | True (0.98) | True (0.95) | True (0.99) | True (1.00) | True (1.00) | True (0.92) | True (0.96) | True (0.56) | False (0.64) | True (0.87) | True (0.94) | True (1.00) | True (0.83) | GeminiCLI.com Feedback: [ISSUE] Post-analysis helper uses a stale imp… |
+| #29135 | True | True (0.87) | True (0.56) | True (0.90) | True (0.97) | False (0.53) | True (0.77) | True (0.95) | True (1.00) | True (0.92) | True (0.82) | True (0.92) | True (0.58) | False (0.50) | False (0.69) | True (0.95) | False (0.53) | True (0.84) | Features |
+| #29221 | False | True (0.87) | True (0.78) | True (0.93) | True (0.99) | True (0.89) | True (0.76) | True (0.94) | True (1.00) | True (0.97) | True (0.82) | True (0.95) | False (0.55) | True (0.58) | True (0.99) | True (0.95) | True (0.95) | True (0.95) | Leeres.blaat_A4-DIN |
+| #29500 | False | True (0.62) | False (0.78) | True (0.73) | True (0.68) | True (0.77) | True (0.59) | True (0.99) | True (0.98) | True (0.99) | True (0.87) | True (0.90) | False (0.71) | False (0.80) | True (0.83) | False (0.52) | True (1.00) | True (0.61) | Docs: typo in README installation section |
+| #28923 | True | True (0.92) | True (0.91) | True (0.83) | True (0.98) | True (0.96) | True (0.65) | True (0.98) | True (1.00) | True (0.98) | True (0.90) | True (0.97) | False (0.54) | True (0.81) | True (0.94) | True (0.96) | True (1.00) | True (0.98) | GeminiCLI.com Feedback: [ISSUE] |
+| #29107 | False | True (0.75) | True (0.68) | True (0.95) | True (0.98) | True (0.99) | True (0.62) | True (0.88) | True (1.00) | True (0.92) | True (0.85) | True (0.94) | True (0.64) | False (0.55) | True (0.93) | True (0.93) | True (0.95) | True (0.93) | "The caller does not have permission  #25306 - still persists |
+| #29224 | True | True (0.75) | True (0.65) | True (0.97) | True (0.97) | True (0.98) | True (0.95) | True (0.98) | True (1.00) | True (0.98) | True (0.77) | True (0.94) | False (0.64) | False (0.62) | True (0.86) | True (0.95) | True (1.00) | True (0.86) | npm install -g @google/gemini-cli@preview |
+| #28717 | False | False (0.93) | False (0.97) | False (0.86) | False (0.79) | False (0.99) | False (0.89) | False (0.93) | True (0.88) | False (0.94) | False (0.90) | False (0.85) | False (0.85) | False (0.84) | False (0.88) | False (0.96) | False (0.98) | False (1.00) | [Bug]: Google AI Pro sign-in silently falls back to API key onboardin… |
+| #29128 | False | False (0.88) | False (0.94) | False (0.77) | False (0.87) | False (0.95) | False (0.80) | False (0.97) | True (0.75) | False (0.93) | False (0.72) | True (0.53) | False (0.66) | False (0.81) | False (0.70) | False (0.83) | False (1.00) | False (0.89) | Add agy cli to docker sbx |

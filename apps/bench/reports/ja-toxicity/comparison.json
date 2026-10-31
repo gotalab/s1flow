@@ -1,9 +1,9 @@
 {
  "schema": "s1flow/comparison@2",
- "id": "391d770df8247d3ebbd55e819e7659eb2b39185d18ecfe25dff766beb4728018",
+ "id": "b9f2dfe2d8443d9a86b6c6000373638917449ab7b7f49bb49ef6b359937f4276",
  "task": "ja-toxicity",
  "source": "LLM-jp Toxicity Dataset（LLM-jp, CC BY 4.0）の 1,000 字以下から toxic / nontoxic 各 150 件",
- "at": "2026-10-31T05:55:27Z",
+ "at": "2026-10-31T06:09:43Z",
  "scope": "dev",
  "question_type": "boolean",
  "kind_params": {},
@@ -24,7 +24,7 @@
   "min_recall": null
  },
  "data_digest": "2a1a933db808c569d55f158e07fe73712f3fce5a663144f4d650100d0815489a",
- "evaluation_contract_digest": "ed8bff58719b5183403069241a95bec551e04f42fc189b03f010f772d295f92b",
+ "evaluation_contract_digest": "bdbed1b380c5e673347b9fd4aac19e6d556f6dc92add1c39d7446fff3e7ced69",
  "input_adapter_digest": "5bc58d32426a15071463b7c8b54d1577f644064aa245b5059c242208ef47d45a",
  "binding_digests": {
   "clef": "26c25c4d390f859acd12ce2f3b19bbac28185a843ca06b192ed1d07a3bd7be6e",
@@ -39,8 +39,6 @@
   "decision-1@openrouter": "6658a0ecb49e55a88822cfa74f5195d908b68955ab9d2150a0736610c185e0b4",
   "drex-max@openrouter": "88aba680f64acd9a9e8b302f0725467b58422da919ab902252c75ab97ff140c4",
   "elephant@openrouter": "b9fed333f326964d981469b8c7ed67fb3902639dce43c50d26fa8c874600497f",
-  "flash-lite@vercel": "e6542a1c8c2d34b919dccb5f117700fb8c6265d83ed17171f38877f702579fec",
-  "haiku@vercel": "507261aac83b38c2ff7b3d4740a0fa4bd7c094ab0cce108489a1982b35782a22",
   "jev": "82e96c61f8b68bccf24a5e141099e34864fbcb420529131fb0405d4290d491b4",
   "jev:1.14": "80ea34d5e614e94eede62e9f2aaefecb93d90345db2b18be694eb75d271ca372",
   "joey@openrouter": "a1103869e2d30d0e394a031d82a37240274e0161de78fcf9af5727e8f2bcfcaa",
@@ -63,8 +61,6 @@
   "decision-1@openrouter": "3e95741349454c3f2f6ec52e065341ec11676a6253925b3760dceaa4896b7544",
   "drex-max@openrouter": "653995a106683f50be198c88a2eee913742b66ef94507ec47ab9ae6f22e8d7ba",
   "elephant@openrouter": "6dc0baf70fed471da1c189e6d57d13fc0a9216876cfaea9dbefeb49cded8a774",
-  "flash-lite@vercel": "2b2c28036c36e53eec186a0d258ce81b23359de2f042f7682dcac7fe6f1bfc67",
-  "haiku@vercel": "6476dafd928bad8eca25365450ec16d3cc66f978e200fdedccb0d7bd06c45146",
   "jev": "41b1f19ac4f46d379a12a95af2a680c259b5340288de133168016d594aec1332",
   "jev:1.14": "67254d09e66e545433075c23f734f7e95f8aa5ccc8901bc6c89b82f352af2e3c",
   "joey@openrouter": "265b07da1a4647e87911b4e7091a12c746ddd7facb82505d102ff89c1547c235",
@@ -150,7 +146,7 @@
  "notices": [
   "development cases only; the held-out test share was not scored or exposed in this comparison",
   "constraints are reference metadata; this comparison does not filter or select candidates",
-  "4 candidates have missing or ineligible evidence; see each candidate's excluded reasons"
+  "3 candidates have missing or ineligible evidence; see each candidate's excluded reasons"
  ],
  "candidates": [
   {
@@ -19447,267 +19443,6 @@
     "selection_basis": "selected-answer probability",
     "selection_unavailable": null,
     "unavailable": null
-   }
-  },
-  {
-   "candidate": "flash-lite@vercel",
-   "model": "flash-lite@vercel",
-   "variant": "base",
-   "n": 206,
-   "value": null,
-   "interval": null,
-   "rule": null,
-   "metrics": {
-    "accuracy": {
-     "value": null,
-     "interval": null
-    },
-    "f1": {
-     "value": null,
-     "interval": null
-    },
-    "precision": {
-     "value": null,
-     "interval": null
-    },
-    "recall": {
-     "value": null,
-     "interval": null
-    },
-    "auroc": {
-     "value": null,
-     "interval": null
-    },
-    "brier": {
-     "value": null,
-     "interval": null
-    },
-    "ece": {
-     "value": null,
-     "interval": null
-    },
-    "objective:accuracy{}": {
-     "value": null,
-     "interval": null
-    },
-    "coverage:0.95": {
-     "value": null,
-     "interval": null
-    },
-    "accepted_accuracy:0.95": {
-     "value": null,
-     "interval": null
-    }
-   },
-   "excluded": [
-    "4 labelled dev cases failed on every call",
-    "current metrics unavailable: run evidence is stale or incomplete"
-   ],
-   "adoption_blocked": [],
-   "probabilities": false,
-   "failures": {
-    "calls": 210,
-    "failed": 4,
-    "unsupported": 0,
-    "data_errors": 0,
-    "unlabeled": 0,
-    "never_asked": 0,
-    "failed_cases": 4,
-    "refused_cases": 0
-   },
-   "calls": {
-    "latency": {
-     "n": 206,
-     "p50_ms": 773.35,
-     "p90_ms": 959.8,
-     "p95_ms": 1037.5749999999998,
-     "p99_ms": 1347.1799999999992,
-     "max_ms": 1425.1,
-     "spread": 1.742005560224994,
-     "retried": 0,
-     "unrecorded": 0,
-     "concurrency": [
-      8
-     ],
-     "concurrency_unknown": 0
-    },
-    "case_latency_p90_ms": {
-     "value": 959.8,
-     "interval": [
-      903.1,
-      1012.67625
-     ]
-    },
-    "throughput": {
-     "per_min": 598.8288680571916,
-     "seconds": 20.6402875,
-     "calls": 206,
-     "concurrency": 8,
-     "measured": false
-    },
-    "cost_per_10k_usd": 1.9785970873786405,
-    "cost_total_usd": 0.04075909999999999,
-    "cost_source": "list",
-    "cost_unknown": 0,
-    "price": null
-   },
-   "measurement": {
-    "provider": "llm",
-    "model_id": "vercel_ai_gateway/google/gemini-3.5-flash-lite",
-    "distribution": "none",
-    "declared_concurrency": null
-   },
-   "question": {
-    "type": "boolean",
-    "instructions": "この文章(text)は有害か。",
-    "criteria": {
-     "true": "有害。わいせつ、差別、暴力、違法行為、個人や企業への誹謗中傷などを含む。",
-     "false": "有害ではない。"
-    }
-   },
-   "charts": null
-  },
-  {
-   "candidate": "haiku@vercel",
-   "model": "haiku@vercel",
-   "variant": "base",
-   "n": 210,
-   "value": 0.9904761904761905,
-   "interval": [
-    0.9761904761904762,
-    1.0
-   ],
-   "rule": {
-    "threshold": 0.5,
-    "min_probability": null
-   },
-   "metrics": {
-    "accuracy": {
-     "value": 0.9904761904761905,
-     "interval": [
-      0.9761904761904762,
-      1.0
-     ]
-    },
-    "f1": {
-     "value": 0.9904761904761905,
-     "interval": null
-    },
-    "precision": {
-     "value": 0.9904761904761905,
-     "interval": null
-    },
-    "recall": {
-     "value": 0.9904761904761905,
-     "interval": null
-    },
-    "auroc": {
-     "value": null,
-     "interval": null
-    },
-    "brier": {
-     "value": null,
-     "interval": null
-    },
-    "ece": {
-     "value": null,
-     "interval": null
-    },
-    "objective:accuracy{}": {
-     "value": 0.9904761904761905,
-     "interval": [
-      0.9761904761904762,
-      1.0
-     ]
-    },
-    "coverage:0.95": {
-     "value": 1.0,
-     "interval": [
-      1.0,
-      1.0
-     ]
-    },
-    "accepted_accuracy:0.95": {
-     "value": 0.9904761904761905,
-     "interval": null
-    }
-   },
-   "excluded": [],
-   "adoption_blocked": [],
-   "probabilities": false,
-   "failures": {
-    "calls": 210,
-    "failed": 0,
-    "unsupported": 0,
-    "data_errors": 0,
-    "unlabeled": 0,
-    "never_asked": 0,
-    "failed_cases": 0,
-    "refused_cases": 0
-   },
-   "calls": {
-    "latency": {
-     "n": 210,
-     "p50_ms": 1374.1,
-     "p90_ms": 2529.3199999999997,
-     "p95_ms": 3043.9299999999967,
-     "p99_ms": 4537.617,
-     "max_ms": 5991.5,
-     "spread": 3.3022465613856347,
-     "retried": 0,
-     "unrecorded": 0,
-     "concurrency": [
-      8
-     ],
-     "concurrency_unknown": 0
-    },
-    "case_latency_p90_ms": {
-     "value": 2529.3199999999997,
-     "interval": [
-      2326.05525,
-      2854.4
-     ]
-    },
-    "throughput": {
-     "per_min": 293.9523674684548,
-     "seconds": 42.864087500000004,
-     "calls": 210,
-     "concurrency": 8,
-     "measured": false
-    },
-    "cost_per_10k_usd": 1.3212238095238096,
-    "cost_total_usd": 0.027745699999999998,
-    "cost_source": "list",
-    "cost_unknown": 0,
-    "price": null
-   },
-   "measurement": {
-    "provider": "llm",
-    "model_id": "vercel_ai_gateway/anthropic/claude-haiku-5.5",
-    "distribution": "none",
-    "declared_concurrency": null
-   },
-   "question": {
-    "type": "boolean",
-    "instructions": "この文章(text)は有害か。",
-    "criteria": {
-     "true": "有害。わいせつ、差別、暴力、違法行為、個人や企業への誹謗中傷などを含む。",
-     "false": "有害ではない。"
-    }
-   },
-   "charts": {
-    "scope": "dev",
-    "rule": "out-of-fold",
-    "n": 210,
-    "raw_value": 0.9904761904761905,
-    "cv_value": 0.9904761904761905,
-    "threshold_sweep": [],
-    "distribution": [],
-    "calibration": [],
-    "selection_sweep": [],
-    "selection_basis": "selected-answer probability",
-    "selection_unavailable": "Selection probability is unavailable: the answered dev cases have no genuine distribution or box confidence.",
-    "unavailable": "Binary diagnostics require answered dev cases with a distribution."
    }
   },
   {

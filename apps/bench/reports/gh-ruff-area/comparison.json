@@ -1,9 +1,9 @@
 {
  "schema": "s1flow/comparison@2",
- "id": "b0268fe4ba98ab24903fffc009031d984a45578e12ac7044fb4722fa7c71010e",
+ "id": "0c8a1d4383dbdbec5822ad20ac37f6bbdfb0945d7e55d090d050ec7304ae0ad8",
  "task": "gh-ruff-area",
  "source": "GitHub issues of astral-sh/ruff (labels applied by maintainers)",
- "at": "2026-10-31T05:56:57Z",
+ "at": "2026-10-31T06:08:53Z",
  "scope": "dev",
  "question_type": "choice",
  "kind_params": {},
@@ -26,7 +26,7 @@
   "min_recall": null
  },
  "data_digest": "1e8600db174d91adbee77c01f9622fe02a1f7c86764fce5310bad1fd768dcd37",
- "evaluation_contract_digest": "ad156035448f9633d91beddc7734c3ca592a78e0989147bab8994e78f77d496a",
+ "evaluation_contract_digest": "b1f06fc52f0b889ce2d65ba44366922d62e017a6da247b3ae6961b34ae58092c",
  "input_adapter_digest": "2f434da6dcf1ddb21d704d53d04202dd38bb9392411ec56d6763649eb3c7a52b",
  "binding_digests": {
   "clef": "26c25c4d390f859acd12ce2f3b19bbac28185a843ca06b192ed1d07a3bd7be6e",
@@ -41,8 +41,6 @@
   "decision-1@openrouter": "6658a0ecb49e55a88822cfa74f5195d908b68955ab9d2150a0736610c185e0b4",
   "drex-max@openrouter": "88aba680f64acd9a9e8b302f0725467b58422da919ab902252c75ab97ff140c4",
   "elephant@openrouter": "b9fed333f326964d981469b8c7ed67fb3902639dce43c50d26fa8c874600497f",
-  "flash-lite@vercel": "e6542a1c8c2d34b919dccb5f117700fb8c6265d83ed17171f38877f702579fec",
-  "haiku@vercel": "507261aac83b38c2ff7b3d4740a0fa4bd7c094ab0cce108489a1982b35782a22",
   "jev": "82e96c61f8b68bccf24a5e141099e34864fbcb420529131fb0405d4290d491b4",
   "jev:1.14": "80ea34d5e614e94eede62e9f2aaefecb93d90345db2b18be694eb75d271ca372",
   "joey@openrouter": "a1103869e2d30d0e394a031d82a37240274e0161de78fcf9af5727e8f2bcfcaa",
@@ -77,10 +75,6 @@
   "drex-max@openrouter/improve-d1@vercel-20261016-0701": "d36a540f1a60f3da19804e791a9a209b2e1da695076fda029aa41fb70a048a43",
   "elephant@openrouter": "3bc39b6b27eb21b79509d7047a774802c34e74c2ee7a30c28c02ad2894ed3221",
   "elephant@openrouter/improve-d1@vercel-20261016-0701": "ad35ef55dc63924300b8ff9126c71907ba776bfed515084f940e62a28aab9062",
-  "flash-lite@vercel": "1cc2f75e80b91c13137d3e3fceb335999578d67ec3e2e0cb2d71015bb0793d02",
-  "flash-lite@vercel/improve-d1@vercel-20261016-0701": "699b2c56eba575c38d48c249bca24207b20f5b1a55d8bea06bd4cd120bc478f0",
-  "haiku@vercel": "70cfb63e1caed4718f7009459660655258be1d818afd54f73c7f53c78a17cc4c",
-  "haiku@vercel/improve-d1@vercel-20261016-0701": "0608321442082ada76eee7e058127782931186fdad179069bb68bc07a989a5f8",
   "jev": "41b1f19ac4f46d379a12a95af2a680c259b5340288de133168016d594aec1332",
   "jev/improve-d1@vercel-20261016-0701": "41b1f19ac4f46d379a12a95af2a680c259b5340288de133168016d594aec1332",
   "jev:1.14": "bbce4b4abdb35d7b84404368100a18365852f9fbb6d7e5e5fdd631ee562244d2",
@@ -153,7 +147,7 @@
  "notices": [
   "development cases only; the held-out test share was not scored or exposed in this comparison",
   "constraints are reference metadata; this comparison does not filter or select candidates",
-  "25 candidates have missing or ineligible evidence; see each candidate's excluded reasons"
+  "23 candidates have missing or ineligible evidence; see each candidate's excluded reasons"
  ],
  "candidates": [
   {
@@ -10775,416 +10769,6 @@
    "measurement": {
     "provider": "openrouter",
     "model_id": "baseten/elephant-1",
-    "distribution": "unknown",
-    "declared_concurrency": null
-   },
-   "question": {
-    "type": "choice",
-    "instructions": "Which part of Ruff (a Python linter and formatter) does this issue concern? Classify by the behavior or feature being requested or reported. Use the affected component as the main signal: lint-rule behavior and fixes belong to linter, code layout belongs to formatter, and LSP-specific behavior and settings belong to server.",
-    "criteria": {
-     "linter": "Lint rules, new checks, detection coverage, false positives, rule-specific fixes, suppression comments (noqa), import sorting, and docstring checks. Requests to detect redundant, deprecated, or problematic Python code belong here, including requests without a rule code.",
-     "formatter": "Code layout and style produced by the formatter, such as spacing, indentation, line wrapping, and quote layout.",
-     "server": "The language server (LSP), editor integration, and editor-specific settings, including how the server discovers, prioritizes, or applies configuration.",
-     "configuration": "General Ruff settings, configuration files, command-line options and behavior, and selecting or enabling rules. Includes how users configure Ruff across CLI workflows."
-    }
-   },
-   "charts": null
-  },
-  {
-   "candidate": "flash-lite@vercel",
-   "model": "flash-lite@vercel",
-   "variant": "base",
-   "n": 361,
-   "value": null,
-   "interval": null,
-   "rule": null,
-   "metrics": {
-    "accuracy": {
-     "value": 0.8587257617728532,
-     "interval": [
-      0.8199445983379502,
-      0.8947368421052632
-     ]
-    },
-    "macro_f1": {
-     "value": 0.8439803766593172,
-     "interval": null
-    },
-    "auroc": {
-     "value": null,
-     "interval": null
-    },
-    "brier": {
-     "value": null,
-     "interval": null
-    },
-    "ece": {
-     "value": null,
-     "interval": null
-    },
-    "coverage:0.95": {
-     "value": 0.0,
-     "interval": [
-      0.0,
-      0.0
-     ]
-    },
-    "accepted_accuracy:0.95": {
-     "value": null,
-     "interval": null
-    }
-   },
-   "excluded": [],
-   "adoption_blocked": [],
-   "probabilities": false,
-   "failures": {
-    "calls": 361,
-    "failed": 0,
-    "unsupported": 0,
-    "data_errors": 0,
-    "unlabeled": 0,
-    "never_asked": 0,
-    "failed_cases": 0,
-    "refused_cases": 0
-   },
-   "calls": {
-    "latency": {
-     "n": 361,
-     "p50_ms": 1204.2,
-     "p90_ms": 2259.4,
-     "p95_ms": 2608.4,
-     "p99_ms": 5388.199999999996,
-     "max_ms": 8489.4,
-     "spread": 4.474505896030556,
-     "retried": 0,
-     "unrecorded": 0,
-     "concurrency": [
-      8
-     ],
-     "concurrency_unknown": 0
-    },
-    "case_latency_p90_ms": {
-     "value": 2259.4,
-     "interval": [
-      2099.1075,
-      2414.6
-     ]
-    },
-    "throughput": {
-     "per_min": 329.6078089355141,
-     "seconds": 65.7144625,
-     "calls": 361,
-     "concurrency": 8,
-     "measured": false
-    },
-    "cost_per_10k_usd": 1.8685429362880885,
-    "cost_total_usd": 0.0674544,
-    "cost_source": "list",
-    "cost_unknown": 0,
-    "price": null
-   },
-   "measurement": {
-    "provider": "llm",
-    "model_id": "vercel_ai_gateway/google/gemini-3.5-flash-lite",
-    "distribution": "none",
-    "declared_concurrency": null
-   },
-   "question": {
-    "type": "choice",
-    "instructions": "Which part of Ruff (a Python linter and formatter) does this issue concern?",
-    "criteria": {
-     "linter": "Lint rules, their fixes, suppression comments (noqa), import sorting, docstring checks, diagnostics or preview rules.",
-     "formatter": "The code formatter: how formatted code looks.",
-     "server": "The language server (LSP) and editor integration.",
-     "configuration": "Settings, the command-line interface, or selecting which rules are enabled."
-    }
-   },
-   "charts": {
-    "scope": "dev",
-    "rule": "out-of-fold",
-    "n": 361,
-    "raw_value": 1.0,
-    "cv_value": 0.0,
-    "threshold_sweep": [],
-    "distribution": [],
-    "calibration": [],
-    "selection_sweep": [],
-    "selection_basis": "selected-answer probability",
-    "selection_unavailable": "Selection probability is unavailable: the answered dev cases have no genuine distribution or box confidence.",
-    "unavailable": null
-   }
-  },
-  {
-   "candidate": "flash-lite@vercel/improve-d1@vercel-20261016-0701",
-   "model": "flash-lite@vercel",
-   "variant": "improve-d1@vercel-20261016-0701",
-   "n": 0,
-   "value": null,
-   "interval": null,
-   "rule": null,
-   "metrics": {
-    "accuracy": {
-     "value": null,
-     "interval": null
-    },
-    "macro_f1": {
-     "value": null,
-     "interval": null
-    },
-    "auroc": {
-     "value": null,
-     "interval": null
-    },
-    "brier": {
-     "value": null,
-     "interval": null
-    },
-    "ece": {
-     "value": null,
-     "interval": null
-    },
-    "coverage:0.95": {
-     "value": null,
-     "interval": null
-    },
-    "accepted_accuracy:0.95": {
-     "value": null,
-     "interval": null
-    }
-   },
-   "excluded": [
-    "missing run evidence for flash-lite@vercel/improve-d1@vercel-20261016-0701"
-   ],
-   "adoption_blocked": [],
-   "probabilities": false,
-   "failures": {
-    "calls": 0,
-    "failed": 0,
-    "unsupported": 0,
-    "data_errors": 0,
-    "unlabeled": 0,
-    "never_asked": 361,
-    "failed_cases": 0,
-    "refused_cases": 0
-   },
-   "calls": {
-    "latency": null,
-    "case_latency_p90_ms": null,
-    "throughput": null,
-    "cost_per_10k_usd": null,
-    "cost_total_usd": null,
-    "cost_source": null,
-    "cost_unknown": 0,
-    "price": null
-   },
-   "measurement": {
-    "provider": "llm",
-    "model_id": "vercel_ai_gateway/google/gemini-3.5-flash-lite",
-    "distribution": "unknown",
-    "declared_concurrency": null
-   },
-   "question": {
-    "type": "choice",
-    "instructions": "Which part of Ruff (a Python linter and formatter) does this issue concern? Classify by the behavior or feature being requested or reported. Use the affected component as the main signal: lint-rule behavior and fixes belong to linter, code layout belongs to formatter, and LSP-specific behavior and settings belong to server.",
-    "criteria": {
-     "linter": "Lint rules, new checks, detection coverage, false positives, rule-specific fixes, suppression comments (noqa), import sorting, and docstring checks. Requests to detect redundant, deprecated, or problematic Python code belong here, including requests without a rule code.",
-     "formatter": "Code layout and style produced by the formatter, such as spacing, indentation, line wrapping, and quote layout.",
-     "server": "The language server (LSP), editor integration, and editor-specific settings, including how the server discovers, prioritizes, or applies configuration.",
-     "configuration": "General Ruff settings, configuration files, command-line options and behavior, and selecting or enabling rules. Includes how users configure Ruff across CLI workflows."
-    }
-   },
-   "charts": null
-  },
-  {
-   "candidate": "haiku@vercel",
-   "model": "haiku@vercel",
-   "variant": "base",
-   "n": 361,
-   "value": null,
-   "interval": null,
-   "rule": null,
-   "metrics": {
-    "accuracy": {
-     "value": 0.8781163434903048,
-     "interval": [
-      0.8448753462603878,
-      0.9085872576177285
-     ]
-    },
-    "macro_f1": {
-     "value": 0.8784787954385336,
-     "interval": null
-    },
-    "auroc": {
-     "value": null,
-     "interval": null
-    },
-    "brier": {
-     "value": null,
-     "interval": null
-    },
-    "ece": {
-     "value": null,
-     "interval": null
-    },
-    "coverage:0.95": {
-     "value": 0.0,
-     "interval": [
-      0.0,
-      0.0
-     ]
-    },
-    "accepted_accuracy:0.95": {
-     "value": null,
-     "interval": null
-    }
-   },
-   "excluded": [],
-   "adoption_blocked": [],
-   "probabilities": false,
-   "failures": {
-    "calls": 361,
-    "failed": 0,
-    "unsupported": 0,
-    "data_errors": 0,
-    "unlabeled": 0,
-    "never_asked": 0,
-    "failed_cases": 0,
-    "refused_cases": 0
-   },
-   "calls": {
-    "latency": {
-     "n": 361,
-     "p50_ms": 1296.6,
-     "p90_ms": 2542.4,
-     "p95_ms": 3277.4,
-     "p99_ms": 4666.679999999979,
-     "max_ms": 6872.8,
-     "spread": 3.5991670522905905,
-     "retried": 0,
-     "unrecorded": 0,
-     "concurrency": [
-      8
-     ],
-     "concurrency_unknown": 0
-    },
-    "case_latency_p90_ms": {
-     "value": 2542.4,
-     "interval": [
-      2302.6,
-      2978.99
-     ]
-    },
-    "throughput": {
-     "per_min": 302.6922103396431,
-     "seconds": 71.55783749999999,
-     "calls": 361,
-     "concurrency": 8,
-     "measured": false
-    },
-    "cost_per_10k_usd": 1.049202216066482,
-    "cost_total_usd": 0.0378762,
-    "cost_source": "list",
-    "cost_unknown": 0,
-    "price": null
-   },
-   "measurement": {
-    "provider": "llm",
-    "model_id": "vercel_ai_gateway/anthropic/claude-haiku-5.5",
-    "distribution": "none",
-    "declared_concurrency": null
-   },
-   "question": {
-    "type": "choice",
-    "instructions": "Which part of Ruff (a Python linter and formatter) does this issue concern?",
-    "criteria": {
-     "linter": "Lint rules, their fixes, suppression comments (noqa), import sorting, docstring checks, diagnostics or preview rules.",
-     "formatter": "The code formatter: how formatted code looks.",
-     "server": "The language server (LSP) and editor integration.",
-     "configuration": "Settings, the command-line interface, or selecting which rules are enabled."
-    }
-   },
-   "charts": {
-    "scope": "dev",
-    "rule": "out-of-fold",
-    "n": 361,
-    "raw_value": 1.0,
-    "cv_value": 0.0,
-    "threshold_sweep": [],
-    "distribution": [],
-    "calibration": [],
-    "selection_sweep": [],
-    "selection_basis": "selected-answer probability",
-    "selection_unavailable": "Selection probability is unavailable: the answered dev cases have no genuine distribution or box confidence.",
-    "unavailable": null
-   }
-  },
-  {
-   "candidate": "haiku@vercel/improve-d1@vercel-20261016-0701",
-   "model": "haiku@vercel",
-   "variant": "improve-d1@vercel-20261016-0701",
-   "n": 0,
-   "value": null,
-   "interval": null,
-   "rule": null,
-   "metrics": {
-    "accuracy": {
-     "value": null,
-     "interval": null
-    },
-    "macro_f1": {
-     "value": null,
-     "interval": null
-    },
-    "auroc": {
-     "value": null,
-     "interval": null
-    },
-    "brier": {
-     "value": null,
-     "interval": null
-    },
-    "ece": {
-     "value": null,
-     "interval": null
-    },
-    "coverage:0.95": {
-     "value": null,
-     "interval": null
-    },
-    "accepted_accuracy:0.95": {
-     "value": null,
-     "interval": null
-    }
-   },
-   "excluded": [
-    "missing run evidence for haiku@vercel/improve-d1@vercel-20261016-0701"
-   ],
-   "adoption_blocked": [],
-   "probabilities": false,
-   "failures": {
-    "calls": 0,
-    "failed": 0,
-    "unsupported": 0,
-    "data_errors": 0,
-    "unlabeled": 0,
-    "never_asked": 361,
-    "failed_cases": 0,
-    "refused_cases": 0
-   },
-   "calls": {
-    "latency": null,
-    "case_latency_p90_ms": null,
-    "throughput": null,
-    "cost_per_10k_usd": null,
-    "cost_total_usd": null,
-    "cost_source": null,
-    "cost_unknown": 0,
-    "price": null
-   },
-   "measurement": {
-    "provider": "llm",
-    "model_id": "vercel_ai_gateway/anthropic/claude-haiku-5.5",
     "distribution": "unknown",
     "declared_concurrency": null
    },

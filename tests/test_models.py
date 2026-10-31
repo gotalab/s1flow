@@ -53,10 +53,8 @@ def test_the_repo_lineup_keeps_its_cache_ids():
         "mercury@openrouter": "openrouter:inception/mercury-decide",
         "clef": "cloudflare:clef",
         "luna@decisions": "openai-decisions:gpt-6-luna",
-        "haiku@vercel": "llm:vercel_ai_gateway/anthropic/claude-haiku-5.5",
     }
     assert {n: BENCH_LINEUP.build(n).id for n in want} == want
-    assert BENCH_LINEUP.build("haiku@vercel").capabilities.distribution == "none"
 
 
 def test_concurrency_reaches_the_built_model(tmp_path):
@@ -68,6 +66,12 @@ def test_sampling_is_part_of_an_llm_id(tmp_path):
     lineup = load(tmp_path, BASE + '\n[models.k5]\nprovider = "llm"\nid = "vercel_ai_gateway/x/m"\noptions.samples = 5\n')
     m = Client(connections=lineup).connections.build("k5")
     assert m.id == "llm:vercel_ai_gateway/x/m#k5" and m.capabilities.distribution == "sampled"
+
+
+def test_an_llm_asked_once_returns_no_distribution(tmp_path):
+    lineup = load(tmp_path, BASE + '\n[models.once]\nprovider = "llm"\nid = "vercel_ai_gateway/x/m"\n')
+    m = Client(connections=lineup).connections.build("once")
+    assert m.id == "llm:vercel_ai_gateway/x/m" and m.capabilities.distribution == "none"
 
 
 def test_box_follows_the_version_not_the_name():
