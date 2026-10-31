@@ -10,7 +10,7 @@ from collections import Counter
 
 from ..core import clock
 from .kinds import Kind
-from .evaluation import Estimate, Evaluation, Floor, ObjectiveScore, cost_note
+from .evaluation import Estimate, Evaluation, Floor, ObjectiveScore, cost_note, why_missing
 from .objectives import measure
 from .objectives.declare import METRICS, Objective
 from .objectives.measure import bound
@@ -55,33 +55,31 @@ def _p99(e: Evaluation) -> float | None:
 SOURCE = {"billed": "billed", "list": "estimated", "mixed": "billed and estimated", None: "unknown"}  # Calls.cost_source
 
 
-def compared(evs: list[Evaluation]) -> list[Evaluation]:
-    """The candidates the report ranks: those with an answer to every labelled case but the ones they refused. One
-    never asked some cases, or whose every call failed on some, is scored on the rest only (rank leaves it out too)."""
-    return [e for e in evs if e.n and not e.failures.missing]
+def compared(task: Task, evs: list[Evaluation]) -> tuple[list[Evaluation], list[Ranked]]:
+    """The candidates the report ranks, and their ranking (select.rank): those with an answer to every labelled case
+    but the ones they refused. One never asked some cases, or whose every call failed on some, is scored on the rest
+    only, so it is not ranked."""
+    scored = [e for e in evs if e.n and not e.failures.missing]
+    return scored, rank(task.primary, task.ties, task.constraints, scored)
 
 
 def left_out(task: Task, evs: list[Evaluation]) -> list[str]:
     gaps = [e for e in evs if e.n and e.failures.missing]
     if not gaps:
         return []
-    why = lambda f: " and ".join(x for x in (f"{f.never_asked} cases never asked" if f.never_asked else "",
-                                             f"{f.failed_cases} cases whose every call failed" if f.failed_cases else "") if x)
-    return ["", "Not compared: " + "; ".join(f"{e.candidate.name} ({why(e.failures)})" for e in gaps)
+    return ["", "Not compared: " + "; ".join(f"{e.candidate.name} ({why_missing(e.failures.never_asked or 0, e.failures.failed_cases or 0)})" for e in gaps)
             + ". With cases it has no answer to, a candidate is measured on the rest only, not on the cases the others answered,"
             + " so it is not ranked. Ask them again: "
             + f"`{ask_again(task, [(e.candidate.model, e.candidate.variant) for e in gaps])}`"]
 
 
-def headline(task: Task, evs: list[Evaluation]) -> str:
-    """What the task's objectives and constraints show (select.rank): the best on the primary, those it cannot tell
-    from it, and what orders them. It picks none: a person or an agent does."""
-    scored = compared(evs)
+def headline(task: Task, evs: list[Evaluation], scored: list[Evaluation], ranked: list[Ranked]) -> str:
+    """What the task's objectives and constraints show (`compared`: `scored`, `ranked`): the best on the primary,
+    those it cannot tell from it, and what orders them. It picks none: a person or an agent does."""
     if not scored:
         return "No candidate has an answer to every case." if any(e.n for e in evs) else "No results."
     objs = task.objectives
     o0 = objs[0]
-    ranked = rank(task.primary, task.ties, task.constraints, scored)
     by = {e.candidate.name: e for e in scored}
     fits = [x for x in ranked if not x.excluded and x.scores[0].value is not None]
     excluded = [x for x in ranked if x.excluded]
@@ -129,13 +127,11 @@ def headline(task: Task, evs: list[Evaluation]) -> str:
     return " ".join(parts)
 
 
-def objectives_table(task: Task, evs: list[Evaluation]) -> list[str]:
+def objectives_table(task: Task, scored: list[Evaluation], ranked: list[Ranked]) -> list[str]:
     """Every objective per candidate, best first, with the constraints."""
-    scored = compared(evs)
     if not scored:
         return []
     objs = task.objectives
-    ranked = rank(task.primary, task.ties, task.constraints, scored)
     floors = {e.candidate.name: e.floors for e in scored}
     head = "| model | " + " | ".join(o.label for o in objs) + " | rule | constraints |"
     L = ["", "## Objectives and constraints", "", head, "|---|" + "---|" * (len(objs) + 2)]
@@ -157,15 +153,14 @@ def _floors(fs: list[Floor]) -> str:
     return f" ({', '.join(f'{f.what} {pct(f.rate)}' for f in fs)})" if fs else ""
 
 
-def weights_table(task: Task, evs: list[Evaluation], preds: dict[str, metrics.Preds]) -> list[str]:
+def weights_table(task: Task, scored: list[Evaluation], ranked: list[Ranked], preds: dict[str, metrics.Preds]) -> list[str]:
     """With ExpectedLoss or a loss table as the objective: the candidates tied at the top with its weights halved and doubled."""
     from .weights import decides, sensitivity, top
 
-    scored = compared(evs)
     moved = sensitivity(task, {e.candidate.name: preds[e.candidate.name] for e in scored if e.candidate.name in preds})
     if not moved:
         return []
-    now = top(rank(task.primary, task.ties, task.constraints, scored))
+    now = top(ranked)
     L = ["", "## With other weights", "", "| weights | tied at the top |", "|---|---|",
          f"| as set: {task.primary.label} | {', '.join(now) or '—'} |"]
     L += [f"| {'halved' if r.factor < 1 else 'doubled'}: {r.objective.label} | {', '.join(r.tied) or '—'} |" for r in moved]
@@ -198,6 +193,7 @@ def render(task: Task, variant: str, evs: list[Evaluation], preds: dict[str, met
     labelled = [c for c in task.load_cases().labelled() if sf.assign.get(c.id) != "test"]
     labels = Counter(str(c.label) for c in labelled) if not box else Counter()
     sel0 = first.selective[0] if first and first.selective else None
+    scored, ranked = compared(task, evs)
     L: list[str] = [
         f"# {task.id}" + (f" · {variant}" if variant != "base" else ""),
         "",
@@ -205,7 +201,7 @@ def render(task: Task, variant: str, evs: list[Evaluation], preds: dict[str, met
         + (f" (right at IoU {kind.iou:g} or more)" if box else f" ({', '.join(f'{k} {v}' for k, v in labels.most_common(8))}" + (", more" if len(labels) > 8 else "") + ")")
         + f" · split: {first.split if first else '—'} · source: {task.source}",
         "",
-        headline(task, evs),
+        headline(task, evs, scored, ranked),
         "",
         "## Comparison",
         "",
@@ -230,9 +226,9 @@ def render(task: Task, variant: str, evs: list[Evaluation], preds: dict[str, met
         f"{e.candidate.name} = {e.answered_by}" + (f" (also {', '.join(v for v in e.answered_by_all if v != e.answered_by)})" if len(e.answered_by_all) > 1 else "")
         for e in evs if e.answered_by
     ) + ". To compare versions, run each by name: `s1flow run <task> --models jev:1.14`."]
-    L += objectives_table(task, evs)
-    L += weights_table(task, evs, preds)
-    L += calls_table(task, evs)
+    L += objectives_table(task, scored, ranked)
+    L += weights_table(task, scored, ranked, preds)
+    L += calls_table(task, evs, ranked)
     L += time_table(evs)
     L += [
         "",
@@ -323,14 +319,14 @@ def _dur(seconds: float) -> str:
     return f"{seconds:.0f} s" if seconds < 90 else f"{seconds / 60:.0f} min" if seconds < 5400 else f"{seconds / 3600:.1f} h"
 
 
-def calls_table(task: Task, evs: list[Evaluation]) -> list[str]:
+def calls_table(task: Task, evs: list[Evaluation], ranked: list[Ranked]) -> list[str]:
     """What the calls took, per candidate: latency per call and API cost per 10,000 cases, with where that cost
-    came from, and the frontier of the primary objective against them."""
+    came from, and the frontier of the primary objective against them (among `ranked`, `compared`'s)."""
     rows = [e for e in evs if e.n]
     if not rows:
         return []
     budget = task.constraints.latency_p99_ms
-    frontier = pareto(task.primary, rank(task.primary, task.ties, task.constraints, compared(rows)), {e.candidate.name: e for e in rows})
+    frontier = pareto(task.primary, ranked, {e.candidate.name: e for e in rows})
     L = [
         "", "## Calls (latency and API cost)", "",
         "| model | calls | p50 | p90 | p99 | max | spread (p99/p50) | retried | concurrency |" + (f" p99 ≤ {budget:.0f}ms |" if budget is not None else "")

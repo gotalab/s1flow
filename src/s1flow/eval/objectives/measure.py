@@ -133,6 +133,11 @@ def cp_upper(k: int, n: int, level: float = 0.95) -> float:
     return 1 - cp_lower(n - k, n, level)
 
 
+def cp_interval(k: int, n: int) -> tuple[float, float]:
+    """Two-sided 95% Clopper-Pearson interval on a proportion: each side at 97.5%."""
+    return cp_lower(k, n, 0.975), cp_upper(k, n, 0.975)
+
+
 @dataclass(frozen=True)
 class Constraint:
     """A share kept on one side of a bound while the objective's value is made best."""

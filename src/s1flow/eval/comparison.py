@@ -29,6 +29,7 @@ from .evaluation import (
     Estimate,
     Evaluation,
     Failures,
+    why_missing,
 )
 from .objectives.declare import METRICS, Constraints, Objective
 from .objectives.measure import MEASURES, measured_as
@@ -183,11 +184,8 @@ def _adoption_blocked(task: Task, item: _CandidateInput) -> list[str]:
 
 def _missing_reason(pr: metrics.Preds) -> list[str]:
     reasons: list[str] = []
-    if pr.never_asked:
-        reasons.append(f"{len(pr.never_asked)} labelled dev cases never asked")
-    if pr.failed_cases:
-        reasons.append(f"{len(pr.failed_cases)} labelled dev cases failed on every call")
     if pr.never_asked or pr.failed_cases:
+        reasons.append(why_missing(len(pr.never_asked), len(pr.failed_cases)))
         reasons.append("current metrics unavailable: run evidence is stale or incomplete")
     if not pr.ids and pr.refused_cases:
         reasons.append(f"{len(pr.refused_cases)} labelled dev cases refused or unsupported")

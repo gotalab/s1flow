@@ -236,6 +236,21 @@ def test_decide_with_a_model(toml):
     assert s1flow("decide", "--state", "{}", "--boolean", "?", cwd=cwd).returncode == 2  # neither --model nor --policy
 
 
+def test_the_client_loads_no_evaluation_stack(toml):
+    """Asking a provider of your own four types in one call loads none of numpy, scipy, sklearn, litellm, dotenv."""
+    code = (
+        "import sys\n"
+        "from s1flow import Client\n"
+        "from s1flow.questions import Boolean, Box, Choice, Score\n"
+        f"d = Client({str(toml)!r}).responses.create(model='toy', state='a bug', questions={{"
+        "'b': Boolean(instructions='?'), 'c': Choice(instructions='?', criteria={'x': None, 'y': None}),"
+        "'s': Score(instructions='?', criteria=['a', 'b', 'c']), 'x': Box(instructions='?')})\n"
+        "print(sorted(d.answers), sorted(m for m in ('numpy', 'scipy', 'sklearn', 'litellm', 'dotenv', 'PIL') if m in sys.modules))\n"
+    )
+    out = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=True, env={"PYTHONPATH": str(HERE), "PATH": ""}).stdout
+    assert out.strip() == "['b', 'c', 's', 'x'] []"
+
+
 def test_decide_with_a_policy_and_record_feedback(tmp_path, monkeypatch):
     """What the decide Action runs: the policy's model, the outputs, the log; then the feedback a person gives."""
     import shutil

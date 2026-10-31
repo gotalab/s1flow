@@ -336,3 +336,10 @@ class CompareFake:
 
 def compare_fake(mode: str) -> Callable[[ModelBuild], CompareFake]:
     return lambda build: CompareFake(build, mode)
+
+
+def headline(t, evs):
+    """The report's headline on these evaluations, ranked as report.render ranks them."""
+    from s1flow.eval import report
+
+    return report.headline(t, evs, *report.compared(t, evs))

@@ -20,7 +20,7 @@ from pydantic import BaseModel, ValidationError
 from ..core import clock
 from ..core.errors import DataError, NotFound, Unsupported, invalid
 from . import evalset, metrics
-from .objectives.measure import cp_lower
+from .objectives.measure import cp_interval
 from .run import run_path
 from .cases import CORRECTIONS, SAMPLED, Correction, ReviewSample, Verdict
 from .shown import pct
@@ -130,7 +130,7 @@ def tally(fixes: dict[str, Correction]) -> Tally:
     sampled = [f for f in fixes.values() if f.sampled]
     k = sum(f.verdict == "relabel" for f in sampled)
     n = len(sampled)
-    rate = (cp_lower(k, n, 0.975), 1 - cp_lower(n - k, n, 0.975)) if n else None  # two-sided Clopper-Pearson
+    rate = cp_interval(k, n) if n else None
     doubtful = [f for f in fixes.values() if f.verdict in ("unclear", "missing")]
     premise = [f"{f.verdict}: {f.id}: {f.reason}" for f in doubtful]
     return Tally(read=len(fixes), verdicts=verdicts, sample_read=len(sampled), sample_relabelled=k, error_rate=rate, premise=premise)

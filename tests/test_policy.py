@@ -126,6 +126,16 @@ def test_a_broken_policy_file_is_a_config_error(store, tmp_path):
         store.evaluated("t")
 
 
+def test_policies_stay_light():
+    """What an app ships loads none of the evaluation stack, nor the evaluation's own shapes."""
+    import subprocess
+
+    code = ("import sys, s1flow.policies; print(sorted(m for m in ('numpy', 'litellm', 'sklearn', 'scipy', 'PIL', 's1flow.eval',"
+            " 's1flow.project') if m in sys.modules))")
+    out = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=True).stdout.strip()
+    assert out == "[]"
+
+
 def test_the_state_shape():
     s = schema_of([STATE, {"title": "x", "body": "y", "labels": ["a"]}])
     assert mismatch(s, STATE) == []

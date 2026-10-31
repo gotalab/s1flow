@@ -4,10 +4,10 @@ import asyncio
 import json
 
 import numpy as np
-from conftest import Timed, binary_preds, cov, make_project
+from conftest import Timed, binary_preds, cov, headline, make_project
 
 from s1flow.objectives import Constraints, Coverage
-from s1flow.eval import metrics, records, report
+from s1flow.eval import metrics, records
 from s1flow.eval import run as running
 from s1flow.eval.task import load
 
@@ -48,9 +48,9 @@ def test_a_time_budget_takes_slow_models_out_of_the_headline(tmp_path):
     fast, slow = (e.model_copy(update={"answered_ids": [str(i) for i in range(e.n)]})
                   for e in (cov("fast", 0.6, p99=150.0), cov("slow", 0.9, p99=900.0)))
     budgeted = t.copy(constraints=Constraints(latency_p99_ms=200))
-    text = report.headline(budgeted, [fast, slow])
+    text = headline(budgeted, [fast, slow])
     assert "**fast**" in text and "slow breaks a constraint and is left out (p99 900ms > 200ms)" in text
-    assert "**slow**" in report.headline(t, [fast, slow])
+    assert "**slow**" in headline(t, [fast, slow])
 
 
 def test_llm_retries_are_ours_and_left_out_of_the_latency(monkeypatch):
