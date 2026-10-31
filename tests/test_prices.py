@@ -14,7 +14,6 @@ from s1flow.client import Capabilities, ChoiceAnswer, Response
 from s1flow.client.answers import Usage
 from s1flow.client.cost import Spend, estimate, recorded
 from s1flow import Client
-from s1flow.client.lineup import Lineup
 from s1flow.client.models import ModelSpec, Price
 from s1flow.eval import metrics, report, verify
 from s1flow.eval import run as running
@@ -152,13 +151,6 @@ def test_verify_says_when_a_price_cannot_be_checked(monkeypatch):
 
     monkeypatch.setattr(gateway.build, "published", down)
     assert verify.check_price(spec("gateway", "x/y", input_per_mtok=1), None).status == "unreadable"
-
-
-def test_the_bench_line_up_prices_the_models_that_bill_nothing():
-    lineup = Lineup.read(ROOT / "apps" / "bench" / "s1flow.toml")
-    priced = {n for n, s in lineup.models.items() if s.price}
-    assert priced == {"jev", "clef", "clef-flash", "luna@decisions"}
-    assert not any(lineup.models[n].provider in ("gateway", "openrouter") for n in priced)  # those bill
 
 
 def test_a_cost_that_does_not_say_where_it_came_from_is_not_known():

@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 import pytest
-from conftest import BENCH, ship
+from conftest import PROJECT, ship
 
 from s1flow import AsyncClient, Client
 from s1flow.client import ModelSpec, Refusal
@@ -264,7 +264,7 @@ def test_decide_with_a_policy_and_record_feedback(tmp_path, monkeypatch):
 
     from s1flow.policies import Policies, PolicySpec
     # Make a runtime-only copy, binding its model through a trusted application connection.
-    legacy = json.loads((BENCH / "policies/gh-ruff-area/v1.json").read_text())
+    legacy = json.loads((PROJECT / "policies/gh-ruff-area/v1.json").read_text())
     questions = legacy["questions"]
     spec = PolicySpec(task="gh-ruff-area", version=1, connection="toy", model_id="t1", questions=questions,
                       state_schema={"type": "object", "properties": {"title": {"type": "string"}, "body": {"type": "string"}}, "required": ["title", "body"]})

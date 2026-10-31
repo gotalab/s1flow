@@ -101,7 +101,13 @@ dev = [
     "respx>=0.23.1",
     "import-linter>=2.5",
     "jsonschema>=4.26",
+    "ruff>=0.17.2",
+    "pytest-xdist>=3.8.0",
 ]
+
+# Pyflakes alone: unused imports and variables, undefined names, redefinitions. Formatting is not checked.
+[tool.ruff.lint]
+select = ["F"]
 
 [tool.mypy]
 python_version = "3.13"

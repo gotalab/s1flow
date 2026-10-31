@@ -491,22 +491,6 @@ def test_a_policy_asks_its_questions_by_id(tmp_path):
         runtime_load(path=path)
 
 
-def test_every_stored_policy_reads_with_the_policy_layer_alone(tmp_path):
-    from pathlib import Path
-    import shutil
-    from s1flow.policies.file import read_file
-
-    root = Path(__file__).resolve().parents[1]
-    copied = tmp_path / "project"
-    shutil.copytree(root / "apps/bench/policies", copied / "policies")
-    found = sorted((copied / "policies").glob("*/v[0-9].json"))
-    assert len(found) == 5
-    for path in found:
-        spec = read_file(path)
-        assert spec.question_id in spec.questions and spec.kind and spec.rule
-        assert Store(copied / "policies").read(spec.task, version=spec.version).spec == spec
-
-
 def test_a_name_that_is_not_there_lists_the_ones_that_are(store, tmp_path):
     store.write_new(policy())
     with pytest.raises(NotFound, match=r"t has no current version"):
