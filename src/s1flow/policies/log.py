@@ -82,13 +82,11 @@ def span(rec: AnsweredLog | FailedLog | FeedbackLog, provider: str | None = None
 
 
 def from_span(name: str, at: str, attrs: dict[str, Any]) -> AnsweredLog | FailedLog | FeedbackLog | None:
-    """Read only v2 spans; old spans cannot identify a unique judgment."""
+    """The record a span() span was written from; None for any other span."""
     a = attrs
     if 's1flow.policy_digest' not in a:
         return None
     if name == FEEDBACK:
-        if 's1flow.decision_id' not in a:
-            return None
         return FeedbackLog(at=at, decision_id=a['s1flow.decision_id'], policy=a['s1flow.policy'],
                            policy_digest=a['s1flow.policy_digest'], label=json.loads(a['s1flow.label']))
     if name != DECIDE:
@@ -96,8 +94,6 @@ def from_span(name: str, at: str, attrs: dict[str, Any]) -> AnsweredLog | Failed
     if 'error.type' in a:
         return FailedLog(at=at, case_id=a.get('s1flow.case_id'), state_sha256=a['s1flow.state_sha256'],
                          policy=a['s1flow.policy'], policy_digest=a['s1flow.policy_digest'], error=a['error.type'])
-    if 's1flow.decision_id' not in a or 's1flow.execution_digest' not in a:
-        return None
     return AnsweredLog(at=at, case_id=a.get('s1flow.case_id'), state_sha256=a['s1flow.state_sha256'], decision=Decision(
         value=json.loads(a['s1flow.answer']), probability=a.get('s1flow.probability'), p_positive=a.get('s1flow.p_positive'),
         below_min_probability=a.get('s1flow.below_min_probability'), decision_id=a['s1flow.decision_id'],

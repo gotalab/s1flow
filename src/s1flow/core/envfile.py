@@ -49,5 +49,3 @@ def load(root: Path) -> None:
                 raise ConfigError(f"invalid dotenv file {path}: remove NUL bytes before loading it")
             for k, v in parse(text).items():
                 os.environ.setdefault(k, v)
-        if (d / ".git").exists():
-            break

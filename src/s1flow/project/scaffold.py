@@ -17,9 +17,9 @@ from pathlib import Path
 
 from ..core import place
 from ..core.errors import ConfigError
-from ..client.lineup import BUILTIN_LINEUP
 
 TEMPLATES = Path(__file__).resolve().parents[1] / "templates"
+LINEUP = TEMPLATES / place.CONFIG  # what `init` copies
 
 
 def _action() -> str:
@@ -32,13 +32,6 @@ def _action() -> str:
 
 
 ACTION = _action()
-
-
-def _git_root(d: Path) -> Path | None:
-    for p in [d, *d.parents]:
-        if (p / ".git").exists():
-            return p
-    return None
 
 
 def stub(task_id: str, instructions: str) -> str:
@@ -70,7 +63,7 @@ def init(
         done.append(f"wrote {show(path)}")
 
     if not (project / place.CONFIG).exists():
-        shutil.copyfile(BUILTIN_LINEUP, project / place.CONFIG)
+        shutil.copyfile(LINEUP, project / place.CONFIG)
         done.append(f"wrote {show(project / place.CONFIG)}")
     ignore = project / ".gitignore"
     lines = ignore.read_text().splitlines() if ignore.exists() else []
@@ -82,7 +75,7 @@ def init(
         raise ConfigError(why)
     if task_id:
         write(project / "tasks" / task_id / "task.py", stub(task_id, instructions))  # its directory is named its id
-    root = _git_root(project)
+    root = place.git_root(project)
     if workflow and root is not None:
         rel = os.path.relpath(project, root)
         prefix = "" if rel == "." else rel.rstrip("/") + "/"

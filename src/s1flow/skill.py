@@ -19,6 +19,7 @@ from dataclasses import dataclass, field
 from importlib import metadata
 from pathlib import Path
 
+from .core import place
 from .core.errors import ConfigError
 
 NAME = "s1flow"
@@ -42,13 +43,10 @@ def version() -> str:
         return "0"
 
 
-def project_root(start: Path | None = None) -> Path:
-    """The git root above `start` (default the working directory), else the working directory."""
-    here = (start or Path.cwd()).resolve()
-    for d in [here, *here.parents]:
-        if (d / ".git").exists():
-            return d
-    return Path.cwd().resolve()
+def project_root() -> Path:
+    """The git root above the working directory, else the working directory."""
+    here = Path.cwd().resolve()
+    return place.git_root(here) or here
 
 
 def targets(root: Path | None = None) -> list[Path]:

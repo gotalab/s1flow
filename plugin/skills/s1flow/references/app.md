@@ -17,12 +17,12 @@ from s1flow import Client, policies
 
 APP = Path(__file__).resolve().parent
 client = Client(connections=APP / "connections.toml")  # grants every connection listed in this file
-runtime = policies.load(path=APP / "policies/ticket-kind/v1.json", client=client,
-                        log=APP / "decisions.jsonl")
-decision = runtime.decide({"title": "...", "body": "..."}, case_id="issue-123")
+policy = policies.load(path=APP / "policies/ticket-kind/v1.json", client=client,
+                       log=APP / "decisions.jsonl")
+decision = policy.decide({"title": "...", "body": "..."}, case_id="issue-123")
 print(decision.value, decision.probability, decision.below_min_probability, decision.decision_id)
 
-runtime.feedback(decision.decision_id, True)   # when the right label is known: the exact id returned above
+policy.feedback(decision.decision_id, True)   # when the right label is known: the exact id returned above
 ```
 
 - `policies.load` needs `path=` or `root=`; `policies.load("<task>", path="policies.json", client=client)` reads

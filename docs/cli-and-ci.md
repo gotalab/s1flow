@@ -8,31 +8,24 @@ pending check. To tell a pending check from an error, read `verdict` in `check -
 
 ## The Agent Skill
 
-The Skill ships as a plugin for Claude Code (`/plugin marketplace add gotalab/s1flow`, then
-`/plugin install s1flow@s1flow`) and for Codex (`codex plugin marketplace add gotalab/s1flow`). The plugin also
-carries a Cursor manifest and follows the Agent Plugins format, for teams that import it into a Cursor team
-marketplace. For any other agent, `s1flow init --skill` copies the Skill into `.agents/skills/` and
-`.claude/skills/` at the Git root. `SKILL.md` says which of its six
-references (collect, measure, ship, app, learn, setup) to read at each stage. The source lives in `skills/s1flow/`, and `scripts/sync_plugin.py`
-writes the plugin copy. The Skill
-drives collecting cases, comparing, reviewing and improving through the same CLI; it isn't a second
-implementation.
+Install the Skill as step 2 of the [quick start](../README.md#quick-start) shows. The plugin also carries a Cursor
+manifest and follows the Agent Plugins format, for teams that import it into a Cursor team marketplace. `SKILL.md`
+says which of its six references (collect, measure, ship, app, learn, setup) to read at each stage. The source
+lives in `skills/s1flow/`, and `scripts/sync_plugin.py` writes the plugin copy. The Skill drives collecting cases,
+comparing, reviewing and improving through the same CLI; it isn't a second implementation.
 
-A typical request to your agent: *"Use s1flow to decide whether a new GitHub issue is a bug. Call the task is-bug,
-collect 200 labeled issues, compare the models and show me the result."* The Skill fetches the issues with its `github.py` script, then runs `cases check`, `run`
-and `report`, and leaves the choice of candidate to you.
+Given a request like the one in the quick start, the Skill fetches the issues with its `github.py` script, then
+runs `cases check`, `run` and `report`, and leaves the choice of candidate to you.
 
 ## GitHub Actions
 
 `decide/action.yml` uses the base package and an explicit `connections` input, and outputs `answer`,
-`probability`, `below_min_probability`, `decision_id` and `policy`. Evaluation uses `action.yml` with the `eval` extra (`s1flow init --ci` writes a workflow for it): on a pull request
-that adopts a policy, it tests the version the pull request makes current against the one the base branch ships, on the
-test cases, and posts the result as a comment. Merging the pull request is the release. A check that cannot
-measure fails unless the workflow sets `on-pending: warn`; a pull request that rewrites a saved version
-fails; one that edits files under `tasks/<task>/` or `s1flow.toml` gets a warning that the check used the edited
-rules and cases.
+`probability`, `below_min_probability`, `decision_id` and `policy`. Evaluation uses `action.yml` with the `eval`
+extra, and `s1flow init --ci` writes the workflow for it: on a pull request that adopts a policy, it checks the
+new version against the one the base branch ships and posts the result as a comment. What it compares, and when
+it passes, fails or is pending, is in [Policies, evidence and releases](policies.md#evidence-and-releases).
 
 Input is passed through files and environment variables, never pasted into shell commands. The workflow installs
 the package you choose up front; loading a policy at runtime never installs anything. In production workflows,
 pin the Action to a release tag or commit SHA, and the package to a version. See [examples/](../examples) for
-example workflows.
+workflows that call the decide Action.

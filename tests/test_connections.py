@@ -129,16 +129,16 @@ def test_project_search_stops_at_git_boundary(tmp_path):
     (repository / ".git").mkdir(parents=True)
     nested = repository / "src" / "feature"
     nested.mkdir(parents=True)
-    assert place.root(nested) is None
+    assert place.find(nested) is None
     connections(repository / "s1flow" / "s1flow.toml", "inside")
-    assert place.root(nested) == repository / "s1flow"
+    assert place.find(nested) == repository / "s1flow"
 
 
 def test_without_git_discovery_does_not_take_parent_settings(tmp_path):
     connections(tmp_path / "s1flow.toml")
     child = tmp_path / "another-app"
     child.mkdir()
-    assert place.root(child) is None
+    assert place.find(child) is None
 
 
 @pytest.mark.parametrize("prefix", [True, False])

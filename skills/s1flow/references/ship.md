@@ -20,7 +20,7 @@ s1flow adopt --spec spec.json --check             # validate only; save nothing
 - `adopt TASK CANDIDATE` scores the chosen candidate on the held-out test and records the result. If the held-out
   test shows it below (its constraint or floors broken, or worse than its train + val interval), nothing is written, exit 1, and `history.jsonl` gets a `refused` line.
   `--force` writes it anyway, marked `forced`; the reason must say why. Stale evidence is refused.
-- `--spec` needs only the base install. `--spec` takes a v2 `PolicySpec` (task/version, a trusted
+- `--spec` needs only the base install. `--spec` takes a `PolicySpec` (task/version, a trusted
   `connection` and exact `model_id`, one boolean or choice question, a rule, an optional input shape). It has no
   evaluation evidence. It always checks the binding: against the project's `s1flow.toml`, or `--connections FILE`.
 - Outside an s1flow project (an app's repository), add `--root policies`, and `--connections FILE` with `--spec`.
