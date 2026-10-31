@@ -67,6 +67,6 @@ def read(path: Path, data: Any, ref: Ref | None) -> PolicySpec:
     if ref.task not in bundle.policies:
         raise NotFound(f'{path} has no policy of {ref.task}')
     entry = bundle.policies[ref.task]
-    if not ref.names(ref.task, entry.version, bundle.channel):
-        raise NotFound(f'{path} holds {policy_id(ref.task, entry.version)} from {bundle.channel}, not {ref}')
+    if not ref.names(ref.task, entry.version):
+        raise NotFound(f'{path} holds {policy_id(ref.task, entry.version)}, not {ref}')
     return entry.policy

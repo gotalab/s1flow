@@ -57,7 +57,7 @@ def test_the_reflection_lm_is_an_llm_model_called_through_the_client(tmp_path, m
 
     async def fake(**kw):
         sent.append(kw)
-        usage = types.SimpleNamespace(prompt_tokens=1_000, completion_tokens=500)
+        usage = litellm.Usage(prompt_tokens=1_000, completion_tokens=500)
         return types.SimpleNamespace(choices=[types.SimpleNamespace(message=types.SimpleNamespace(content="new question"))], usage=usage, _hidden_params={})
 
     monkeypatch.setattr(litellm, "acompletion", fake)

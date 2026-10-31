@@ -59,18 +59,14 @@ def channel_name(name: str) -> str:
 
 @dataclass(frozen=True)
 class Ref:
+    """TASK@vN, or TASK / TASK@current (version None): the version current names."""
     task: str
-    channel: str | None = None
     version: int | None = None
 
     def __post_init__(self) -> None:
         identifier(self.task)
-        if self.channel is not None:
-            channel_name(self.channel)
         if self.version is not None and (isinstance(self.version, bool) or self.version < 1):
             raise ConfigError('a policy version is a positive integer')
-        if self.version is not None and self.channel is not None:
-            raise ConfigError('a policy reference names a version or a channel, not both')
 
     @classmethod
     def parse(cls, text: str) -> Ref:
@@ -80,13 +76,15 @@ class Ref:
         identifier(task)
         if (n := version_number(which)) is not None:
             return cls(task, version=n)
-        return cls(task, channel=channel_name(which) if which else None)
+        if which:
+            channel_name(which)
+        return cls(task)
 
-    def names(self, task: str, version: int, channel: str | None = None) -> bool:
-        return task == self.task and self.version in (None, version) and (self.channel is None or channel is None or self.channel == channel)
+    def names(self, task: str, version: int) -> bool:
+        return task == self.task and self.version in (None, version)
 
     def __str__(self) -> str:
-        return policy_id(self.task, self.version) if self.version is not None else f'{self.task}@{self.channel or CURRENT}'
+        return policy_id(self.task, self.version) if self.version is not None else f'{self.task}@{CURRENT}'
 
 
 def digest(data: Any) -> str:
@@ -253,19 +251,6 @@ def _writer_lock(path: Path) -> Iterator[None]:
                 fcntl.flock(stream, fcntl.LOCK_UN)
 
 
-def _sync_dir(directory: Path) -> None:
-    # Windows cannot open directories through os.open for fsync. File bytes were
-    # already flushed; atomic publication still applies, but directory durability
-    # across power loss is a POSIX guarantee here.
-    if sys.platform == 'win32':
-        return
-    fd = os.open(directory, os.O_RDONLY)
-    try:
-        os.fsync(fd)
-    finally:
-        os.close(fd)
-
-
 def atomic_write(path: Path, text: str, *, immutable: bool = False) -> None:
     """Publish complete bytes in the same filesystem, never exposing a partial file."""
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -273,8 +258,6 @@ def atomic_write(path: Path, text: str, *, immutable: bool = False) -> None:
     try:
         with os.fdopen(fd, 'w', encoding='utf-8') as stream:
             stream.write(text)
-            stream.flush()
-            os.fsync(stream.fileno())
         if immutable:
             try:
                 os.link(temporary, path)
@@ -282,7 +265,6 @@ def atomic_write(path: Path, text: str, *, immutable: bool = False) -> None:
                 raise ConfigError(f'{path} already exists; saved versions cannot be overwritten') from None
         else:
             os.replace(temporary, path)
-        _sync_dir(path.parent)
     finally:
         if os.path.exists(temporary):
             os.unlink(temporary)
@@ -338,12 +320,12 @@ class Policies:
             raise NotFound(f'no policy of {task!r}; tasks with policies: {", ".join(self.tasks()) or "none"}')
 
     def get(self, ref: Ref) -> PolicySpec:
-        return self.read(ref.task, version=ref.version, channel=ref.channel or CURRENT)
+        return self.read(ref.task, version=ref.version)
 
-    def read(self, task: str, version: int | None = None, channel: str = CURRENT) -> PolicySpec:
+    def read(self, task: str, version: int | None = None) -> PolicySpec:
+        """Version `version`, or the one current names."""
         self.known(task)
         if version is None:
-            channel_name(channel)
             version = self.current(task)
             if version is None:
                 raise NotFound(f'{task} has no current version; s1flow adopt picks one, s1flow adopt --spec FILE saves one')
@@ -361,13 +343,18 @@ class Policies:
             raise ConfigError(f'{spec.task} already has v{latest}; a new policy is v{latest + 1}')
         atomic_write(self._file(spec.task, f'v{spec.version}.json'), spec.dump(), immutable=True)
 
-    def write_new(self, spec: PolicySpec, *, adopted: Switch | None = None) -> None:
-        """Save a new version; `adopted` (s1flow adopt's) also makes it the version that runs (merging that change
-        ships it)."""
+    def evaluation_path(self, task: str, version: int) -> Path:
+        return self._file(task, f'v{version}.evaluation.json')
+
+    def write_new(self, spec: PolicySpec, *, adopted: Switch | None = None, evaluation: str | None = None) -> None:
+        """Save a new version, with its evaluation record (vN.evaluation.json) when it has one; `adopted` (s1flow
+        adopt's) also makes it the version that runs (merging that change ships it)."""
         with self.locked(spec.task):
             if adopted is not None:
                 self._may_switch(spec.task, adopted)
             self._write_new(spec)
+            if evaluation is not None:
+                atomic_write(self.evaluation_path(spec.task, spec.version), evaluation, immutable=True)
             if adopted is not None:
                 self._switch(spec.task, adopted)
 
