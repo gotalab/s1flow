@@ -20,7 +20,7 @@ jobs:
         with:
           python-version: "3.13"
       - run: uv sync --frozen
-      - run: uv run pytest -q -n auto  # also checks schema/, plugin/skills/, the import contracts and the wheel
+      - run: uv run pytest -q -n auto  # also checks schema/, the import contracts and the wheel
   static:
     runs-on: ubuntu-latest
     steps:

@@ -236,7 +236,7 @@ def test_chart_summary_and_cost_quality_frontier_are_owned_by_report(task):
     saved = json.loads((task.where.root / 'out' / 'base.json').read_text())
     assert saved['chart_summary']['candidate_count'] == 1
     assert saved['chart_summary']['cost_quality_frontier'] == ['fake']
-    script = (Path(__file__).resolve().parents[1] / 'skills/s1flow/scripts/charts.py').read_text()
+    script = (Path(__file__).resolve().parents[1] / 'plugin/skills/s1flow/scripts/charts.py').read_text()
     assert 'const better = ' not in script and 'const front = [...rs].sort' not in script
 
 
