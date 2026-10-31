@@ -1,0 +1,43 @@
+{
+ "schema": "s1flow/policy@2",
+ "task": "gh-ruff-kind",
+ "version": 1,
+ "connection": "clef-flash",
+ "model_id": "clef-flash",
+ "questions": {
+  "kind": {
+   "question": {
+    "type": "choice",
+    "instructions": "What kind of issue is this, filed against Ruff (a Python linter and formatter)?",
+    "criteria": {
+     "bug": "Something isn't working: a crash, a false positive or negative, a wrong fix, or output that differs from what is documented.",
+     "question": "Asking for support or clarification about how Ruff behaves or how to configure it.",
+     "documentation": "Improvements or additions to the documentation.",
+     "feature": "A request to implement a new lint rule, extend an existing one, or add a capability; nothing is broken."
+    }
+   },
+   "kind": {},
+   "rule": {
+    "threshold": null,
+    "min_probability": 0.9207
+   }
+  }
+ },
+ "at": "2026-10-15T21:46:11Z",
+ "s1flow_version": "0.1.0",
+ "state_schema": {
+  "type": "object",
+  "properties": {
+   "body": {
+    "type": "string"
+   },
+   "title": {
+    "type": "string"
+   }
+  },
+  "required": [
+   "body",
+   "title"
+  ]
+ }
+}

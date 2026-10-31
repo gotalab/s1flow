@@ -1,7 +1,7 @@
 """policies.json (`s1flow export`): the policies an app uses, in one file it vendors and loads from."""
 
 import json
-from conftest import point
+from conftest import PROJECT, point
 import shutil
 from pathlib import Path
 
@@ -14,13 +14,12 @@ from s1flow.core.errors import ConfigError, NotFound
 from s1flow.policies import policy_set
 from s1flow.policies.file import Policies, read_file
 
-BENCH = Path(__file__).resolve().parents[1] / "apps" / "bench"
-SCHEMA = json.loads((BENCH.parents[1] / "schema" / "policy-set-2.json").read_text())
+SCHEMA = json.loads((PROJECT.parents[2] / "schema" / "policy-set-2.json").read_text())
 
 
 @pytest.fixture
 def project(tmp_path):
-    shutil.copytree(BENCH / "policies", tmp_path / "policies")
+    shutil.copytree(PROJECT / "policies", tmp_path / "policies")
     (tmp_path / "s1flow.toml").write_text("default = []\n[models]\n")
     return tmp_path
 
@@ -39,7 +38,7 @@ def shipped(project):
 
 
 def runtime_load(*args, **kwargs):
-    return policies.load(*args, client=Client(connections=BENCH / "s1flow.toml"), **kwargs)
+    return policies.load(*args, client=Client(connections=PROJECT / "s1flow.toml"), **kwargs)
 
 
 def test_an_export_holds_each_policy_as_its_file_without_its_evidence_with_its_digest(project):

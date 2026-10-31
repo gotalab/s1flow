@@ -1,0 +1,50 @@
+{
+ "schema": "s1flow/policy@2",
+ "task": "nod-wake",
+ "version": 1,
+ "connection": "d1@vercel",
+ "model_id": "liquid/d1",
+ "questions": {
+  "next": {
+   "question": {
+    "type": "choice",
+    "instructions": "あなたはユーザーの調べもの・予定・連絡・買い物・作業などを手伝っているAIエージェント。チャットでユーザーの最新の発言(user)を受け取った。agent はその直前のあなたの発言、earlier はそれより前のやりとり（古い順）。ユーザーの発言(user)を受けて、あなたはどうするべきか。",
+    "criteria": {
+     "wake": "返事か作業が要る。質問、依頼、許可、訂正、方針の変更や中止、不満、相談。",
+     "stamp": "スタンプで足りる。お礼、相づち、感想、雑談、冗談、会話の締め。",
+     "ignore": "反応不要。誤入力、続きが来そうな途中の発言、あなた宛てではない。"
+    }
+   },
+   "kind": {
+    "positive": "wake"
+   },
+   "rule": {
+    "threshold": null,
+    "min_probability": 0.5240097692949388
+   }
+  }
+ },
+ "at": "2026-10-15T21:46:18Z",
+ "s1flow_version": "0.1.0",
+ "state_schema": {
+  "type": "object",
+  "properties": {
+   "agent": {
+    "type": "string"
+   },
+   "earlier": {
+    "type": "array",
+    "items": {
+     "type": "string"
+    }
+   },
+   "user": {
+    "type": "string"
+   }
+  },
+  "required": [
+   "agent",
+   "user"
+  ]
+ }
+}
