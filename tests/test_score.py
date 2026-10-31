@@ -109,7 +109,7 @@ def test_a_score_task_runs_reports_and_compares(tmp_path):
     assert e.measures["qwk"].value and e.measures["qwk"].value > 0.8
     assert e.selective[0].accuracy == 1.0  # the unsure fourth is left out at the chosen min probability
     md = report.render(task, "base", [e], {"rater": pr})
-    assert "| MAE |" in md
+    assert "| MAE (levels) |" in md
     c = comparison.collect(task)
     row = next(r for r in c.candidates if r.model == "rater")
     assert row.value == e.objective.value and {"mae", "qwk", "brier"} <= set(row.metrics)

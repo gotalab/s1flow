@@ -31,7 +31,8 @@ from .evaluation import (
     Evaluation,
     Failures,
 )
-from .objectives.declare import Constraints, Objective
+from .objectives.declare import METRICS, Constraints, Objective
+from .objectives.measure import MEASURES, measured_as
 from .run import run_path
 from .task import Task
 
@@ -211,30 +212,6 @@ def _empty_failures(total: int, reason: str | None = None) -> Failures:
                     never_asked=total if reason else 0, failed_cases=0, refused_cases=0)
 
 
-_KNOWN_METRIC_LABELS = {
-    "accuracy": "accuracy",
-    "precision": "precision",
-    "recall": "recall",
-    "f1": "F1",
-    "macro_f1": "macro-F1",
-    "mean_iou": "mean IoU",
-    "mae": "MAE (levels)",
-    "qwk": "QWK",
-    "auroc": "AUROC",
-    "brier": "Brier score",
-    "ece": "ECE",
-}
-_KNOWN_METRIC_UNITS: dict[str, Literal["share", "number"]] = {
-    "accuracy": "share", "precision": "share", "recall": "share",
-    "f1": "number", "macro_f1": "number", "mean_iou": "number", "mae": "number", "qwk": "number",
-    "auroc": "number", "brier": "number", "ece": "number",
-}
-_KNOWN_METRIC_DIRECTIONS: dict[str, Literal["max", "min"]] = {
-    "accuracy": "max", "precision": "max", "recall": "max", "f1": "max",
-    "macro_f1": "max", "mean_iou": "max", "mae": "min", "qwk": "max", "auroc": "max", "brier": "min", "ece": "min",
-}
-
-
 def _target_key(target: float) -> str:
     """Stable, compact target text used in selective metric keys."""
     return format(float(target), ".15g")
@@ -278,49 +255,19 @@ def _metric_definitions(task: Task, evaluations: Sequence[Evaluation]) -> list[M
             seen.add(key)
 
     reading = _plain_reading_basis(task)
-    plain_bases = {
-        "accuracy": f"{reading}; correct / answered labelled dev cases",
-        "precision": f"{reading}; true positives / predicted positives among answered labelled dev cases",
-        "recall": f"{reading}; true positives / labelled positives among answered labelled dev cases",
-        "f1": f"{reading}; harmonic mean of precision and recall over answered labelled dev cases",
-        "macro_f1": f"{reading}; mean of per-class F1 over answered labelled dev cases",
-        "mean_iou": f"{reading}; mean IoU over answered labelled dev cases",
-        "mae": "expected level; mean absolute error in levels over answered labelled dev cases",
-        "qwk": f"{reading}; quadratic weighted kappa over answered labelled dev cases",
-    }
-    add("accuracy", "accuracy", "share", plain_bases["accuracy"], "max")
-    for key in task.kind.report:
-        if key in _KNOWN_METRIC_LABELS:
-            add(key, _KNOWN_METRIC_LABELS[key], _KNOWN_METRIC_UNITS[key],
-                plain_bases.get(key, "plain answers over answered labelled dev cases"), _KNOWN_METRIC_DIRECTIONS[key])
+    measured = measured_as(task.kind)
 
+    def add_metric(name: str) -> None:
+        metric, basis = METRICS[name], MEASURES[(name, measured)].basis
+        assert basis is not None, f"{name} on a {measured} question has no basis to show"
+        add(name, metric.label, metric.unit, basis.format(reading=reading), metric.direction)
+
+    # the plain answers' numbers, then what the probabilities say, when a candidate gave any
+    for name in ("accuracy", *task.kind.report):
+        add_metric(name)
     if any(e.probabilities for e in evaluations):
-        if task.kind.type == "box":
-            add("auroc", "AUROC", "number",
-                "recorded box confidence; hit-ranking AUROC over answered labelled dev cases", "max")
-            add("ece", "ECE", "number",
-                "recorded box confidence; calibration of hit correctness over answered labelled dev cases", "min")
-        elif task.kind.type == "score":
-            add("auroc", "AUROC", "number",
-                "genuine model probabilities; mean over the cuts k of AUROC(label >= k, P(level >= k)) over answered labelled dev cases", "max")
-            add("brier", "Brier score", "number",
-                "genuine model probabilities; ranked probability score over (levels - 1), over answered labelled dev cases", "min")
-            add("ece", "ECE", "number",
-                "genuine model probabilities; calibration of the rounded level's correctness over answered labelled dev cases", "min")
-        elif task.kind.binary:
-            add("auroc", "AUROC", "number",
-                "genuine model probabilities; binary positive-vs-negative AUROC over answered labelled dev cases", "max")
-            add("brier", "Brier score", "number",
-                "genuine model probabilities; binary Brier score over answered labelled dev cases", "min")
-            add("ece", "ECE", "number",
-                "genuine model probabilities; calibration of answer correctness over answered labelled dev cases", "min")
-        else:
-            add("auroc", "AUROC", "number",
-                "genuine model probabilities; macro one-v-rest AUROC over options and answered labelled dev cases", "max")
-            add("brier", "Brier score", "number",
-                "genuine model probabilities; multiclass Brier score over answered labelled dev cases", "min")
-            add("ece", "ECE", "number",
-                "genuine model probabilities; calibration of selected-answer correctness over answered labelled dev cases", "min")
+        for name in ("auroc", "brier", "ece"):
+            add_metric(name)
 
     for i, objective in enumerate(task.objectives):
         if (
