@@ -105,6 +105,8 @@
 
 ### Added
 
+- `s1flow models` runs on the base install. `s1flow models --verify` needs only `s1flow[images]`; before, both
+  needed `s1flow[eval]` and `s1flow[images]`.
 - `tiebreak` takes `"latency"` and `"cost"` beside objectives, in the order that ranks the tied candidates
   (`tiebreak=["cost", "latency"]` puts API cost first).
 - `s1flow init --task` writes every default into task.py: `split=Split(test=0.3, k=5, seed=1)`,
