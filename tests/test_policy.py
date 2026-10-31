@@ -22,6 +22,7 @@ from s1flow.eval.candidate import variant_name
 from s1flow.policies.file import PolicySpec, asked
 from s1flow.client import Client
 from s1flow.client.lineup import Lineup
+from s1flow.client import identity
 from s1flow.client.identity import execution_digest
 from s1flow.policies.state_shape import mismatch, schema_of
 from s1flow.client import Boolean, BooleanAnswer, Capabilities, Choice, ChoiceAnswer, Response, ModelBuild, ModelSpec, Usage
@@ -434,7 +435,7 @@ def test_a_decision_names_the_content_that_made_it(store, tmp_path):
     ship(store, policy())
     path = tmp_path / "policies" / "t" / "v1.json"
     raw = json.loads(path.read_text())
-    want = policies.file.policy_digest(raw)
+    want = identity.digest(raw)
     log = tmp_path / "log.jsonl"
     d = runtime_load("t", root=tmp_path / "policies", log=log).decide(STATE, case_id="c1")
     assert d.policy == "t@v1" and d.policy_digest == want and len(want) == 64
