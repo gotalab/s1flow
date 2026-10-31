@@ -1,9 +1,9 @@
 {
  "schema": "s1flow/comparison@2",
- "id": "16479b756c2cb2409262c086364c0a82f5802152b1f605815e5ea28aeebc39c2",
+ "id": "4501cbfd26ec2e9780f47c1c401d150924f94a221e4b586ddcd1512d7ca7d524",
  "task": "helpsteer2-helpfulness",
  "source": "NVIDIA HelpSteer2 (CC BY 4.0), validation split: 60 responses per helpfulness level, under 4,000 characters",
- "at": "2026-10-31T08:45:09Z",
+ "at": "2026-10-31T08:49:34Z",
  "scope": "dev",
  "question_type": "score",
  "kind_params": {},
@@ -24,7 +24,7 @@
   "min_recall": null
  },
  "data_digest": "18b53cc7f5c7dbc67a206b00a97a3685014eb944ddea1731126e08c283dd3091",
- "evaluation_contract_digest": "e1d069066613127de733f68b602cf2d1e0dcfa8293076988df5bad746879e8b3",
+ "evaluation_contract_digest": "d275571c329f38a8750a5ce3b405aea6eb4c232446c493f58755ca0ebb815e48",
  "input_adapter_digest": "29677fe5860e35150fd8a88e095470dfaf6b5353598cd18d0a45dd6d442396bb",
  "binding_digests": {
   "clef": "b4f3fcdd2397ffcee0b38f29781c0f4b0b74045b26bd2bfd231ff3d6477bac95",
@@ -214,7 +214,9 @@
    "excluded": [
     "missing run evidence for clef"
    ],
-   "adoption_blocked": [],
+   "adoption_blocked": [
+    "score questions are comparable but cannot be adopted as runtime policies"
+   ],
    "probabilities": false,
    "failures": {
     "calls": 0,
@@ -312,7 +314,9 @@
    "excluded": [
     "missing run evidence for clef-flash"
    ],
-   "adoption_blocked": [],
+   "adoption_blocked": [
+    "score questions are comparable but cannot be adopted as runtime policies"
+   ],
    "probabilities": false,
    "failures": {
     "calls": 0,
@@ -429,7 +433,9 @@
     }
    },
    "excluded": [],
-   "adoption_blocked": [],
+   "adoption_blocked": [
+    "score questions are comparable but cannot be adopted as runtime policies"
+   ],
    "probabilities": true,
    "failures": {
     "calls": 210,
@@ -1394,7 +1400,9 @@
     }
    },
    "excluded": [],
-   "adoption_blocked": [],
+   "adoption_blocked": [
+    "score questions are comparable but cannot be adopted as runtime policies"
+   ],
    "probabilities": true,
    "failures": {
     "calls": 210,
@@ -2359,7 +2367,9 @@
     }
    },
    "excluded": [],
-   "adoption_blocked": [],
+   "adoption_blocked": [
+    "score questions are comparable but cannot be adopted as runtime policies"
+   ],
    "probabilities": true,
    "failures": {
     "calls": 210,
@@ -3324,7 +3334,9 @@
     }
    },
    "excluded": [],
-   "adoption_blocked": [],
+   "adoption_blocked": [
+    "score questions are comparable but cannot be adopted as runtime policies"
+   ],
    "probabilities": true,
    "failures": {
     "calls": 210,
@@ -4289,7 +4301,9 @@
     }
    },
    "excluded": [],
-   "adoption_blocked": [],
+   "adoption_blocked": [
+    "score questions are comparable but cannot be adopted as runtime policies"
+   ],
    "probabilities": true,
    "failures": {
     "calls": 210,
@@ -5254,7 +5268,9 @@
     }
    },
    "excluded": [],
-   "adoption_blocked": [],
+   "adoption_blocked": [
+    "score questions are comparable but cannot be adopted as runtime policies"
+   ],
    "probabilities": true,
    "failures": {
     "calls": 210,
@@ -6219,7 +6235,9 @@
     }
    },
    "excluded": [],
-   "adoption_blocked": [],
+   "adoption_blocked": [
+    "score questions are comparable but cannot be adopted as runtime policies"
+   ],
    "probabilities": true,
    "failures": {
     "calls": 210,
@@ -7184,7 +7202,9 @@
     }
    },
    "excluded": [],
-   "adoption_blocked": [],
+   "adoption_blocked": [
+    "score questions are comparable but cannot be adopted as runtime policies"
+   ],
    "probabilities": true,
    "failures": {
     "calls": 210,
@@ -8149,7 +8169,9 @@
     }
    },
    "excluded": [],
-   "adoption_blocked": [],
+   "adoption_blocked": [
+    "score questions are comparable but cannot be adopted as runtime policies"
+   ],
    "probabilities": true,
    "failures": {
     "calls": 210,
@@ -9114,7 +9136,9 @@
     }
    },
    "excluded": [],
-   "adoption_blocked": [],
+   "adoption_blocked": [
+    "score questions are comparable but cannot be adopted as runtime policies"
+   ],
    "probabilities": true,
    "failures": {
     "calls": 210,
@@ -10061,6 +10085,7 @@
     "missing run evidence for jev"
    ],
    "adoption_blocked": [
+    "score questions are comparable but cannot be adopted as runtime policies",
     "model is an alias; adopt a pinned model version"
    ],
    "probabilities": false,
@@ -10179,7 +10204,9 @@
     }
    },
    "excluded": [],
-   "adoption_blocked": [],
+   "adoption_blocked": [
+    "score questions are comparable but cannot be adopted as runtime policies"
+   ],
    "probabilities": true,
    "failures": {
     "calls": 210,
@@ -11151,7 +11178,9 @@
     }
    },
    "excluded": [],
-   "adoption_blocked": [],
+   "adoption_blocked": [
+    "score questions are comparable but cannot be adopted as runtime policies"
+   ],
    "probabilities": true,
    "failures": {
     "calls": 210,
@@ -12116,7 +12145,9 @@
     }
    },
    "excluded": [],
-   "adoption_blocked": [],
+   "adoption_blocked": [
+    "score questions are comparable but cannot be adopted as runtime policies"
+   ],
    "probabilities": true,
    "failures": {
     "calls": 210,
@@ -13081,7 +13112,9 @@
     }
    },
    "excluded": [],
-   "adoption_blocked": [],
+   "adoption_blocked": [
+    "score questions are comparable but cannot be adopted as runtime policies"
+   ],
    "probabilities": true,
    "failures": {
     "calls": 210,
@@ -14053,7 +14086,9 @@
     }
    },
    "excluded": [],
-   "adoption_blocked": [],
+   "adoption_blocked": [
+    "score questions are comparable but cannot be adopted as runtime policies"
+   ],
    "probabilities": true,
    "failures": {
     "calls": 210,
@@ -15018,7 +15053,9 @@
     }
    },
    "excluded": [],
-   "adoption_blocked": [],
+   "adoption_blocked": [
+    "score questions are comparable but cannot be adopted as runtime policies"
+   ],
    "probabilities": true,
    "failures": {
     "calls": 210,
@@ -15983,7 +16020,9 @@
     }
    },
    "excluded": [],
-   "adoption_blocked": [],
+   "adoption_blocked": [
+    "score questions are comparable but cannot be adopted as runtime policies"
+   ],
    "probabilities": true,
    "failures": {
     "calls": 210,

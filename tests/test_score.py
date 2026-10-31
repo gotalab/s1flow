@@ -113,3 +113,4 @@ def test_a_score_task_runs_reports_and_compares(tmp_path):
     c = comparison.collect(task)
     row = next(r for r in c.candidates if r.model == "rater")
     assert row.value == e.objective.value and {"mae", "qwk", "brier"} <= set(row.metrics)
+    assert row.adoption_blocked == ["score questions are comparable but cannot be adopted as runtime policies"]

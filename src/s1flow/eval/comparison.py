@@ -187,8 +187,8 @@ def _measurement(item: _CandidateInput, pr: metrics.Preds | None) -> Measurement
 
 def _adoption_blocked(task: Task, item: _CandidateInput) -> list[str]:
     blocked: list[str] = []
-    if task.kind.type == "box":
-        blocked.append("box questions are comparable but cannot be adopted as runtime policies")
+    if not task.kind.adoptable:
+        blocked.append(f"{task.kind.type} questions are comparable but cannot be adopted as runtime policies")
     spec = item.spec
     if spec is not None and spec.versions is not None and spec.version is None:
         blocked.append("model is an alias; adopt a pinned model version")
