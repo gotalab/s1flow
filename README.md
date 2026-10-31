@@ -20,13 +20,13 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/automation-share-dark.svg">
-  <img alt="Share of Ruff issues each model can route on its own while staying 95% accurate: d1-ultra 88%, mammoth-1 86%, Decider 85%, Jev 1.14 75%. Accuracy over all 361 cases: 90%, 91%, 90%, 85%." src="docs/images/automation-share.svg">
+  <img alt="Share of Ruff issues each model can route on its own while staying 95% accurate: d1-ultra 88%, Drex Max 87%, mammoth-1 86%, Decider 85%, Span-02 80%, Jev 1.14 75%, Clef 69%. Accuracy over all 361 cases: 90%, 90%, 91%, 90%, 88%, 85%, 86%." src="docs/images/automation-share.svg">
 </picture>
 
-Routing Ruff's issues to the area they concern, these four models are within 6 points of each other on
-accuracy, yet the share of issues each can route on its own while staying 95% accurate ranges from 75% to 88%.
+Routing Ruff's issues to the area they concern, these seven models are within 6 points of each other on
+accuracy, yet the share of issues each can route on its own while staying 95% accurate ranges from 69% to 88%.
 That share needs a confidence with every answer, so the uncertain issues can go to a person while the rest are
-acted on. The numbers are a snapshot of four of the 17 decision models in the [reports](apps/bench/reports),
+acted on. The numbers are a snapshot of seven of the 17 decision models in the [reports](apps/bench/reports),
 each task scored by its own objective, not a ranking of providers. Your own cases may tell a different story,
 which is exactly why you measure them.
 
