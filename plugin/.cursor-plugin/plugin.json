@@ -1,7 +1,6 @@
 {
   "name": "s1flow",
   "description": "The s1flow Agent Skill: collect and review labeled cases, compare decision models and prompts, and adopt a policy your app runs with the s1flow SDK.",
-  "version": "0.1.0",
   "author": {
     "name": "gotalab"
   },
