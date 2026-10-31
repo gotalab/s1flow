@@ -36,9 +36,9 @@ from ..answers import Answer, BooleanAnswer, BoxAnswer, BoxEdges, ChoiceAnswer, 
 from ..boxes import iou
 from ..images import data_url, placeholders
 from ..models import Capabilities, ModelBuild, ModelSpec, Price, check_supported
-from ..questions import TEXT_TYPES, Boolean, Choice, Questions, Score
+from ..questions import Boolean, Choice, Questions, Score
 from ..state import Image, State, has_image
-from .build import Options, declared, options, spec_options
+from .build import Options, options, spec_options
 from .http import AUTH_STATUS, refused_without, retryable
 from .needs import Needs, declares, litellm_needs
 from .published import per_token, publishes
@@ -222,8 +222,8 @@ def _raw(usage: Any) -> Any:
 
 class LLMModel:
     def __init__(
-        self, model: str, *, samples: int = 1, concurrency: int = 8, api_key_env: str | None = None, image: bool = False,
-        box_units: BoxUnits | None = None, capabilities: Capabilities | None = None, cache_dir: Path | None = None,
+        self, model: str, *, capabilities: Capabilities, samples: int = 1, concurrency: int = 8, api_key_env: str | None = None,
+        box_units: BoxUnits | None = None, cache_dir: Path | None = None,
     ):
         self.box_units: BoxUnits = box_units or "k1000"
         self.model = model
@@ -232,9 +232,7 @@ class LLMModel:
         self.concurrency = concurrency
         # An LLM returns no distribution: k samples make one ("sampled"), one sample has none.
         distribution: Literal["sampled", "none"] = "sampled" if samples > 1 else "none"
-        self.capabilities = (capabilities or Capabilities(
-            context_tokens=128_000, image=image, question_types=TEXT_TYPES | {"box"} if box_units else TEXT_TYPES,
-        )).model_copy(update={"distribution": distribution})
+        self.capabilities = capabilities.model_copy(update={"distribution": distribution})
         self.api_key_env = api_key_env
         self.cache_dir = cache_dir  # for the gateway's price list
 
@@ -322,7 +320,7 @@ def build(b: ModelBuild) -> LLMModel:
     caps = b.spec.capabilities
     if "box" in caps.question_types and o.box_units is None:
         raise ConfigError(f"{b.name}: Box questions need options.box_units (k1000 or pixels), the units this LLM answers in")
-    if declared(b) and "distribution" in caps.model_fields_set:
+    if "distribution" in caps.model_fields_set:
         raise ConfigError(f"{b.name}: an LLM's distribution follows options.samples; leave it out of capabilities")
     return LLMModel(
         b.spec.id, samples=o.samples, concurrency=b.spec.concurrency or 8, api_key_env=o.api_key_env,

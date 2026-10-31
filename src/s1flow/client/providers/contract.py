@@ -47,10 +47,8 @@ def validate_response(response: object, questions: Questions, provider: str) -> 
     """Validate the provider's typed response against the questions it was asked."""
     if not isinstance(response, Response):
         raise ProviderError(f"{provider} returned a malformed response outside the contract")
-    if not isinstance(response.answered_by, str) or not response.answered_by.strip():
+    if not response.answered_by.strip():
         raise ProviderError(f"{provider} returned blank answered_by outside the contract")
-    if not isinstance(response.answers, dict):
-        raise ProviderError(f"{provider} returned malformed answers outside the contract")
     missing = [qid for qid in questions if qid not in response.answers]
     if missing:
         raise ProviderError(f"{provider} answered without {', '.join(missing)}, outside the contract")
@@ -84,7 +82,8 @@ def _validate_answer(qid: str, question: Any, answer: Answer) -> None:
 def validate_answer_values(
     qid: str, answer: Answer, *, options: Iterable[str] | None = None, levels: int | None = None,
 ) -> None:
-    """Validate numeric answer values and any option/level membership available to a reader."""
+    """Validate numeric answer values and any option/level membership available to a reader. The answer types
+    already hold the rest (a box's edges are in 0..1 and in order: `BoxEdges`)."""
     if isinstance(answer, BooleanAnswer):
         _probability(qid, "probability", answer.probability)
         return
@@ -97,30 +96,20 @@ def validate_answer_values(
         _confidence(qid, answer.confidence)
         return
     if isinstance(answer, ScoreAnswer):
-        score = _number(qid, "score", answer.score)
+        score = answer.score
+        if not math.isfinite(score):
+            _fail(qid, f"score must be finite, got {score!r}")
         if levels is not None and not 0 <= score <= levels - 1:
             _fail(qid, f"score {score:g} is outside the levels 0..{levels - 1}")
         _distribution(qid, answer.probabilities, (str(i) for i in range(levels)) if levels is not None else None)
         _confidence(qid, answer.confidence)
         return
     if isinstance(answer, BoxAnswer):
-        box = answer.box
-        for edge in ("top", "bottom", "left", "right"):
-            value = getattr(box, edge, None)
-            if value is None:
-                _fail(qid, f"box is missing {edge}")
-            _number(qid, f"box.{edge}", value, low=0, high=1)
-        if box.top > box.bottom or box.left > box.right:
-            _fail(qid, f"box edges are out of order: {box}")
         _confidence(qid, answer.confidence)
         _confidence(qid, answer.agreement, name="agreement")
 
 
-def _distribution(qid: str, probabilities: object, options: Iterable[str] | None) -> None:
-    if probabilities is None:
-        return
-    if not isinstance(probabilities, dict):
-        _fail(qid, f"probabilities must be a mapping, got {type(probabilities).__name__}")
+def _distribution(qid: str, probabilities: dict[str, float] | None, options: Iterable[str] | None) -> None:
     if not probabilities:
         return  # an empty map has the same no-distribution meaning as None
     allowed = None if options is None else set(options)
@@ -134,34 +123,15 @@ def _distribution(qid: str, probabilities: object, options: Iterable[str] | None
         _fail(qid, "distribution has no positive mass on the question's options")
 
 
-def _confidence(qid: str, value: object, *, name: str = "confidence") -> None:
+def _confidence(qid: str, value: float | None, *, name: str = "confidence") -> None:
     if value is not None:
         _probability(qid, name, value)
 
 
-def _probability(qid: str, name: str, value: object) -> float:
-    return _number(qid, name, value, low=0, high=1)
-
-
-def _number(qid: str, name: str, value: object, *, low: float | None = None, high: float | None = None) -> float:
-    if isinstance(value, bool):
-        _fail(qid, f"{name} must be a finite number, got {value!r}")
-    if not isinstance(value, (int, float, str)):
-        _fail(qid, f"{name} must be a finite number, got {value!r}")
-    try:
-        number = float(value)
-    except (TypeError, ValueError, OverflowError):
-        _fail(qid, f"{name} must be a finite number, got {value!r}")
-    if not math.isfinite(number) or (low is not None and number < low) or (high is not None and number > high):
-        bounds = ""
-        if low is not None and high is not None:
-            bounds = f" between {low:g} and {high:g}"
-        elif low is not None:
-            bounds = f" at least {low:g}"
-        elif high is not None:
-            bounds = f" at most {high:g}"
-        _fail(qid, f"{name} must be finite{bounds}, got {value!r}")
-    return number
+def _probability(qid: str, name: str, value: float) -> float:
+    if not 0 <= value <= 1:  # NaN too
+        _fail(qid, f"{name} must be finite between 0 and 1, got {value!r}")
+    return value
 
 
 def _fail(qid: str, detail: str) -> NoReturn:

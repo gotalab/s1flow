@@ -35,8 +35,3 @@ def options(kind: type[O], b: ModelBuild) -> O:
         return spec_options(kind, b.spec)
     except ConfigError as e:
         raise ConfigError(f"{b.name}: {e}") from None
-
-
-def declared(b: ModelBuild) -> bool:
-    """Whether s1flow.toml declared capabilities for this model (rather than leaving the default)."""
-    return "capabilities" in b.spec.model_fields_set

@@ -1,15 +1,16 @@
 """A provider of your own, as s1flow.toml names one ("toy_provider:build"): it answers all four question types
-from the words of the state, so a test can call it without a network. Imports s1flow.client alone."""
+from the words of the state, so a test can call it without a network. Imports s1flow.client and its errors alone."""
 
 from __future__ import annotations
 
+import os
 from typing import Any
 
 from s1flow.client import (
     BooleanAnswer, BoxAnswer, BoxEdges, Capabilities, ChoiceAnswer, Response, ModelBuild, Questions, Refusal, ScoreAnswer, State, Usage,
 )
 from s1flow.client.models import check_supported
-from s1flow.client.providers.keys import key
+from s1flow.core.errors import ConfigError
 
 
 class Toy:
@@ -21,8 +22,8 @@ class Toy:
 
     async def decide(self, state: State, questions: Questions, *, options: dict[str, Any] | None = None) -> Response:
         check_supported(self, state, questions)
-        if self.key_env:
-            key(self.key_env)
+        if self.key_env and not os.environ.get(self.key_env):
+            raise ConfigError(f"{self.key_env} is not set")
         self.calls += 1
         text = str(state).lower()
         out: dict[str, Any] = {}

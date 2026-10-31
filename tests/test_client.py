@@ -97,10 +97,11 @@ def test_an_answer_missing_a_question_is_the_providers_failure(toml):
         ("area", QS["area"], "choice", "option"),
         ("area", QS["area"], "distribution", "probability"),
         ("area", QS["area"], "type", "type"),
+        ("severity", QS["severity"], "inf_score", "score must be finite"),
     ],
 )
 def test_a_provider_answer_stays_inside_the_question_contract(toml, qid, question, answer_kind, detail):
-    from s1flow.client import BooleanAnswer, ChoiceAnswer, Response
+    from s1flow.client import BooleanAnswer, ChoiceAnswer, Response, ScoreAnswer
 
     class Broken:
         id, concurrency = "broken", 1
@@ -113,6 +114,7 @@ def test_a_provider_answer_stays_inside_the_question_contract(toml, qid, questio
                 "choice": ChoiceAnswer(choice="bogus"),
                 "distribution": ChoiceAnswer(choice="formatter", probabilities={"formatter": 2}),
                 "type": BooleanAnswer(probability=0.5),
+                "inf_score": ScoreAnswer(score=float("inf")),
             }[answer_kind]
             return Response(answers={qid: answer}, answered_by="broken-1")
 
