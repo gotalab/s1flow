@@ -31,7 +31,7 @@ from ..policies.history import Switch
 from .candidate import Candidate
 from ..policies.state_shape import schema_of
 from . import evalset, metrics, weights
-from .evaluation import Calls, Evaluation, ObjectiveScore
+from .evaluation import Calls, Evaluation, ObjectiveScore, why_missing
 from .policy import EvaluatedPolicy, Evidence, Pin, Selection, pin
 from .run import Conditions, ask_again
 from .select import Ranked, rank, unlike_among_tied
@@ -73,14 +73,6 @@ def candidates(task: Task, only: list[str] | None = None, variants: list[str] | 
                 continue
             out.append((Candidate(model=model, variant=variant).name, model, variant))
     return out
-
-
-def missing(pr: metrics.Preds) -> str:
-    """Why a candidate has no answer to some labelled cases: never asked, or every call failed (not a refusal)."""
-    return " and ".join(x for x in (
-        f"{len(pr.never_asked)} cases never asked" if pr.never_asked else "",
-        f"{len(pr.failed_cases)} cases whose every call failed" if pr.failed_cases else "",
-    ) if x)
 
 
 def rule_for(task: Task, score: ObjectiveScore) -> DecisionRule:
@@ -177,7 +169,7 @@ def shortlist(task: Task, only: list[str] | None = None, variants: list[str] | N
         raise NotFound(f"no runs for {task.id}; s1flow run {task.id} first")
     measured = Conditions.now(task, [Candidate(model=m, variant=v) for _, m, v in cands], task.where.declared_connections().resolved)
     preds = {name: metrics.load(task, variant, model) for name, model, variant in cands}
-    gaps = {c: missing(preds[c[0]]) for c in cands if preds[c[0]].never_asked or preds[c[0]].failed_cases}
+    gaps = {c: why_missing(len(preds[c[0]].never_asked), len(preds[c[0]].failed_cases)) for c in cands if preds[c[0]].never_asked or preds[c[0]].failed_cases}
     if gaps:
         # candidates compared on different cases are not compared: a model that skipped the new cases, or whose calls
         # failed on some, is scored on the rest only and can look better than one that answered them all

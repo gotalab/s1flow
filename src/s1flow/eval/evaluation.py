@@ -55,6 +55,12 @@ class Failures(_Frozen):
         return (self.never_asked or 0) + (self.failed_cases or 0)
 
 
+def why_missing(never_asked: int, failed_cases: int) -> str:
+    """The cases `Failures.missing` counts, in words: what report, adopt and comparison say a candidate left out."""
+    return " and ".join(x for x in (f"{never_asked} cases never asked" if never_asked else "",
+                                    f"{failed_cases} cases whose every call failed" if failed_cases else "") if x)
+
+
 class Selective(_Frozen):
     """Answer sure only where the probability reaches a cut, keeping `target_accuracy` on the sure answers."""
 
