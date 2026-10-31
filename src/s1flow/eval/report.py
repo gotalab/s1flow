@@ -12,7 +12,7 @@ from ..core import clock
 from .kinds import Kind
 from .evaluation import Estimate, Evaluation, Floor, ObjectiveScore, cost_note
 from .objectives import measure
-from .objectives.declare import Objective
+from .objectives.declare import METRICS, Objective
 from .objectives.measure import bound
 from . import evalset, metrics
 from .run import ask_again
@@ -188,13 +188,11 @@ def pareto(o0: Objective, ranked: list[Ranked], by: dict[str, Evaluation]) -> se
     return {m for m, a in pts.items() if not any(beats(b, a) for b in pts.values())}
 
 
-REPORTED = {"f1": "F1", "macro_f1": "macro-F1", "mean_iou": "mean IoU", "mae": "MAE"}  # a kind's own number, as the comparison heads it
-
-
 def render(task: Task, variant: str, evs: list[Evaluation], preds: dict[str, metrics.Preds]) -> str:
     sf = evalset.current(task)
     cases = {cid: c for cid, c in task.load_cases().by_id().items() if sf.assign.get(cid) != "test"}
     kind = task.kind
+    own = kind.report[0]  # the kind's own number, beside its accuracy
     box = kind.type == "box"
     first = next((e for e in evs if e.n), None)
     labelled = [c for c in task.load_cases().labelled() if sf.assign.get(c.id) != "test"]
@@ -211,7 +209,8 @@ def render(task: Task, variant: str, evs: list[Evaluation], preds: dict[str, met
         "",
         "## Comparison",
         "",
-        "| model | scored | accuracy | " + REPORTED[kind.report[0]] + " | AUROC | ECE | coverage | sure accuracy (lower bound) | refused / unsupported | failed |",
+        "| model | scored | " + " | ".join(METRICS[name].label for name in ("accuracy", own, "auroc", "ece"))
+        + " | coverage | sure accuracy (lower bound) | refused / unsupported | failed |",
         "|---|---|---|---|---|---|---|---|---|---|",
     ]
     for e in evs:
@@ -223,7 +222,7 @@ def render(task: Task, variant: str, evs: list[Evaluation], preds: dict[str, met
         flag = "" if e.probabilities else " ※"
         acc = e.accuracy or Estimate(value=None)
         L.append(
-            f"| {e.candidate.name}{flag}{' ✕' if f.missing else ''} | {e.n} | {pct(acc.value, 1)}{band(acc.interval)} | {num(e.measures[kind.report[0]].value if kind.report[0] in e.measures else None)} | {num(e.auroc.value if e.auroc else None)} | {num(e.ece)} "
+            f"| {e.candidate.name}{flag}{' ✕' if f.missing else ''} | {e.n} | {pct(acc.value, 1)}{band(acc.interval)} | {num(e.measures[own].value if own in e.measures else None)} | {num(e.auroc.value if e.auroc else None)} | {num(e.ece)} "
             f"| {pct(s.coverage.value)}{band(s.coverage.interval)} | {pct(s.accuracy, 1)} ({pct(s.lower, 1)}) | {f.unsupported}/{f.calls} | {f.failed}/{f.calls} |"
         )
     L += left_out(task, evs)

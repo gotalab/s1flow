@@ -243,16 +243,6 @@ def labels_needed(correct: int, n: int, coverage: float, target: float) -> int |
     return int(np.ceil((lo - n) / coverage))
 
 
-def ece(conf: np.ndarray, correct: np.ndarray, bins: int = 10) -> float:
-    edges = np.linspace(0, 1, bins + 1)
-    total = 0.0
-    for i in range(bins):
-        m = (conf > edges[i]) & (conf <= edges[i + 1]) if i else (conf >= 0) & (conf <= edges[1])
-        if m.any():
-            total += m.mean() * abs(conf[m].mean() - correct[m].mean())
-    return float(total)
-
-
 def _better(b: Bound, v: float | None, than: float | None) -> bool:
     if v is None:
         return False
@@ -452,7 +442,7 @@ def evaluate(task: Task, pr: Preds, target: float | None = None, variant: str = 
         split=splitting.describe(plan), split_method=str(plan.method),
         accuracy=Estimate(value=accuracy.value(p0[dev]), interval=acc_i), measures={k: Estimate(value=v) for k, v in reported.items()},
         auroc=Estimate(value=auroc.value(p0[dev]), interval=au_i),
-        brier=measure.measure("brier", p0[dev]), ece=ece(conf[dev], correct[dev]),
+        brier=measure.measure("brier", p0[dev]), ece=measure.measure("ece", p0[dev]),
         selective=selective, error_loss_threshold=threshold, floors=floor_rows,
         sweep=sweep(p0.y[dev], p0.p_positive[dev], sorted({*SWEEP, threshold.chosen})) if threshold else None,
         objective=_score(primary, dev, primary_i), tiebreak=[_score(r, dev, i) for r, i in zip(later, later_i)],

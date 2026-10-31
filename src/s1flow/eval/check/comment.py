@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 from ..evaluation import cost_note
-from ..objectives.declare import Objective
+from ..objectives.declare import METRICS, Objective
 from ..objectives.measure import BOOTSTRAP
 from ..shown import pct, usd
 from ..task import Task
@@ -59,7 +59,7 @@ def markdown(task: Task, r: CheckResult) -> str:
     fixed: list[tuple[str | None, str, list[str], str]] = [
         ("coverage", "sure share", [f"{pct(s.coverage, 1)} ({s.sure})" for s in sides], _diff(None, d.coverage) if d else ""),
         (None, "sure accuracy", [f"{pct(s.sure_accuracy, 1)} ({s.sure_errors} wrong)" for s in sides], _diff(None, d.sure_accuracy) if d else ""),
-        ("accuracy", "accuracy (all)", [pct(s.accuracy, 1) for s in sides], _diff(None, d.accuracy) if d else ""),
+        ("accuracy", METRICS["accuracy"].label, [pct(s.accuracy, 1) for s in sides], _diff(None, d.accuracy) if d else ""),
     ]
     rows: list[tuple[str, list[str], str]] = []
     if o0.name not in {name for name, *_ in fixed}:

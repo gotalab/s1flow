@@ -41,6 +41,7 @@ interval. Only the built-ins hold a constraint.
 from __future__ import annotations
 
 import json
+from dataclasses import dataclass
 from typing import Any, Callable, Literal, cast
 
 from pydantic import BaseModel, ConfigDict, Field, JsonValue
@@ -101,31 +102,63 @@ def ExpectedLoss(fn: float = 1.0, fp: float = 1.0) -> Objective:
                      label=f"loss per case (miss {fn:g}, false alarm {fp:g})")
 
 
+@dataclass(frozen=True)
+class Metric:
+    """What a number measured on the answers is called, how it is shown and which way is better."""
+
+    label: str
+    unit: Literal["share", "number"]
+    direction: Literal["max", "min"]
+
+
+# Each number without params, by name, wherever it is shown: the objectives below, the report's columns, the
+# comparison's metric definitions, a check's rows. Which kinds have it, and on what, is MEASURES' (measure.py).
+METRICS: dict[str, Metric] = {
+    "accuracy": Metric("accuracy (all)", "share", "max"),
+    "precision": Metric("precision", "share", "max"),
+    "recall": Metric("recall", "share", "max"),
+    "f1": Metric("F1", "number", "max"),
+    "macro_f1": Metric("macro-F1", "number", "max"),
+    "mean_iou": Metric("mean IoU", "number", "max"),
+    "mae": Metric("MAE (levels)", "number", "min"),
+    "qwk": Metric("QWK", "number", "max"),
+    "auroc": Metric("AUROC", "number", "max"),
+    "brier": Metric("Brier score", "number", "min"),
+    "ece": Metric("ECE", "number", "min"),
+}
+
+
+def _plain(name: str, sets: RuleField | None = None) -> Objective:
+    """An objective without params, named and shown as its metric."""
+    m = METRICS[name]
+    return Objective(name=name, direction=m.direction, sets=sets, unit=m.unit, label=m.label)
+
+
 def AUROC() -> Objective:
-    return Objective(name="auroc", direction="max", sets=None, unit="number", label="AUROC")
+    return _plain("auroc")
 
 
 def Accuracy() -> Objective:
-    return Objective(name="accuracy", direction="max", sets=None, unit="share", label="accuracy (all)")
+    return _plain("accuracy")
 
 
 def F1() -> Objective:
     """F1 of the positive (2 x hits / (positives + cases read positive)), at the P(positive) threshold it chooses."""
-    return Objective(name="f1", direction="max", sets="threshold", unit="number", label="F1")
+    return _plain("f1", sets="threshold")
 
 
 def MacroF1() -> Objective:
-    return Objective(name="macro_f1", direction="max", sets=None, unit="number", label="macro-F1")
+    return _plain("macro_f1")
 
 
 def MAE() -> Objective:
     """The mean absolute error of a score question's expected level, in levels (a failed call is as far off as its label can be)."""
-    return Objective(name="mae", direction="min", sets=None, unit="number", label="MAE (levels)")
+    return _plain("mae")
 
 
 def QWK() -> Objective:
     """Quadratic weighted kappa of a score question's level (the expected level, rounded) against its label: 1 agrees, 0 is chance."""
-    return Objective(name="qwk", direction="max", sets=None, unit="number", label="QWK")
+    return _plain("qwk")
 
 
 def Loss(default: float = 1.0, losses: dict[str, dict[str, float]] | None = None, unsure: float | None = None) -> Objective:
