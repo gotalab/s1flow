@@ -5,7 +5,7 @@ The checks below run offline and need no API keys. To call real models from the 
 
 ```bash
 uv sync --frozen
-uv run pytest -q -n auto   # also checks schema/, the import contracts and the wheel
+uv run pytest -q -n auto --dist worksteal   # also checks schema/, the import contracts and the wheel
 uv run ruff check          # pyflakes: unused imports and variables, undefined names
 uv run mypy src/s1flow
 ```

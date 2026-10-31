@@ -20,7 +20,7 @@ from dataclasses import dataclass, replace
 from typing import Any, Callable, Sequence
 
 import numpy as np
-from scipy.stats import beta, rankdata
+from scipy.special import betaincinv
 
 from ...client.answers import BoxEdges
 from ...client.boxes import iou
@@ -57,8 +57,8 @@ class Pairs:
         return len(self.y)
 
     def __getitem__(self, idx: np.ndarray) -> Pairs:
-        return replace(
-            self, y=self.y[idx], ok=self.ok[idx], value=self.value[idx], unsure=self.unsure[idx], min_probability_set=self.min_probability_set[idx], correct=self.correct[idx],
+        return Pairs(  # not dataclasses.replace: a bootstrap takes thousands of these
+            measured=self.measured, options=self.options, levels=self.levels, y=self.y[idx], ok=self.ok[idx], value=self.value[idx], unsure=self.unsure[idx], min_probability_set=self.min_probability_set[idx], correct=self.correct[idx],
             probability=self.probability[idx], p_positive=self.p_positive[idx], confidence=self.confidence[idx],
             distribution=None if self.distribution is None else self.distribution[idx], expected=self.expected[idx],
         )
@@ -124,9 +124,9 @@ def pairs(kind: Kind, labels: Sequence[Any], readings: Sequence[Reading | None])
 
 def cp_lower(k: int, n: int, level: float = 0.95) -> float:
     """One-sided Clopper-Pearson lower bound on a proportion."""
-    if n == 0:
+    if n == 0 or k == 0:
         return 0.0
-    return 0.0 if k == 0 else float(beta.ppf(1 - level, k, n - k + 1))
+    return float(betaincinv(k, n - k + 1, 1 - level))  # scipy.stats.beta.ppf, without importing scipy.stats (most of a second)
 
 
 def cp_upper(k: int, n: int, level: float = 0.95) -> float:
@@ -214,8 +214,21 @@ def _auc(pos: np.ndarray, score: np.ndarray) -> float | None:
     n0 = len(pos) - n1
     if n1 == 0 or n0 == 0:
         return None
-    r = rankdata(score)
+    r = _ranks(score)
     return float((r[pos].sum() - n1 * (n1 + 1) / 2) / (n1 * n0))
+
+
+def _ranks(x: np.ndarray) -> np.ndarray:
+    """The 1-based ranks of `x`, ties at their average: scipy.stats.rankdata's default, without its per-call checks
+    (a bootstrap ranks each of its draws)."""
+    order = np.argsort(x, kind="mergesort")
+    xs = x[order]
+    new = np.concatenate(([True], xs[1:] != xs[:-1]))
+    starts = np.concatenate((np.flatnonzero(new), [len(x)]))
+    group = np.cumsum(new) - 1
+    ranks = np.empty(len(x))
+    ranks[order] = (starts[group] + starts[group + 1] + 1) / 2
+    return ranks
 
 
 def _f1(tp: np.ndarray, true: np.ndarray, said: np.ndarray) -> np.ndarray:
