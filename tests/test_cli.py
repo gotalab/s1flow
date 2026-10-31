@@ -2,21 +2,13 @@
 
 from __future__ import annotations
 
-import os
-import subprocess
-import sys
-from pathlib import Path
 
 import pytest
 
+from conftest import s1flow
+
 from s1flow.cli import EXITS, HELP, TABLE
 
-HERE = Path(__file__).parent
-
-
-def s1flow(*args: str, cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
-    env = {k: v for k, v in os.environ.items() if not k.startswith("S1FLOW_")} | {"PYTHONPATH": str(HERE)}
-    return subprocess.run([sys.executable, "-c", "from s1flow.cli import main; main()", *args], cwd=cwd, capture_output=True, text=True, env=env)
 
 
 @pytest.mark.parametrize("args, said", [
