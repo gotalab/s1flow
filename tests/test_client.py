@@ -89,9 +89,12 @@ def test_an_answer_missing_a_question_is_the_providers_failure(toml):
         Client(toml).responses.create(model=Short(), state="x", questions={"bug": QS["bug"], "area": QS["area"]})
 
 
-def test_an_answer_that_skipped_validation_is_the_providers_failure(toml):
-    """A value set after construction never went through pydantic; it is a ProviderError, not a bug in s1flow."""
-    from s1flow.client import BooleanAnswer, Response
+def test_an_answer_cannot_be_changed_past_validation(toml):
+    """Answers and responses are frozen, so a value set after construction cannot skip pydantic: a provider
+    that tries fails as a ProviderError, not later as a bug in s1flow."""
+    from pydantic import ValidationError
+
+    from s1flow.client import BooleanAnswer, BoxAnswer, BoxEdges, Response
 
     class Mutated:
         id, concurrency = "mutated", 1
@@ -99,11 +102,15 @@ def test_an_answer_that_skipped_validation_is_the_providers_failure(toml):
 
         async def decide(self, state, questions, *, options=None):
             answer = BooleanAnswer(probability=0.5)
-            answer.probability = "high"  # type: ignore[assignment]
+            answer.probability = "high"  # type: ignore[misc]
             return Response(answers={"bug": answer}, answered_by="mutated-1")
 
     with pytest.raises(ProviderError, match="malformed response outside the contract"):
         Client(toml).responses.create(model=Mutated(), state="x", questions={"bug": QS["bug"]})
+    box = BoxAnswer(box=BoxEdges(top=0, bottom=1, left=0, right=1))
+    for model, field in ((box, "box"), (Response(answers={"b": box}, answered_by="m"), "answered_by")):
+        with pytest.raises(ValidationError, match="frozen"):
+            setattr(model, field, None)
 
 
 @pytest.mark.parametrize(
