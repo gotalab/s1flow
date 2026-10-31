@@ -546,16 +546,19 @@ def _percentile(ms: np.ndarray, at: float) -> float | None:
 
 
 def _p90s(ms: np.ndarray, resamples: list[np.ndarray]) -> list[float]:
-    """`_percentile(ms[r], 90)` of each resample `r` that has a recorded latency, the ones of a size computed together."""
-    if not resamples:
-        return []
-    drawn = np.sort(ms[np.stack(resamples)], axis=1)  # the unrecorded (nan) last
-    known = (~np.isnan(drawn)).sum(axis=1)
-    out = np.full(len(drawn), np.nan)
-    for k in np.unique(known[known > 0]):
-        rows = known == k
-        out[rows] = np.percentile(drawn[rows, :k], 90, axis=1)
-    return [float(v) for v in out[known > 0]]
+    """`_percentile(ms[r], 90)` of each resample `r` that has a recorded latency, the ones of a size computed together
+    (a batch of resamples at a time, about a million values, so a large evaluation needs no matrix of them all)."""
+    out: list[float] = []
+    batch = max(1, 2**20 // max(1, len(resamples[0]) if resamples else 1))
+    for start in range(0, len(resamples), batch):
+        drawn = np.sort(ms[np.stack(resamples[start:start + batch])], axis=1)  # the unrecorded (nan) last
+        known = (~np.isnan(drawn)).sum(axis=1)
+        values = np.full(len(drawn), np.nan)
+        for k in np.unique(known[known > 0]):
+            rows = known == k
+            values[rows] = np.percentile(drawn[rows, :k], 90, axis=1)
+        out += [float(v) for v in values[known > 0]]
+    return out
 
 
 def latency(pr: Preds) -> Latency | None:
