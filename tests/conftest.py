@@ -1,5 +1,5 @@
 """What more than one test file uses (a test file imports from here, never from another test file): test projects,
-a s1flow.toml whose models are this module's fakes, and tasks attached to them; the CLI in this process or a fresh one;
+a s1flow.toml whose models are this module's fakes, and tasks attached to them; the CLI in this process;
 a runtime policy and a client for it; tasks and evaluations written in a test."""
 
 from __future__ import annotations
@@ -11,7 +11,6 @@ import os
 import re
 import shutil
 import subprocess
-import sys
 import warnings
 from dataclasses import dataclass
 from pathlib import Path
@@ -170,10 +169,21 @@ def point(store, task: str, version: int):
     (store.dir(task) / "channels.json").write_text(ChannelsFile(channels={"current": version}).dump())
 
 
-def s1flow(*args: str, cwd: Path, env: dict[str, str] | None = None) -> subprocess.CompletedProcess[str]:
-    """`s1flow ARGS` in a fresh process, without the caller's S1FLOW_* settings (cli runs it in this one)."""
-    e = {k: v for k, v in os.environ.items() if not k.startswith("S1FLOW_")} | {"PYTHONPATH": str(HERE)} | (env or {})
-    return subprocess.run([sys.executable, "-c", "from s1flow.cli import main; main()", *args], cwd=cwd, capture_output=True, text=True, env=e)
+def s1flow(*args: str, cwd: Path | None = None, env: dict[str, str] | None = None) -> subprocess.CompletedProcess[str]:
+    """`s1flow ARGS` run from `cwd`, without the caller's S1FLOW_* settings and with `env` set, in this process
+    (`cli`): a fresh Python for each call took more CPU than the rest of the suite."""
+    saved_env, saved_cwd = dict(os.environ), os.getcwd()
+    try:
+        for k in [k for k in os.environ if k.startswith("S1FLOW_")]:
+            del os.environ[k]
+        os.environ.update(env or {})
+        os.chdir(cwd or saved_cwd)
+        ran = cli(*args)
+    finally:
+        os.chdir(saved_cwd)
+        os.environ.clear()
+        os.environ.update(saved_env)
+    return subprocess.CompletedProcess(["s1flow", *args], ran.exit_code, ran.output, ran.err)
 
 
 # ---------- a runtime policy and a client that answers it, without a project ----------

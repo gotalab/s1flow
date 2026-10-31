@@ -1,7 +1,7 @@
 """What each provider declares it needs (keys, hosts), and `s1flow doctor`, which checks it on the base install."""
 
 import json
-from conftest import runtime_spec, ship
+from conftest import runtime_spec, s1flow, ship
 import os
 import subprocess
 import sys
@@ -129,17 +129,14 @@ def test_reach_counts_any_answer_and_asks_each_host_once(monkeypatch):
 # ---------- the command ----------
 
 
-def s1flow(*args, cwd, env=None):
-    base = {k: v for k, v in os.environ.items() if not k.startswith("S1FLOW_") and k not in KEYS}
-    path = os.pathsep.join([str(HERE), str(cwd)])
-    return subprocess.run([sys.executable, "-c", "from s1flow.cli import main; main()", *args], cwd=cwd, capture_output=True, text=True,
-                          env=base | {"PYTHONPATH": path} | (env or {}))
-
-
 @pytest.fixture
-def project(tmp_path):
+def project(tmp_path, monkeypatch):
+    """A project whose own my_provider module is importable, with none of the keys its models need set."""
     (tmp_path / "s1flow.toml").write_text(TOML)
     (tmp_path / "my_provider.py").write_text(DECLARED)
+    monkeypatch.syspath_prepend(str(tmp_path))
+    for key in KEYS:
+        monkeypatch.delenv(key, raising=False)
     return tmp_path
 
 
