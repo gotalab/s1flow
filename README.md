@@ -8,7 +8,7 @@
     then runs that setup in your app.
   </p>
   <p><em>Is this ticket a bug? Which team owns it? Should the agent act or ask?</em></p>
-  <p><a href="#quick-start">Quick start</a> · <a href="docs/README.md">Docs</a> · <a href="apps/bench/reports">Benchmarks</a></p>
+  <p><a href="#quick-start">Quick start</a> · <a href="#docs">Docs</a> · <a href="apps/bench/reports">Benchmarks</a></p>
 </div>
 
 <picture>
