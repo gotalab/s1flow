@@ -79,7 +79,7 @@ def test_every_stored_policy_fits():
         assert errors(runtime, spec) == [], path
         record = json.loads(sidecar.read_text())
         assert errors(evidence, record) == [], sidecar
-        evaluated = store.read(spec["task"], version=spec["version"])
+        evaluated = store.evaluated(spec["task"], version=spec["version"])
         assert evaluated.spec.digest == record["policy_digest"]
         assert evaluated.evidence.execution_digest == record["evidence"]["execution_digest"]  # as stored: none is invented for an old record
 
@@ -153,4 +153,4 @@ def test_a_record_that_is_no_object_is_an_invalid_record(tmp_path, text):
     (tmp_path / "nod-wake" / "v1.json").write_text((src / "v1.json").read_text())
     (tmp_path / "nod-wake" / "v1.evaluation.json").write_text(text)
     with pytest.raises(ConfigError, match="invalid evaluation record"):
-        Store(tmp_path).read("nod-wake", version=1)
+        Store(tmp_path).evaluated("nod-wake", version=1)

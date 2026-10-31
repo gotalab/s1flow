@@ -43,7 +43,7 @@ def test_each_stored_policy_reads_with_the_policy_layer_alone(tmp_path):
     for path in POLICIES:
         spec = read_file(tmp_path / "policies" / path.parent.name / path.name)
         assert spec.question_id in spec.questions and spec.kind and spec.rule, path
-        assert store.read(spec.task, version=spec.version).spec == spec, path
+        assert store.evaluated(spec.task, version=spec.version).spec == spec, path
 
 
 def test_the_line_up_and_what_each_task_runs_read():

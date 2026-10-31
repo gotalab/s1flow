@@ -44,7 +44,7 @@ def optimize(task: Task, *, model: str | None = None, **overrides: Any) -> Optim
             raise ConfigError(f"{', '.join('--' + k.replace('_', '-') for k in overrides)} set GEPA's settings; "
                               f"{task.id} optimizes with {optimizer.name}: set its settings in task.py")
         optimizer = dataclasses.replace(optimizer, **overrides)
-    current = task.policies.read(task.id)
+    current = task.policies.evaluated(task.id)
     model = model or current.candidate.model
     adopt.adoptable(task.where.client().connections.retrieve(model).spec, model)  # before it spends anything: it must be adoptable
     start = current.candidate.variant if model == current.candidate.model else "base"
