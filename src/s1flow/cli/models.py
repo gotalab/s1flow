@@ -11,7 +11,7 @@ from .common import command, project
 
 def models(a: argparse.Namespace) -> int:
     """The line-up: what each model declares (s1flow.toml) next to what --verify found (models.verified.json)."""
-    from ..eval import verify as verifying
+    from ..project import verify as verifying
 
     p = project(a)
     if a.verify:
