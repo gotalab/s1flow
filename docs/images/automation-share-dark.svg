@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 391" width="880" height="391" role="img" aria-labelledby="t d">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 514" width="860" height="514" role="img" aria-labelledby="t d">
   <title id="t">Similar accuracy, very different share you can automate</title>
-  <desc id="d">For each model, a thin bar shows accuracy over all cases and a thick bar the share of cases it can handle automatically at a 95% accuracy target. Ruff issues (4 areas · English, 361 cases): d1-ultra (Liquid) 88% automatable at 90.0% accuracy, Decider v1.2 (Perplexity) 85% automatable at 90.3% accuracy, mammoth-1 (Baseten) 86% automatable at 90.9% accuracy, Jev 1.14 (TypeSafe) 75% automatable at 85.0% accuracy. Source: apps/bench reports, 2026-10-31.</desc>
+  <desc id="d">For each model: a thick bar for the share of cases it can handle automatically at a 95% accuracy target, a thin bar for accuracy over all cases, then median latency and API cost per 10,000 cases. Ruff issues (4 areas · English, 361 cases): Drex Max (Nace AI) 87% automatable, 90.6% accuracy, 298 ms, $0.28; d1-ultra (Liquid) 86% automatable, 90.9% accuracy, 212 ms, $0.17; mammoth-1 (Baseten) 86% automatable, 90.9% accuracy, 222 ms, $0.47; Decider v1.2 (Perplexity) 85% automatable, 90.3% accuracy, 218 ms, $0.09; Span-02 (Respan) 79% automatable, 88.6% accuracy, 176 ms, $0.05; Jev 1.14 (TypeSafe) 76% automatable, 85.3% accuracy, 143 ms, $0.29; Clef (Cloudflare) 70% automatable, 86.4% accuracy, 345 ms, $1.11. Latency: one model at a time, 4 calls at once, from Claude's cloud environment (egress in US East, Ashburn).</desc>
   <style>
     text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; fill: #1f2328; }
     .bg { fill: #ffffff; }
@@ -9,6 +9,7 @@
     .ps { font-size: 13px; fill: #6e7781; }
     .n { font-size: 14px; font-weight: 600; }
     .v { font-size: 18px; font-weight: 700; }
+    .m { font-size: 14px; font-weight: 600; }
     .a { font-size: 12px; fill: #6e7781; }
     .lg { font-size: 13px; fill: #57606a; }
     .f { font-size: 12px; fill: #6e7781; }
@@ -25,37 +26,97 @@
       .rule { stroke: #30363d; }
     }
   </style>
-  <rect class="bg" width="880" height="391" rx="16"/>
+  <rect class="bg" width="860" height="514" rx="16"/>
   <text class="h" x="28" y="44">Similar accuracy. Very different automation.</text>
-  <rect class="acc" x="560" y="31" width="22" height="5" rx="2.5"/>
-  <text class="lg" x="590" y="38">accuracy</text>
-  <rect class="bar" x="668" y="27" width="22" height="12" rx="4"/>
-  <text class="lg" x="698" y="38">automatable at 95%</text>
-  <text class="p" x="28" y="88">Ruff issues</text>
-  <text class="ps" x="140" y="88">4 areas · English · 361 cases</text>
-  <text class="n" x="28" y="137">d1-ultra</text>
-  <rect class="acc" x="140" y="112" width="576.2" height="5" rx="2.5"/>
-  <text class="a" x="792" y="118">90%</text>
-  <rect class="track" x="140" y="123" width="640" height="18" rx="5"/>
-  <rect class="bar" x="140" y="123" width="562.0" height="18" rx="5"/>
-  <text class="v" x="792" y="139">88%</text>
-  <text class="n" x="28" y="189">Decider</text>
-  <rect class="acc" x="140" y="164" width="578.0" height="5" rx="2.5"/>
-  <text class="a" x="792" y="170">90%</text>
-  <rect class="track" x="140" y="175" width="640" height="18" rx="5"/>
-  <rect class="bar" x="140" y="175" width="546.0" height="18" rx="5"/>
-  <text class="v" x="792" y="191">85%</text>
-  <text class="n" x="28" y="241">mammoth-1</text>
-  <rect class="acc" x="140" y="216" width="581.5" height="5" rx="2.5"/>
-  <text class="a" x="792" y="222">91%</text>
-  <rect class="track" x="140" y="227" width="640" height="18" rx="5"/>
-  <rect class="bar" x="140" y="227" width="549.6" height="18" rx="5"/>
-  <text class="v" x="792" y="243">86%</text>
-  <text class="n" x="28" y="293">Jev 1.14</text>
-  <rect class="acc" x="140" y="268" width="544.3" height="5" rx="2.5"/>
-  <text class="a" x="792" y="274">85%</text>
-  <rect class="track" x="140" y="279" width="640" height="18" rx="5"/>
-  <rect class="bar" x="140" y="279" width="482.2" height="18" rx="5"/>
-  <text class="v" x="792" y="295">75%</text>
-  <text class="f" x="28" y="375">apps/bench reports, 2026-10-31 · development cases · a dated snapshot, not a ranking of providers</text>
+  <text class="lg" x="140" y="96">automatable at 95% · thin line: accuracy</text>
+  <text class="lg" x="560" y="96">p50 latency</text>
+  <text class="lg" x="720" y="96">API cost per 10k</text>
+  <line class="rule" x1="540" x2="540" y1="84" y2="462"/>
+  <text class="ps" x="28" y="70">Ruff issues · 4 areas · English · 361 cases</text>
+  <text class="n" x="28" y="138">Drex Max</text>
+  <rect class="acc" x="140" y="120" width="298.9" height="4" rx="2"/>
+  <text class="a" x="476" y="126">91%</text>
+  <rect class="track" x="140" y="128" width="330" height="16" rx="4"/>
+  <rect class="bar" x="140" y="128" width="288.0" height="16" rx="4"/>
+  <text class="v" x="476" y="143">87%</text>
+  <rect class="track" x="560" y="132" width="80" height="8" rx="3"/>
+  <rect class="acc" x="560" y="132" width="59.6" height="8" rx="3"/>
+  <text class="m" x="648" y="141">298 ms</text>
+  <rect class="track" x="720" y="132" width="60" height="8" rx="3"/>
+  <rect class="acc" x="720" y="132" width="13.8" height="8" rx="3"/>
+  <text class="m" x="788" y="141">$0.28</text>
+  <text class="n" x="28" y="188">d1-ultra</text>
+  <rect class="acc" x="140" y="170" width="299.8" height="4" rx="2"/>
+  <text class="a" x="476" y="176">91%</text>
+  <rect class="track" x="140" y="178" width="330" height="16" rx="4"/>
+  <rect class="bar" x="140" y="178" width="283.4" height="16" rx="4"/>
+  <text class="v" x="476" y="193">86%</text>
+  <rect class="track" x="560" y="182" width="80" height="8" rx="3"/>
+  <rect class="acc" x="560" y="182" width="42.4" height="8" rx="3"/>
+  <text class="m" x="648" y="191">212 ms</text>
+  <rect class="track" x="720" y="182" width="60" height="8" rx="3"/>
+  <rect class="acc" x="720" y="182" width="8.4" height="8" rx="3"/>
+  <text class="m" x="788" y="191">$0.17</text>
+  <text class="n" x="28" y="238">mammoth-1</text>
+  <rect class="acc" x="140" y="220" width="299.8" height="4" rx="2"/>
+  <text class="a" x="476" y="226">91%</text>
+  <rect class="track" x="140" y="228" width="330" height="16" rx="4"/>
+  <rect class="bar" x="140" y="228" width="283.4" height="16" rx="4"/>
+  <text class="v" x="476" y="243">86%</text>
+  <rect class="track" x="560" y="232" width="80" height="8" rx="3"/>
+  <rect class="acc" x="560" y="232" width="44.3" height="8" rx="3"/>
+  <text class="m" x="648" y="241">222 ms</text>
+  <rect class="track" x="720" y="232" width="60" height="8" rx="3"/>
+  <rect class="acc" x="720" y="232" width="23.3" height="8" rx="3"/>
+  <text class="m" x="788" y="241">$0.47</text>
+  <text class="n" x="28" y="288">Decider</text>
+  <rect class="acc" x="140" y="270" width="298.0" height="4" rx="2"/>
+  <text class="a" x="476" y="276">90%</text>
+  <rect class="track" x="140" y="278" width="330" height="16" rx="4"/>
+  <rect class="bar" x="140" y="278" width="281.6" height="16" rx="4"/>
+  <text class="v" x="476" y="293">85%</text>
+  <rect class="track" x="560" y="282" width="80" height="8" rx="3"/>
+  <rect class="acc" x="560" y="282" width="43.5" height="8" rx="3"/>
+  <text class="m" x="648" y="291">218 ms</text>
+  <rect class="track" x="720" y="282" width="60" height="8" rx="3"/>
+  <rect class="acc" x="720" y="282" width="4.6" height="8" rx="3"/>
+  <text class="m" x="788" y="291">$0.09</text>
+  <text class="n" x="28" y="338">Span-02</text>
+  <rect class="acc" x="140" y="320" width="292.5" height="4" rx="2"/>
+  <text class="a" x="476" y="326">89%</text>
+  <rect class="track" x="140" y="328" width="330" height="16" rx="4"/>
+  <rect class="bar" x="140" y="328" width="261.4" height="16" rx="4"/>
+  <text class="v" x="476" y="343">79%</text>
+  <rect class="track" x="560" y="332" width="80" height="8" rx="3"/>
+  <rect class="acc" x="560" y="332" width="35.2" height="8" rx="3"/>
+  <text class="m" x="648" y="341">176 ms</text>
+  <rect class="track" x="720" y="332" width="60" height="8" rx="3"/>
+  <rect class="acc" x="720" y="332" width="2.5" height="8" rx="3"/>
+  <text class="m" x="788" y="341">$0.05</text>
+  <text class="n" x="28" y="388">Jev 1.14</text>
+  <rect class="acc" x="140" y="370" width="281.6" height="4" rx="2"/>
+  <text class="a" x="476" y="376">85%</text>
+  <rect class="track" x="140" y="378" width="330" height="16" rx="4"/>
+  <rect class="bar" x="140" y="378" width="251.4" height="16" rx="4"/>
+  <text class="v" x="476" y="393">76%</text>
+  <rect class="track" x="560" y="382" width="80" height="8" rx="3"/>
+  <rect class="acc" x="560" y="382" width="28.6" height="8" rx="3"/>
+  <text class="m" x="648" y="391">143 ms</text>
+  <rect class="track" x="720" y="382" width="60" height="8" rx="3"/>
+  <rect class="acc" x="720" y="382" width="14.4" height="8" rx="3"/>
+  <text class="m" x="788" y="391">$0.29</text>
+  <text class="n" x="28" y="438">Clef</text>
+  <rect class="acc" x="140" y="420" width="285.2" height="4" rx="2"/>
+  <text class="a" x="476" y="426">86%</text>
+  <rect class="track" x="140" y="428" width="330" height="16" rx="4"/>
+  <rect class="bar" x="140" y="428" width="232.2" height="16" rx="4"/>
+  <text class="v" x="476" y="443">70%</text>
+  <rect class="track" x="560" y="432" width="80" height="8" rx="3"/>
+  <rect class="acc" x="560" y="432" width="69.0" height="8" rx="3"/>
+  <text class="m" x="648" y="441">345 ms</text>
+  <rect class="track" x="720" y="432" width="60" height="8" rx="3"/>
+  <rect class="acc" x="720" y="432" width="55.7" height="8" rx="3"/>
+  <text class="m" x="788" y="441">$1.11</text>
+  <text class="f" x="28" y="478">apps/bench reports, 2026-10-31 · development cases · a dated snapshot, not a ranking of providers</text>
+  <text class="f" x="28" y="496">Latency: one model at a time, 4 calls at once, from Claude's cloud environment (egress in US East, Ashburn).</text>
 </svg>

@@ -20,14 +20,15 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/automation-share-dark.svg">
-  <img alt="Share of Ruff issues each model can route on its own while staying 95% accurate: d1-ultra 88%, mammoth-1 86%, Decider 85%, Jev 1.14 75%. Accuracy over all 361 cases: 90%, 91%, 90%, 85%." src="docs/images/automation-share.svg">
+  <img alt="Ruff issues, 361 cases. Share each model can route on its own while staying 95% accurate, accuracy over all cases, median latency and API cost per 10,000 cases: Drex Max 87%, 91%, 298 ms, $0.28; d1-ultra 86%, 91%, 212 ms, $0.17; mammoth-1 86%, 91%, 222 ms, $0.47; Decider 85%, 90%, 218 ms, $0.09; Span-02 79%, 89%, 176 ms, $0.05; Jev 1.14 76%, 85%, 143 ms, $0.29; Clef 70%, 86%, 345 ms, $1.11." src="docs/images/automation-share.svg">
 </picture>
 
-Routing Ruff's issues to the area they concern, these four models are within 6 points of each other on
-accuracy, yet the share of issues each can route on its own while staying 95% accurate ranges from 75% to 88%.
+Routing Ruff's issues to the area they concern, these seven models are within 6 points of each other on
+accuracy, yet the share of issues each can route on its own while staying 95% accurate ranges from 70% to 87%.
 That share needs a confidence with every answer, so the uncertain issues can go to a person while the rest are
-acted on. The numbers are a snapshot of four of the 17 decision models in the [reports](apps/bench/reports),
-each task scored by its own objective, not a ranking of providers. Your own cases may tell a different story,
+acted on. Latency and cost differ too, and do not follow the share. The numbers are a snapshot of seven of the 17
+decision models in the [reports](apps/bench/reports), each task scored by its own objective, not a ranking of
+providers; latency depends on where you call from. Your own cases may tell a different story,
 which is exactly why you measure them.
 
 ## Quick start
