@@ -54,6 +54,8 @@ def test_out_writes_the_snapshot_and_markdown_and_from_reads_it(ran):
     assert [p["candidate"] for p in saved["ranking"]] == [r["candidate"] for r in json.loads(cli("report", "truth", "--json").output)["ranking"]]
     assert saved["ranking"][0] == {"candidate": "good", "tied": True, "excluded": []} and set(saved["order"]) == {"by", "skipped", "why"}
     assert saved["current"] is None and saved["unranked"] is None  # no policy adopted yet
+    assert cli("report", "truth", "--candidate", "good", "--out", "one").exit_code == 0  # one candidate shown, the snapshot still ranked
+    assert json.loads((ran.root / "one" / "comparison.json").read_text())["ranking"] == saved["ranking"]
     offline = cli("report", "--from", "out/comparison.json", "--json")
     assert offline.exit_code == 0 and json.loads(offline.output)["provenance"] == "saved snapshot"
     assert cli("report", "--from", "out/comparison.json", "--out", "again").exit_code == 2

@@ -37,7 +37,8 @@ def read_snapshot(path: Path) -> dict[str, Any]:
     if len(names) != len(set(names)):
         raise ValueError('comparison has duplicate candidate identifiers')
     ranking = data.get('ranking')
-    if ranking is not None and (not isinstance(ranking, list) or any(not isinstance(p, dict) or p.get('candidate') not in names for p in ranking)):
+    if ranking is not None and (not isinstance(ranking, list) or any(
+            not isinstance(p, dict) or p.get('candidate') not in names or not isinstance(p.get('excluded', []), list) for p in ranking)):
         raise ValueError('comparison ranking names a candidate it does not hold')
     return data
 

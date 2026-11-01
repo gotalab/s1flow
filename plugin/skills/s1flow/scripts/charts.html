@@ -25,19 +25,21 @@ code { font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace; }
 table { border-collapse:collapse; width:100%; font-variant-numeric:tabular-nums; font-size:14px; }
 th { text-align:right; font-weight:500; color:var(--muted); font-size:12px; border-bottom:1px solid #c9cfd8; padding:8px 10px; white-space:nowrap; }
 td { padding:9px 10px; text-align:right; border-bottom:1px solid var(--line); white-space:nowrap; }
-th.name,td.name { text-align:left; white-space:normal; overflow-wrap:anywhere; min-width:240px; }
-th.strip,td.strip { width:38%; min-width:200px; padding-left:16px; padding-right:16px; }
+th.name,td.name { text-align:left; white-space:normal; overflow-wrap:normal; min-width:200px; }
+th.orders { color:var(--accent); white-space:normal; min-width:110px; } td.orders { font-weight:600; }
+tr.after-tie td { border-top:2px solid #c9cfd8; }
+th.strip,td.strip { width:30%; min-width:160px; padding-left:16px; padding-right:16px; }
 td.strip svg { display:block; width:100%; height:18px; overflow:visible; }
 td.value { font-weight:600; }
 tr.top td { background:var(--tint); }
 tr.top td.name { font-weight:600; }
 tr.out td { color:var(--faint); }
 .variant { color:var(--muted); font-weight:400; }
-.badge { display:inline-block; margin-left:8px; padding:0 7px; border-radius:9px; font-size:11px; font-weight:600; line-height:18px; vertical-align:1px; }
+.badge { display:inline-block; white-space:nowrap; margin-left:8px; padding:0 7px; border-radius:9px; font-size:11px; font-weight:600; line-height:18px; vertical-align:1px; }
 .badge.first { background:var(--accent); color:#fff; }
 .badge.current { border:1px solid var(--ink); color:var(--ink); }
 .reason { display:block; font-size:12px; font-weight:400; color:var(--faint); }
-.key { display:flex; flex-wrap:wrap; gap:4px 18px; margin:10px 0 0; font-size:12px; color:var(--muted); }
+.key { display:flex; flex-wrap:wrap; gap:4px 18px; margin:0 0 8px; font-size:12px; color:var(--muted); }
 .key i { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:6px; vertical-align:-1px; }
 details { margin-top:14px; border-top:1px solid var(--line); padding-top:12px; }
 details > summary { cursor:pointer; font-weight:600; font-size:15px; }
@@ -63,7 +65,7 @@ pre { white-space:pre-wrap; overflow-wrap:anywhere; font:12px/1.6 ui-monospace,m
 #error { color:#9a381b; }
 .notice:empty,[hidden] { display:none!important; }
 footer { margin-top:40px; color:var(--faint); font-size:12px; overflow-wrap:anywhere; }
-@media(max-width:760px) { main { padding:24px 16px 48px; } .figures { grid-template-columns:1fr; } #decision .lead { font-size:17px; } th.strip,td.strip { min-width:110px; } th.name,td.name { min-width:140px; } }
+@media(max-width:760px) { main { padding:24px 16px 48px; } .figures { grid-template-columns:1fr; } #decision .lead { font-size:17px; } th.strip,td.strip { display:none; } th.name,td.name { min-width:120px; } th { white-space:normal; min-width:72px; } th.orders { min-width:80px; } td { padding:8px 6px; } }
 @media print { @page { size:A4 landscape; margin:12mm; } main { max-width:none; padding:0; } .figure-tools,.controls { display:none!important; } details { display:block; } .table-wrap { overflow:visible; } }
 </style>
 </head>
@@ -81,8 +83,8 @@ footer { margin-top:40px; color:var(--faint); font-size:12px; overflow-wrap:anyw
 </section>
 <section aria-labelledby="ranking-title">
   <h2 id="ranking-title"></h2>
-  <div class="table-wrap" tabindex="0" role="region" aria-labelledby="ranking-title"><table><thead id="ranking-head"></thead><tbody id="ranking-body"></tbody></table></div>
   <div class="key" id="key"></div>
+  <div class="table-wrap" tabindex="0" role="region" aria-labelledby="ranking-title"><table><thead id="ranking-head"></thead><tbody id="ranking-body"></tbody></table></div>
 </section>
 <section aria-label="More detail">
   <details id="tradeoffs"><summary>Trade-offs <span class="meta">any two measures, against each other</span></summary>
@@ -125,7 +127,7 @@ function el(tag,text,cls) { const n=document.createElement(tag);if(text!==undefi
 function txt(id,value) { $(id).textContent=value; }
 function svgNode(parent,tag,attrs={},text) {const n=document.createElementNS(NS,tag);for(const [k,v] of Object.entries(attrs))n.setAttribute(k,String(v));if(text!==undefined)n.textContent=text;parent.appendChild(n);return n;}
 function label(parent,x,y,text,attrs={}) {return svgNode(parent,'text',{x,y,fill:INK,'font-size':12,'font-family':'Arial, sans-serif',...attrs},text);}
-function name(r,parent) {parent.append(document.createTextNode(r.model));if(r.variant!=='base')parent.append(el('span',` · ${r.variant}`,'variant'));return parent;}
+function name(r,parent) {r.model.split(/(?<=[@:])/).forEach((part,i)=>{if(i)parent.append(document.createElement('wbr'));parent.append(document.createTextNode(part));});if(r.variant!=='base')parent.append(el('span',` · ${r.variant}`,'variant'));return parent;}
 
 // The task's objective: the metric the ranking orders by.
 const params=D.objective.params||{};
@@ -144,32 +146,38 @@ const ranked=D.ranking?D.ranking.filter(p=>byName.has(p.candidate)).map(p=>({row
 const shown=new Set(ranked.map(p=>p.row.candidate));
 const left=rows.filter(r=>!shown.has(r.candidate));
 const topGroup=ranked.filter(p=>p.tied);
-const first=topGroup[0];
+const first=topGroup.length===1||(D.order?.by||[]).length?topGroup[0]:undefined;
 const tieWords={latency:'p90 latency',cost:'API cost'};
 // The tiebreak's objectives get a column beside the objective: they order the tied candidates.
 const tieMetrics=(D.order?.by||[]).map(k=>definitions.find(d=>d.key==='objective:'+k)).filter(Boolean);
 const tieLabel=k=>tieWords[k]||definitions.find(d=>d.key==='objective:'+k)?.label||k;
 
+function currentWords() {
+  if(!D.current)return '';
+  if(first&&D.current===first.row.candidate)return 'It is the current policy.';
+  if(shown.has(D.current))return `The current policy is ${D.current}.`;
+  return byName.has(D.current)?`The current policy, ${D.current}, is not compared (see Not compared below).`:`The current policy, ${D.current}, is not in this comparison.`;
+}
 function renderDecision() {
-  const lead=$('lead');lead.replaceChildren();
-  if(!ranked.length){lead.textContent='No candidate has an answer to every development case yet.';txt('why',D.unranked||'');return;}
-  if(!first){
+  const lead=$('lead');lead.replaceChildren();const why=[];
+  if(!ranked.length)lead.textContent='No candidate has an answer to every development case yet.';
+  else if(!topGroup.length){
     lead.append('Sorted by ',el('strong',D.objective.label),'.');
-    txt('why',D.ranking?'No candidate is within the constraints.':(D.unranked?`Not ranked: ${D.unranked}.`:'This snapshot holds no ranking; regenerate it with s1flow report TASK --out DIR to see which candidates are tied.'));return;
+    why.push(D.ranking?'No candidate is within the constraints.':D.unranked?`Not ranked: ${D.unranked}.`:'This snapshot holds no ranking; regenerate it with s1flow report TASK --out DIR to see which candidates are tied.');
+  } else if(topGroup.length===1){
+    const s=el('strong');name(first.row,s);lead.append(s,` is best on ${D.objective.label}: ${fmt(first.row.value,primary.unit)}.`);
+  } else if(first){
+    const s=el('strong');name(first.row,s);
+    lead.append(s,` comes first of the ${topGroup.length} candidates tied on ${D.objective.label}, ordered by ${D.order.by.map(tieLabel).join(', then ')}.`);
+  } else {
+    lead.append(el('strong',`${topGroup.length} candidates`),` are tied on ${D.objective.label}.`);
+    why.push('No tiebreak orders them: compare them on cost and latency below, or name one in task.py’s tiebreak.');
   }
-  const s=el('strong');name(first.row,s);
-  lead.append(s);
-  if(topGroup.length===1)lead.append(` is best on ${D.objective.label}: ${fmt(first.row.value,primary.unit)}.`);
-  else {
-    const by=D.order?.by||[];
-    lead.append(` comes first of the ${topGroup.length} candidates tied on ${D.objective.label}${by.length?`, ordered by ${by.map(tieLabel).join(', then ')}`:''}.`);
-  }
-  const why=[];
-  if(topGroup.length>1&&!(D.order?.by||[]).length)why.push('No tiebreak orders them, so they are listed by name: compare them on cost and latency below.');
   if(D.order?.why)why.push(D.order.why+'.');
-  if(D.current){why.push(D.current===first.row.candidate?'It is the current policy.':shown.has(D.current)?`The current policy is ${D.current}.`:`The current policy, ${D.current}, is not in this comparison.`);}
+  if(!ranked.length&&D.unranked)why.push(D.unranked);
+  const words=currentWords();if(words)why.push(words);
   txt('why',why.join(' '));
-  $('adopt').hidden=false;txt('adopt',`s1flow adopt ${D.task} ${first.row.candidate} --reason "..."`);
+  if(first&&D.current!==first.row.candidate){$('adopt').hidden=false;txt('adopt',`s1flow adopt ${D.task} ${first.row.candidate} --reason "..."`);}
 }
 
 function intervalScale() {
@@ -190,14 +198,16 @@ function strip(p,range,isTop,isOut) {
   return svg;
 }
 function renderRanking() {
-  txt('ranking-title',`${ranked.length} candidates by ${D.objective.label}, ${primary.direction==='min'?'lower':'higher'} is better`);
+  txt('ranking-title',`${ranked.length} ${ranked.length===1?'candidate':'candidates'} by ${D.objective.label}, ${primary.direction==='min'?'lower':'higher'} is better`);
   const head=el('tr');
-  for(const [t,c] of [['Candidate','name'],[D.objective.label,''],['95% interval','strip'],...tieMetrics.map(d=>[d.label,'']),['API cost / 10k',''],['p90 latency','']])head.appendChild(el('th',t,c));
+  const range=intervalScale();
+  const span=range?` ${fmt(range[0],primary.unit)} – ${fmt(range[1],primary.unit)}`:'';
+  for(const [t,c] of [['Candidate','name'],[D.objective.label,''],...tieMetrics.map(d=>[`${d.label} · orders the tie`,'orders']),['95% interval'+span,'strip'],['API cost / 10k',''],['p90 latency','']])head.appendChild(el('th',t,c));
   $('ranking-head').replaceChildren(head);
-  const range=intervalScale();const body=$('ranking-body');body.replaceChildren();
-  for(const p of ranked){
+  const body=$('ranking-body');body.replaceChildren();
+  ranked.forEach((p,i)=>{
     const r=p.row,out=p.excluded.length>0;
-    const tr=el('tr',undefined,p.tied?'top':out?'out':'');
+    const tr=el('tr',undefined,[p.tied?'top':out?'out':'',i&&ranked[i-1].tied&&!p.tied?'after-tie':''].join(' ').trim());
     const cell=name(r,el('td',undefined,'name'));
     if(p===first)cell.appendChild(el('span','first','badge first'));
     if(D.current===r.candidate)cell.appendChild(el('span','current','badge current'));
@@ -205,8 +215,8 @@ function renderRanking() {
     const s=el('td',undefined,'strip');if(range)s.appendChild(strip(p,range,p.tied,out));
     if(r.interval)s.title=`${fmt(r.interval[0],primary.unit)} – ${fmt(r.interval[1],primary.unit)}`;
     const c=el('td',fmt(cost(r),'usd'));if(r.calls?.cost_source&&r.calls.cost_source!=='billed'&&finite(cost(r)))c.title=r.calls.cost_source==='list'?'estimated from list price':r.calls.cost_source;
-    tr.append(cell,el('td',fmt(r.value,primary.unit),'value'),s,...tieMetrics.map(d=>el('td',fmt(r.metrics[d.key]?.value,d.unit))),c,el('td',fmt(latency(r),'ms')));body.appendChild(tr);
-  }
+    tr.append(cell,el('td',fmt(r.value,primary.unit),'value'),...tieMetrics.map(d=>el('td',fmt(r.metrics[d.key]?.value,d.unit),'orders')),s,c,el('td',fmt(latency(r),'ms')));body.appendChild(tr);
+  });
   const key=$('key');key.replaceChildren();
   const item=(color,text)=>{const k=el('span');const i=el('i');i.style.background=color;k.append(i,text);key.appendChild(k);};
   if(topGroup.length)item(ACCENT,topGroup.length>1?`tied: ${D.objective.label} cannot tell them apart (intervals overlap the best's)`:'best');

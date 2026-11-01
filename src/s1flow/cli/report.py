@@ -44,7 +44,7 @@ def report(a: argparse.Namespace) -> int:
                 raise ConfigError("--candidate and --out take a TASK")
             return _print_tasks(overview(project(a)), a.json)
         task = load(project(a), a.task)
-        if a.candidate is None:
+        if a.candidate is None or a.out:  # the snapshot carries the ranking too
             try:
                 listed = adopting.shortlist(task)
             except ConfigError:
