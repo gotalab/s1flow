@@ -43,6 +43,24 @@ s1flow models --verify [--models jev:1.15]   # ask plain questions; check every 
 A model and its versions are declared in `s1flow.toml` (`[models."jev@openrouter".versions."1.15"]`, `id = ...`).
 `--verify` checks only what is declared; finding new versions is in `measure.md`.
 
+To add a model, the person reviews a new `[models."NAME"]` entry (by convention `model@api`): `provider`, the
+`id` the API takes, and `capabilities` (`question_types`, `image`, `context_tokens`, `max_options`) where they
+differ from the defaults. Built-in providers and the key each reads:
+
+| `provider` | API | key |
+|---|---|---|
+| `openrouter` | OpenRouter | `OPENROUTER_API_KEY` |
+| `gateway` | Vercel AI Gateway | `AI_GATEWAY_API_KEY` |
+| `typesafe` | TypeSafe's own | `TYPESAFE_API_KEY` |
+| `cloudflare` | Workers AI, through s1flow's `clef-proxy/` relay (`CLEF_RELAY_URL`) | none (a `wrangler` login) |
+| `openai-decisions` | OpenAI's Decisions API | `OPENAI_API_KEY` |
+| `llm` | an LLM through LiteLLM (`s1flow[llm]`) | the one its LiteLLM prefix reads |
+
+OpenRouter and the Gateway return what each call billed and `llm` prices from LiteLLM's list; for the others,
+declare a list price (`price.input_per_mtok`, `price.as_of`, `price.source`) or cost stays unknown. A provider of
+your own is `"package.module:factory"` and needs `provider_revision` to be evaluated. Then `s1flow doctor --models
+NAME` and `s1flow models --verify --models NAME`.
+
 ## Project and connection discovery
 
 `--project PATH` and `--connections PATH` work before or after the subcommand, only where `--help` lists them.

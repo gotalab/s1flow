@@ -27,6 +27,9 @@
 
 ### Added
 
+- A task can ask a `Score` question (levels 0 to L-1): `MAE()` is its default objective, with `QWK()` and
+  `Accuracy()` of the rounded level; comparison, report and charts read it. A policy still holds a boolean or
+  choice question.
 - `s1flow models` runs on the base install. `s1flow models --verify` needs only `s1flow[images]`; before, both
   needed `s1flow[eval]` and `s1flow[images]`.
 - `tiebreak` takes `"latency"` and `"cost"` beside objectives, in the order that ranks the tied candidates
