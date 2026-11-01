@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- `feedback record` calls no model, so it takes no `--connections` (passing one is a usage error).
+- `init --ci` outside a Git repository exits 2 and says why, instead of writing the project without the workflow.
+  A bad `--task` id is also refused before anything is written.
+
+### Added
+
+- `doctor --policy TASK --path policies.json` checks a policy from an exported file, outside an s1flow project.
+
+### Fixed
+
+- The `policies.load(...)` line `export` prints names `client=`.
+
 ## 0.1.0a2 (2026-11-01)
 
 ### Breaking changes

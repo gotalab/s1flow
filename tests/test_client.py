@@ -274,9 +274,9 @@ def test_decide_with_a_policy_and_record_feedback(tmp_path, monkeypatch):
     decision_id = outputs.pop("decision_id")
     assert outputs == {"answer": "formatter", "probability": "0.8000", "below_min_probability": "true", "policy": "gh-ruff-area@v1"}
     assert decision_id == json.loads(log.read_text().splitlines()[0])["decision"]["decision_id"]
-    done = s1flow("feedback", "record", "gh-ruff-area", decision_id, "formater", "--log", str(log), "--connections", models, cwd=tmp_path)
+    done = s1flow("feedback", "record", "gh-ruff-area", decision_id, "formater", "--log", str(log), cwd=tmp_path)
     assert done.returncode == 2 and "one of: linter, formatter, server, configuration" in done.stderr
-    done = s1flow("feedback", "record", "gh-ruff-area", decision_id, "formatter", "--log", str(log), "--connections", models, cwd=tmp_path)
+    done = s1flow("feedback", "record", "gh-ruff-area", decision_id, "formatter", "--log", str(log), cwd=tmp_path)  # no model: no connections
     assert done.returncode == 0, done.stderr
     assert [json.loads(x)["type"] for x in log.read_text().splitlines()] == ["answered", "feedback"]
     assert json.loads(log.read_text().splitlines()[0])["state"] is None  # not kept unless asked
@@ -290,9 +290,11 @@ def test_decide_with_a_policy_and_record_feedback(tmp_path, monkeypatch):
     app.mkdir()
     shutil.copy(tmp_path / "policies" / "gh-ruff-area" / "v1.json", app / "policy.json")
     second_id = json.loads(log.read_text().splitlines()[-1])["decision"]["decision_id"]
-    done = s1flow("feedback", "record", "gh-ruff-area", second_id, "linter", "--log", str(log), "--path", str(app / "policy.json"), "--connections", models, cwd=app)
+    done = s1flow("feedback", "record", "gh-ruff-area", second_id, "linter", "--log", str(log), "--path", str(app / "policy.json"), cwd=app)
     assert done.returncode == 0, done.stderr
     assert json.loads(log.read_text().splitlines()[-1])["type"] == "feedback"
+    done = s1flow("feedback", "record", "gh-ruff-area", second_id, "linter", "--log", str(log), "--path", str(app / "policy.json"), "--connections", models, cwd=app)
+    assert done.returncode == 2 and "--connections does not apply to s1flow feedback record" in done.stderr
 
 
 def test_decide_reads_the_projects_env_file(toml):
