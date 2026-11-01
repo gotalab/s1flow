@@ -67,7 +67,8 @@ remote code or install packages.
 
 ## Schemas
 
-The public JSON Schemas in `schema/`, one per file s1flow reads or writes, are generated from the types. JSON
-Schema only checks structure. Use
+The public JSON Schemas in `schema/` are generated from the types (`scripts/write_schemas.py`): the policy, an
+exported policy set, the decision log, a decision and a response, a case, a run, the split, the comparison, the
+evaluation record and the history. JSON Schema only checks structure. Use
 `s1flow adopt --spec FILE --check` for checks across fields, such as whether the positive option you set on a choice
 question works with a threshold, and to check the policy against a connection file.

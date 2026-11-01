@@ -83,10 +83,11 @@ order, with no recommendations, eligibility filters or adopt buttons. Metric def
 measured come from the same snapshot that agents read. Target lines don't hide candidates that fall short. You
 can export each chart as a self-contained SVG or PNG that includes the source and sample size.
 
-Box questions get the shared metrics and a confidence selection curve. Yes/no questions add precision/recall and
-calibration charts. Choice questions get a curve of the selected answer's probability when the model returns a
-real distribution. A provider's own confidence score is treated as a separate signal, and no probability curve
-is drawn when the signal it needs isn't available.
+Score questions (levels 0 to L-1) are read by their expected level: MAE (the default objective) and QWK, beside the
+shared metrics. Box questions get the shared metrics and a confidence selection curve. Yes/no questions add
+precision/recall and calibration charts. Choice questions get a curve of the selected answer's probability when the
+model returns a real distribution. A provider's own confidence score is treated as a separate signal, and no
+probability curve is drawn when the signal it needs isn't available.
 
 ## Thresholds and intervals
 

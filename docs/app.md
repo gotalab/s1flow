@@ -137,5 +137,4 @@ response = Client(connections="connections.toml").responses.create(
 ```
 
 The Client supports yes/no (`boolean`), choice, score and box questions, and several questions in one request, as far as
-the provider supports them. Comparisons support yes/no, choice and box questions, but not score. A policy holds
-one yes/no or choice question.
+the provider supports them. Evaluation compares all four. A policy holds one yes/no or choice question.
