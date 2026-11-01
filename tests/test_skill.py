@@ -146,6 +146,13 @@ def test_init_writes_only_the_project_unless_asked(repo):
     assert not (repo / ".claude").exists() and not (repo / ".agents").exists()
 
 
+def test_init_ci_outside_git_says_why_and_writes_nothing(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    done = cli("init", "--ci")
+    assert done.exit_code == 2 and "not in a Git repository: run git init first, or leave out --ci" in done.err
+    assert list(tmp_path.iterdir()) == []
+
+
 @pytest.mark.skipif(shutil.which("uv") is None, reason="needs uv to build the wheel")
 def test_the_wheel_carries_the_skill(tmp_path):
     done = subprocess.run(["uv", "build", "--wheel", "--out-dir", str(tmp_path), str(REPO)], capture_output=True, text=True)

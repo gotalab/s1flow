@@ -41,8 +41,8 @@ providers.
 nearest Git root. Outside a Git repository, it only checks the current directory and `./s1flow`, so use
 `--project` when you run it from deeper inside.
 
-Evaluation commands use `--connections` when given, else the selected project's `s1flow.toml`. `decide --policy`, `feedback record`, `doctor --policy`, and `adopt --spec --root` need an explicit
-`--connections`.
+Evaluation commands use `--connections` when given, else the selected project's `s1flow.toml`. `decide --policy`, `doctor --policy`, and `adopt --spec --root` need an explicit
+`--connections`; `feedback record` calls no model and takes none.
 
 The CLI reads `.env` in the project directory (or cwd with no project) and every directory above it up to the
 Git root, nearest first; a variable already set wins. When it can't find a

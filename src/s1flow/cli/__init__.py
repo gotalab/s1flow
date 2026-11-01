@@ -15,7 +15,7 @@ table (HELP), and a command that does not exist is one line naming the closest.
     s1flow adopt --spec spec.json --reason "..." [--root policies] [--connections PATH]   save a spec as the next version, current
     s1flow adopt --spec spec.json --check [--connections PATH]          validate it (and its binding) only
     s1flow export [gh-ruff-area ...] --out policies.json                each task's current policy in one file, for an app to vendor
-    s1flow doctor [--models jev,d1@vercel | --policy gh-ruff-area[@…]] [--reach] [--json]   the keys and hosts they need
+    s1flow doctor [--models jev,d1@vercel | --policy gh-ruff-area[@…] [--path policies.json]] [--reach] [--json]   the keys and hosts they need
     s1flow init --skill                                                 write the Agent Skill where agents read it (skill.py)
 
 A policy is named TASK[@vN] wherever a command takes one (the current version when none is given), so its id

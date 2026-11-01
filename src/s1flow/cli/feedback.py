@@ -7,14 +7,13 @@ import json
 from pathlib import Path
 from typing import Any
 
-from .common import POLICY, Parser, command, label, load_env, policy_client, policy_root, project, project_root
+from .common import POLICY, Parser, command, label, policy_root, project
 
 
 def feedback_record(a: argparse.Namespace) -> int:
-    from .. import policies
+    from ..policies.policy import record_feedback, resolve
 
-    load_env(project_root(a))
-    policies.load(a.policy, client=policy_client(a), path=a.path, root=policy_root(a), log=a.log).feedback(a.decision_id, label(a.label))
+    record_feedback(resolve(a.policy, path=a.path, root=policy_root(a)), a.decision_id, label(a.label), log=a.log)
     return 0
 
 
@@ -39,8 +38,9 @@ def feedback_measure(a: argparse.Namespace) -> int:
 def add(sub: Any) -> None:
     group = sub.add_parser("feedback", context=("project", "connections"), help="record the right answer for a case a policy decided (record), or measure policies in production (measure)").add_subparsers(
         dest="action", required=True, parser_class=Parser)
-    f = command(group, "record", feedback_record, context=("project", "connections"), help="record the right answer for a case a policy decided",
-                description="Record the right answer for a case, joined to its answer by decision_id (what `s1flow feedback measure` measures from).")
+    f = command(group, "record", feedback_record, context=("project",), help="record the right answer for a case a policy decided",
+                description="Record the right answer for a case, joined to its answer by decision_id (what `s1flow feedback measure` measures from). "
+                            "It calls no model, so it takes no connections.")
     f.add_argument("policy", metavar=POLICY, help="the policy that decided it (its id in the log, or the task: the current version)")
     f.add_argument("decision_id", help="the exact decision_id returned by decide")
     f.add_argument("label", help="the right answer: a class key, or true / false")

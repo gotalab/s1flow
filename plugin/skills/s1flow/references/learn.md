@@ -11,11 +11,10 @@ policy.feedback(decision.decision_id, label)
 From a workflow or another process:
 
 ```bash
-s1flow feedback record <task>[@vN] <decision_id> <label> \
-  --connections s1flow.toml --log "$RUNNER_TEMP/s1flow-log.jsonl"
+s1flow feedback record <task>[@vN] <decision_id> <label> --log "$RUNNER_TEMP/s1flow-log.jsonl"
 ```
 
-`--connections` is required; `--path` reads a policy file or `policies.json` instead of `policies/`. The label is
+It calls no model, so it takes no `--connections`; `--path` reads a policy file or `policies.json` instead of `policies/`. The label is
 a class key, or `true` / `false`. `case_id` can repeat and is never a feedback key: a repeated case can have
 several decision ids. Keep the answered and feedback logs together.
 

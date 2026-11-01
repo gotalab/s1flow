@@ -99,7 +99,7 @@ def exercise_runtime(root: Path):
             assert decision['value'] is label and decision['below_min_probability'] is None
             decisions.append(decision)
             cli('feedback', 'record', 'ticket-bug@v1', decision['decision_id'], str(label).lower(),
-                '--path', policy_path, '--connections', models, '--log', log, cwd=other)
+                '--path', policy_path, '--log', log, cwd=other)
         assert len(calls) == 2 and decisions[0]['decision_id'] != decisions[1]['decision_id']
         recorded = [json.loads(line) for line in log.read_text().splitlines()]
         assert [event['type'] for event in recorded] == ['answered', 'feedback', 'answered', 'feedback']
@@ -155,7 +155,7 @@ print(json.dumps({"decision_id": decision.decision_id, "value": decision.value})
         deployed = json.loads(cli('decide', '--policy', 'ticket-bug@v3', '--path', root / 'policies/ticket-bug/v3.json',
                                   '--connections', models, '--state', '{"text":"bug again"}', '--case-id', 'same-ticket',
                                   '--log', log, '--keep-state', '--json', cwd=other).stdout)
-        cli('feedback', 'record', 'ticket-bug@v3', deployed['decision_id'], 'true', '--connections', models,
+        cli('feedback', 'record', 'ticket-bug@v3', deployed['decision_id'], 'true',
             '--path', root / 'policies/ticket-bug/v3.json', '--log', log)
         measured = json.loads(cli('feedback', 'measure', 'ticket-bug', log, '--json').stdout)
         current = next(r for r in measured['production'] if r['policy'] == 'ticket-bug@v3')

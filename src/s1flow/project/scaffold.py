@@ -48,6 +48,12 @@ def init(
 ) -> list[str]:
     """Returns what was written (an existing file is left as it is)."""
     project = project.resolve()
+    root = place.git_root(project)
+    if workflow and root is None:
+        raise ConfigError(f"--ci writes .github/workflows/ at the Git root, and {project} is not in a Git repository: "
+                          "run git init first, or leave out --ci")
+    if task_id and (why := place.task_id_error(task_id)):
+        raise ConfigError(why)
     project.mkdir(parents=True, exist_ok=True)
     done: list[str] = []
 
@@ -71,11 +77,8 @@ def init(
     if missing:
         ignore.write_text("\n".join([*lines, *missing]) + "\n")
         done.append(f"added {', '.join(missing)} to {show(ignore)}")
-    if task_id and (why := place.task_id_error(task_id)):
-        raise ConfigError(why)
     if task_id:
         write(project / "tasks" / task_id / "task.py", stub(task_id, instructions))  # its directory is named its id
-    root = place.git_root(project)
     if workflow and root is not None:
         rel = os.path.relpath(project, root)
         prefix = "" if rel == "." else rel.rstrip("/") + "/"

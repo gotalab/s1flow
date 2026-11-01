@@ -18,12 +18,14 @@ def doctor(a: argparse.Namespace) -> int:
 
     if a.models and a.policy:
         raise ConfigError("doctor takes --models or --policy, not both")
+    if a.path and not a.policy:
+        raise ConfigError("--path names where --policy is read from: it goes with --policy")
     root = project_root(a)
     before = {k for k, v in os.environ.items() if v}
     load_env(root)
     from_dotenv = {k for k, v in os.environ.items() if v and k not in before}
     if a.policy:
-        runtime = policies.load(a.policy, client=policy_client(a), root=policy_root(a))
+        runtime = policies.load(a.policy, client=policy_client(a), path=a.path, root=policy_root(a))
         r = runtime.spec
         report = checking.check(f"policy {r.ref}", [(r.connection, runtime.model_spec)],
                                 env=dict(os.environ), from_dotenv=from_dotenv, probe=a.reach)
@@ -54,5 +56,6 @@ def add(sub: Any) -> None:
                               "it calls (for a sandbox's allow-list). Exit 0 when everything needed is there, 1 otherwise, one line per problem.")
     doc.add_argument("--models", help="comma-separated names from s1flow.toml (default: its `default`)")
     doc.add_argument("--policy", metavar=POLICY, help="the model of this policy (the current version when no @ is given)")
+    doc.add_argument("--path", help="with --policy: a policy file, or a policy set from `s1flow export` (policies.json), instead of policies/ (as decide --path)")
     doc.add_argument("--reach", action="store_true", help="also send one plain HTTPS request per host, without a key (no model is called)")
     doc.add_argument("--json", action="store_true")

@@ -11,7 +11,7 @@ get a new ID.
 
 ```bash
 s1flow feedback record ticket-bug@v1 DECISION_ID true --log decisions.jsonl \
-  --path policies/ticket-bug/v1.json --connections connections.toml
+  --path policies/ticket-bug/v1.json
 s1flow feedback measure ticket-bug decisions.jsonl --json         # measures; --add also adds the cases
 s1flow optimize ticket-bug --json                  # a new candidate; report and adopt as for any other
 ```

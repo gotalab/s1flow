@@ -182,6 +182,13 @@ def test_doctor_on_a_policy(project):
     done = s1flow("doctor", "--policy", "t", "--connections", str(project / "s1flow.toml"), cwd=project)
     assert done.returncode == 1 and done.stderr.splitlines() == ["problem: OPENROUTER_API_KEY is not set (fake): get one at https://openrouter.ai/keys"]
     assert done.stdout.startswith("policy t@v1")
+    app = project / "app"  # an app's repository: the exported file; outside Git, no project is found from here
+    app.mkdir()
+    assert s1flow("export", "--out", str(app / "policies.json"), cwd=project).returncode == 0
+    done = s1flow("doctor", "--policy", "t", "--path", "policies.json", "--connections", str(project / "s1flow.toml"), cwd=app)
+    assert done.returncode == 1 and done.stdout.startswith("policy t@v1"), done.stderr
+    done = s1flow("doctor", "--path", "policies.json", cwd=app)
+    assert done.returncode == 2 and "it goes with --policy" in done.stderr
 
 
 def test_doctor_runs_on_the_base_install(project):
