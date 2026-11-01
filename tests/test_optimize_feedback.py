@@ -305,3 +305,15 @@ def test_an_invalid_log_line_names_its_file_and_line(tmp_path):
     with pytest.raises(DataError, match=r"log.jsonl:1: invalid log record"):
         feedback.read([log])
 
+
+
+def test_a_model_named_by_its_version_is_optimized(tmp_path):
+    p = make_project(tmp_path, {"m": ByQuestion}, versions={"m": {"1": "m-1"}})
+    rows = [{"id": str(i), "text": CLASSES[i % 3]} for i in range(120)]
+    (tmp_path / "data.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
+    task = attach(Task(id="toy", cases="data.jsonl", dir=tmp_path, state=lambda r: {"text": r["text"]}, question=q("Which?"),
+                       label=lambda r: r["text"], objective=Coverage(target_accuracy=0.9)), p)
+    current(task)
+    task.optimizer = Rewrite("Better?")
+    r = optimizing.optimize(task, model="m:1")  # `report` asks for name:<version> to pin a model
+    assert r.candidate == f"m:1/{r.variant}" and ":" not in r.variant

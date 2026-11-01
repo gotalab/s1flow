@@ -14,6 +14,7 @@ from __future__ import annotations
 import asyncio
 import dataclasses
 import datetime as dt
+import re
 from typing import Any
 
 from pydantic import BaseModel
@@ -48,7 +49,8 @@ def optimize(task: Task, *, model: str | None = None, **overrides: Any) -> Optim
     model = model or current.candidate.model
     adopt.adoptable(task.where.client().connections.retrieve(model).spec, model)  # before it spends anything: it must be adoptable
     start = current.candidate.variant if model == current.candidate.model else "base"
-    name = f"optimize-{model}-{dt.datetime.now().strftime('%Y%m%d-%H%M')}"
+    # a variant name holds no ":" (jev:1.14 names a version), nor what else a version label may hold
+    name = f"optimize-{re.sub(r'[^\w.+@-]', '-', model)}-{dt.datetime.now().strftime('%Y%m%d-%H%M')}"
     sf = evalset.fixed(task)
     by_id = task.load_cases().by_id()
     split = {role: [i for i in sf.ids(role) if i in by_id] for role in ("train", "val", "test")}
@@ -58,9 +60,9 @@ def optimize(task: Task, *, model: str | None = None, **overrides: Any) -> Optim
     art = Optimized(variant=name, model=model, optimizer=optimizer.name, settings=optimizer.settings(), at=clock.now(),
                     question=found.question, seed_question=seed_q, start=start, split=split,  # type: ignore[arg-type]
                     model_calls=found.model_calls, cost_usd=found.cost_usd, detail=found.detail)
+    task.add_optimized(art)  # checks the name before a file the task could not load again is written
     out = task.dir / "optimized" / f"{name}.json"
     out.parent.mkdir(exist_ok=True)
     out.write_text(art.model_dump_json(indent=1) + "\n")
-    task.add_optimized(art)
     asyncio.run(run_model(task, model, limit=None, variant=name))
     return OptimizeResult(task=task.id, variant=name, start=start, model=model, candidate=Candidate(model=model, variant=name).name, optimization=art)
