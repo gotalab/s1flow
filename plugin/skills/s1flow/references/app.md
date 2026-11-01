@@ -55,7 +55,7 @@ s1flow decide --model jev --boolean "Is this a bug report?" --state @state.json 
 
 ## GitHub Actions
 
-`gotalab/s1flow/decide@v0.1.0a1` answers one case. Required inputs: `policy`, `state`, `connections`. Optional:
+`gotalab/s1flow/decide@v0.1.0a2` answers one case. Required inputs: `policy`, `state`, `connections`. Optional:
 `case-id`, `log`, `keep-state`, `path`, `working-directory`, `package`. Outputs: `answer`, `probability`,
 `below_min_probability`, `decision_id`, `policy`. It installs s1flow in the workflow when the repository does not
 list it. Keys stay in repository secrets. A failed step has no decision to record, so `continue-on-error` leaves
@@ -87,7 +87,7 @@ jobs:
             echo 'S1FLOW_EOF'
           } >> "$GITHUB_OUTPUT"
       - id: s1
-        uses: gotalab/s1flow/decide@v0.1.0a1
+        uses: gotalab/s1flow/decide@v0.1.0a2
         continue-on-error: true
         with:
           working-directory: s1flow

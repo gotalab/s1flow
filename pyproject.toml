@@ -1,6 +1,6 @@
 [project]
 name = "s1flow"
-version = "0.1.0a1"
+version = "0.1.0a2"
 description = "Evaluate decision models (Jev, Clef, d1, OpenAI Decisions) on your own data, then run the one you trust in your app and CI"
 keywords = ["decision model", "system one", "jev", "llm evaluation", "confidence threshold", "classification", "routing"]
 dynamic = ["readme"]
