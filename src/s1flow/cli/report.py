@@ -65,7 +65,8 @@ def report(a: argparse.Namespace) -> int:
         if out.exists() and not out.is_dir():
             raise ConfigError(f"--out takes a directory; {out} is a file")
         out.mkdir(parents=True, exist_ok=True)
-        (out / "comparison.json").write_text(result.model_dump_json(by_alias=True, indent=1) + "\n")
+        saved = _with_ranking(result, listed, unranked, _current(project(a), task.id))
+        (out / "comparison.json").write_text(saved.model_dump_json(by_alias=True, indent=1) + "\n")
         wrote = [out / "comparison.json"]
         for variant in ["base", *task.variants]:
             if reporting.available_models(task, variant):
@@ -111,6 +112,23 @@ def report(a: argparse.Namespace) -> int:
     if unranked:
         print(f"not ranked: {unranked}")
     return 0
+
+
+def _current(where: Any, task_id: str) -> str | None:
+    """The candidate of the task's current policy."""
+    from ..eval.policy import overview
+
+    return next((p.candidate for t in overview(where, [task_id]) for p in t.policies if p.current), None)
+
+
+def _with_ranking(result: Any, listed: Any, unranked: str | None, current: str | None) -> Any:
+    """The snapshot with the ranking `report` lists (adopt.shortlist), for the chart page to show as is."""
+    from ..eval.comparison import Placed
+
+    if listed is None:
+        return result.model_copy(update={"unranked": unranked, "current": current})
+    ranking = [Placed(candidate=r.candidate, tied=r.tied, excluded=r.excluded) for r in listed.rows()]
+    return result.model_copy(update={"ranking": ranking, "order": listed.order(), "current": current})
 
 
 def _print_tasks(found: list[Any], as_json: bool) -> int:

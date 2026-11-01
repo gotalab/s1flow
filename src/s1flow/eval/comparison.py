@@ -1,6 +1,8 @@
-"""One neutral development comparison of the current line-up's saved runs, for terminal readers and agents.
+"""One development comparison of the current line-up's saved runs, for terminal readers, agents and the chart page.
 
-It never asks a model, and it neither ranks nor recommends: ``metrics`` owns the numbers, ``eval.select`` the ranking.
+It never asks a model and recommends nothing: ``metrics`` owns the numbers, ``eval.select`` the ranking. A saved
+snapshot carries that ranking as `report` lists it (``ranking``, ``order``) and the current policy's candidate, so the
+chart page shows the same order without ranking again.
 """
 from __future__ import annotations
 
@@ -21,6 +23,7 @@ from ..core.errors import ConfigError, NotFound, S1flowError
 from ..policies.kinds import KindParams
 from ..policies.rule import DecisionRule
 from . import evalset, metrics, select
+from .adopt import Order
 from .candidate import Candidate
 from .evaluation import (
     Calls,
@@ -84,6 +87,15 @@ class ComparisonRow(BaseModel):
         return self
 
 
+class Placed(BaseModel):
+    """One candidate in `report`'s ranking (adopt.Row, without what the row already holds)."""
+
+    model_config = ConfigDict(extra='forbid')
+    candidate: str
+    tied: bool  # the primary objective cannot tell it from the best
+    excluded: list[str] = Field(default_factory=list)  # constraints it breaks; it cannot be picked
+
+
 class Comparison(BaseModel):
     model_config = ConfigDict(extra='forbid', populate_by_name=True, serialize_by_alias=True)
     schema_: Literal['s1flow/comparison@2'] = Field(default='s1flow/comparison@2', alias='schema')
@@ -105,6 +117,10 @@ class Comparison(BaseModel):
     metric_definitions: list[MetricDefinition]
     notices: list[str] = Field(default_factory=list)
     candidates: list[ComparisonRow]
+    ranking: list[Placed] | None = None  # best first, as `report` lists it; None: not ranked (`unranked` says why)
+    order: Order | None = None  # what orders the tied candidates
+    unranked: str | None = None
+    current: str | None = None  # the candidate of the task's current policy, if any
 
     @model_validator(mode="after")
     def _metric_definitions_match_rows(self) -> "Comparison":

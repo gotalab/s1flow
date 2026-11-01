@@ -50,6 +50,10 @@ def test_out_writes_the_snapshot_and_markdown_and_from_reads_it(ran):
     got = cli("report", "truth", "--out", "out")
     assert got.exit_code == 0 and "wrote out/comparison.json, out/questions/base.md, out/questions/base.json" in got.err
     assert (ran.root / "out" / "questions" / "base.md").read_text().startswith("# truth")
+    saved = json.loads((ran.root / "out" / "comparison.json").read_text())  # the chart page shows report's ranking as is
+    assert [p["candidate"] for p in saved["ranking"]] == [r["candidate"] for r in json.loads(cli("report", "truth", "--json").output)["ranking"]]
+    assert saved["ranking"][0] == {"candidate": "good", "tied": True, "excluded": []} and set(saved["order"]) == {"by", "skipped", "why"}
+    assert saved["current"] is None and saved["unranked"] is None  # no policy adopted yet
     offline = cli("report", "--from", "out/comparison.json", "--json")
     assert offline.exit_code == 0 and json.loads(offline.output)["provenance"] == "saved snapshot"
     assert cli("report", "--from", "out/comparison.json", "--out", "again").exit_code == 2
