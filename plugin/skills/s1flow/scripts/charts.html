@@ -176,8 +176,10 @@ function renderDecision() {
   if(D.order?.why)why.push(D.order.why+'.');
   if(!ranked.length&&D.unranked)why.push(D.unranked);
   const words=currentWords();if(words)why.push(words);
+  const blocked=first?.row.adoption_blocked||[];
+  if(blocked.length)why.push(`It cannot be adopted: ${blocked.join('; ')}.`);
   txt('why',why.join(' '));
-  if(first&&D.current!==first.row.candidate){$('adopt').hidden=false;txt('adopt',`s1flow adopt ${D.task} ${first.row.candidate} --reason "..."`);}
+  if(first&&!blocked.length&&D.current!==first.row.candidate){$('adopt').hidden=false;txt('adopt',`s1flow adopt ${D.task} ${first.row.candidate} --reason "..."`);}
 }
 
 function intervalScale() {
