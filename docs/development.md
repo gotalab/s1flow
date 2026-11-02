@@ -20,10 +20,9 @@ makes them unreadable, rewrite them to the current shape in the same change.
 
 ## Release
 
-1. In one pull request, set the version in `pyproject.toml`, and pin the Action at `v<version>` and the package at
-   `==<version>` in `examples/` and the Skill's `references/app.md` (`tests/test_docs.py` fails until they agree).
-   Merge it.
-2. Tag the merge commit `v<version>` and push the tag (`git tag -a v<version> <sha> -m v<version> && git push origin v<version>`).
-   `s1flow init --ci` writes `gotalab/s1flow@v<version>` of the CLI that ran it, so every release needs its tag.
-3. Run the publish workflow from that tag (Actions → publish → Run workflow → Use workflow from: `v<version>`).
-   It refuses any other ref, runs the package checks on the tag, then publishes to PyPI.
+In one pull request, set the version in `pyproject.toml`, and pin the Action at `v<version>` and the package at
+`==<version>` in `examples/` and the Skill's `references/app.md` (`tests/test_docs.py` fails until they agree).
+Merging it is the release: the publish workflow sees the new version on main, tags the merge commit `v<version>`
+(`s1flow init --ci` writes `gotalab/s1flow@v<version>` of the CLI that ran it, so every release needs its tag), runs
+the package checks on it and publishes to PyPI. Nothing runs on a local machine. If a job fails after the tag is made,
+re-run the failed jobs of that run.

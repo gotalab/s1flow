@@ -46,7 +46,7 @@ def test_the_docs_name_only_commands_the_cli_has():
 
 def test_the_examples_and_the_skill_pin_the_release_of_this_version():
     """`s1flow init --ci` writes gotalab/s1flow@v<version>; what people copy pins the same release (the Release steps
-    in docs/development.md: the PR that sets the version sets these, and publish runs from that tag)."""
+    in docs/development.md: the PR that sets the version sets these, and merging it tags and publishes that commit)."""
     pins = [(p.relative_to(ROOT), want, ref) for p in DOCS for want, pin in PINS.items() for ref in pin.findall(p.read_text())]
     assert {want for _, want, _ in pins} == set(PINS)  # both kinds are there to check
     stale = [f"{p}: {ref}" for p, want, ref in pins if ref != want]
