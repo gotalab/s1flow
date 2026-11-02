@@ -4,6 +4,9 @@
 
 ### Changed
 
+- The chart page (`scripts/charts.py`) opens on a table of every compared candidate across the task's objectives,
+  the question type's metrics, API cost and latency, with the best per column highlighted and a ◆ on candidates no
+  other matches or beats on every measure shown. Candidates never run and the details are folded away.
 - `feedback record` calls no model, so it takes no `--connections` (passing one is a usage error).
 - `init --ci` outside a Git repository exits 2 and says why, instead of writing the project without the workflow.
   A bad `--task` id is also refused before anything is written.

@@ -77,11 +77,13 @@ python <skill>/scripts/charts.py comparison.json --out comparison.html
 ```
 
 It reads only the saved snapshot, so it doesn't import the evaluation tools, call a model, rescore or adopt
-anything. The page opens with the task's objective plotted against API cost. You can switch either axis
-to latency or another metric, and add a second chart. The table lists every candidate in model and variant
-order, with no recommendations, eligibility filters or adopt buttons. Metric definitions, units and how each was
-measured come from the same snapshot that agents read. Target lines don't hide candidates that fall short. You
-can export each chart as a self-contained SVG or PNG that includes the source and sample size.
+anything. The page opens on a table of every compared candidate. Its columns are the task's own objectives, the
+metrics the question type has (precision, recall and F1; macro-F1; MAE and QWK; mean IoU; accuracy), API cost and
+p90 latency; any other metric in the snapshot is a click away. Each cell has a bar from the worst value to the
+best, the best in each column is highlighted, and a column header sorts by it. A ◆ marks a candidate that no other
+candidate matches or beats on every measure shown: the ones worth weighing, with no weights and no pick. Below the
+table, a trade-off chart plots any two measures. The candidates not compared and why, the probability curves and how
+everything was measured are folded away. Charts export as SVG or PNG with their source and sample size.
 
 Score questions (levels 0 to L-1) are read by their expected level: MAE (the default objective) and QWK, beside the
 shared metrics. Box questions get the shared metrics and a confidence selection curve. Yes/no questions add
