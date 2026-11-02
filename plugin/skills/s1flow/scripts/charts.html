@@ -15,6 +15,7 @@ h2 { font-size:18px; margin:0 0 6px; font-weight:600; }
 p { margin:8px 0; }
 .meta { color:var(--muted); font-size:13px; }
 section { margin-top:32px; }
+#measures-box { border:0; padding:0; margin:4px 0 0; } #measures-box > summary { font-weight:400; font-size:13px; }
 #measures { display:flex; flex-wrap:wrap; gap:6px; margin:10px 0 14px; }
 #measures label { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border:1px solid #c9cfd8; border-radius:14px; font-size:13px; cursor:pointer; user-select:none; }
 #measures label:has(input:checked) { background:var(--tint); border-color:var(--accent); color:var(--accent); }
@@ -26,7 +27,7 @@ th button { all:unset; cursor:pointer; display:inline-block; text-align:right; }
 th button:hover,th button:focus-visible { color:var(--ink); text-decoration:underline; }
 th[aria-sort] button { color:var(--ink); font-weight:600; }
 td { padding:8px 10px; text-align:right; border-bottom:1px solid var(--line); white-space:nowrap; }
-th.name,td.name { text-align:left; min-width:190px; white-space:normal; }
+th.name,td.name { text-align:left; min-width:190px; white-space:normal; position:sticky; left:0; background:#fff; z-index:1; }
 td.name { font-weight:500; }
 .variant { color:var(--muted); font-weight:400; }
 td.cell { min-width:92px; }
@@ -77,7 +78,7 @@ footer { margin-top:40px; color:var(--faint); font-size:12px; overflow-wrap:anyw
 </header>
 <section aria-labelledby="compare-title">
   <h2 id="compare-title">Compare candidates</h2>
-  <div id="measures" role="group" aria-label="Measures shown"></div>
+  <details id="measures-box" open><summary class="meta">Measures shown</summary><div id="measures" role="group" aria-label="Measures shown"></div></details>
   <div class="table-wrap" tabindex="0" role="region" aria-labelledby="compare-title"><table><thead id="compare-head"></thead><tbody id="compare-body"></tbody></table></div>
   <p class="key" id="key"></p>
 </section>
@@ -124,35 +125,48 @@ function name(r,parent) {r.model.split(/(?<=[@:])/).forEach((part,i)=>{if(i)pare
 const params=D.objective.params||{};
 const objectiveKey=D.objective.name==='coverage'?`coverage:${params.target_accuracy}`:null;
 const isTask=k=>k.startsWith('objective:')||k===objectiveKey;
+const canonical=v=>JSON.stringify(v,(_,x)=>x&&typeof x==='object'&&!Array.isArray(x)?Object.fromEntries(Object.keys(x).sort().map(k=>[k,x[k]])):x);
+const canonicalParams=k=>{try{return canonical(JSON.parse(k.slice(k.indexOf('{'))))===canonical(params);}catch{return false;}};
 // Every measure the snapshot holds: its metrics, then what the calls took.
-const measures=[...definitions.map(d=>({...d,label:isTask(d.key)?`${d.label} · task`:d.label,get:r=>r.metrics[d.key]?.value,interval:r=>r.metrics[d.key]?.interval})),
+const value=(r,k)=>r.metrics[k]?.value;
+const sameEverywhere=(a,b)=>rows.every(r=>value(r,a)===value(r,b));
+// A plain metric the task also declares as an objective (accuracy beside objective:accuracy{}) is dropped when the
+// two agree everywhere, and named as the plain reading when they differ (a tuned rule against P >= 0.5).
+const twin=d=>definitions.some(o=>o.key===`objective:${d.key}{}`);
+const metricDefs=definitions.filter(d=>!(twin(d)&&sameEverywhere(d.key,`objective:${d.key}{}`)));
+const objectiveLabel=d=>d.key===objectiveKey||d.key.startsWith(`objective:${D.objective.name}{`)&&canonicalParams(d.key)?D.objective.label:d.label;
+const measures=[...metricDefs.map(d=>({...d,label:isTask(d.key)?`${objectiveLabel(d)} · task`:twin(d)?`${d.label} (plain reading)`:d.label,get:r=>value(r,d.key),interval:r=>r.metrics[d.key]?.interval})),
   {key:'api-cost',label:'API cost / 10k',unit:'usd',direction:'min',basis:'Recorded billed or estimated API cost per 10,000 inputs; unpriced calls remain unknown.',get:r=>r.calls?.cost_unknown?null:r.calls?.cost_per_10k_usd},
   {key:'latency',label:'p90 latency',unit:'ms',direction:'min',basis:'Recorded answering-attempt latency, 90th percentile.',get:r=>r.calls?.latency?.p90_ms}];
 
 // Shown first: the task's own objectives, the metrics that say how often answers are right (those this question
 // type has), cost and latency. Calibration (AUROC, Brier, ECE) and the rest are one click away.
 const HEADLINE=['accuracy','precision','recall','f1','macro_f1','mae','qwk','mean_iou'];
-const taskKeys=definitions.filter(d=>isTask(d.key)).map(d=>d.key);
-const typeKeys=HEADLINE.filter(k=>definitions.some(d=>d.key===k));
+const taskKeys=metricDefs.filter(d=>isTask(d.key)).map(d=>d.key);
+const typeKeys=HEADLINE.filter(k=>metricDefs.some(d=>d.key===k));
 // A task objective named like a plain metric (objective:accuracy{} beside accuracy) is read by the task's own rule,
 // so it is shown in place of the plain one.
 const plainOf=k=>k.match(/^objective:(\w+)\{\}$/)?.[1];
 const replaced=new Set(taskKeys.map(plainOf).filter(Boolean));
 const shown=new Set([...taskKeys,...typeKeys.filter(k=>!replaced.has(k)),'api-cost','latency']);
-const primaryKey=taskKeys.find(k=>k===objectiveKey||k.startsWith(`objective:${D.objective.name}{`))||typeKeys[0]||measures[0].key;
+const primaryKey=taskKeys.find(k=>k===objectiveKey||k.startsWith(`objective:${D.objective.name}{`)&&canonicalParams(k))||taskKeys[0]||typeKeys[0]||measures[0].key;
 
 // Compared: candidates with an answer to every case they were asked (excluded ones are listed below the table).
 const compared=rows.filter(r=>r.n>0&&!r.excluded.length);
 const left=rows.filter(r=>!compared.includes(r));
 const better=(m,a,b)=>m.direction==='min'?a<b:a>b;
 
-// ◆: no other candidate is as good or better on every measure and better on one. Only the measures every compared
-// candidate has take part (an unknown cost cannot be compared); `unused` names the others.
-function front(list,shownMs) {
-  const ms=shownMs.filter(m=>list.every(r=>finite(m.get(r))));
-  const set=new Set(list.filter(r=>!list.some(o=>o!==r&&ms.every(m=>!better(m,m.get(r),m.get(o)))&&ms.some(m=>better(m,m.get(o),m.get(r))))));
-  return Object.assign(set,{unused:shownMs.filter(m=>!ms.includes(m))});
+// ◆: no other candidate is at least as good on every measure shown and better on one. An unknown value neither
+// matches nor beats: a candidate is outdone only by one known wherever it is known.
+function outdoes(o,r,ms) {
+  let strictly=false;
+  for(const m of ms){const a=m.get(o),b=m.get(r);
+    if(!finite(b))continue;
+    if(!finite(a)||better(m,b,a))return false;
+    if(better(m,a,b))strictly=true;}
+  return strictly;
 }
+const front=(list,ms)=>new Set(list.filter(r=>!list.some(o=>o!==r&&outdoes(o,r,ms))));
 let sortKey=null, sortAsc=true;
 function renderMeasures() {
   const box=$('measures');box.replaceChildren();
@@ -160,7 +174,8 @@ function renderMeasures() {
 }
 function renderTable() {
   const group=m=>isTask(m.key)?0:m.unit==='usd'||m.unit==='ms'?2:1;  // the task's objectives first, then the metrics, then the calls
-  const ms=measures.filter(m=>shown.has(m.key)).sort((a,b)=>group(a)-group(b));
+  const ms=measures.filter(m=>shown.has(m.key)).sort((a,b)=>group(a)-group(b)||(b.key===primaryKey)-(a.key===primaryKey));
+  if(sortKey&&!shown.has(sortKey))sortKey=null;
   const best=new Map(ms.map(m=>{const v=compared.map(m.get).filter(finite);return [m.key,v.length?(m.direction==='min'?Math.min(...v):Math.max(...v)):null];}));
   const worst=new Map(ms.map(m=>{const v=compared.map(m.get).filter(finite);return [m.key,v.length?(m.direction==='min'?Math.max(...v):Math.min(...v)):null];}));
   const onFront=front(compared,ms);
@@ -172,9 +187,9 @@ function renderTable() {
   });
   const head=el('tr');head.appendChild(el('th','Candidate','name'));
   for(const m of ms){const th=el('th');const b=el('button',m.label);b.type='button';b.title=`${m.basis} ${m.direction==='min'?'Lower':'Higher'} is better. Sort by it.`;
-    b.addEventListener('click',()=>{if(sortKey===m.key)sortAsc=!sortAsc;else{sortKey=m.key;sortAsc=true;}renderTable();});
-    if(sortKey===m.key)th.setAttribute('aria-sort',sortAsc?'descending':'ascending');
-    b.textContent=`${m.label} ${m.direction==='min'?'↓':'↑'}`;th.appendChild(b);head.appendChild(th);}
+    b.addEventListener('click',()=>{if(sortKey!==m.key){sortKey=m.key;sortAsc=true;}else if(sortAsc)sortAsc=false;else sortKey=null;renderTable();});
+    if(sortKey===m.key)th.setAttribute('aria-sort',(sortAsc===(m.direction==='max'))?'descending':'ascending');
+    b.textContent=`${m.label}\u00a0${m.direction==='min'?'↓':'↑'}`;th.appendChild(b);head.appendChild(th);}
   $('compare-head').replaceChildren(head);
   const body=$('compare-body');body.replaceChildren();
   for(const r of order){const tr=el('tr',undefined,onFront.has(r)?'front':'');tr.appendChild(name(r,el('td',undefined,'name')));
@@ -183,8 +198,7 @@ function renderTable() {
       const i=m.interval?.(r);if(i)td.title=`95% interval ${fmt(i[0],m.unit)} – ${fmt(i[1],m.unit)}`;tr.appendChild(td);}
     body.appendChild(tr);}
   const key=$('key');key.replaceChildren();
-  const unused=onFront.unused.length?` (${onFront.unused.map(m=>m.label).join(', ')} left out: unknown for some)`:'';
-  key.append(el('b','◆'),` ${onFront.size} of ${compared.length}: no other candidate is as good or better on every measure shown${unused}. `,el('b','Blue'),': best in its column. Bars run from worst to best. Hover a value for its interval.');
+  key.append(el('b','◆'),` ${onFront.size} of ${compared.length}: no other candidate is at least as good on every measure shown and better on one. `,el('b','Blue'),': best in its column. Bars run from worst to best. Hover a value for its interval.');
 }
 
 // Trade-off: any two measures; the ◆ candidates are named, the rest on hover.
@@ -201,7 +215,7 @@ function newSvg(title) {const svg=document.createElementNS(NS,'svg');svg.setAttr
 function finish(svg,width,height,caption) {label(svg,16,height,caption,{'font-size':10,fill:MUTED});svg.setAttribute('viewBox',`0 0 ${width} ${height+12}`);svg.setAttribute('width',width);svg.setAttribute('height',height+12);return svg;}
 function relationshipFigure(xd,yd,width) {
   const title=`${yd.label} × ${xd.label}`, svg=newSvg(title);
-  const onFront=front(compared,[xd,yd]);
+  const onFront=front(compared,measures.filter(m=>shown.has(m.key)));  // the table's ◆
   const points=compared.map(r=>({r,x:xd.get(r),y:yd.get(r)})).filter(q=>finite(q.x)&&finite(q.y));
   const [xlo,xhi,xstep]=range(points.map(q=>q.x),xd.unit),[ylo,yhi,ystep]=range(points.map(q=>q.y),yd.unit);
   const L=64,R=width-24,T=40,H=width<500?260:320,B=T+H;
@@ -225,7 +239,7 @@ function relationshipFigure(xd,yd,width) {
     boxes.push(spot.box);label(svg,spot.x,spot.y,text,{'text-anchor':spot.anchor,'font-size':11,fill:ACCENT});
   }
   if(!points.length)label(svg,L+12,T+40,'No candidate has both measures.',{fill:MUTED});
-  return finish(svg,width,B+58,`◆ ${onFront.size}: not beaten on both · ${points.length} of ${compared.length} candidates · ${D.task} · ${D.n} development cases · snapshot ${D.id.slice(0,12)}`);
+  return finish(svg,width,B+58,`Blue: ◆ in the table · ${points.length} of ${compared.length} candidates plotted · ${D.task} · ${D.n} development cases · snapshot ${D.id.slice(0,12)}`);
 }
 function plotFigure(title,basis,width,points,xTitle,yTitle,{target=null,diagonal=false}={}) {
   const svg=newSvg(title);label(svg,16,22,title,{'font-size':14});label(svg,16,40,basis,{'font-size':11,fill:MUTED});
@@ -264,7 +278,7 @@ function renderNotCompared() {
   if(!left.length)return;
   $('not-compared-box').hidden=false;
   const never=left.filter(r=>!r.n), other=left.filter(r=>r.n);
-  txt('not-compared-count',`${left.length} candidates${never.length?`, ${never.length} never run`:''}`);
+  txt('not-compared-count',`${left.length} candidate${left.length===1?'':'s'}${never.length?`, ${never.length} never run`:''}`);
   const list=$('not-compared');
   for(const r of other){const li=el('li',r.candidate);li.append(el('span',` — ${r.excluded.join('; ')}`));list.appendChild(li);}
   if(never.length)list.appendChild(el('li',`No runs: ${never.map(r=>r.candidate).join(', ')}`));
@@ -292,10 +306,12 @@ try {
   if(D.schema!=='s1flow/comparison@2')throw new Error('Generate a new comparison snapshot with s1flow report TASK --out DIR.');
   txt('task',D.task);
   txt('context',`${D.question_type} question · ${D.n} labelled development cases · task objective: ${D.objective.label} · ${String(D.at).slice(0,10)}`);
-  txt('compare-title',`Compare ${compared.length} candidates`);
+  txt('compare-title',compared.length?`Compare ${compared.length} candidate${compared.length===1?'':'s'}`:'No candidate to compare yet: see Not compared below');
+  if(!compared.length)$('not-compared-box').open=true;
+  if(window.innerWidth<760)$('measures-box').open=false;
   renderMeasures();renderTable();renderNotCompared();
   for(const id of ['x-axis','y-axis'])for(const m of measures){const option=el('option',m.label);option.value=m.key;$(id).appendChild(option);}
-  $('x-axis').value='api-cost';$('y-axis').value=primaryKey;
+  $('x-axis').value=compared.some(r=>finite(measures.find(m=>m.key==='api-cost').get(r)))?'api-cost':'latency';$('y-axis').value=primaryKey;
   for(const id of ['x-axis','y-axis'])$(id).addEventListener('change',renderRelationship);
   renderRelationship();
   for(const r of compared){const option=el('option',r.candidate);option.value=r.candidate;$('diagnostic-candidate').appendChild(option);}
