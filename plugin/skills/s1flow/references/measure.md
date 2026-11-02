@@ -70,10 +70,10 @@ python <skill>/scripts/charts.py report/comparison.json --out comparison.html
 ```
 
 `<skill>` is this Skill's directory. The renderer is standard-library Python: no model calls, no rescoring, no
-adoption. It opens on `report`'s ranking: the candidates tied at the top on the objective, the first by the
-tiebreak, and the current policy; then each compared candidate's objective, interval, tiebreak, API cost and p90
-latency. The other metrics, a trade-off chart of any two measures, and the candidates not compared are folded away.
-It marks the first by the tiebreak, not a winner: the pick stays the person's.
+adoption. It opens on a table of every compared candidate across the task's objectives, the question type's metrics,
+API cost and p90 latency (other metrics one click away), with the best per column highlighted. A ◆ marks a candidate
+no other candidate matches or beats on every measure shown; the page itself marks this, the CLI does not. There is
+no pick, overall score or weighting. A trade-off chart plots any two measures. SVG and PNG buttons save it.
 Probability diagnostics (acceptance curve, precision/recall, calibration) appear only where real probabilities
 or box confidence exist. A provider's own confidence is not the selected answer's probability.
 

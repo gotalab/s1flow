@@ -961,70 +961,6 @@
    "title": "Objective",
    "type": "object"
   },
-  "Order": {
-   "description": "What orders the candidates the primary objective cannot tell apart (`tied`): `by`, task.py's tiebreak as\napplied; none: they are listed by name, and their order says nothing.",
-   "properties": {
-    "by": {
-     "items": {
-      "type": "string"
-     },
-     "title": "By",
-     "type": "array"
-    },
-    "skipped": {
-     "items": {
-      "type": "string"
-     },
-     "title": "Skipped",
-     "type": "array"
-    },
-    "why": {
-     "anyOf": [
-      {
-       "type": "string"
-      },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "title": "Why"
-    }
-   },
-   "required": [
-    "by",
-    "skipped"
-   ],
-   "title": "Order",
-   "type": "object"
-  },
-  "Placed": {
-   "additionalProperties": false,
-   "description": "One candidate in `report`'s ranking (adopt.Row, without what the row already holds).",
-   "properties": {
-    "candidate": {
-     "title": "Candidate",
-     "type": "string"
-    },
-    "tied": {
-     "title": "Tied",
-     "type": "boolean"
-    },
-    "excluded": {
-     "items": {
-      "type": "string"
-     },
-     "title": "Excluded",
-     "type": "array"
-    }
-   },
-   "required": [
-    "candidate",
-    "tied"
-   ],
-   "title": "Placed",
-   "type": "object"
-  },
   "Price": {
    "additionalProperties": false,
    "description": "A model's list price, declared in s1flow.toml (`price.input_per_mtok = ...`) for a model that bills nothing back.\n\nWhat it costs is an estimate from the tokens the model reports (client/cost.py): a model can charge what\ntokens do not show (cached input, unseen reasoning, a minimum), so a model that returns what it billed\n(AI Gateway, OpenRouter) is never priced from here. A price these four parts cannot write is left out.",
@@ -1382,56 +1318,6 @@
    },
    "title": "Candidates",
    "type": "array"
-  },
-  "ranking": {
-   "anyOf": [
-    {
-     "items": {
-      "$ref": "#/$defs/Placed"
-     },
-     "type": "array"
-    },
-    {
-     "type": "null"
-    }
-   ],
-   "default": null,
-   "title": "Ranking"
-  },
-  "order": {
-   "anyOf": [
-    {
-     "$ref": "#/$defs/Order"
-    },
-    {
-     "type": "null"
-    }
-   ],
-   "default": null
-  },
-  "unranked": {
-   "anyOf": [
-    {
-     "type": "string"
-    },
-    {
-     "type": "null"
-    }
-   ],
-   "default": null,
-   "title": "Unranked"
-  },
-  "current": {
-   "anyOf": [
-    {
-     "type": "string"
-    },
-    {
-     "type": "null"
-    }
-   ],
-   "default": null,
-   "title": "Current"
   }
  },
  "required": [

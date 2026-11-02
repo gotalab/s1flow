@@ -9,45 +9,44 @@
 :root { color-scheme:light; font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; color:#202734; background:#fff; --ink:#202734; --muted:#5f6b7c; --faint:#9aa3b1; --line:#e3e7ed; --accent:#3b45c9; --tint:#eef0fd; }
 * { box-sizing:border-box; }
 body { margin:0; background:#fff; }
-main { max-width:1080px; margin:auto; padding:40px 32px 72px; }
+main { max-width:1180px; margin:auto; padding:40px 32px 72px; }
 h1 { font-size:28px; line-height:1.2; margin:4px 0 0; font-weight:650; }
-h2 { font-size:18px; margin:0 0 12px; font-weight:600; }
+h2 { font-size:18px; margin:0 0 6px; font-weight:600; }
 p { margin:8px 0; }
 .meta { color:var(--muted); font-size:13px; }
-section { margin-top:40px; }
-#decision { margin-top:28px; padding:20px 22px; border-radius:8px; background:var(--tint); }
-#decision .lead { font-size:19px; line-height:1.45; margin:0; }
-#decision .lead strong { color:var(--accent); }
-#decision .why { margin:6px 0 0; color:var(--muted); font-size:14px; }
-code { font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace; }
-#adopt { display:inline-block; margin-top:12px; padding:5px 10px; border-radius:5px; background:#fff; color:var(--ink); }
+section { margin-top:32px; }
+#measures { display:flex; flex-wrap:wrap; gap:6px; margin:10px 0 14px; }
+#measures label { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border:1px solid #c9cfd8; border-radius:14px; font-size:13px; cursor:pointer; user-select:none; }
+#measures label:has(input:checked) { background:var(--tint); border-color:var(--accent); color:var(--accent); }
+#measures input { margin:0; accent-color:var(--accent); }
 .table-wrap { overflow-x:auto; }
 table { border-collapse:collapse; width:100%; font-variant-numeric:tabular-nums; font-size:14px; }
-th { text-align:right; font-weight:500; color:var(--muted); font-size:12px; border-bottom:1px solid #c9cfd8; padding:8px 10px; white-space:nowrap; }
-td { padding:9px 10px; text-align:right; border-bottom:1px solid var(--line); white-space:nowrap; }
-th.name,td.name { text-align:left; white-space:normal; overflow-wrap:normal; min-width:200px; }
-th.orders { color:var(--accent); white-space:normal; min-width:110px; } td.orders { font-weight:600; }
-tr.after-tie td { border-top:2px solid #c9cfd8; }
-th.strip,td.strip { width:30%; min-width:160px; padding-left:16px; padding-right:16px; }
-td.strip svg { display:block; width:100%; height:18px; overflow:visible; }
-td.value { font-weight:600; }
-tr.top td { background:var(--tint); }
-tr.top td.name { font-weight:600; }
-tr.out td { color:var(--faint); }
+th { text-align:right; font-weight:500; color:var(--muted); font-size:12px; border-bottom:1px solid #c9cfd8; padding:8px 10px; vertical-align:bottom; }
+th button { all:unset; cursor:pointer; display:inline-block; text-align:right; }
+th button:hover,th button:focus-visible { color:var(--ink); text-decoration:underline; }
+th[aria-sort] button { color:var(--ink); font-weight:600; }
+td { padding:8px 10px; text-align:right; border-bottom:1px solid var(--line); white-space:nowrap; }
+th.name,td.name { text-align:left; min-width:190px; white-space:normal; }
+td.name { font-weight:500; }
 .variant { color:var(--muted); font-weight:400; }
-.badge { display:inline-block; white-space:nowrap; margin-left:8px; padding:0 7px; border-radius:9px; font-size:11px; font-weight:600; line-height:18px; vertical-align:1px; }
-.badge.first { background:var(--accent); color:#fff; }
-.badge.current { border:1px solid var(--ink); color:var(--ink); }
-.reason { display:block; font-size:12px; font-weight:400; color:var(--faint); }
-.key { display:flex; flex-wrap:wrap; gap:4px 18px; margin:0 0 8px; font-size:12px; color:var(--muted); }
-.key i { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:6px; vertical-align:-1px; }
+td.cell { min-width:92px; }
+.bar { display:block; height:4px; margin-top:4px; background:var(--line); border-radius:2px; }
+.bar i { display:block; height:4px; border-radius:2px; background:#aab1bf; margin-left:auto; }
+td.best { color:var(--accent); font-weight:650; }
+td.best .bar i { background:var(--accent); }
+tr.front td.name::before { content:"◆"; color:var(--accent); margin:0 6px 0 -16px; font-size:11px; }
+tr.front td.name { padding-left:26px; }
+tr.front td.name, tr.front td:first-child { font-weight:650; }
+td.name { padding-left:26px; }
+.key { margin:8px 0 0; font-size:12px; color:var(--muted); }
+.key b { color:var(--accent); }
 details { margin-top:14px; border-top:1px solid var(--line); padding-top:12px; }
 details > summary { cursor:pointer; font-weight:600; font-size:15px; }
 details > summary .meta { font-weight:400; margin-left:6px; }
 details[open] > summary { margin-bottom:12px; }
 button,select { font:inherit; color:var(--ink); background:#fff; border:1px solid #bbc3cf; border-radius:4px; min-height:32px; padding:4px 8px; }
-button { cursor:pointer; font-size:12px; }
-button:focus-visible,summary:focus-visible,select:focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
+.figure-tools button { cursor:pointer; font-size:12px; }
+button:focus-visible,summary:focus-visible,select:focus-visible,#measures label:focus-within { outline:2px solid var(--accent); outline-offset:3px; }
 .controls { display:flex; flex-wrap:wrap; gap:10px 20px; align-items:end; margin:0 0 8px; font-size:13px; color:var(--muted); }
 .controls label { display:flex; flex-direction:column; gap:3px; }
 figure { margin:0; min-width:0; }
@@ -63,10 +62,10 @@ pre { white-space:pre-wrap; overflow-wrap:anywhere; font:12px/1.6 ui-monospace,m
 .measurement summary { font-size:14px; font-weight:500; }
 #question { white-space:pre-wrap; font-size:14px; }
 #error { color:#9a381b; }
-.notice:empty,[hidden] { display:none!important; }
+[hidden] { display:none!important; }
 footer { margin-top:40px; color:var(--faint); font-size:12px; overflow-wrap:anywhere; }
-@media(max-width:760px) { main { padding:24px 16px 48px; } .figures { grid-template-columns:1fr; } #decision .lead { font-size:17px; } th.strip,td.strip { display:none; } th.name,td.name { min-width:120px; } th { white-space:normal; min-width:72px; } th.orders { min-width:80px; } td { padding:8px 6px; } }
-@media print { @page { size:A4 landscape; margin:12mm; } main { max-width:none; padding:0; } .figure-tools,.controls { display:none!important; } details { display:block; } .table-wrap { overflow:visible; } }
+@media(max-width:760px) { main { padding:24px 16px 48px; } .figures { grid-template-columns:1fr; } th.name,td.name { min-width:130px; } td.cell { min-width:72px; } td,th { padding:7px 6px; } }
+@media print { @page { size:A4 landscape; margin:12mm; } main { max-width:none; padding:0; } .figure-tools,.controls,#measures { display:none!important; } .table-wrap { overflow:visible; } }
 </style>
 </head>
 <body>
@@ -76,24 +75,18 @@ footer { margin-top:40px; color:var(--faint); font-size:12px; overflow-wrap:anyw
   <p class="meta" id="context"></p>
   <h1 id="task"></h1>
 </header>
-<section id="decision" aria-label="Best candidates">
-  <p class="lead" id="lead"></p>
-  <p class="why" id="why"></p>
-  <code id="adopt" hidden></code>
+<section aria-labelledby="compare-title">
+  <h2 id="compare-title">Compare candidates</h2>
+  <div id="measures" role="group" aria-label="Measures shown"></div>
+  <div class="table-wrap" tabindex="0" role="region" aria-labelledby="compare-title"><table><thead id="compare-head"></thead><tbody id="compare-body"></tbody></table></div>
+  <p class="key" id="key"></p>
 </section>
-<section aria-labelledby="ranking-title">
-  <h2 id="ranking-title"></h2>
-  <div class="key" id="key"></div>
-  <div class="table-wrap" tabindex="0" role="region" aria-labelledby="ranking-title"><table><thead id="ranking-head"></thead><tbody id="ranking-body"></tbody></table></div>
+<section aria-labelledby="tradeoff-title">
+  <h2 id="tradeoff-title">Trade-off</h2>
+  <div class="controls"><label>Vertical<select id="y-axis"></select></label><label>Horizontal<select id="x-axis"></select></label></div>
+  <div id="relationship"></div>
 </section>
 <section aria-label="More detail">
-  <details id="tradeoffs"><summary>Trade-offs <span class="meta">any two measures, against each other</span></summary>
-    <div class="controls"><label>Vertical<select id="y-axis"></select></label><label>Horizontal<select id="x-axis"></select></label></div>
-    <div id="relationship"></div>
-  </details>
-  <details id="all-metrics"><summary>Every metric <span class="meta" id="metric-count"></span></summary>
-    <div class="table-wrap" tabindex="0" role="region" aria-label="Every metric"><table><thead id="metrics-head"></thead><tbody id="metrics-body"></tbody></table></div>
-  </details>
   <details id="not-compared-box" hidden><summary>Not compared <span class="meta" id="not-compared-count"></span></summary><ul id="not-compared"></ul></details>
   <details id="diagnostics"><summary>Probability and threshold curves <span class="meta">exploratory, development cases</span></summary>
     <label class="controls">Candidate<select id="diagnostic-candidate"><option value="">Choose a candidate</option></select></label>
@@ -117,11 +110,9 @@ const D=JSON.parse(document.getElementById('comparison-data').textContent);
 const rows=D.candidates, definitions=D.metric_definitions;
 const $=id=>document.getElementById(id);
 const NS='http://www.w3.org/2000/svg';
-const INK='#202734', MUTED='#5f6b7c', FAINT='#b4bbc6', LINE='#e3e7ed', ACCENT='#3b45c9';
+const INK='#202734', MUTED='#5f6b7c', LINE='#e3e7ed', ACCENT='#3b45c9';
 const finite=x=>typeof x==='number'&&Number.isFinite(x);
 const fmt=(x,unit='number')=>!finite(x)?'—':unit==='share'?`${(x*100).toFixed(1)}%`:unit==='usd'?`$${x.toLocaleString('en-US',{maximumSignificantDigits:3})}`:unit==='ms'?`${Math.round(x).toLocaleString('en-US')} ms`:x.toLocaleString('en-US',{maximumSignificantDigits:3});
-const cost=r=>r.calls?.cost_unknown?null:r.calls?.cost_per_10k_usd;
-const latency=r=>r.calls?.latency?.p90_ms;
 const figureStore=new Map();
 function el(tag,text,cls) { const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n; }
 function txt(id,value) { $(id).textContent=value; }
@@ -129,108 +120,74 @@ function svgNode(parent,tag,attrs={},text) {const n=document.createElementNS(NS,
 function label(parent,x,y,text,attrs={}) {return svgNode(parent,'text',{x,y,fill:INK,'font-size':12,'font-family':'Arial, sans-serif',...attrs},text);}
 function name(r,parent) {r.model.split(/(?<=[@:])/).forEach((part,i)=>{if(i)parent.append(document.createElement('wbr'));parent.append(document.createTextNode(part));});if(r.variant!=='base')parent.append(el('span',` · ${r.variant}`,'variant'));return parent;}
 
-// The task's objective: the metric the ranking orders by.
+// The task's objective as a metric key: coverage is kept under its target.
 const params=D.objective.params||{};
-const canonical=value=>JSON.stringify(value,(_,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.keys(v).sort().map(k=>[k,v[k]])):v);
-const objectivePrefix=`objective:${D.objective.name}`;
-const primary=definitions.find(d=>(D.objective.name==='coverage'&&d.key.startsWith('coverage:')&&Number(d.key.slice(9))===params.target_accuracy)
-  ||(d.key.startsWith(objectivePrefix+'{')&&canonical(JSON.parse(d.key.slice(objectivePrefix.length)))===canonical(params)))
-  ||{key:null,label:D.objective.label,unit:D.objective.unit==='share'?'share':'number',direction:D.objective.direction,basis:'the task objective'};
-const objective=r=>({value:r.value,interval:r.interval});
-const better=(a,b)=>primary.direction==='min'?a-b:b-a;
+const objectiveKey=D.objective.name==='coverage'?`coverage:${params.target_accuracy}`:null;
+const isTask=k=>k.startsWith('objective:')||k===objectiveKey;
+// Every measure the snapshot holds: its metrics, then what the calls took.
+const measures=[...definitions.map(d=>({...d,label:isTask(d.key)?`${d.label} · task`:d.label,get:r=>r.metrics[d.key]?.value,interval:r=>r.metrics[d.key]?.interval})),
+  {key:'api-cost',label:'API cost / 10k',unit:'usd',direction:'min',basis:'Recorded billed or estimated API cost per 10,000 inputs; unpriced calls remain unknown.',get:r=>r.calls?.cost_unknown?null:r.calls?.cost_per_10k_usd},
+  {key:'latency',label:'p90 latency',unit:'ms',direction:'min',basis:'Recorded answering-attempt latency, 90th percentile.',get:r=>r.calls?.latency?.p90_ms}];
 
-// Who is compared, in the ranking `s1flow report` lists; without one, by the objective alone.
-const byName=new Map(rows.map(r=>[r.candidate,r]));
-const ranked=D.ranking?D.ranking.filter(p=>byName.has(p.candidate)).map(p=>({row:byName.get(p.candidate),tied:p.tied,excluded:p.excluded||[]}))
-  :rows.filter(r=>finite(r.value)&&!r.excluded.length).sort((a,b)=>better(a.value,b.value)).map(row=>({row,tied:false,excluded:[]}));
-const shown=new Set(ranked.map(p=>p.row.candidate));
-const left=rows.filter(r=>!shown.has(r.candidate));
-const topGroup=ranked.filter(p=>p.tied);
-const first=topGroup.length===1||(D.order?.by||[]).length?topGroup[0]:undefined;
-const tieWords={latency:'p90 latency',cost:'API cost'};
-// The tiebreak's objectives get a column beside the objective: they order the tied candidates.
-const tieMetrics=(D.order?.by||[]).map(k=>definitions.find(d=>d.key==='objective:'+k)).filter(Boolean);
-const tieLabel=k=>tieWords[k]||definitions.find(d=>d.key==='objective:'+k)?.label||k;
+// Shown first: the task's own objectives, the metrics that say how often answers are right (those this question
+// type has), cost and latency. Calibration (AUROC, Brier, ECE) and the rest are one click away.
+const HEADLINE=['accuracy','precision','recall','f1','macro_f1','mae','qwk','mean_iou'];
+const taskKeys=definitions.filter(d=>isTask(d.key)).map(d=>d.key);
+const typeKeys=HEADLINE.filter(k=>definitions.some(d=>d.key===k));
+// A task objective named like a plain metric (objective:accuracy{} beside accuracy) is read by the task's own rule,
+// so it is shown in place of the plain one.
+const plainOf=k=>k.match(/^objective:(\w+)\{\}$/)?.[1];
+const replaced=new Set(taskKeys.map(plainOf).filter(Boolean));
+const shown=new Set([...taskKeys,...typeKeys.filter(k=>!replaced.has(k)),'api-cost','latency']);
+const primaryKey=taskKeys.find(k=>k===objectiveKey||k.startsWith(`objective:${D.objective.name}{`))||typeKeys[0]||measures[0].key;
 
-function currentWords() {
-  if(!D.current)return '';
-  if(first&&D.current===first.row.candidate)return 'It is the current policy.';
-  if(shown.has(D.current))return `The current policy is ${D.current}.`;
-  return byName.has(D.current)?`The current policy, ${D.current}, is not compared (see Not compared below).`:`The current policy, ${D.current}, is not in this comparison.`;
-}
-function renderDecision() {
-  const lead=$('lead');lead.replaceChildren();const why=[];
-  if(!ranked.length)lead.textContent='No candidate has an answer to every development case yet.';
-  else if(!topGroup.length){
-    lead.append('Sorted by ',el('strong',D.objective.label),'.');
-    why.push(D.ranking?'No candidate is within the constraints.':D.unranked?`Not ranked: ${D.unranked}.`:'This snapshot holds no ranking; regenerate it with s1flow report TASK --out DIR to see which candidates are tied.');
-  } else if(topGroup.length===1){
-    const s=el('strong');name(first.row,s);lead.append(s,` is best on ${D.objective.label}: ${fmt(first.row.value,primary.unit)}.`);
-  } else if(first){
-    const s=el('strong');name(first.row,s);
-    lead.append(s,` comes first of the ${topGroup.length} candidates tied on ${D.objective.label}, ordered by ${D.order.by.map(tieLabel).join(', then ')}.`);
-  } else {
-    lead.append(el('strong',`${topGroup.length} candidates`),` are tied on ${D.objective.label}.`);
-    why.push('No tiebreak orders them: compare them on cost and latency below, or name one in task.py’s tiebreak.');
-  }
-  if(D.order?.why)why.push(D.order.why+'.');
-  if(!ranked.length&&D.unranked)why.push(D.unranked);
-  const words=currentWords();if(words)why.push(words);
-  const blocked=first?.row.adoption_blocked||[];
-  if(blocked.length)why.push(`It cannot be adopted: ${blocked.join('; ')}.`);
-  txt('why',why.join(' '));
-  if(first&&!blocked.length&&D.current!==first.row.candidate){$('adopt').hidden=false;txt('adopt',`s1flow adopt ${D.task} ${first.row.candidate} --reason "..."`);}
-}
+// Compared: candidates with an answer to every case they were asked (excluded ones are listed below the table).
+const compared=rows.filter(r=>r.n>0&&!r.excluded.length);
+const left=rows.filter(r=>!compared.includes(r));
+const better=(m,a,b)=>m.direction==='min'?a<b:a>b;
 
-function intervalScale() {
-  const values=ranked.flatMap(p=>[p.row.value,...(p.row.interval||[])]).filter(finite);
-  if(!values.length)return null;
-  let lo=Math.min(...values),hi=Math.max(...values);
-  if(primary.unit==='share'){const step=hi-lo>.3?.1:.05;lo=Math.max(0,Math.floor(lo/step)*step);hi=Math.min(1,Math.ceil(hi/step)*step);}
-  if(lo===hi){lo-=1;hi+=1;}
-  return [lo,hi];
+// ◆: no other candidate is as good or better on every measure and better on one. Only the measures every compared
+// candidate has take part (an unknown cost cannot be compared); `unused` names the others.
+function front(list,shownMs) {
+  const ms=shownMs.filter(m=>list.every(r=>finite(m.get(r))));
+  const set=new Set(list.filter(r=>!list.some(o=>o!==r&&ms.every(m=>!better(m,m.get(r),m.get(o)))&&ms.some(m=>better(m,m.get(o),m.get(r))))));
+  return Object.assign(set,{unused:shownMs.filter(m=>!ms.includes(m))});
 }
-function strip(p,range,isTop,isOut) {
-  const svg=document.createElementNS(NS,'svg');svg.setAttribute('viewBox','0 0 100 18');svg.setAttribute('preserveAspectRatio','none');svg.setAttribute('aria-hidden','true');
-  const X=v=>(v-range[0])/(range[1]-range[0])*100, c=isOut?FAINT:isTop?ACCENT:MUTED;
-  svgNode(svg,'line',{x1:0,x2:100,y1:9,y2:9,stroke:LINE,'vector-effect':'non-scaling-stroke'});
-  const i=p.row.interval;
-  if(i&&i.every(finite))svgNode(svg,'rect',{x:X(i[0]),y:5,width:Math.max(.4,X(i[1])-X(i[0])),height:8,rx:0,fill:c,'fill-opacity':isTop?.28:.18});
-  if(finite(p.row.value))svgNode(svg,'rect',{x:X(p.row.value)-.5,y:2,width:1,height:14,fill:c});
-  return svg;
+let sortKey=null, sortAsc=true;
+function renderMeasures() {
+  const box=$('measures');box.replaceChildren();
+  for(const m of measures){const l=el('label'),i=el('input');i.type='checkbox';i.checked=shown.has(m.key);i.addEventListener('change',()=>{i.checked?shown.add(m.key):shown.delete(m.key);renderTable();renderRelationship();});l.append(i,m.label);l.title=m.basis;box.appendChild(l);}
 }
-function renderRanking() {
-  txt('ranking-title',`${ranked.length} ${ranked.length===1?'candidate':'candidates'} by ${D.objective.label}, ${primary.direction==='min'?'lower':'higher'} is better`);
-  const head=el('tr');
-  const range=intervalScale();
-  const span=range?` ${fmt(range[0],primary.unit)} – ${fmt(range[1],primary.unit)}`:'';
-  for(const [t,c] of [['Candidate','name'],[D.objective.label,''],...tieMetrics.map(d=>[`${d.label} · orders the tie`,'orders']),['95% interval'+span,'strip'],['API cost / 10k',''],['p90 latency','']])head.appendChild(el('th',t,c));
-  $('ranking-head').replaceChildren(head);
-  const body=$('ranking-body');body.replaceChildren();
-  ranked.forEach((p,i)=>{
-    const r=p.row,out=p.excluded.length>0;
-    const tr=el('tr',undefined,[p.tied?'top':out?'out':'',i&&ranked[i-1].tied&&!p.tied?'after-tie':''].join(' ').trim());
-    const cell=name(r,el('td',undefined,'name'));
-    if(p===first)cell.appendChild(el('span','first','badge first'));
-    if(D.current===r.candidate)cell.appendChild(el('span','current','badge current'));
-    if(out)cell.appendChild(el('span',p.excluded.join('; '),'reason'));
-    const s=el('td',undefined,'strip');if(range)s.appendChild(strip(p,range,p.tied,out));
-    if(r.interval)s.title=`${fmt(r.interval[0],primary.unit)} – ${fmt(r.interval[1],primary.unit)}`;
-    const c=el('td',fmt(cost(r),'usd'));if(r.calls?.cost_source&&r.calls.cost_source!=='billed'&&finite(cost(r)))c.title=r.calls.cost_source==='list'?'estimated from list price':r.calls.cost_source;
-    tr.append(cell,el('td',fmt(r.value,primary.unit),'value'),...tieMetrics.map(d=>el('td',fmt(r.metrics[d.key]?.value,d.unit),'orders')),s,c,el('td',fmt(latency(r),'ms')));body.appendChild(tr);
+function renderTable() {
+  const group=m=>isTask(m.key)?0:m.unit==='usd'||m.unit==='ms'?2:1;  // the task's objectives first, then the metrics, then the calls
+  const ms=measures.filter(m=>shown.has(m.key)).sort((a,b)=>group(a)-group(b));
+  const best=new Map(ms.map(m=>{const v=compared.map(m.get).filter(finite);return [m.key,v.length?(m.direction==='min'?Math.min(...v):Math.max(...v)):null];}));
+  const worst=new Map(ms.map(m=>{const v=compared.map(m.get).filter(finite);return [m.key,v.length?(m.direction==='min'?Math.max(...v):Math.min(...v)):null];}));
+  const onFront=front(compared,ms);
+  const by=measures.find(m=>m.key===(sortKey||primaryKey));
+  const order=[...compared].sort((a,b)=>{
+    if(!sortKey&&onFront.has(a)!==onFront.has(b))return onFront.has(a)?-1:1;
+    const x=by?.get(a),y=by?.get(b);if(!finite(x)||!finite(y))return finite(x)?-1:finite(y)?1:0;
+    const d=by.direction==='min'?x-y:y-x;return sortKey&&!sortAsc?-d:d;
   });
+  const head=el('tr');head.appendChild(el('th','Candidate','name'));
+  for(const m of ms){const th=el('th');const b=el('button',m.label);b.type='button';b.title=`${m.basis} ${m.direction==='min'?'Lower':'Higher'} is better. Sort by it.`;
+    b.addEventListener('click',()=>{if(sortKey===m.key)sortAsc=!sortAsc;else{sortKey=m.key;sortAsc=true;}renderTable();});
+    if(sortKey===m.key)th.setAttribute('aria-sort',sortAsc?'descending':'ascending');
+    b.textContent=`${m.label} ${m.direction==='min'?'↓':'↑'}`;th.appendChild(b);head.appendChild(th);}
+  $('compare-head').replaceChildren(head);
+  const body=$('compare-body');body.replaceChildren();
+  for(const r of order){const tr=el('tr',undefined,onFront.has(r)?'front':'');tr.appendChild(name(r,el('td',undefined,'name')));
+    for(const m of ms){const v=m.get(r),b=best.get(m.key),w=worst.get(m.key);const td=el('td',fmt(v,m.unit),'cell'+(finite(v)&&v===b?' best':''));
+      if(finite(v)&&finite(b)){const share=b===w?1:(v-w)/(b-w);const bar=el('span',undefined,'bar'),fill=el('i');fill.style.width=`${Math.max(4,share*100)}%`;bar.appendChild(fill);td.appendChild(bar);}
+      const i=m.interval?.(r);if(i)td.title=`95% interval ${fmt(i[0],m.unit)} – ${fmt(i[1],m.unit)}`;tr.appendChild(td);}
+    body.appendChild(tr);}
   const key=$('key');key.replaceChildren();
-  const item=(color,text)=>{const k=el('span');const i=el('i');i.style.background=color;k.append(i,text);key.appendChild(k);};
-  if(topGroup.length)item(ACCENT,topGroup.length>1?`tied: ${D.objective.label} cannot tell them apart (intervals overlap the best's)`:'best');
-  if(range)item('#cbd0f4','bar: 95% interval, tick: value');
-  if(ranked.some(p=>p.excluded.length))item(FAINT,'outside the task’s constraints');
+  const unused=onFront.unused.length?` (${onFront.unused.map(m=>m.label).join(', ')} left out: unknown for some)`:'';
+  key.append(el('b','◆'),` ${onFront.size} of ${compared.length}: no other candidate is as good or better on every measure shown${unused}. `,el('b','Blue'),': best in its column. Bars run from worst to best. Hover a value for its interval.');
 }
 
-// Trade-offs: any two measures; the top group is named on the chart, the rest on hover.
-const axes=[...definitions,
-  {key:'api-cost',label:'API cost / 10,000 inputs',unit:'usd',direction:'min',basis:'Recorded billed or estimated API costs; unpriced calls remain unknown.',get:cost},
-  {key:'latency',label:'p90 latency (ms)',unit:'ms',direction:'min',basis:'Recorded answering-attempt latency.',get:latency}];
-const estimate=(r,d)=>d.get?{value:d.get(r)}:r.metrics[d.key]||{};
+// Trade-off: any two measures; the ◆ candidates are named, the rest on hover.
 function niceStep(span) {if(!(span>0))return 1;const p=10**Math.floor(Math.log10(span/4));const n=span/4/p;return (n<=1?1:n<=2?2:n<=5?5:10)*p;}
 function tick(x,unit) {return unit==='share'?`${Number((x*100).toFixed(1))}%`:unit==='usd'?`$${x.toLocaleString('en-US',{maximumSignificantDigits:3})}`:x.toLocaleString('en-US',{maximumSignificantDigits:3});}
 function range(values,unit) {
@@ -244,31 +201,31 @@ function newSvg(title) {const svg=document.createElementNS(NS,'svg');svg.setAttr
 function finish(svg,width,height,caption) {label(svg,16,height,caption,{'font-size':10,fill:MUTED});svg.setAttribute('viewBox',`0 0 ${width} ${height+12}`);svg.setAttribute('width',width);svg.setAttribute('height',height+12);return svg;}
 function relationshipFigure(xd,yd,width) {
   const title=`${yd.label} × ${xd.label}`, svg=newSvg(title);
-  const points=ranked.map(p=>({p,x:estimate(p.row,xd).value,y:estimate(p.row,yd).value})).filter(q=>finite(q.x)&&finite(q.y));
+  const onFront=front(compared,[xd,yd]);
+  const points=compared.map(r=>({r,x:xd.get(r),y:yd.get(r)})).filter(q=>finite(q.x)&&finite(q.y));
   const [xlo,xhi,xstep]=range(points.map(q=>q.x),xd.unit),[ylo,yhi,ystep]=range(points.map(q=>q.y),yd.unit);
-  const L=64,R=width-24,T=40,H=width<500?260:340,B=T+H;
+  const L=64,R=width-24,T=40,H=width<500?260:320,B=T+H;
   const X=v=>L+10+(v-xlo)/(xhi-xlo)*(R-L-20),Y=v=>B-10-(v-ylo)/(yhi-ylo)*(H-20);
   const xTick=R-L<420?xstep*2:xstep;
   for(let t=xlo;t<=xhi+xstep*.01;t+=xTick){svgNode(svg,'line',{x1:X(t),x2:X(t),y1:T,y2:B,stroke:LINE});label(svg,X(t),B+18,tick(t,xd.unit),{'text-anchor':'middle','font-size':11,fill:MUTED});}
   for(let t=ylo;t<=yhi+ystep*.01;t+=ystep){svgNode(svg,'line',{x1:L,x2:R,y1:Y(t),y2:Y(t),stroke:LINE});label(svg,L-8,Y(t)+4,tick(t,yd.unit),{'text-anchor':'end','font-size':11,fill:MUTED});}
   label(svg,R,B+36,`${xd.label} (${xd.direction==='min'?'lower':'higher'} is better) →`,{'text-anchor':'end','font-size':12,fill:MUTED});
   label(svg,L,T-22,`↑ ${yd.label} (${yd.direction==='min'?'lower':'higher'} is better)`,{'font-size':12,fill:MUTED});
-  // Dots first, then names where they fit: the tied and the current candidate; any other name is on hover.
-  const marks=points.map(q=>({q,x:X(q.x),y:Y(q.y)}));
-  for(const m of [...marks].sort((a,b)=>Number(a.q.p.tied)-Number(b.q.p.tied))){const c=m.q.p.excluded.length?FAINT:m.q.p.tied?ACCENT:'#8a93a3';
-    const dot=svgNode(svg,'circle',{cx:m.x,cy:m.y,r:m.q.p.tied?5:4,fill:c});
-    svgNode(dot,'title',{},`${m.q.p.row.candidate}: ${yd.label} ${fmt(m.q.y,yd.unit)}, ${xd.label} ${fmt(m.q.x,xd.unit)}`);}
+  const marks=points.map(q=>({q,x:X(q.x),y:Y(q.y),on:onFront.has(q.r)}));
+  for(const m of [...marks].sort((a,b)=>Number(a.on)-Number(b.on))){
+    const dot=svgNode(svg,'circle',{cx:m.x,cy:m.y,r:m.on?5:4,fill:m.on?ACCENT:'#9aa3b1'});
+    svgNode(dot,'title',{},`${m.q.r.candidate}: ${yd.label} ${fmt(m.q.y,yd.unit)}, ${xd.label} ${fmt(m.q.x,xd.unit)}`);}
+  // Names where they fit without covering a dot or another name; the rest are on hover.
   const boxes=marks.map(m=>[m.x-5,m.y-5,m.x+5,m.y+5]);
   const free=b=>b[0]>=L&&b[2]<=R&&b[1]>=T&&b[3]<=B&&!boxes.some(o=>b[0]<o[2]&&o[0]<b[2]&&b[1]<o[3]&&o[1]<b[3]);
-  let unnamed=0;
-  for(const m of marks.filter(m=>m.q.p.tied||D.current===m.q.p.row.candidate)){
-    const text=m.q.p.row.candidate,w=text.length*6.4,h=12;
+  for(const m of marks.filter(m=>m.on)){
+    const text=m.q.r.candidate,w=text.length*6.4,h=12;
     const spot=[[8,4,'start'],[-8,4,'end'],[-w/2,-10,'start'],[-w/2,18,'start']].map(([dx,dy,anchor])=>{const x0=anchor==='end'?m.x+dx-w:m.x+dx;return {box:[x0,m.y+dy-h+2,x0+w,m.y+dy+2],x:m.x+dx,y:m.y+dy,anchor};}).find(o=>free(o.box));
-    if(!spot){unnamed++;continue;}
-    boxes.push(spot.box);label(svg,spot.x,spot.y,text,{'text-anchor':spot.anchor,'font-size':11,fill:m.q.p.tied?ACCENT:INK});
+    if(!spot)continue;
+    boxes.push(spot.box);label(svg,spot.x,spot.y,text,{'text-anchor':spot.anchor,'font-size':11,fill:ACCENT});
   }
   if(!points.length)label(svg,L+12,T+40,'No candidate has both measures.',{fill:MUTED});
-  return finish(svg,width,B+58,`${points.length} of ${ranked.length} candidates${unnamed?` (${unnamed} tied names hidden where they overlap; hover a dot)`:''} · ${D.task} · ${D.n} development cases · snapshot ${D.id.slice(0,12)}`);
+  return finish(svg,width,B+58,`◆ ${onFront.size}: not beaten on both · ${points.length} of ${compared.length} candidates · ${D.task} · ${D.n} development cases · snapshot ${D.id.slice(0,12)}`);
 }
 function plotFigure(title,basis,width,points,xTitle,yTitle,{target=null,diagonal=false}={}) {
   const svg=newSvg(title);label(svg,16,22,title,{'font-size':14});label(svg,16,40,basis,{'font-size':11,fill:MUTED});
@@ -288,7 +245,7 @@ function mountFigure(parent,id,build) {
   const tools=el('div',undefined,'figure-tools');for(const type of ['svg','png']){const b=el('button',type.toUpperCase());b.type='button';b.setAttribute('aria-label',`Save ${id} as ${type.toUpperCase()}`);b.addEventListener('click',()=>downloadFigure(id,type));tools.appendChild(b);}figure.appendChild(tools);parent.appendChild(figure);
   figureStore.set(id,{holder,build});drawFigure(id);
 }
-function drawFigure(id) {const f=figureStore.get(id);if(!f||!f.holder.isConnected||!f.holder.offsetParent)return;const width=Math.max(320,Math.round(f.holder.getBoundingClientRect().width));f.holder.replaceChildren(f.build(width));}
+function drawFigure(id) {const f=figureStore.get(id);if(!f||!f.holder.offsetParent)return;const width=Math.max(320,Math.round(f.holder.getBoundingClientRect().width));f.holder.replaceChildren(f.build(width));}
 function download(blob,name) {const url=URL.createObjectURL(blob),a=el('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 async function downloadFigure(id,type) {
   try {
@@ -300,19 +257,8 @@ async function downloadFigure(id,type) {
 }
 function renderRelationship() {
   const parent=$('relationship');parent.replaceChildren();figureStore.delete('tradeoff');
-  const xd=axes.find(d=>d.key===$('x-axis').value),yd=axes.find(d=>d.key===$('y-axis').value);
+  const xd=measures.find(m=>m.key===$('x-axis').value),yd=measures.find(m=>m.key===$('y-axis').value);
   mountFigure(parent,'tradeoff',width=>relationshipFigure(xd,yd,width));
-}
-
-function renderMetrics() {
-  txt('metric-count',`${definitions.length} metrics, cost and latency`);
-  const head=el('tr');const name0=el('th','Candidate','name');head.appendChild(name0);
-  for(const d of definitions)head.appendChild(el('th',d.label));
-  for(const t of ['p50 latency','p99 latency','Answered'])head.appendChild(el('th',t));
-  $('metrics-head').replaceChildren(head);const body=$('metrics-body');body.replaceChildren();
-  for(const p of ranked){const r=p.row,tr=el('tr',undefined,p.tied?'top':'');tr.appendChild(name(r,el('td',undefined,'name')));
-    for(const d of definitions){const m=r.metrics[d.key];const cell=el('td',fmt(m?.value,d.unit));if(m?.interval)cell.title=`${fmt(m.interval[0],d.unit)} – ${fmt(m.interval[1],d.unit)}`;tr.appendChild(cell);}
-    const l=r.calls?.latency||{};tr.append(el('td',fmt(l.p50_ms,'ms')),el('td',fmt(l.p99_ms,'ms')),el('td',`${r.n} / ${D.n}`));body.appendChild(tr);}
 }
 function renderNotCompared() {
   if(!left.length)return;
@@ -320,8 +266,8 @@ function renderNotCompared() {
   const never=left.filter(r=>!r.n), other=left.filter(r=>r.n);
   txt('not-compared-count',`${left.length} candidates${never.length?`, ${never.length} never run`:''}`);
   const list=$('not-compared');
-  for(const r of other){const li=el('li',r.candidate);li.append(el('span',` — ${r.excluded.join('; ')||'not ranked'}`));list.appendChild(li);}
-  if(never.length){const li=el('li',`No runs: ${never.map(r=>r.candidate).join(', ')}`);list.appendChild(li);}
+  for(const r of other){const li=el('li',r.candidate);li.append(el('span',` — ${r.excluded.join('; ')}`));list.appendChild(li);}
+  if(never.length)list.appendChild(el('li',`No runs: ${never.map(r=>r.candidate).join(', ')}`));
 }
 function renderDiagnostics() {
   const parent=$('diagnostic-figures');parent.replaceChildren();for(const key of [...figureStore.keys()])if(key.startsWith('diagnostic-'))figureStore.delete(key);
@@ -334,26 +280,27 @@ function renderDiagnostics() {
 }
 function renderContext() {
   const base=rows.find(r=>r.variant==='base')||rows[0];txt('question',base?.question?.instructions||'');txt('source',D.source?`Cases: ${D.source}`:'');
-  for(const d of definitions){const p=el('p',undefined,'meta');p.append(el('strong',`${d.label}. `),document.createTextNode(d.basis));$('metric-definitions').appendChild(p);}
+  for(const m of measures){const p=el('p',undefined,'meta');p.append(el('strong',`${m.label}. `),document.createTextNode(m.basis));$('metric-definitions').appendChild(p);}
   const targets=Object.entries(D.constraints||{}).filter(([,v])=>v!==null&&v!==undefined);
-  if(targets.length)$('notices').appendChild(el('p',`Constraints: ${targets.map(([k,v])=>`${k} = ${typeof v==='object'?JSON.stringify(v):v}`).join(' · ')}.`));
+  if(targets.length)$('notices').appendChild(el('p',`Constraints recorded in task.py: ${targets.map(([k,v])=>`${k} = ${typeof v==='object'?JSON.stringify(v):v}`).join(' · ')}.`));
   for(const note of D.notices||[])$('notices').appendChild(el('p',note));
-  for(const p of ranked){const r=p.row,detail=el('details',undefined,'measurement');detail.appendChild(el('summary',r.candidate));const dl=el('dl');const l=r.calls?.latency||{};
+  for(const r of compared){const detail=el('details',undefined,'measurement');detail.appendChild(el('summary',r.candidate));const dl=el('dl');const l=r.calls?.latency||{};
     const values=[['Answered / labelled',`${r.n} / ${D.n}`],['Refused / failed / missing',`${r.failures?.refused_cases??'unknown'} / ${r.failures?.failed_cases??'unknown'} / ${r.failures?.never_asked??'unknown'}`],['Provider / model',`${r.measurement?.provider} / ${r.measurement?.model_id}`],['Probability evidence',r.measurement?.distribution||'unknown'],['Recorded concurrency',(l.concurrency||[]).join(', ')||'unknown'],['p50 / p90 / p99',`${fmt(l.p50_ms,'ms')} / ${fmt(l.p90_ms,'ms')} / ${fmt(l.p99_ms,'ms')}`],['Cost basis',`${r.calls?.cost_source||'unknown'} · ${r.calls?.cost_unknown||0} unpriced calls`],['Fitted reading rule',JSON.stringify(r.rule)]];
     for(const [k,v] of values)dl.append(el('dt',k),el('dd',String(v)));detail.appendChild(dl);detail.appendChild(el('pre',JSON.stringify(r.question,null,2)));$('measurements').appendChild(detail);}
 }
 try {
   if(D.schema!=='s1flow/comparison@2')throw new Error('Generate a new comparison snapshot with s1flow report TASK --out DIR.');
   txt('task',D.task);
-  txt('context',`${D.n} labelled development cases · objective: ${D.objective.label} · ${new Date(D.at).toISOString().slice(0,10)}`);
-  renderDecision();renderRanking();renderMetrics();renderNotCompared();
-  for(const id of ['x-axis','y-axis'])for(const d of axes){const option=el('option',d.label);option.value=d.key;$(id).appendChild(option);}
-  $('x-axis').value='api-cost';$('y-axis').value=primary.key&&axes.some(d=>d.key===primary.key)?primary.key:axes[0].key;
+  txt('context',`${D.question_type} question · ${D.n} labelled development cases · task objective: ${D.objective.label} · ${String(D.at).slice(0,10)}`);
+  txt('compare-title',`Compare ${compared.length} candidates`);
+  renderMeasures();renderTable();renderNotCompared();
+  for(const id of ['x-axis','y-axis'])for(const m of measures){const option=el('option',m.label);option.value=m.key;$(id).appendChild(option);}
+  $('x-axis').value='api-cost';$('y-axis').value=primaryKey;
   for(const id of ['x-axis','y-axis'])$(id).addEventListener('change',renderRelationship);
-  $('tradeoffs').addEventListener('toggle',()=>{if($('tradeoffs').open)renderRelationship();});
-  for(const p of ranked){const option=el('option',p.row.candidate);option.value=p.row.candidate;$('diagnostic-candidate').appendChild(option);}
+  renderRelationship();
+  for(const r of compared){const option=el('option',r.candidate);option.value=r.candidate;$('diagnostic-candidate').appendChild(option);}
   $('diagnostic-candidate').addEventListener('change',renderDiagnostics);$('diagnostics').addEventListener('toggle',()=>{if($('diagnostics').open)renderDiagnostics();});
-  renderContext();txt('provenance',`Snapshot ${D.id} · computed ${D.at} · development cases only; the held-out test is read when you adopt. Regenerate after changing data, instructions or models.`);
+  renderContext();txt('provenance',`Snapshot ${D.id} · computed ${D.at} · development cases only; the held-out test is read when a candidate is adopted. Regenerate after changing data, instructions or models.`);
   let frame;new ResizeObserver(()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(()=>{for(const id of figureStore.keys())drawFigure(id);});}).observe(document.querySelector('main'));
 }catch(error){$('error').hidden=false;txt('error',`Could not display this report: ${error.message}`);console.error(error);}
 </script>

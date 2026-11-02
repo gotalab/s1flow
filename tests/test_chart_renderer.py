@@ -65,11 +65,3 @@ def test_renderer_cannot_overwrite_its_input(tmp_path):
     done = invoke(str(source), '--out', str(source))
     assert done.returncode == 2 and source.read_bytes() == before
 
-
-
-def test_a_ranking_must_name_candidates_the_snapshot_holds(tmp_path):
-    data = snapshot()
-    data['ranking'] = [{'candidate': 'nobody', 'tied': True, 'excluded': []}]
-    source = tmp_path / 'comparison.json'; source.write_text(json.dumps(data))
-    done = invoke(str(source))
-    assert done.returncode == 2 and 'ranking' in done.stderr

@@ -77,13 +77,13 @@ python <skill>/scripts/charts.py comparison.json --out comparison.html
 ```
 
 It reads only the saved snapshot, so it doesn't import the evaluation tools, call a model, rescore or adopt
-anything. The page opens on the decision: the candidates the objective cannot tell apart at the top, the first of
-them by the tiebreak, and the current policy, in the order `s1flow report` lists them (the snapshot carries that
-ranking). Below that, one row per compared candidate: the objective with its 95% interval, the tiebreak's
-objectives, API cost and p90 latency. Every other metric, a trade-off chart of any two measures, the candidates
-not compared and why, the probability curves and how each figure was measured are folded away underneath. A
-snapshot without a ranking (a score question, or one saved by an older s1flow) is sorted by the objective alone.
-Charts export as SVG or PNG with their source and sample size.
+anything. The page opens on a table of every compared candidate. Its columns are the task's own objectives, the
+metrics the question type has (precision, recall and F1; macro-F1; MAE and QWK; mean IoU; accuracy), API cost and
+p90 latency; any other metric in the snapshot is a click away. Each cell has a bar from the worst value to the
+best, the best in each column is highlighted, and a column header sorts by it. A ◆ marks a candidate that no other
+candidate matches or beats on every measure shown: the ones worth weighing, with no weights and no pick. Below the
+table, a trade-off chart plots any two measures. The candidates not compared and why, the probability curves and how
+everything was measured are folded away. Charts export as SVG or PNG with their source and sample size.
 
 Score questions (levels 0 to L-1) are read by their expected level: MAE (the default objective) and QWK, beside the
 shared metrics. Box questions get the shared metrics and a confidence selection curve. Yes/no questions add
