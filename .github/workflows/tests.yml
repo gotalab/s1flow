@@ -3,7 +3,7 @@ on:
   push:
     branches: [main]  # a PR's commits are checked as the pull_request; pushing its branch again would repeat them
   pull_request:
-  workflow_call:  # publish.yml runs these on the tag it releases
+  workflow_call:  # publish.yml runs these on the commit it releases
 permissions:
   contents: read
 concurrency:  # a newer push to a PR cancels the checks of the one it replaces; every other run has its own group

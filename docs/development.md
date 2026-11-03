@@ -20,10 +20,16 @@ makes them unreadable, rewrite them to the current shape in the same change.
 
 ## Release
 
-1. In one pull request, set the version in `pyproject.toml`, and pin the Action at `v<version>` and the package at
-   `==<version>` in `examples/` and the Skill's `references/app.md` (`tests/test_docs.py` fails until they agree).
-   Merge it.
-2. Tag the merge commit `v<version>` and push the tag (`git tag -a v<version> <sha> -m v<version> && git push origin v<version>`).
-   `s1flow init --ci` writes `gotalab/s1flow@v<version>` of the CLI that ran it, so every release needs its tag.
-3. Run the publish workflow from that tag (Actions → publish → Run workflow → Use workflow from: `v<version>`).
-   It refuses any other ref, runs the package checks on the tag, then publishes to PyPI.
+A pull request that changes what users see (the CLI, the Python API, the Action, the Skill, file formats) is the
+release: it also raises the alpha number in `pyproject.toml` (`0.1.0a3` → `0.1.0a4`), renames the changelog's
+`Unreleased` section to that version and date, and pins the Action at `v<version>` and the package at `==<version>`
+in `examples/` and the Skill's `references/app.md` (`tests/test_docs.py` fails until they agree). A change users don't
+see keeps the version and ships with the next one that raises it. When two open pull requests take the same number,
+the one merged second takes the next.
+
+Merging it releases: the publish workflow sees the version change on main, runs the package checks on that commit,
+tags it `v<version>` (`s1flow init --ci` writes `gotalab/s1flow@v<version>` of the CLI that ran it, so every release
+needs its tag) and publishes to PyPI. Nothing runs on a local machine. Only a commit that changes the version
+releases, so a later merge never ships in its place. If a job fails for a reason outside the code (a runner or PyPI
+outage), use "Re-run failed jobs" on that run; if the code needs a fix, merge it, then run the publish workflow from
+main (Actions → publish → Run workflow), which releases main's version when it has no tag yet.

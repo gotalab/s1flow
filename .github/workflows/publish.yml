@@ -1,31 +1,78 @@
-# Publishes to PyPI by trusted publishing: PyPI trusts this workflow, so no token is stored.
-# Run it from the release's tag (Actions → publish → Run workflow → Use workflow from: v<version>), after the
-# steps in docs/development.md. It refuses any other ref, so every version on PyPI has the tag `s1flow init --ci`
-# points new projects at, and it publishes only what passed the package checks on that tag.
+# Releases a merge to main that changes pyproject.toml's version: runs the package checks on it, tags it v<version>,
+# then publishes to PyPI by trusted publishing (PyPI trusts this file by name, so no token is stored).
+# Merging the pull request that raises the version (docs/development.md) is the approval; nothing runs locally.
+# When a job fails, "Re-run failed jobs" on this run carries on; a later merge never releases in its place, but
+# running this workflow from main releases main's version if it has no tag yet.
 name: publish
 on:
-  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [pyproject.toml]
+  workflow_dispatch:  # from main, after a fix merged to main once the release's checks failed
 permissions:
   contents: read
+concurrency:
+  group: publish
+  cancel-in-progress: false
 jobs:
-  tag:
+  version:
     runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+      release: ${{ steps.version.outputs.release }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          fetch-depth: 2  # and the commit before it, to see whether this one changed the version
           persist-credentials: false
-      - name: The ref is the tag of pyproject.toml's version
+      - id: version
+        shell: bash  # with pipefail: a failed ls-remote stops here instead of reading as "no tag"
         run: |
-          version=$(python3 -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')
-          if [ "$GITHUB_REF" != "refs/tags/v$version" ]; then
-            echo "::error::publish runs from the tag v$version, not $GITHUB_REF: tag the commit that set the version (git tag -a v$version <sha> -m v$version && git push origin v$version), then run this workflow from that tag"
+          if [ "$GITHUB_REF" != refs/heads/main ]; then
+            echo "::error::publish releases main, not $GITHUB_REF"
             exit 1
           fi
+          version_at() { git show "$1:pyproject.toml" | python3 -c 'import sys, tomllib; print(tomllib.load(sys.stdin.buffer)["project"]["version"])'; }
+          version=$(version_at HEAD)
+          tag="v$version"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          if [ "$GITHUB_EVENT_NAME" = push ] && [ "$(version_at HEAD^)" = "$version" ]; then
+            echo "The version stays $version: nothing to release"
+            echo "release=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # the commit the tag points at ("^{}" peels an annotated tag); empty when there is no such tag
+          tagged=$(git ls-remote --exit-code origin "refs/tags/$tag" "refs/tags/$tag^{}" | tail -n 1 | cut -f 1 || [ $? = 2 ])
+          if [ -n "$tagged" ] && [ "$tagged" != "$GITHUB_SHA" ]; then
+            echo "::error::this commit sets version $version, but $tag is already on $tagged: set an unreleased version"
+            exit 1
+          fi
+          echo "Releasing $GITHUB_SHA as $tag"
+          echo "release=true" >> "$GITHUB_OUTPUT"
   checks:
-    needs: tag
+    needs: version
+    if: needs.version.outputs.release == 'true'
     uses: ./.github/workflows/tests.yml
+  tag:
+    needs: [version, checks]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # to create the tag
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.version.outputs.tag }}
+        run: |
+          if gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$TAG" > /dev/null 2>&1; then  # a re-run made it
+            tagged=$(gh api "repos/$GITHUB_REPOSITORY/commits/$TAG" --jq .sha)
+            [ "$tagged" = "$GITHUB_SHA" ] || { echo "::error::$TAG is on $tagged, not this commit"; exit 1; }
+          else
+            obj=$(gh api "repos/$GITHUB_REPOSITORY/git/tags" -f tag="$TAG" -f message="$TAG" -f object="$GITHUB_SHA" -f type=commit --jq .sha)
+            gh api "repos/$GITHUB_REPOSITORY/git/refs" -f ref="refs/tags/$TAG" -f sha="$obj" > /dev/null
+            echo "Tagged $GITHUB_SHA $TAG"
+          fi
   pypi:
-    needs: checks
+    needs: tag
     runs-on: ubuntu-latest
     environment: pypi
     permissions:
