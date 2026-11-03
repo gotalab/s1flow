@@ -104,6 +104,7 @@ dev = [
     "jsonschema>=4.26",
     "ruff>=0.17.2",
     "pytest-xdist>=3.8.0",
+    "hypothesis>=6.170.12",
 ]
 
 # Pyflakes alone: unused imports and variables, undefined names, redefinitions. Formatting is not checked.

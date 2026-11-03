@@ -12,6 +12,11 @@ uv run mypy src/s1flow
 
 CI (`.github/workflows/tests.yml`) runs the same commands on every pull request and on main.
 
+Some tests are properties checked on generated cases (Hypothesis): the measures against their definitions or
+scikit-learn, the evaluation's reading of a case against production's, the rule search against its constraints, and
+the policy store under any order of writes. With `CI` set they draw the same cases every run; locally they draw new
+ones each time, and a failure prints the case that broke it.
+
 `apps/bench` is this repository's own evaluation project, separate from the package you install. Its past reports
 are not a measure of any provider's current accuracy. Tests of the package read `tests/fixtures/project`, a frozen
 copy of the bench's line-up and policies, so re-running or adopting in the bench changes no test.

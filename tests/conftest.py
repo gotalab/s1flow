@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 import pytest
+from hypothesis import settings
 
 from s1flow import Client
 from s1flow.client import Boolean, BooleanAnswer, BoxAnswer, BoxEdges, Capabilities, Choice, ChoiceAnswer, ModelBuild, ModelSpec, Response, Usage
@@ -27,6 +28,12 @@ from s1flow.eval.task import Task
 from s1flow.objectives import Coverage, Objective
 from s1flow.policies import DecisionRule, PolicySpec, asked
 from s1flow.project import Project
+
+# Property tests (Hypothesis): CI draws the same examples on every run, so a red check is the change's; a local run
+# draws new ones each time. No deadline: a busy xdist worker is not a slow function.
+settings.register_profile("ci", derandomize=True, deadline=None, print_blob=True)
+settings.register_profile("local", deadline=None)
+settings.load_profile("ci" if os.environ.get("CI") else "local")
 
 HERE = Path(__file__).resolve().parent  # on PYTHONPATH in an s1flow process: toy_provider is importable
 BENCH = HERE.parent / "apps" / "bench"  # s1flow's own evaluation project: its tasks are the tests' real cases

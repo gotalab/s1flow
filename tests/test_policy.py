@@ -3,10 +3,16 @@
 import asyncio
 import json
 import sys
+import tempfile
+from contextlib import contextmanager
+from pathlib import Path
 
 import pytest
+from hypothesis import settings
+from hypothesis import strategies as st
+from hypothesis.stateful import RuleBasedStateMachine, invariant, rule
 from pydantic import ValidationError
-from conftest import Sharp, attach, make_project, ship
+from conftest import Sharp, attach, make_project, runtime_spec, ship
 
 from s1flow import policies
 from s1flow.core.errors import ConfigError, DataError, NotFound, ProviderError, S1flowError
@@ -27,6 +33,7 @@ from s1flow.client.identity import execution_digest
 from s1flow.policies.state_shape import mismatch, schema_of
 from s1flow.client import Boolean, Choice, ChoiceAnswer, Response, ModelBuild, ModelSpec
 from s1flow.policies.kinds import KindParams
+from s1flow.policies.history import Switch
 
 STATE = {"title": "Crash on start", "body": "It crashes."}
 CLASSES = ["kind/bug", "kind/question", "kind/enhancement"]
@@ -526,3 +533,77 @@ def test_only_adopt_switches_current():
     cli = (src / "cli" / "adopt.py").read_text()  # in the CLI, only adopt --spec writes (the rest goes through eval/adopt.py)
     found = [m.start() for m in re.finditer(r"adopted=|\.switch\(", cli)]
     assert found and all(cli.rfind("\ndef ", 0, at) == cli.find("\ndef _adopt_spec") for at in found)
+
+
+class StoreMachine(RuleBasedStateMachine):
+    """The policy store under any order of saves, switches, refusals and attempts to overwrite or to switch from a
+    stale current: every write either happens whole or leaves the store as it was, and current, the saved versions
+    and history.jsonl always agree with each other."""
+
+    def __init__(self):
+        super().__init__()
+        self.dir = tempfile.TemporaryDirectory()
+        self.store = policies.Policies(Path(self.dir.name))
+        self.versions: list[int] = []
+        self.current: int | None = None
+        self.history: list[tuple[str, int, int | None]] = []
+
+    def teardown(self):
+        self.dir.cleanup()
+
+    def version(self, step: int) -> int:
+        return max(1, max(self.versions, default=0) + step)  # step <= 0: one already saved, or under it
+
+    def fresh(self, v: int) -> bool:
+        return v > max(self.versions, default=0)
+
+    @rule(step=st.integers(-1, 2))
+    def save(self, step):
+        v = self.version(step)
+        with self.raises_unless(self.fresh(v), "already has"):
+            self.store.write_new(runtime_spec(version=v))
+            self.versions.append(v)
+
+    @rule(step=st.integers(-1, 2), action=st.sampled_from(["adopt", "spec"]), stale=st.booleans())
+    def switch(self, step, action, stale):
+        v = self.version(step)
+        previous = (1 if self.current is None else None) if stale else self.current
+        entry = Switch(action=action, version=v, previous=previous, by="t", reason="t")
+        with self.raises_unless(self.fresh(v) and not stale, "current changed" if stale else "already has"):
+            self.store.write_new(runtime_spec(version=v), adopted=entry)
+            self.versions.append(v)
+            self.history.append((action, v, self.current))
+            self.current = v
+
+    @rule()
+    def refuse(self):
+        v = max(self.versions, default=0) + 1
+        self.store.log("ticket", Switch(action="refused", version=v, previous=self.current, by="t", reason="t"))
+        self.history.append(("refused", v, self.current))
+        with self.raises_unless(False, "switches nothing"):
+            self.store.write_new(runtime_spec(version=v), adopted=Switch(action="refused", version=v, previous=self.current, by="t", reason="t"))
+
+    @contextmanager
+    def raises_unless(self, allowed: bool, refusal: str):
+        if allowed:
+            yield
+        else:
+            with pytest.raises(ConfigError, match=refusal):
+                yield
+
+    @invariant()
+    def the_store_is_the_model(self):
+        assert self.store.versions("ticket") == sorted(self.versions)
+        assert self.store.current("ticket") == self.current
+        assert [(h.action, h.version, h.previous) for h in self.store.history("ticket")] == self.history
+
+    @invariant()
+    def each_switch_starts_where_the_last_one_left_current(self):
+        switches = [h for h in self.store.history("ticket") if h.action != "refused"]
+        assert [h.previous for h in switches] == [None, *(h.version for h in switches)][:len(switches)]
+        assert self.store.current("ticket") == (switches[-1].version if switches else None)
+        assert all(self.store.read("ticket", version=h.version).version == h.version for h in switches)
+
+
+TestStoreMachine = StoreMachine.TestCase
+TestStoreMachine.settings = settings(max_examples=60, stateful_step_count=15)
