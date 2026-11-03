@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import json
 
 import pytest
 
-from conftest import s1flow
+from conftest import compare_fake, make_project, s1flow
 
 from s1flow.cli import EXITS, HELP, TABLE
+from s1flow.eval import metrics
 
 
 
@@ -125,3 +127,39 @@ def test_report_with_no_task_is_the_overview_of_what_runs(tmp_path):
     assert area["why"]["reason"] == "v3 times out" and area["current"] == 1
 
 
+
+
+TRUTH = '''from s1flow.eval import Task
+from s1flow.questions import Boolean
+
+task = Task(id="truth", cases="data.jsonl", state=lambda r: {"truth": r["truth"]}, label=lambda r: r["truth"],
+            question=Boolean(instructions="truth?"))
+'''
+
+
+def test_adopt_and_check_exit_as_the_table_says(tmp_path, monkeypatch):
+    """adopt: 0 written, 1 refused below on the held-out test. check: 0 pass, 1 worse, 2 pending (calls needed)."""
+    project = make_project(tmp_path / "p", {"good": compare_fake("good"), "bad": compare_fake("bad")})
+    d = project.tasks_dir / "truth"
+    d.mkdir(parents=True)
+    (d / "task.py").write_text(TRUTH)
+    (d / "data.jsonl").write_text("".join(json.dumps({"id": str(i), "truth": i % 2 == 1}) + "\n" for i in range(40)))
+    git = {"GIT_CONFIG_COUNT": "1", "GIT_CONFIG_KEY_0": "user.name", "GIT_CONFIG_VALUE_0": "t"}
+
+    def run(*args):
+        return s1flow(*args, cwd=project.root, env=git)
+
+    assert run("run", "truth", "--models", "good,bad").returncode == 0
+    assert run("adopt", "truth", "good", "--reason", "best").returncode == 0
+    with monkeypatch.context() as m:
+        m.setattr(metrics, "test_verdict", lambda task, e: "below")
+        refused = run("adopt", "truth", "bad", "--reason", "try")
+        assert refused.returncode == 1 and "not written" in refused.stdout
+        assert run("adopt", "truth", "bad", "--reason", "anyway", "--force").returncode == 0
+    worse = run("check", "truth", "--against", "v1")  # current is v2, the bad one
+    assert worse.returncode == 1, worse.stdout + worse.stderr
+    better = run("check", "truth", "--against", "v2", "--candidate", "v1")
+    assert better.returncode == 0, better.stdout + better.stderr
+    (d / "task.py").write_text(TRUTH.replace("truth?", "Is it true?"))  # an edited question: its answers are not cached
+    pending = run("check", "truth", "--cached-only")
+    assert pending.returncode == 2, pending.stdout + pending.stderr
