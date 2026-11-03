@@ -1,6 +1,6 @@
 # Releases a merge to main that changes pyproject.toml's version: runs the package checks on it, tags it v<version>,
 # then publishes to PyPI by trusted publishing (PyPI trusts this file by name, so no token is stored).
-# Merging the release pull request (docs/development.md) is the approval; nothing runs on a local machine.
+# Merging the pull request that raises the version (docs/development.md) is the approval; nothing runs locally.
 # When a job fails, "Re-run failed jobs" on this run carries on; a later merge never releases in its place, but
 # running this workflow from main releases main's version if it has no tag yet.
 name: publish
