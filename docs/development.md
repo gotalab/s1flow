@@ -19,9 +19,13 @@ ones each time, and a failure prints the case that broke it.
 
 `apps/bench` is this repository's own evaluation project, separate from the package you install. Its past reports
 are not a measure of any provider's current accuracy. Tests of the package read `tests/fixtures/project`, a frozen
-copy of the bench's line-up and policies, so re-running or adopting in the bench changes no test.
-`tests/test_bench.py` checks only that the bench's committed tasks, policies and reports still read: when a change
-makes them unreadable, rewrite them to the current shape in the same change.
+copy of the bench's line-up and policies, so re-running or adopting in the bench changes no test. A few also take
+real input from the bench: `make_project(copy_tasks=...)` in `tests/conftest.py` copies the `nod-wake` and
+`gh-ruff-area` tasks and reads their cases, `tests/test_optimize.py` reads `massive-ja-intent`'s question, and
+`tests/test_schemas.py` checks every bench task's cases and every saved policy against the schemas. Editing those
+tasks or their data can change these tests. `tests/test_bench.py` checks only that the bench's committed tasks,
+policies and reports still read: when a change makes them unreadable, rewrite them to the current shape in the same
+change.
 
 ## Release
 
