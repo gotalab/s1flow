@@ -1,9 +1,11 @@
 """Production feedback never joins a label to a newer call just because its case ID repeats."""
 
+import pytest
 from conftest import attach, make_project
 
 from s1flow.client import Boolean
 from s1flow.client.identity import state_digest
+from s1flow.core.errors import DataError
 from s1flow.eval import Task, feedback
 from s1flow.eval.candidate import Candidate
 from s1flow.eval.evaluation import Evaluation, Failures, ObjectiveScore
@@ -30,6 +32,11 @@ def answer(id, *, at="2026-10-24T00:00:00Z", state=None, state_hash=None, policy
 
 def label(id, value=False, *, at="2026-10-24T01:00:00Z", policy_digest="policy"):
     return FeedbackLog(at=at, decision_id=id, policy="toy@v1", policy_digest=policy_digest, label=value)
+
+
+def test_a_log_that_cannot_be_read_is_a_data_error(tmp_path):
+    with pytest.raises(DataError, match=r"cannot read .*nolog\.jsonl"):
+        feedback.read([tmp_path / "nolog.jsonl"])
 
 
 def test_exact_decision_join_latest_correction_and_no_state_carry(tmp_path):

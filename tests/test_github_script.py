@@ -4,6 +4,7 @@ import importlib.util
 import json
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 import pytest
@@ -66,6 +67,27 @@ def test_a_rationale_is_what_maintainers_wrote_around_the_labelling(tmp_path):
     assert github.add_rationales(p, "o/r", "t") == (1, 2)  # the comments were cached: gh is not called
     rows = [json.loads(x) for x in (d / "data.jsonl").read_text().splitlines()]
     assert [r["rationale"] for r in rows] == ["A crash, so a bug.", ""]
+
+
+@pytest.mark.parametrize("zone", ["UTC", "America/New_York", "Asia/Tokyo"])
+def test_the_day_after_a_labelling_is_24_hours_in_any_time_zone(monkeypatch, zone):
+    monkeypatch.setenv("TZ", zone)
+    time.tzset()
+    try:
+        labelled = {"timelineItems": {"nodes": [{"__typename": "LabeledEvent", "label": {"name": "bug"}, "createdAt": "2026-07-01T00:00:00Z"}]}}
+        said = [{"createdAt": at, "authorAssociation": "MEMBER", "body": at, "author": {"login": "m"}} for at in ("2026-07-01T23:30:00Z", "2026-07-02T00:30:00Z")]
+        assert github.rationale(labelled, "bug", said) == "2026-07-01T23:30:00Z"  # summer time moved the cutoff an hour
+    finally:
+        monkeypatch.undo()
+        time.tzset()
+
+
+def test_a_call_that_keeps_hitting_the_secondary_limit_stops_with_the_reason(monkeypatch):
+    refused = subprocess.CompletedProcess([], 1, "", "You have exceeded a secondary rate limit")
+    monkeypatch.setattr(github.subprocess, "run", lambda *a, **k: refused)
+    monkeypatch.setattr(github.time, "sleep", lambda s: None)
+    with pytest.raises(RuntimeError, match="secondary rate limit"):
+        github.graphql("query { viewer { login } }", {}, attempts=2)
 
 
 def test_without_gh_the_script_says_what_to_install_and_audit_still_runs(tmp_path):

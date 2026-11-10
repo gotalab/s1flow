@@ -148,9 +148,12 @@ def lines(done: Installed) -> list[str]:
     return out
 
 
-def _policy(v: str) -> tuple[int, ...]:
-    m = re.match(r"\d+(\.\d+)*", v)
-    return tuple(int(x) for x in m.group(0).split(".")) if m else ()
+def _order(v: str) -> tuple[tuple[int, ...], str, int]:
+    """Where a version sorts among releases: 0.1.0a2 < 0.1.0a10 < 0.1.0b1 < 0.1.0rc1 < 0.1.0."""
+    m = re.match(r"(\d+(?:\.\d+)*)(?:(a|b|rc)(\d+))?", v)
+    if not m:
+        return (), "", 0
+    return tuple(int(x) for x in m.group(1).split(".")), m.group(2) or "release", int(m.group(3) or 0)
 
 
 def stale(root: Path | None = None) -> list[str]:
@@ -162,7 +165,7 @@ def stale(root: Path | None = None) -> list[str]:
         if m is None:
             continue
         was, now = str(m.get("s1flow_version", "?")), version()
-        if _policy(was) < _policy(now):
-            out.append(f"{_show(copy)} is from s1flow {was}, this is {now}: s1flow init --skill --force updates it")
+        if _order(was) < _order(now):
+            out.append(f"{_show(copy)} is from s1flow {was}, this is {now}: s1flow init --skill updates it")
     return out
 

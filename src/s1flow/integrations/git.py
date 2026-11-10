@@ -12,7 +12,7 @@ def _run(args: list[str], cwd: Path | None = None) -> str | None:
         out = subprocess.run(args, capture_output=True, text=True, timeout=5, cwd=str(cwd) if cwd else None)
     except (OSError, subprocess.SubprocessError):
         return None
-    return out.stdout.strip() or None
+    return (out.stdout.strip() or None) if out.returncode == 0 else None
 
 
 def sha(root: Path) -> str | None:

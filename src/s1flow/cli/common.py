@@ -133,9 +133,6 @@ def policy_client(a: argparse.Namespace) -> Client:
 def policy_root(a: argparse.Namespace) -> Path | None:
     if getattr(a, "path", None) is not None:
         return None
-    explicit = getattr(a, "root", None)
-    if explicit is not None:
-        return place.absolute(explicit, "policy root")
     root = project_root(a, required=True)
     assert root is not None
     return root / "policies"

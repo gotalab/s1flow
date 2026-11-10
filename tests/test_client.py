@@ -315,6 +315,8 @@ def test_env_files_are_read_nearest_first_and_never_over_the_environment(tmp_pat
 
     assert envfile.parse('A=1\nexport B = "x\\ny" \nC=plain # note\nD=\'#kept\'\n# E=no\nnot a line\nF=\n') == {
         "A": "1", "B": "x\ny", "C": "plain", "D": "#kept", "F": ""}
+    assert envfile.parse('A="a b" # note\nB=\'k#1\' # note\nC="say \\"hi\\" # in" # out\nD="open # note\n') == {
+        "A": "a b", "B": "k#1", "C": 'say "hi" # in', "D": '"open'}  # a comment after the closing quote is not the value
     repo = tmp_path / "repo"
     (repo / ".git").mkdir(parents=True)
     (tmp_path / ".env").write_text("S1FLOW_T_D=above the git root\n")
