@@ -114,6 +114,7 @@ def graphql(query: str, variables: dict[str, Any], attempts: int = 6) -> dict[st
     for k, v in variables.items():
         if v is not None:
             args += ["-F" if isinstance(v, int) else "-f", f"{k}={v}"]
+    err = "no attempt made"
     for attempt in range(attempts):
         p = subprocess.run(args, capture_output=True, text=True)
         if p.returncode == 0:

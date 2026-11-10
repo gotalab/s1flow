@@ -3,7 +3,7 @@ snapshots. Nothing here pins what the bench holds (which models, versions or res
 there changes no test; a failure here means a change made the bench's committed records unreadable. Then rewrite
 those records to the current shape, or re-run the bench, in the same change; do not loosen these tests. Tests of
 the package's own behaviour read the frozen copy in tests/fixtures/project instead (conftest.PROJECT); the few that
-take a bench task's cases as real input are named in docs/development.md."""
+take real input from the bench are named in docs/development.md."""
 
 import json
 import re

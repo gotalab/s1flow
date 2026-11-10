@@ -37,6 +37,9 @@ def label(id, value=False, *, at="2026-10-24T01:00:00Z", policy_digest="policy")
 def test_a_log_that_cannot_be_read_is_a_data_error(tmp_path):
     with pytest.raises(DataError, match=r"cannot read .*nolog\.jsonl"):
         feedback.read([tmp_path / "nolog.jsonl"])
+    (tmp_path / "latin1.jsonl").write_bytes("é\n".encode("latin-1"))
+    with pytest.raises(DataError, match=r"cannot read .*latin1\.jsonl"):
+        feedback.read([tmp_path / "latin1.jsonl"])
 
 
 def test_exact_decision_join_latest_correction_and_no_state_carry(tmp_path):

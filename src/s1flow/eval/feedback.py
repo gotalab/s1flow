@@ -98,7 +98,7 @@ def read(paths: list[Path]) -> Logs:
     for path in paths:
         try:
             text = path.read_text()
-        except OSError as e:
+        except (OSError, UnicodeDecodeError) as e:
             raise DataError(f"cannot read the log {path}: {e}") from None
         for n, line in enumerate(text.splitlines(), 1):
             if not line.strip():
