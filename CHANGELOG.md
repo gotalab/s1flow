@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Upgrading s1flow keeps saved answers, the answer cache and adopted policies: no s1flow version or source is part of
+  a request's or a policy's identity any more, only the model, the input, the question and a format number bumped when
+  what is sent or how an answer is read changes. Runs, cache entries and policies written by 0.1.0a4 and 0.1.0a5 stay
+  current; answers from 0.1.0a2 and 0.1.0a3 stay current where the input's keys were already in sorted order (those
+  releases sent the keys as written).
+
 ## 0.1.0a5 (2026-11-12)
 
 ### Added

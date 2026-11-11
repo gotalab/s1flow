@@ -49,7 +49,7 @@ def validate_evidence(task: Task, policy: EvaluatedPolicy) -> None:
     """Only current model/input/data conditions can support adopting an evaluated policy."""
     runtime = DecisionPolicy(policy.spec, client=task.where.client())
     adoptable(runtime.model_spec, policy.spec.connection)
-    if runtime.execution_digest != policy.evidence.execution_digest:
+    if not runtime.same_execution(policy.evidence.execution_digest):
         raise ConfigError(f"{policy.spec.ref}: execution conditions changed; measure and adopt again")
     if policy.evidence.input_adapter_digest != task.input_adapter_digest:
         raise ConfigError(f"{policy.spec.ref}: input adapter changed; measure and adopt again")

@@ -1,14 +1,15 @@
 """Content identities shared by the runtime and evaluation; no evaluation imports.
 
-These are equality checks, not signatures. Credentials never contribute to them. A
-source revision accompanies the SDK version so editable installs cannot certify old
-answers after the request builder or answer interpretation changes.
+These are equality checks, not signatures. Credentials never contribute to them. Neither the
+s1flow version nor its source does: an upgrade that sends the same request and reads the
+answer the same way keeps every saved answer, cache entry and adoption. REQUEST and
+EXECUTION are bumped by hand when that stops being true; tests/test_wire_format.py fails
+when what is sent or how an answer is read changes, so the bump is not forgotten.
 """
 import hashlib
 import json
 import re
 from importlib.metadata import PackageNotFoundError, version
-from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
@@ -55,18 +56,16 @@ def _public(value: Any) -> Any:
     return value
 
 
-def _revision() -> str:
-    root = Path(__file__).parent
-    # Include the shared response interpretation too. No config or user inputs are read.
-    paths = sorted(root.rglob("*.py")) + sorted((root.parent / "policies").glob("*.py"))
-    return digest({str(p.relative_to(root.parent)): hashlib.sha256(p.read_bytes()).hexdigest() for p in paths})
-
+# Bump when a built-in provider sends different bytes for the same input and question, or reads
+# the same reply into a different answer (tests/test_wire_format.py names the change).
+REQUEST = "s1flow/request@3"
+# Bump when a policy turns the same answers into different decisions. An execution names REQUEST too.
+EXECUTION = "s1flow/execution@3"
 
 try:
     SDK_VERSION = version("s1flow")
 except PackageNotFoundError:
     SDK_VERSION = "source"
-IMPLEMENTATION_REVISION = _revision()
 
 
 def model_digest(spec: ModelSpec) -> str:
@@ -95,17 +94,14 @@ def _dependency_revision(spec: ModelSpec) -> dict[str, str]:
 
 def request_digest(spec: ModelSpec, state: State, questions: Questions) -> str:
     """The actual materialized input, question and effective request implementation."""
-    return digest({"schema": "s1flow/request@2", "model": model_digest(spec), "state": state,
-                   "questions": questions, "sdk": SDK_VERSION, "implementation": IMPLEMENTATION_REVISION,
-                   "dependencies": _dependency_revision(spec)})
+    return digest({"schema": REQUEST, "model": model_digest(spec), "state": state,
+                   "questions": questions, "dependencies": _dependency_revision(spec)})
 
 
 def execution_digest(spec: ModelSpec, policy_digest: str) -> str:
     """Shared runtime conditions; evaluation records preprocessing identity separately."""
-    return digest({"schema": "s1flow/execution@2", "model": model_digest(spec), "policy": policy_digest,
-                   "declared_concurrency": spec.concurrency,
-                   "sdk": SDK_VERSION, "implementation": IMPLEMENTATION_REVISION,
-                   "dependencies": _dependency_revision(spec)})
+    return digest({"schema": EXECUTION, "request": REQUEST, "model": model_digest(spec), "policy": policy_digest,
+                   "declared_concurrency": spec.concurrency, "dependencies": _dependency_revision(spec)})
 
 
 def state_digest(state: State) -> str:
@@ -116,7 +112,7 @@ def state_digest(state: State) -> str:
 def require_provider_revision(spec: ModelSpec) -> None:
     """Evaluation reuse needs an app-declared revision of custom request code.
 
-    Built-ins are covered by IMPLEMENTATION_REVISION. This guard is not applied
+    Built-ins are covered by REQUEST and EXECUTION. This guard is not applied
     by direct Client or DecisionPolicy, which support explicitly unassessed use.
     """
     from ..core.errors import ConfigError
@@ -125,3 +121,48 @@ def require_provider_revision(spec: ModelSpec) -> None:
     if spec.provider not in BUILTIN and not spec.provider_revision:
         raise ConfigError(f"custom provider {spec.provider!r} needs provider_revision in the app's model configuration "
                           "before evaluation, caching or adoption; declare its implementation commit or package revision")
+
+
+# 0.1.0a2 to 0.1.0a5 hashed their version and the source of client/ and policies/ into every identity, so each
+# upgrade made every saved answer look unasked. They send what this release sends and read answers as it does,
+# except that 0.1.0a2 and 0.1.0a3 sent a state's keys in the order written (0.1.0a4 sorts them): their answers
+# stand only for a state whose keys were already sorted, and their policies were measured on such requests.
+# Saved runs, cache entries and adoptions keep the identity they were written with, so keep this table. It names
+# the formats those releases sent and decided as: a bump of either retires it.
+_RELEASED_AS = ("s1flow/request@3", "s1flow/execution@3")
+_RELEASED: dict[str, tuple[str, bool]] = {  # version -> (its source revision, whether it sent keys sorted)
+    "0.1.0a2": ("be5b78a24f470d18042ddfc443235b0cc990ae21551a4b6d87cb2c7145114b8d", False),
+    "0.1.0a3": ("3abe4d1a43437172e57cb9f39ec63198767b0ef4ef3661bf8c5ae7bbc5f6a756", False),
+    "0.1.0a4": ("fcdfd90b318c653acaeb3a129f512800707cb2292880f6a69cb3b365f34c2ce7", True),
+    "0.1.0a5": ("2a64d762d1cd9a5dc93fcb8cc9ad6a85740a7c4dac9b7bb5915370165c9e7f55", True),
+}
+
+
+def _keys_sorted(x: Any) -> bool:
+    if isinstance(x, dict):
+        return list(x) == sorted(x, key=str) and all(_keys_sorted(v) for v in x.values())
+    if isinstance(x, (list, tuple)):
+        return all(_keys_sorted(v) for v in x)
+    return True
+
+
+def request_digests(spec: ModelSpec, state: State, questions: Questions) -> tuple[str, ...]:
+    """The request's identity, then the ones the releases above wrote for the same request."""
+    if REQUEST != _RELEASED_AS[0]:
+        return (request_digest(spec, state, questions),)
+    sent_as_now = _keys_sorted(state)
+    common = {"model": model_digest(spec), "state": state, "questions": questions, "dependencies": _dependency_revision(spec)}
+    return (request_digest(spec, state, questions), *(
+        digest(common | {"schema": "s1flow/request@2", "sdk": sdk, "implementation": revision})
+        for sdk, (revision, sorted_sent) in _RELEASED.items() if sorted_sent or sent_as_now))
+
+
+def execution_digests(spec: ModelSpec, policy_digest: str) -> tuple[str, ...]:
+    """The execution's identity, then the ones the releases that sent keys sorted wrote for it."""
+    if (REQUEST, EXECUTION) != _RELEASED_AS:
+        return (execution_digest(spec, policy_digest),)
+    common = {"model": model_digest(spec), "policy": policy_digest, "declared_concurrency": spec.concurrency,
+              "dependencies": _dependency_revision(spec)}
+    return (execution_digest(spec, policy_digest), *(
+        digest(common | {"schema": "s1flow/execution@2", "sdk": sdk, "implementation": revision})
+        for sdk, (revision, sorted_sent) in _RELEASED.items() if sorted_sent))
