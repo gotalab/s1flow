@@ -120,9 +120,18 @@ def test_a_model_takes_only_the_kinds_it_declares():
 
 
 def test_app_data_that_only_mentions_a_kind_is_not_media(tmp_path):
-    state = {"attachment": {"type": "video", "title": "demo"}}
-    assert media.materialize(state, tmp_path) == state
-    check_supported(OpenRouterModel("liquid/d1"), state, Q)
+    for state in (
+        {"attachment": {"type": "video", "title": "demo"}},
+        {"ticket": "refund", "attachments": [{"type": "pdf", "path": "/srv/inv/1.pdf", "name": "inv"}]},
+        ["msg", {"type": "video", "url": "https://example.com/v", "title": "t"}],
+    ):
+        assert media.materialize(state, tmp_path) == state
+        check_supported(OpenRouterModel("liquid/d1"), state, Q)
+
+
+def test_a_mistyped_image_reference_is_still_an_error(tmp_path):
+    with pytest.raises(DataError, match="bad media reference"):
+        media.materialize(["x", {"type": "image", "file": "a.png"}], tmp_path)
 
 
 def test_a_policy_shape_names_each_kind():

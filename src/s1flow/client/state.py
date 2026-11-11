@@ -88,10 +88,19 @@ def kinds_in(state: State) -> set[MediaKind]:
     return {x.type for x in state if isinstance(x, (Image, Media))}
 
 
+# The exact key sets that make a dict audio, video or a PDF: a reference, or a prepared one read back from JSON.
+# An app's own `{"type": "video", "url": ..., "title": ...}` has other keys too, so it stays data.
+_MEDIA_KEYS = ({"type", "path"}, {"type", "url"}, {"type", "media_type", "data", "sha256"})
+
+
 def is_media_dict(x: Any) -> bool:
-    """A dict that stands for media: a kind as its `type` and a source (`path`, `url`, or a prepared one's `data`).
-    `{"type": "video", "title": ...}` in an app's own data is not one."""
-    return isinstance(x, dict) and x.get("type") in MEDIA_KINDS and any(k in x for k in ("path", "url", "data"))
+    """A dict that stands for media. Any `{"type": "image", ...}` is an image (as before audio, video and PDFs came),
+    so a mistyped image reference is an error; audio, video and PDFs need one of the exact shapes above."""
+    if not isinstance(x, dict):
+        return False
+    if x.get("type") == "image":
+        return True
+    return x.get("type") in MEDIA_KINDS and set(x) in _MEDIA_KEYS
 
 
 def has_unprepared_media(x: Any) -> bool:

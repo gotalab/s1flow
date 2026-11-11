@@ -33,7 +33,7 @@ REFUSAL_STATUS = frozenset({413, 422})
 # 'Inception does not accept box questions', 2026-10-16; 'Clef Omni accepts at most 4 audio clips, got 5',
 # 'ScaleDown reads one document per request', 2026-11-12). A bare 400 stays a failure: it is
 # more often our request than the model's limit.
-REFUSAL_HINTS = ("does not accept", "too large", "exceeds the maximum", "accepts at most", "per request")
+REFUSAL_HINTS = ("does not accept", "too large", "exceeds the maximum", "accepts at most", "document per request")
 
 _clients: dict[int, httpx.AsyncClient] = {}
 

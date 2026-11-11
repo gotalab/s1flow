@@ -121,7 +121,7 @@ task = Task(
   binary task, `min_precision=` and `min_recall=` are floors: the threshold is chosen among those that keep both,
   and a model that cannot is excluded with the reason. Floors come from the person, like weights. They need an
   objective that sets the threshold (any binary objective but Coverage and AUROC).
-- Images, audio, video and PDFs go as top-level items of a list state, by path from the task folder or URL:
+- Images, audio, video and PDFs go as top-level items of a list state, by path from the task folder or URL, with no other keys:
   `state=lambda r: ["Voicemail:", {"type": "audio", "path": r["file"]}]` (`"image"`, `"audio"` WAV/MP3,
   `"video"` MP4, `"pdf"`). Every model gets the same bytes. Only models that declare the kind are compared on
   it (`s1flow models`); how many and how large each takes is the model's limit (Clef Omni: 4 audio clips of
