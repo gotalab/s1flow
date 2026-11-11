@@ -96,7 +96,11 @@ def _spans(obj: dict[str, Any]) -> list[tuple[str, str, dict[str, Any]]]:
 def read(paths: list[Path]) -> Logs:
     logs = Logs()
     for path in paths:
-        for n, line in enumerate(path.read_text().splitlines(), 1):
+        try:
+            text = path.read_text()
+        except (OSError, UnicodeDecodeError) as e:
+            raise DataError(f"cannot read the log {path}: {e}") from None
+        for n, line in enumerate(text.splitlines(), 1):
             if not line.strip():
                 continue
             try:

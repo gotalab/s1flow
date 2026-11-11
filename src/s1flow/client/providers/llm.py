@@ -248,7 +248,7 @@ class LLMModel:
         as `decide`'s is."""
         done = await complete(self.model, messages, self.api_key_env, temperature=temperature)
         r = done.response
-        cost = response_cost(self.model, [r], self.cache_dir)
+        cost = await asyncio.to_thread(response_cost, self.model, [r], self.cache_dir)
         usage = Usage(input_tokens=r.usage.prompt_tokens, output_tokens=r.usage.completion_tokens, cost_usd=cost,
                       cost_source="list" if cost is not None else None, raw=_raw(r.usage))
         return str(r.choices[0].message.content), usage
@@ -268,7 +268,8 @@ class LLMModel:
             raise ProviderError(f"unreadable structured output: {e}") from e
         tin = sum(r.usage.prompt_tokens for r in responses)
         tout = sum(r.usage.completion_tokens for r in responses)
-        cost = response_cost(self.model, responses, self.cache_dir)
+        # The gateway's price list may be fetched here (blocking): off the loop, so a caller's timeout can still cancel.
+        cost = await asyncio.to_thread(response_cost, self.model, responses, self.cache_dir)
         return Response(
             answers=to_answers(samples, questions, distribution=self.samples > 1, box_units=self.box_units, size=first_size(state)),
             answered_by=self.model,

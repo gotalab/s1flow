@@ -28,13 +28,20 @@ def ran(tmp_path, monkeypatch):
     return project
 
 
-def test_report_ranks_by_the_objective_and_writes_only_the_evaluation_set(ran):
+def test_report_ranks_by_the_objective_and_writes_nothing(ran):
     got = cli("report", "truth")
     assert got.exit_code == 0
     lines = got.output.splitlines()
     assert lines[0].startswith("truth: ") and lines[2].split()[:2] == ["=", "good"]  # best first; no pick marked
     assert not (ran.root / "reports").exists()
-    assert (ran.tasks_dir / "truth" / "split.json").exists()  # fixed on first use, as before
+    assert (ran.tasks_dir / "truth" / "split.json").exists()  # the evaluation set, as `run` fixed it
+
+
+def test_a_task_without_its_cases_file_is_one_error_line(ran):
+    (ran.tasks_dir / "truth" / "data.jsonl").unlink()  # as right after `s1flow init --task`
+    got = cli("report", "truth")
+    assert got.exit_code == 2 and "Traceback" not in got.err
+    assert got.err.startswith("error: truth: cannot read ") and "data.jsonl" in got.err
 
 
 def test_json_holds_every_metric_and_the_ranking(ran):

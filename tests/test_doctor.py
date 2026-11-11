@@ -212,7 +212,7 @@ def test_doctor_names_a_project_skill_an_older_s1flow_wrote(project, monkeypatch
     stale = skill.stale()
     done = s1flow("doctor", "--models", "toy", cwd=project)
     assert done.returncode == 0
-    assert stale == [f".claude/skills/s1flow is from s1flow 0.0.1, this is {skill.version()}: s1flow init --skill --force updates it"]
+    assert stale == [f".claude/skills/s1flow is from s1flow 0.0.1, this is {skill.version()}: s1flow init --skill updates it"]
     assert [line for line in done.stdout.splitlines() if line.startswith("skill: ")] == [f"skill: {line}" for line in stale]
     assert json.loads(s1flow("doctor", "--models", "toy", "--json", cwd=project).stdout)["skill"] == stale
 

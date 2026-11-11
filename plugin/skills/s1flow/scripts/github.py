@@ -23,6 +23,7 @@ arrive and the cursor is saved, so an interrupted fetch resumes where it stopped
 from __future__ import annotations
 
 import argparse
+import calendar
 import collections
 import json
 import shutil
@@ -113,6 +114,7 @@ def graphql(query: str, variables: dict[str, Any], attempts: int = 6) -> dict[st
     for k, v in variables.items():
         if v is not None:
             args += ["-F" if isinstance(v, int) else "-f", f"{k}={v}"]
+    err = "no attempt made"
     for attempt in range(attempts):
         p = subprocess.run(args, capture_output=True, text=True)
         if p.returncode == 0:
@@ -121,19 +123,16 @@ def graphql(query: str, variables: dict[str, Any], attempts: int = 6) -> dict[st
                 raise RuntimeError(json.dumps(data["errors"])[:500])
             return data["data"]
         err = (p.stderr + p.stdout)[:300]
-        if "secondary rate limit" in err.lower():
-            time.sleep(60)
-        elif attempt == attempts - 1:
-            raise RuntimeError(f"gh api graphql failed: {err}")
-        else:
-            time.sleep(2 * 2**attempt)
-    raise AssertionError("unreachable")
+        if attempt == attempts - 1:
+            break
+        time.sleep(60 if "secondary rate limit" in err.lower() else 2 * 2**attempt)
+    raise RuntimeError(f"gh api graphql failed: {err}")
 
 
 def _pace(rate: dict[str, Any]) -> None:
     """Stop short of the hourly budget instead of running into it."""
     if rate["remaining"] < 200:
-        reset = time.mktime(time.strptime(rate["resetAt"], "%Y-%m-%dT%H:%M:%SZ")) - time.timezone
+        reset = calendar.timegm(time.strptime(rate["resetAt"], "%Y-%m-%dT%H:%M:%SZ"))
         time.sleep(max(0.0, reset - time.time()) + 5)
 
 
@@ -294,7 +293,7 @@ def rationale(issue: dict[str, Any], label: str, comments: list[dict[str, Any]],
     t = label_time(issue, label)
     if not t:
         return ""
-    cutoff = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(time.mktime(time.strptime(t, "%Y-%m-%dT%H:%M:%SZ")) - time.timezone + within_hours * 3600))
+    cutoff = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(calendar.timegm(time.strptime(t, "%Y-%m-%dT%H:%M:%SZ")) + within_hours * 3600))
     reporter = (issue.get("author") or {}).get("login")
     picked = [
         c for c in comments

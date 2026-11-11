@@ -240,7 +240,7 @@ def test_init_makes_a_project(tmp_path):
     proj = tmp_path / "app"
     assert not any(".github" in x for x in scaffold.init(tmp_path / "bare"))  # the workflow only when asked
     done = scaffold.init(proj, "ticket-bug", 'Is it a "bug"?', workflow=True)
-    assert (proj / "s1flow.toml").exists() and {".cache/", ".env"} <= set((proj / ".gitignore").read_text().split())
+    assert (proj / "s1flow.toml").exists() and {".cache/", ".env", ".write.lock"} <= set((proj / ".gitignore").read_text().split())
     wf = (tmp_path / ".github" / "workflows" / "s1flow-check.yml").read_text()
     assert '"app/tasks/**"' in wf and 'working-directory: "app"' in wf and "${{ secrets.OPENROUTER_API_KEY }}" in wf
     assert "push:" not in wf and "80 calls" in wf  # pull requests only, and what one costs

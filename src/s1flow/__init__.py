@@ -10,8 +10,8 @@
 """
 
 from .client import AsyncClient, Client, Response
-from .core.errors import ConfigError, DataError, NotFound, ProviderError, Rejected, S1flowError, Unsupported
+from .core.errors import ConfigError, DataError, NotFound, ProviderError, Rejected, S1flowError, TimedOut, Unsupported
 
 __all__ = [
-    "AsyncClient", "Client", "ConfigError", "DataError", "Response", "NotFound", "ProviderError", "Rejected", "S1flowError", "Unsupported",
+    "AsyncClient", "Client", "ConfigError", "DataError", "Response", "NotFound", "ProviderError", "Rejected", "S1flowError", "TimedOut", "Unsupported",
 ]

@@ -135,7 +135,11 @@ class Cases:
 
     def data_sha256(self) -> str:
         """The task's data, its feedback and its corrections: what a policy was chosen on."""
-        h = hashlib.sha256((self.dir / self.file).read_bytes())
+        path = (self.dir / self.file).resolve()
+        try:
+            h = hashlib.sha256(path.read_bytes())
+        except OSError as e:
+            raise DataError(f"{self.task_id}: cannot read {path}: {e}") from None
         for extra in (self.dir / FEEDBACK, self.dir / CORRECTIONS):
             if extra.exists():
                 h.update(extra.read_bytes())
