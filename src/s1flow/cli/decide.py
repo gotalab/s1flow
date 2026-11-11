@@ -76,17 +76,17 @@ def _questions(a: argparse.Namespace) -> dict[str, Any] | None:
 
 
 def _state(a: argparse.Namespace) -> State:
-    from ..client import images
-    from ..client.state import has_unprepared_image
+    from ..client import media
+    from ..client.state import MEDIA_KINDS, has_unprepared_media
     from ..core.errors import DataError
 
     state: Any = json_arg(a.state, "--state") if a.state is not None else None
-    if has_unprepared_image(state):
-        raise DataError("state cannot load files or URLs; use --image PATH for an explicit local image")
-    if a.image:
+    if has_unprepared_media(state):
+        raise DataError("state cannot load files or URLs; use --image, --audio, --video or --pdf PATH for an explicit local file")
+    files = [(kind, path) for kind in MEDIA_KINDS for path in getattr(a, kind) or []]
+    if files:
         parts = [] if state is None else state if isinstance(state, list) else [state]
-        prepared = [images.prepare(Path(path).read_bytes()) for path in a.image]
-        state = [*parts, *prepared]
+        state = media.materialize([*parts, *({"type": kind, "path": path} for kind, path in files)], Path.cwd())
     if state is None:
         raise ConfigError("decide needs a state: --state JSON, or --state @file.json")
     return cast("State", state)
@@ -126,6 +126,9 @@ def add(sub: Any) -> None:
     which.add_argument("--policy", metavar=POLICY, help="decide with this policy (policies/<task>/; the current version when no @ is given)")
     d.add_argument("--state", help="the state as JSON, or @file.json")
     d.add_argument("--image", action="append", metavar="PATH", help="add an image to the state (needs s1flow[images]); repeatable")
+    d.add_argument("--audio", action="append", metavar="PATH", help="add audio (WAV or MP3) to the state; repeatable")
+    d.add_argument("--video", action="append", metavar="PATH", help="add a video (MP4) to the state; repeatable")
+    d.add_argument("--pdf", action="append", metavar="PATH", help="add a PDF to the state")
     asked = d.add_argument_group("the questions (--model)")
     asked.add_argument("--questions", help='the questions as JSON {"name": {"type": "choice", "instructions": ..., "criteria": ...}}, or @file.json')
     asked.add_argument("--boolean", metavar="TEXT", help="one yes / no question instead, named q")

@@ -12,9 +12,14 @@ answer is plain, and checks every claim a `Capabilities` can make:
 | `image`   | the disc's colour, on a red disc, then a blue one             | the colour, with p >= PASS, twice    |
 | `images`  | both discs in one state, red first                            | both colours in order                |
 | `box`     | the box of a disc off-centre in a 4:3 image                   | IoU >= BOX_PASS                      |
+| `audio`   | the colour a voice says, "red", then "blue" (MP3)             | the colour, with p >= PASS, twice    |
+| `video`   | the colour at the end, red then blue, then blue then red      | the last colour, with p >= PASS, twice |
+| `pdf`     | is the invoice paid, on a paid one, then an unpaid one        | P(true) >= PASS, then <= 1 - PASS    |
 
 Every check runs whatever the model declares, so a claim that fails and a capability nobody
-declared both show. `images` and `box` need `image` to pass first. The results go to
+declared both show. `images` and `box` need `image` to pass first. The video asks for the last colour,
+so a model that reads only the first frame fails; the PDF's text is compressed, so a model that reads the
+base64 as text (AI Gateway did, 2026-11-11) fails. The results go to
 models.verified.json beside s1flow.toml, which `s1flow models` shows next to the declarations.
 A model whose key is not set is not asked (`unset_keys`): nothing is recorded for it, since a missing
 key says nothing about what the model takes.
@@ -32,6 +37,7 @@ import io
 import json
 import math
 import os
+import zlib
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
@@ -39,7 +45,7 @@ from typing import TYPE_CHECKING, Literal, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ..client import AsyncClient, images
+from ..client import AsyncClient, images, media
 from ..core import clock
 from ..client.answers import Answer, BooleanAnswer, BoxAnswer, BoxEdges, ChoiceAnswer, Response, ScoreAnswer
 from ..client.boxes import iou
@@ -47,7 +53,7 @@ from ..client import providers
 from ..client.models import Capabilities, DecisionModel, ModelSpec, Price
 from ..client.providers.needs import where_to_get
 from ..client.questions import Boolean, Box, Choice, Questions, Score
-from ..client.state import Image, Part, State
+from ..client.state import Image, Media, MediaKind, Part, State
 from ..core.errors import ProviderError, S1flowError
 from . import Project
 
@@ -56,8 +62,8 @@ if TYPE_CHECKING:
 
 PASS = 0.6
 BOX_PASS = 0.5
-CheckName = Literal["boolean", "choice", "score", "image", "images", "box"]
-EVERYTHING = Capabilities(image=True, question_types=frozenset({"boolean", "choice", "score", "box"}))
+CheckName = Literal["boolean", "choice", "score", "image", "images", "box", "audio", "video", "pdf"]
+EVERYTHING = Capabilities(image=True, audio=True, video=True, pdf=True, question_types=frozenset({"boolean", "choice", "score", "box"}))
 
 
 class Check(BaseModel):
@@ -84,6 +90,9 @@ def claims(caps: Capabilities) -> dict[CheckName, bool]:
         "image": caps.image,
         "images": caps.image,
         "box": caps.image and "box" in caps.question_types,
+        "audio": caps.audio,
+        "video": caps.video,
+        "pdf": caps.pdf,
     }
 
 
@@ -148,6 +157,54 @@ def box_image() -> Image:
     return _png(im)
 
 
+SAID: Questions = {
+    "colour": Choice(instructions="What colour does the speaker say?", criteria={"red": None, "blue": None, "green": None})
+}
+LAST_COLOUR: Questions = {
+    "colour": Choice(instructions="What colour fills the screen at the END of the video?", criteria={"red": None, "blue": None, "green": None})
+}
+PAID: Questions = {"paid": Boolean(instructions="The invoice has already been paid.")}
+# probes/: say-red.mp3 and say-blue.mp3, a synthetic voice saying "The colour is red." (2.2 s, 16 kHz mono, 24 kbps;
+# beeps made here were too hard: Gemini Decision 1 could not count them, 2026-11-11), and 4-second 320x240 clips,
+# 2 s of one colour then 2 s of the other, made with
+# ffmpeg -f lavfi -i color=c=red:s=320x240:d=2:r=10 -f lavfi -i color=c=blue:s=320x240:d=2:r=10
+#        -filter_complex "[0][1]concat=n=2:v=1" -pix_fmt yuv420p red-blue.mp4
+PROBES = Path(__file__).with_name("probes")
+
+
+def saying(colour: str) -> Media:
+    return _media("audio", (PROBES / f"say-{colour}.mp3").read_bytes())
+
+
+def clip(first: str, last: str) -> Media:
+    return _media("video", (PROBES / f"{first}-{last}.mp4").read_bytes())
+
+
+def invoice(paid: bool) -> Media:
+    """A one-page PDF whose text is compressed: only a model that reads the PDF can tell what it says."""
+    status = "Status: PAID in full on 2026-10-01" if paid else "Status: UNPAID - 45 days overdue"
+    lines = ["INVOICE #1042", "Acme Corp", "Total due: 4,200 USD", status]
+    text = zlib.compress(("BT /F1 18 Tf 72 720 Td 24 TL " + " ".join(f"({x}) Tj T*" for x in lines) + " ET").encode())
+    objects = [b"<< /Type /Catalog /Pages 2 0 R >>", b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+               b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>",
+               b"<< /Length %d /Filter /FlateDecode >>\nstream\n" % len(text) + text + b"\nendstream",
+               b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>"]
+    out, offsets = b"%PDF-1.4\n", []
+    for i, o in enumerate(objects, 1):
+        offsets.append(len(out))
+        out += b"%d 0 obj\n" % i + o + b"\nendobj\n"
+    xref = len(out)
+    out += b"xref\n0 %d\n0000000000 65535 f \n" % (len(objects) + 1) + b"".join(b"%010d 00000 n \n" % x for x in offsets)
+    out += b"trailer\n<< /Size %d /Root 1 0 R >>\nstartxref\n%d\n%%%%EOF\n" % (len(objects) + 1, xref)
+    return _media("pdf", out)
+
+
+def _media(kind: MediaKind, raw: bytes) -> Media:
+    prepared = media.prepare(kind, raw)
+    assert isinstance(prepared, Media)
+    return prepared
+
+
 # ---------- reading the answers ----------
 
 
@@ -191,6 +248,7 @@ class _Probe:
         asks = {
             "boolean": self._boolean, "choice": self._choice, "score": self._score,
             "image": self._image, "images": self._images, "box": self._box,
+            "audio": self._audio, "video": self._video, "pdf": self._pdf,
         }
         try:
             ok, detail = await asks[name]()
@@ -230,6 +288,19 @@ class _Probe:
         conf = f", confidence {a.confidence:.2f}" if a.confidence is not None else ""
         return score >= BOX_PASS, f"IoU {score:.2f}{conf}"
 
+    async def _audio(self) -> tuple[bool, str]:
+        got = [_picked((await self.ask(["A recording:", saying(c)], SAID)).answers["colour"], c) for c in COLOURS]
+        return all(ok for ok, _ in got), " / ".join(d for _, d in got)
+
+    async def _video(self) -> tuple[bool, str]:
+        got = [_picked((await self.ask(["A clip:", clip(a, b)], LAST_COLOUR)).answers["colour"], b) for a, b in (("red", "blue"), ("blue", "red"))]
+        return all(ok for ok, _ in got), " / ".join(d for _, d in got)
+
+    async def _pdf(self) -> tuple[bool, str]:
+        on = _as(BooleanAnswer, (await self.ask(["An invoice:", invoice(paid=True)], PAID)).answers["paid"]).probability
+        off = _as(BooleanAnswer, (await self.ask(["An invoice:", invoice(paid=False)], PAID)).answers["paid"]).probability
+        return on >= PASS and off <= 1 - PASS, f"P(true) {on:.2f} / {off:.2f}"
+
 
 async def probe(client: AsyncClient, name: str) -> Verification:
     # Every model is asked about images (s1flow[images] draws them). Without a working Pillow this stops before
@@ -239,7 +310,7 @@ async def probe(client: AsyncClient, name: str) -> Verification:
     model = client.connections.build(name)  # its own object: the declared capabilities are set aside for the probe
     model.capabilities = EVERYTHING.model_copy(update={"max_options": model.capabilities.max_options})
     p = _Probe(client, model)
-    first: tuple[CheckName, ...] = ("boolean", "choice", "score", "image")
+    first: tuple[CheckName, ...] = ("boolean", "choice", "score", "image", "audio", "video", "pdf")
     checks: dict[CheckName, Check] = dict(zip(first, await asyncio.gather(*(p.check(c) for c in first))))
     if checks["image"].ok:
         checks["images"], checks["box"] = await asyncio.gather(p.check("images"), p.check("box"))
@@ -381,7 +452,7 @@ def verify(project: Project, names: list[str]) -> list[Found]:
 def _cell(said: dict[CheckName, bool], v: Verification | None, *checks: CheckName) -> str:
     """One capability in the line-up's table: declared or not, against what --verify found (`v`)."""
     declared = said[checks[0]]
-    if v is None:
+    if v is None or any(c not in v.checks for c in checks):  # never verified, or before the check existed
         return "✓?" if declared else "·"
     ok = all(v.checks[c].ok for c in checks)
     return ("✓" if ok else "✗!") if declared else ("+" if ok else "·")
@@ -401,6 +472,7 @@ def lineup(project: Project) -> list[dict[str, str]]:
             "name": name, "provider": spec.provider, "id": models.resolved(name).id,
             "boolean": _cell(said, v, "boolean"), "choice": _cell(said, v, "choice"), "score": _cell(said, v, "score"),
             "image": _cell(said, v, "image", "images"), "box": _cell(said, v, "box"),
+            "audio": _cell(said, v, "audio"), "video": _cell(said, v, "video"), "pdf": _cell(said, v, "pdf"),
             "distribution": caps.distribution, "context": f"{caps.context_tokens // 1000}k",
             "limits": ", ".join(f"{k} {x}" for k, x in [("options", caps.max_options), ("instr", caps.max_instructions_chars), ("desc", caps.max_description_chars)] if x) or "-",
             "concurrency": str(m.concurrency), "checked": v.at[:10] if v else "-",

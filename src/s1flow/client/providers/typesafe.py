@@ -14,7 +14,7 @@ from __future__ import annotations
 from typing import Any
 
 from ..answers import Response, Usage
-from ..images import typesafe_assets
+from ..media import typesafe_assets
 from ..models import Capabilities, ModelBuild, ModelSpec, check_supported
 from ..questions import Questions, has_box
 from ..state import State, has_image

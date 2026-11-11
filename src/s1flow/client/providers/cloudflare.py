@@ -15,7 +15,7 @@ from typing import Any
 
 from ..answers import ChoiceAnswer, Response, Usage
 from ..endpoints import cloudflare_relay
-from ..images import data_url, placeholders
+from ..media import data_url, placeholders
 from ..models import Capabilities, ModelBuild, ModelSpec, check_supported
 from ..questions import Questions
 from ..state import State, has_image

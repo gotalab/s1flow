@@ -3,9 +3,11 @@
 The System One wire format (systemone.py): yes/no questions are `noul`, answers carry their own
 `confidence`, and usage reports the billed cost.
 
-Images are `image_url` parts with a base64 data URL in the top-level state array
-(OpenRouter's Multimodal Decisions guide). Models without image input answer 400;
-TypeSafe's `assets` is dropped without an error, so it must not be sent here (2026-10-15).
+Images, audio, video and PDFs are Chat Completions content parts in the top-level state array
+(`image_url`, `input_audio`, `video_url`, `file`; OpenRouter's Multimodal Decisions guide). A model
+that does not read a kind answers 400; TypeSafe's `assets` is dropped without an error, so it must not
+be sent here (2026-10-15). Gemini Decision 1, Clef Omni and ScaleDown read audio, video or PDFs this way
+through `/systemone` too (2026-11-11).
 """
 
 from __future__ import annotations
@@ -16,10 +18,10 @@ from pathlib import Path
 from typing import Any
 
 from ..answers import Response, Usage
-from ..images import image_url_parts
+from ..media import chat_parts
 from ..models import Capabilities, ModelBuild, ModelSpec, Price, check_supported
 from ..questions import Questions
-from ..state import State, has_image
+from ..state import State, has_media
 from .build import NoOptions, options, spec_options
 from .http import Request, send
 from .needs import Needs, declares, origin
@@ -47,8 +49,8 @@ class OpenRouterModel:
 
     def request(self, state: State, questions: Questions, *, options: dict[str, Any] | None = None) -> Request:
         body: dict[str, Any] = {"model": self.model_id, "state": state, "questions": systemone.questions(questions)}
-        if has_image(state):
-            body["state"] = image_url_parts(state)
+        if has_media(state):
+            body["state"] = chat_parts(state)
         if options:
             body.update(options)
         return Request(f"{BASE_URL}/systemone", body, keys={"Authorization": ("Bearer ", "OPENROUTER_API_KEY")})

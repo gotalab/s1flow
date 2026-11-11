@@ -34,7 +34,7 @@ from . import pricing
 from ...core.errors import ConfigError, ProviderError, Rejected
 from ..answers import Answer, BooleanAnswer, BoxAnswer, BoxEdges, ChoiceAnswer, Response, ScoreAnswer, Usage
 from ..boxes import iou
-from ..images import data_url, placeholders
+from ..media import data_url, placeholders
 from ..models import Capabilities, ModelBuild, ModelSpec, Price, check_supported
 from ..questions import Boolean, Choice, Questions, Score
 from ..state import Image, State, has_image

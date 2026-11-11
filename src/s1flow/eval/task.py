@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, Any, Callable, Literal, cast
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from ..client import images
+from ..client import media
 from ..client.identity import digest
 from ..client.questions import Question
 from ..client.state import State
@@ -163,7 +163,7 @@ class Task:
 
     @property
     def data_digest(self) -> str:
-        """Current source data and materialized model inputs, including referenced image bytes."""
+        """Current source data and materialized model inputs, including referenced media bytes."""
         cases = self.load_cases()
         cases.forget()
         return digest({"source": cases.data_sha256(), "cases": [
@@ -248,8 +248,8 @@ class Task:
         self.variants[art.variant] = art.question
 
     def model_state(self, case: Case) -> State:
-        """The state a model receives: images loaded and prepared (client/images.materialize)."""
-        return images.materialize(case.state, self.dir)
+        """The state a model receives: media loaded and prepared (client/media.materialize)."""
+        return media.materialize(case.state, self.dir)
 
     def load_cases(self) -> Cases:
         """The task's cases (eval/cases.py): its rows, production's feedback, the corrections. Read once."""

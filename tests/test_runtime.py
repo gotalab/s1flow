@@ -105,7 +105,7 @@ def test_shape_and_image_refs_fail_before_call(tmp_path: Path, monkeypatch: pyte
         runtime.decide({'changed': 'a'})
     runtime = DecisionPolicy(runtime_spec(), client=c)
     for state in ([{'type': 'image', 'path': str(tmp_path / 'secret')}], [{'type': 'image', 'url': 'https://example.invalid/a.png'}]):
-        with pytest.raises(DataError, match='prepare an Image'):
+        with pytest.raises(DataError, match='prepare it explicitly'):
             runtime.decide(state)
     assert calls == []
     # The entire array is checked, including elements after the old preview limit.

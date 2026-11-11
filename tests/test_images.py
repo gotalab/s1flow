@@ -10,7 +10,7 @@ import pytest
 import respx
 from PIL import Image as PILImage
 
-from s1flow.client import Capabilities, Choice, Image, images
+from s1flow.client import Capabilities, Choice, Image, images, media
 from s1flow.client.endpoints import cloudflare_relay
 from s1flow.client.providers.cloudflare import CloudflareModel
 from s1flow.client.providers.gateway import BASE_URL as GW_URL, GatewayModel
@@ -57,17 +57,17 @@ def test_prepare_flattens_alpha_and_applies_exif_rotation():
 def test_materialize_loads_paths_once_and_rejects_bad_placement(tmp_path):
     (tmp_path / "a.png").write_bytes(png((300, 300)))
     state = ["画面", {"type": "image", "path": "a.png"}]
-    out = images.materialize(state, tmp_path)
+    out = media.materialize(state, tmp_path)
     assert out[0] == "画面" and isinstance(out[1], Image) and out[1].sha256
-    assert images.materialize("text only", tmp_path) == "text only"
+    assert media.materialize("text only", tmp_path) == "text only"
     with pytest.raises(DataError, match="top-level"):
-        images.materialize({"shot": {"type": "image", "path": "a.png"}}, tmp_path)
+        media.materialize({"shot": {"type": "image", "path": "a.png"}}, tmp_path)
     with pytest.raises(DataError, match="at most"):
-        images.materialize([{"type": "image", "path": "a.png"}] * 5, tmp_path)
+        media.materialize([{"type": "image", "path": "a.png"}] * 5, tmp_path)
     with pytest.raises(DataError, match="not found"):
-        images.materialize([{"type": "image", "path": "missing.png"}], tmp_path)
+        media.materialize([{"type": "image", "path": "missing.png"}], tmp_path)
     with pytest.raises(DataError, match="exactly one"):
-        images.materialize([{"type": "image", "path": "a.png", "url": "https://x"}], tmp_path)
+        media.materialize([{"type": "image", "path": "a.png", "url": "https://x"}], tmp_path)
 
 
 STATE = ["画面", images.prepare(png((300, 300)))]
@@ -103,7 +103,7 @@ def test_openrouter_and_gateway_send_image_url_parts(monkeypatch):
     gw = respx.post(f"{GW_URL}/evaluate").mock(return_value=httpx.Response(200, json={"answers": CHOICE}))
     asyncio.run(OpenRouterModel("typesafe/jev-1.13", capabilities=IMG).decide(STATE, Q))
     asyncio.run(GatewayModel("liquid/d1", capabilities=IMG).decide(STATE, Q))
-    part = {"type": "image_url", "image_url": {"url": images.data_url(STATE[1])}}
+    part = {"type": "image_url", "image_url": {"url": media.data_url(STATE[1])}}
     for route in (orr, gw):
         body = json.loads(route.calls[0].request.read())
         assert body["state"] == ["画面", part] and "assets" not in body
@@ -117,7 +117,7 @@ def test_decisions_sends_one_user_message_with_input_image(monkeypatch):
     asyncio.run(DecisionsModel("gpt-6-luna", capabilities=IMG).decide(STATE, Q))
     body = json.loads(route.calls[0].request.read())
     assert body["input"] == [{"role": "user", "content": [
-        {"type": "input_text", "text": "画面"}, {"type": "input_image", "image_url": images.data_url(STATE[1])},
+        {"type": "input_text", "text": "画面"}, {"type": "input_image", "image_url": media.data_url(STATE[1])},
     ]}]
 
 
@@ -126,7 +126,7 @@ def test_clef_sends_images_apart_with_placeholders():
     route = respx.post(f"{cloudflare_relay()}/run/@cf/cloudflare/clef").mock(return_value=httpx.Response(200, json={"result": {"answers": CHOICE}}))
     asyncio.run(CloudflareModel("clef", capabilities=IMG).decide(STATE, Q))
     body = json.loads(route.calls[0].request.read())
-    assert body["state"] == ["画面", "[image 1]"] and body["images"] == [images.data_url(STATE[1])]
+    assert body["state"] == ["画面", "[image 1]"] and body["images"] == [media.data_url(STATE[1])]
 
 
 def test_an_untranslated_image_cannot_be_sent_as_text():
@@ -139,5 +139,5 @@ def test_an_untranslated_image_cannot_be_sent_as_text():
 def test_llm_puts_images_after_the_prompt():
     content = user_content(STATE, Q)
     assert "[image 1]" in content[0]["text"] and STATE[1].data not in content[0]["text"]
-    assert content[1] == {"type": "image_url", "image_url": {"url": images.data_url(STATE[1])}}
+    assert content[1] == {"type": "image_url", "image_url": {"url": media.data_url(STATE[1])}}
     assert isinstance(user_content(["画面"], Q), str)

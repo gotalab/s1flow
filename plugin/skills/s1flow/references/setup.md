@@ -45,7 +45,7 @@ A model and its versions are declared in `s1flow.toml` (`[models."jev@openrouter
 `--verify` checks only what is declared; finding new versions is in `measure.md`.
 
 To add a model, the person reviews a new `[models."NAME"]` entry (by convention `model@api`): `provider`, the
-`id` the API takes, and `capabilities` (`question_types`, `image`, `context_tokens`, `max_options`) where they
+`id` the API takes, and `capabilities` (`question_types`, `image`, `audio`, `video`, `pdf`, `context_tokens`, `max_options`) where they
 differ from the defaults. Built-in providers and the key each reads:
 
 | `provider` | API | key |
@@ -61,6 +61,25 @@ OpenRouter and the Gateway return what each call billed and `llm` prices from Li
 declare a list price (`price.input_per_mtok`, `price.as_of`, `price.source`) or cost stays unknown. A provider of
 your own is `"package.module:factory"` and needs `provider_revision` to be evaluated. Then `s1flow doctor --models
 NAME` and `s1flow models --verify --models NAME`.
+
+For audio, video or PDF cases, the models that read them (`s1flow models --verify`, 2026-11-11) are all on OpenRouter:
+
+```toml
+[models."gemini-decision@openrouter"]
+provider = "openrouter"
+id = "google/gemini-decision-1"
+capabilities = { image = true, audio = true, video = true, pdf = true }
+
+[models."clef-omni@openrouter"]
+provider = "openrouter"
+id = "cloudflare/clef-omni"
+capabilities = { image = true, audio = true, video = true, context_tokens = 65536 }
+
+[models."classify@openrouter"]
+provider = "openrouter"
+id = "scaledown/classify-1"
+capabilities = { pdf = true }  # one PDF a request; it reads one image too, but not two
+```
 
 ## Project and connection discovery
 

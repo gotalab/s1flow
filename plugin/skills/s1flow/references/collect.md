@@ -121,6 +121,11 @@ task = Task(
   binary task, `min_precision=` and `min_recall=` are floors: the threshold is chosen among those that keep both,
   and a model that cannot is excluded with the reason. Floors come from the person, like weights. They need an
   objective that sets the threshold (any binary objective but Coverage and AUROC).
+- Images, audio, video and PDFs go as top-level items of a list state, by path from the task folder or URL:
+  `state=lambda r: ["Voicemail:", {"type": "audio", "path": r["file"]}]` (`"image"`, `"audio"` WAV/MP3,
+  `"video"` MP4, `"pdf"`). Every model gets the same bytes; one state holds at most 4 images, 4 audio clips,
+  2 videos (16 MiB of audio and video together) and 1 PDF. Only models that declare the kind are compared on it
+  (`s1flow models`).
 - `optimizer=Gepa(budget=300, reflection=None)` is what `optimize` runs (`measure.md`).
 - How the team already decides (a triage policy, CONTRIBUTING, a bot's prompt) goes in `tasks/<id>/context.md`:
   `optimize` reads it, the model never does. `criteria.md` is for the person's decision criteria, not the model.

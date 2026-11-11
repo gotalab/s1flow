@@ -15,7 +15,7 @@ from typing import Any
 
 from ...core.errors import Unsupported
 from ..answers import Answer, BooleanAnswer, ChoiceAnswer, Response, ScoreAnswer, Usage
-from ..images import openai_content
+from ..media import openai_content
 from ..models import Capabilities, ModelBuild, ModelSpec, check_supported
 from ..questions import Questions
 from ..state import State, has_image

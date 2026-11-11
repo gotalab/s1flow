@@ -121,10 +121,12 @@ The limit covers the whole call, retries and waits included. When it passes, s1f
 The log records it as `failed` with the error `TimedOut: ...`, apart from other failures. `adecide` takes the same
 `timeout`. Without one, a decision takes as long as its retries do.
 
-## Images and logged input
+## Images, audio, video, PDFs and logged input
 
-Images must be passed as `Image` values that your code prepares before the policy runs. Input JSON can't make the
-runtime fetch files or URLs. On the CLI, `--image PATH` loads a local file you name, and needs `s1flow[images]`.
+Media must be passed as values your code prepares before the policy runs: `media.prepare("audio", data)` (or
+`"image"`, `"video"`, `"pdf"`) as top-level items of a list state. Input JSON can't make the runtime fetch files or
+URLs. On the CLI, `--image`, `--audio`, `--video` and `--pdf PATH` load a local file you name; images need
+`s1flow[images]`. Audio is WAV or MP3, video MP4, sent as the file's own bytes; images are resized and re-encoded.
 Input is logged only if you ask for it (`keep_state=True` or `--keep-state`).
 
 ## Call a model directly
