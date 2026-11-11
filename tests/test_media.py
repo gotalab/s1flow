@@ -18,7 +18,12 @@ from s1flow.cli.decide import _state
 from s1flow.client import Capabilities, Choice, Media, media
 from s1flow.client.identity import state_digest
 from s1flow.client.models import check_supported
+from s1flow.client.providers.cloudflare import CloudflareModel
+from s1flow.client.providers.gateway import GatewayModel
+from s1flow.client.providers.llm import user_content
+from s1flow.client.providers.openai_decisions import DecisionsModel
 from s1flow.client.providers.openrouter import BASE_URL as OR_URL, OpenRouterModel
+from s1flow.client.providers.typesafe import TypeSafeModel
 from s1flow.core.errors import DataError, Unsupported
 from s1flow.policies.state_shape import mismatch, schema_of
 from s1flow.project import verify
@@ -145,3 +150,13 @@ def test_verify_inputs_say_what_the_checks_ask():
     assert b"Status: PAID" in zlib.decompress(paid[start:paid.index(b"\nendstream")])
     assert paid != unpaid
     assert verify.clip("red", "blue").data != verify.clip("blue", "red").data
+
+
+@pytest.mark.parametrize("model", [
+    TypeSafeModel("jev-latest"), GatewayModel("liquid/d1"), DecisionsModel("gpt-6-luna"), CloudflareModel("clef"),
+])
+def test_a_provider_that_carries_only_images_refuses_other_media_before_the_call(model):
+    with pytest.raises(Unsupported, match="cannot send audio, pdf"):
+        model.request(["x", WAV, media.prepare("pdf", PDF)], Q)
+    with pytest.raises(Unsupported, match="cannot send audio"):
+        user_content(["x", WAV], Q)

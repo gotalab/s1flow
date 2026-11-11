@@ -14,7 +14,7 @@ from __future__ import annotations
 from typing import Any
 
 from ..answers import Response, Usage
-from ..media import typesafe_assets
+from ..media import typesafe_assets, images_only
 from ..models import Capabilities, ModelBuild, ModelSpec, check_supported
 from ..questions import Questions, has_box
 from ..state import State, has_image
@@ -40,6 +40,7 @@ class TypeSafeModel:
         self.api_key_env = api_key_env
 
     def request(self, state: State, questions: Questions, *, options: dict[str, Any] | None = None) -> Request:
+        images_only(state, self.id)
         body: dict[str, Any] = {"model": self.model_id, "state": state, "questions": systemone.questions(questions)}
         headers = {}
         if has_image(state):

@@ -14,7 +14,7 @@ from typing import Any
 
 from . import systemone
 from ..answers import Response, Usage
-from ..media import chat_parts
+from ..media import chat_parts, images_only
 from ..models import Capabilities, ModelBuild, ModelSpec, Price, check_supported
 from ..questions import Questions
 from ..state import State, has_image
@@ -35,6 +35,7 @@ class GatewayModel:
         self.capabilities = capabilities or Capabilities()
 
     def request(self, state: State, questions: Questions, *, options: dict[str, Any] | None = None) -> Request:
+        images_only(state, self.id)
         body: dict[str, Any] = {"model": self.model_id, "state": state, "questions": systemone.questions(questions, noul=False)}
         if has_image(state):
             body["state"] = chat_parts(state)

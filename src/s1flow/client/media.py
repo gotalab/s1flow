@@ -26,9 +26,9 @@ from typing import Any
 
 from pydantic import ValidationError
 
-from ..core.errors import DataError
+from ..core.errors import DataError, Unsupported
 from . import images
-from .state import Image, Media, MediaKind, MediaRef, Part, State, is_media_dict
+from .state import Image, kinds_in, Media, MediaKind, MediaRef, Part, State, is_media_dict
 
 def _sniff(kind: MediaKind, raw: bytes) -> str | None:
     """The media type the bytes are, among those `kind` accepts; None when they are none of them."""
@@ -122,6 +122,14 @@ def materialize(state: Any, base_dir: Path) -> State:
 
 
 # Translations. Each takes a state that has_media() narrowed to a list of parts.
+
+
+def images_only(state: State, provider: str) -> None:
+    """For a provider whose API carries images and no other media: audio, video or a PDF is refused before the call,
+    not serialized into a request it cannot express."""
+    other = kinds_in(state) - {"image"}
+    if other:
+        raise Unsupported(f"{provider} cannot send {', '.join(sorted(other))}")
 
 
 def data_url(x: Image | Media) -> str:
