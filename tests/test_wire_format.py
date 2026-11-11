@@ -10,8 +10,6 @@ file and commit it with the change:
     S1FLOW_WRITE_WIRE_FORMAT=1 pytest tests/test_wire_format.py
 """
 
-from __future__ import annotations
-
 import json
 import os
 from pathlib import Path
