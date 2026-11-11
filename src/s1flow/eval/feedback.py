@@ -235,13 +235,14 @@ def _objective_estimate(b: measure.Bound, pairs: measure.Pairs, show_interval: b
     return Estimate(value=value, interval=measure.interval(draws))
 
 
-def _same_execution(task: Task, adopted: EvaluatedPolicy) -> Callable[[str, str], bool]:
+def _same_execution(task: Task, adopted: EvaluatedPolicy) -> Callable[[str, str], bool] | None:
     """Logged and adopted execution digests are the same execution when equal, or when both are the one the policy
-    runs under today as this or an earlier release wrote it (an app and the adoption on different releases)."""
+    runs under today as this or an earlier release wrote it (an app and the adoption on different releases).
+    None: its connection is not declared here, so only equal digests can be matched."""
     try:
         runtime = DecisionPolicy(adopted.spec, client=task.where.client())
     except ConfigError:
-        return str.__eq__  # its connection is not declared here: only stored digests to compare
+        return None
     return lambda logged, evidence: logged == evidence or (runtime.same_execution(logged) and runtime.same_execution(evidence))
 
 
@@ -257,7 +258,7 @@ def production(task: Task, cs: list[Answered], failed: list[FailedLog]) -> list[
         reason = None
         kind = task.kind
         adopted = None
-        same_execution: Callable[[str, str], bool] = str.__eq__
+        same_execution: Callable[[str, str], bool] | None = None
         try:
             parsed = Ref.parse(ref)
             adopted = task.policies.evaluated(parsed.task, parsed.version)
@@ -278,8 +279,10 @@ def production(task: Task, cs: list[Answered], failed: list[FailedLog]) -> list[
             if primary is None:
                 reason = "adoption evidence has no primary objective"
             elif any(c.decision.policy_digest != adopted.spec.digest or
-                     not same_execution(c.decision.execution_digest, adopted.evidence.execution_digest) for c in rows):
-                reason = "logged policy or execution identity differs from the adoption evidence"
+                     not (same_execution or str.__eq__)(c.decision.execution_digest, adopted.evidence.execution_digest) for c in rows):
+                reason = "logged policy or execution identity differs from the adoption evidence" + (
+                    "" if same_execution else f" (connection {adopted.spec.connection} is not declared here, so identities "
+                                              "written by different s1flow releases cannot be matched)")
             elif primary.code_sha256 and (primary.key not in task.custom or
                                           task.custom[primary.key].objective.code_sha256 != primary.code_sha256):
                 reason = "adopted custom objective code differs or is unavailable; evidence cannot be reused"

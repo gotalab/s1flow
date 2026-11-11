@@ -143,6 +143,50 @@
       }
      }
     }
+   },
+   "box": {
+    "sent": {
+     "url": "https://api.typesafe.ai/v1/systemone",
+     "headers": {
+      "typesafe-danger-zone-images": "true"
+     },
+     "body": {
+      "model": "jev-1.14.0",
+      "state": [
+       "The screen shows:",
+       "jevfit-image-1"
+      ],
+      "questions": {
+       "where": {
+        "type": "box",
+        "instructions": "Where is the error message?"
+       }
+      },
+      "assets": {
+       "jevfit-image-1": {
+        "type": "image",
+        "data_base64": "iVBORw0KGgo=",
+        "format": "png"
+       }
+      }
+     }
+    },
+    "read": {
+     "answered_by": "jev-1.14.0",
+     "answers": {
+      "where": {
+       "type": "box",
+       "box": {
+        "top": 0.1,
+        "bottom": 0.5,
+        "left": 0.2,
+        "right": 0.9
+       },
+       "confidence": 0.6,
+       "agreement": null
+      }
+     }
+    }
    }
   },
   "gateway": {
@@ -279,6 +323,46 @@
         "1": 0.6
        },
        "confidence": null
+      }
+     }
+    }
+   },
+   "box": {
+    "sent": {
+     "url": "https://ai-gateway.vercel.sh/v1/evaluate",
+     "headers": {},
+     "body": {
+      "model": "typesafe-ai/jev",
+      "state": [
+       "The screen shows:",
+       {
+        "type": "image_url",
+        "image_url": {
+         "url": "data:image/png;base64,iVBORw0KGgo="
+        }
+       }
+      ],
+      "questions": {
+       "where": {
+        "type": "box",
+        "instructions": "Where is the error message?"
+       }
+      }
+     }
+    },
+    "read": {
+     "answered_by": "typesafe-ai/jev",
+     "answers": {
+      "where": {
+       "type": "box",
+       "box": {
+        "top": 0.1,
+        "bottom": 0.5,
+        "left": 0.2,
+        "right": 0.9
+       },
+       "confidence": 0.6,
+       "agreement": null
       }
      }
     }
@@ -421,6 +505,46 @@
       }
      }
     }
+   },
+   "box": {
+    "sent": {
+     "url": "https://openrouter.ai/api/v1/systemone",
+     "headers": {},
+     "body": {
+      "model": "typesafe/jev",
+      "state": [
+       "The screen shows:",
+       {
+        "type": "image_url",
+        "image_url": {
+         "url": "data:image/png;base64,iVBORw0KGgo="
+        }
+       }
+      ],
+      "questions": {
+       "where": {
+        "type": "box",
+        "instructions": "Where is the error message?"
+       }
+      }
+     }
+    },
+    "read": {
+     "answered_by": "typesafe/jev",
+     "answers": {
+      "where": {
+       "type": "box",
+       "box": {
+        "top": 0.1,
+        "bottom": 0.5,
+        "left": 0.2,
+        "right": 0.9
+       },
+       "confidence": 0.6,
+       "agreement": null
+      }
+     }
+    }
    }
   },
   "cloudflare": {
@@ -558,6 +682,44 @@
       }
      }
     }
+   },
+   "box": {
+    "sent": {
+     "url": "https://relay.test/run/@cf/cloudflare/clef",
+     "headers": {},
+     "body": {
+      "model": "clef",
+      "state": [
+       "The screen shows:",
+       "[image 1]"
+      ],
+      "questions": {
+       "where": {
+        "type": "box",
+        "instructions": "Where is the error message?"
+       }
+      },
+      "images": [
+       "data:image/png;base64,iVBORw0KGgo="
+      ]
+     }
+    },
+    "read": {
+     "answered_by": "clef",
+     "answers": {
+      "where": {
+       "type": "box",
+       "box": {
+        "top": 0.1,
+        "bottom": 0.5,
+        "left": 0.2,
+        "right": 0.9
+       },
+       "confidence": 0.6,
+       "agreement": null
+      }
+     }
+    }
    }
   },
   "openai-decisions": {
@@ -568,6 +730,93 @@
      "body": {
       "model": "gpt-6-luna",
       "input": "{\n \"meta\": {\n  \"a\": [\n   {\n    \"b\": 3,\n    \"y\": 2\n   }\n  ],\n  \"z\": 1\n },\n \"title\": \"Crash on start\"\n}",
+      "questions": [
+       {
+        "type": "choice",
+        "name": "kind",
+        "instructions": "What kind of issue?",
+        "choices": [
+         {
+          "value": "kind/bug",
+          "description": "it is broken"
+         },
+         {
+          "value": "kind/question"
+         }
+        ]
+       },
+       {
+        "type": "predicate",
+        "name": "refund",
+        "instructions": "Does it ask for a refund?"
+       },
+       {
+        "type": "score",
+        "name": "urgency",
+        "instructions": "How urgent?",
+        "levels": [
+         {
+          "label": "0",
+          "description": "low"
+         },
+         {
+          "label": "1",
+          "description": "high"
+         }
+        ]
+       }
+      ]
+     }
+    },
+    "read": {
+     "answered_by": "gpt-6-luna",
+     "answers": {
+      "kind": {
+       "type": "choice",
+       "choice": "kind/bug",
+       "probabilities": {
+        "kind/bug": 0.8,
+        "kind/question": 0.2
+       },
+       "confidence": 0.7
+      },
+      "refund": {
+       "type": "boolean",
+       "probability": 0.1
+      },
+      "urgency": {
+       "type": "score",
+       "score": 0.6,
+       "probabilities": {
+        "0": 0.4,
+        "1": 0.6
+       },
+       "confidence": null
+      }
+     }
+    }
+   },
+   "image": {
+    "sent": {
+     "url": "https://api.openai.com/v1/decisions",
+     "headers": {},
+     "body": {
+      "model": "gpt-6-luna",
+      "input": [
+       {
+        "role": "user",
+        "content": [
+         {
+          "type": "input_text",
+          "text": "The screen shows:"
+         },
+         {
+          "type": "input_image",
+          "image_url": "data:image/png;base64,iVBORw0KGgo="
+         }
+        ]
+       }
+      ],
       "questions": [
        {
         "type": "choice",
@@ -789,6 +1038,570 @@
        "score": 1.0,
        "probabilities": null,
        "confidence": null
+      }
+     }
+    }
+   },
+   "box": {
+    "sent": {
+     "model": "openai/gpt-test",
+     "messages": [
+      {
+       "role": "system",
+       "content": "You are a precise classifier. Read the STATE and answer every QUESTION about it. Reply with a JSON object that has one field per question id, following the schema."
+      },
+      {
+       "role": "user",
+       "content": [
+        {
+         "type": "text",
+         "text": "STATE:\n[\n \"The screen shows:\",\n \"[image 1]\"\n]\n\nQUESTIONS:\n- where (box): Where is the error message?\n    Answer the bounding box of that target: top, bottom, left, right as integers on a 0-1000 scale of the image height and width (0 = top or left edge, 1000 = bottom or right edge)."
+        },
+        {
+         "type": "image_url",
+         "image_url": {
+          "url": "data:image/png;base64,iVBORw0KGgo="
+         }
+        }
+       ]
+      }
+     ],
+     "num_retries": 0,
+     "response_format": {
+      "type": "json_schema",
+      "json_schema": {
+       "name": "answers",
+       "schema": {
+        "type": "object",
+        "properties": {
+         "where": {
+          "type": "object",
+          "properties": {
+           "top": {
+            "type": "number"
+           },
+           "bottom": {
+            "type": "number"
+           },
+           "left": {
+            "type": "number"
+           },
+           "right": {
+            "type": "number"
+           }
+          },
+          "required": [
+           "top",
+           "bottom",
+           "left",
+           "right"
+          ],
+          "additionalProperties": false
+         }
+        },
+        "required": [
+         "where"
+        ],
+        "additionalProperties": false
+       },
+       "strict": true
+      }
+     },
+     "temperature": 0
+    },
+    "read": {
+     "answered_by": "openai/gpt-test",
+     "answers": {
+      "where": {
+       "type": "box",
+       "box": {
+        "top": 0.1,
+        "bottom": 0.5,
+        "left": 0.2,
+        "right": 0.9
+       },
+       "confidence": null,
+       "agreement": null
+      }
+     }
+    }
+   }
+  },
+  "llm sampled": {
+   "text": {
+    "sent": [
+     {
+      "model": "openai/gpt-test",
+      "messages": [
+       {
+        "role": "system",
+        "content": "You are a precise classifier. Read the STATE and answer every QUESTION about it. Reply with a JSON object that has one field per question id, following the schema."
+       },
+       {
+        "role": "user",
+        "content": [
+         {
+          "type": "text",
+          "text": "STATE:\n[\n \"The screen shows:\",\n \"[image 1]\"\n]\n\nQUESTIONS:\n- where (box): Where is the error message?\n    The image is 1000x600 pixels. Answer the bounding box of that target in pixels: top, bottom, left, right, from the top-left corner."
+         },
+         {
+          "type": "image_url",
+          "image_url": {
+           "url": "data:image/png;base64,iVBORw0KGgo="
+          }
+         }
+        ]
+       }
+      ],
+      "num_retries": 0,
+      "response_format": {
+       "type": "json_schema",
+       "json_schema": {
+        "name": "answers",
+        "schema": {
+         "type": "object",
+         "properties": {
+          "where": {
+           "type": "object",
+           "properties": {
+            "top": {
+             "type": "number"
+            },
+            "bottom": {
+             "type": "number"
+            },
+            "left": {
+             "type": "number"
+            },
+            "right": {
+             "type": "number"
+            }
+           },
+           "required": [
+            "top",
+            "bottom",
+            "left",
+            "right"
+           ],
+           "additionalProperties": false
+          }
+         },
+         "required": [
+          "where"
+         ],
+         "additionalProperties": false
+        },
+        "strict": true
+       }
+      },
+      "temperature": 1
+     },
+     {
+      "model": "openai/gpt-test",
+      "messages": [
+       {
+        "role": "system",
+        "content": "You are a precise classifier. Read the STATE and answer every QUESTION about it. Reply with a JSON object that has one field per question id, following the schema."
+       },
+       {
+        "role": "user",
+        "content": [
+         {
+          "type": "text",
+          "text": "STATE:\n[\n \"The screen shows:\",\n \"[image 1]\"\n]\n\nQUESTIONS:\n- where (box): Where is the error message?\n    The image is 1000x600 pixels. Answer the bounding box of that target in pixels: top, bottom, left, right, from the top-left corner."
+         },
+         {
+          "type": "image_url",
+          "image_url": {
+           "url": "data:image/png;base64,iVBORw0KGgo="
+          }
+         }
+        ]
+       }
+      ],
+      "num_retries": 0,
+      "response_format": {
+       "type": "json_schema",
+       "json_schema": {
+        "name": "answers",
+        "schema": {
+         "type": "object",
+         "properties": {
+          "where": {
+           "type": "object",
+           "properties": {
+            "top": {
+             "type": "number"
+            },
+            "bottom": {
+             "type": "number"
+            },
+            "left": {
+             "type": "number"
+            },
+            "right": {
+             "type": "number"
+            }
+           },
+           "required": [
+            "top",
+            "bottom",
+            "left",
+            "right"
+           ],
+           "additionalProperties": false
+          }
+         },
+         "required": [
+          "where"
+         ],
+         "additionalProperties": false
+        },
+        "strict": true
+       }
+      },
+      "temperature": 1
+     }
+    ],
+    "read": {
+     "answered_by": "openai/gpt-test",
+     "answers": {
+      "kind": {
+       "type": "choice",
+       "choice": "kind/bug",
+       "probabilities": {
+        "kind/bug": 0.5,
+        "kind/question": 0.5
+       },
+       "confidence": null
+      },
+      "refund": {
+       "type": "boolean",
+       "probability": 0.5
+      },
+      "urgency": {
+       "type": "score",
+       "score": 0.5,
+       "probabilities": {
+        "0": 0.5,
+        "1": 0.5
+       },
+       "confidence": null
+      }
+     }
+    }
+   },
+   "image": {
+    "sent": [
+     {
+      "model": "openai/gpt-test",
+      "messages": [
+       {
+        "role": "system",
+        "content": "You are a precise classifier. Read the STATE and answer every QUESTION about it. Reply with a JSON object that has one field per question id, following the schema."
+       },
+       {
+        "role": "user",
+        "content": [
+         {
+          "type": "text",
+          "text": "STATE:\n[\n \"The screen shows:\",\n \"[image 1]\"\n]\n\nQUESTIONS:\n- where (box): Where is the error message?\n    The image is 1000x600 pixels. Answer the bounding box of that target in pixels: top, bottom, left, right, from the top-left corner."
+         },
+         {
+          "type": "image_url",
+          "image_url": {
+           "url": "data:image/png;base64,iVBORw0KGgo="
+          }
+         }
+        ]
+       }
+      ],
+      "num_retries": 0,
+      "response_format": {
+       "type": "json_schema",
+       "json_schema": {
+        "name": "answers",
+        "schema": {
+         "type": "object",
+         "properties": {
+          "where": {
+           "type": "object",
+           "properties": {
+            "top": {
+             "type": "number"
+            },
+            "bottom": {
+             "type": "number"
+            },
+            "left": {
+             "type": "number"
+            },
+            "right": {
+             "type": "number"
+            }
+           },
+           "required": [
+            "top",
+            "bottom",
+            "left",
+            "right"
+           ],
+           "additionalProperties": false
+          }
+         },
+         "required": [
+          "where"
+         ],
+         "additionalProperties": false
+        },
+        "strict": true
+       }
+      },
+      "temperature": 1
+     },
+     {
+      "model": "openai/gpt-test",
+      "messages": [
+       {
+        "role": "system",
+        "content": "You are a precise classifier. Read the STATE and answer every QUESTION about it. Reply with a JSON object that has one field per question id, following the schema."
+       },
+       {
+        "role": "user",
+        "content": [
+         {
+          "type": "text",
+          "text": "STATE:\n[\n \"The screen shows:\",\n \"[image 1]\"\n]\n\nQUESTIONS:\n- where (box): Where is the error message?\n    The image is 1000x600 pixels. Answer the bounding box of that target in pixels: top, bottom, left, right, from the top-left corner."
+         },
+         {
+          "type": "image_url",
+          "image_url": {
+           "url": "data:image/png;base64,iVBORw0KGgo="
+          }
+         }
+        ]
+       }
+      ],
+      "num_retries": 0,
+      "response_format": {
+       "type": "json_schema",
+       "json_schema": {
+        "name": "answers",
+        "schema": {
+         "type": "object",
+         "properties": {
+          "where": {
+           "type": "object",
+           "properties": {
+            "top": {
+             "type": "number"
+            },
+            "bottom": {
+             "type": "number"
+            },
+            "left": {
+             "type": "number"
+            },
+            "right": {
+             "type": "number"
+            }
+           },
+           "required": [
+            "top",
+            "bottom",
+            "left",
+            "right"
+           ],
+           "additionalProperties": false
+          }
+         },
+         "required": [
+          "where"
+         ],
+         "additionalProperties": false
+        },
+        "strict": true
+       }
+      },
+      "temperature": 1
+     }
+    ],
+    "read": {
+     "answered_by": "openai/gpt-test",
+     "answers": {
+      "kind": {
+       "type": "choice",
+       "choice": "kind/bug",
+       "probabilities": {
+        "kind/bug": 0.5,
+        "kind/question": 0.5
+       },
+       "confidence": null
+      },
+      "refund": {
+       "type": "boolean",
+       "probability": 0.5
+      },
+      "urgency": {
+       "type": "score",
+       "score": 0.5,
+       "probabilities": {
+        "0": 0.5,
+        "1": 0.5
+       },
+       "confidence": null
+      }
+     }
+    }
+   },
+   "box": {
+    "sent": [
+     {
+      "model": "openai/gpt-test",
+      "messages": [
+       {
+        "role": "system",
+        "content": "You are a precise classifier. Read the STATE and answer every QUESTION about it. Reply with a JSON object that has one field per question id, following the schema."
+       },
+       {
+        "role": "user",
+        "content": [
+         {
+          "type": "text",
+          "text": "STATE:\n[\n \"The screen shows:\",\n \"[image 1]\"\n]\n\nQUESTIONS:\n- where (box): Where is the error message?\n    The image is 1000x600 pixels. Answer the bounding box of that target in pixels: top, bottom, left, right, from the top-left corner."
+         },
+         {
+          "type": "image_url",
+          "image_url": {
+           "url": "data:image/png;base64,iVBORw0KGgo="
+          }
+         }
+        ]
+       }
+      ],
+      "num_retries": 0,
+      "response_format": {
+       "type": "json_schema",
+       "json_schema": {
+        "name": "answers",
+        "schema": {
+         "type": "object",
+         "properties": {
+          "where": {
+           "type": "object",
+           "properties": {
+            "top": {
+             "type": "number"
+            },
+            "bottom": {
+             "type": "number"
+            },
+            "left": {
+             "type": "number"
+            },
+            "right": {
+             "type": "number"
+            }
+           },
+           "required": [
+            "top",
+            "bottom",
+            "left",
+            "right"
+           ],
+           "additionalProperties": false
+          }
+         },
+         "required": [
+          "where"
+         ],
+         "additionalProperties": false
+        },
+        "strict": true
+       }
+      },
+      "temperature": 1
+     },
+     {
+      "model": "openai/gpt-test",
+      "messages": [
+       {
+        "role": "system",
+        "content": "You are a precise classifier. Read the STATE and answer every QUESTION about it. Reply with a JSON object that has one field per question id, following the schema."
+       },
+       {
+        "role": "user",
+        "content": [
+         {
+          "type": "text",
+          "text": "STATE:\n[\n \"The screen shows:\",\n \"[image 1]\"\n]\n\nQUESTIONS:\n- where (box): Where is the error message?\n    The image is 1000x600 pixels. Answer the bounding box of that target in pixels: top, bottom, left, right, from the top-left corner."
+         },
+         {
+          "type": "image_url",
+          "image_url": {
+           "url": "data:image/png;base64,iVBORw0KGgo="
+          }
+         }
+        ]
+       }
+      ],
+      "num_retries": 0,
+      "response_format": {
+       "type": "json_schema",
+       "json_schema": {
+        "name": "answers",
+        "schema": {
+         "type": "object",
+         "properties": {
+          "where": {
+           "type": "object",
+           "properties": {
+            "top": {
+             "type": "number"
+            },
+            "bottom": {
+             "type": "number"
+            },
+            "left": {
+             "type": "number"
+            },
+            "right": {
+             "type": "number"
+            }
+           },
+           "required": [
+            "top",
+            "bottom",
+            "left",
+            "right"
+           ],
+           "additionalProperties": false
+          }
+         },
+         "required": [
+          "where"
+         ],
+         "additionalProperties": false
+        },
+        "strict": true
+       }
+      },
+      "temperature": 1
+     }
+    ],
+    "read": {
+     "answered_by": "openai/gpt-test",
+     "answers": {
+      "where": {
+       "type": "box",
+       "box": {
+        "top": 0.18333333333333335,
+        "bottom": 0.8500000000000001,
+        "left": 0.19,
+        "right": 0.89
+       },
+       "confidence": null,
+       "agreement": 0.9250601581299416
       }
      }
     }

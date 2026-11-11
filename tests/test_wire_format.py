@@ -25,7 +25,7 @@ import respx
 from s1flow.client import BooleanAnswer, ChoiceAnswer, Client, Image
 from s1flow.client import identity
 from s1flow.client.models import Capabilities, ModelSpec
-from s1flow.client.questions import Boolean, Choice, Score
+from s1flow.client.questions import Boolean, Box, Choice, Score
 from s1flow.policies import DecisionRule
 from s1flow.policies.kinds import KindParams, kind_of
 
@@ -38,8 +38,10 @@ QUESTIONS = {
 }
 # Keys out of order at two depths: what is sent is the state with its keys sorted.
 TEXT = {"title": "Crash on start", "meta": {"z": 1, "a": [{"y": 2, "b": 3}]}}
-PIXEL = Image(media_type="image/png", data="iVBORw0KGgo=", sha256="0" * 64, width=4, height=3)
+PIXEL = Image(media_type="image/png", data="iVBORw0KGgo=", sha256="0" * 64, width=1000, height=600)
 WITH_IMAGE = ["The screen shows:", PIXEL]
+BOX = {"where": Box(instructions="Where is the error message?")}
+BOX_ANSWER = {"type": "box", "box": {"top": 0.1, "bottom": 0.5, "left": 0.2, "right": 0.9}, "confidence": 0.6}
 
 SYSTEM_ONE = {
     "kind": {"type": "choice", "choice": "kind/bug", "probabilities": {"kind/bug": 0.8, "kind/question": 0.2}, "confidence": 0.7},
@@ -62,13 +64,21 @@ REPLIES: dict[str, dict[str, Any]] = {
          "probabilities": [{"value": 0, "label": "0", "probability": 0.4}, {"value": 1, "label": "1", "probability": 0.6}]},
     ], "usage": {"input_tokens": 90, "output_tokens": 0}},
 }
+BOX_REPLIES: dict[str, dict[str, Any]] = {
+    "typesafe": {"model": "jev-1.14.0", "answers": {"where": BOX_ANSWER}},
+    "gateway": {"model": "typesafe-ai/jev", "answers": {"where": BOX_ANSWER}},
+    "openrouter": {"model": "typesafe/jev", "answers": {"where": BOX_ANSWER}},
+    "cloudflare": {"result": {"model": "clef", "answers": {"where": BOX_ANSWER}}},
+}
+ALL = Capabilities(image=True, question_types=frozenset({"boolean", "choice", "score", "box"}))
 MODELS = {
-    "typesafe": ModelSpec(provider="typesafe", id="jev-1.14.0", capabilities=Capabilities(image=True)),
-    "gateway": ModelSpec(provider="gateway", id="typesafe-ai/jev", capabilities=Capabilities(image=True)),
-    "openrouter": ModelSpec(provider="openrouter", id="typesafe/jev", capabilities=Capabilities(image=True)),
-    "cloudflare": ModelSpec(provider="cloudflare", id="clef", capabilities=Capabilities(image=True)),
-    "openai-decisions": ModelSpec(provider="openai-decisions", id="gpt-6-luna"),
-    "llm": ModelSpec(provider="llm", id="openai/gpt-test", capabilities=Capabilities(image=True)),
+    "typesafe": ModelSpec(provider="typesafe", id="jev-1.14.0", capabilities=ALL),
+    "gateway": ModelSpec(provider="gateway", id="typesafe-ai/jev", capabilities=ALL),
+    "openrouter": ModelSpec(provider="openrouter", id="typesafe/jev", capabilities=ALL),
+    "cloudflare": ModelSpec(provider="cloudflare", id="clef", capabilities=ALL),
+    "openai-decisions": ModelSpec(provider="openai-decisions", id="gpt-6-luna", capabilities=Capabilities(image=True)),
+    "llm": ModelSpec(provider="llm", id="openai/gpt-test", options={"box_units": "k1000"}, capabilities=ALL),
+    "llm sampled": ModelSpec(provider="llm", id="openai/gpt-test", options={"samples": 2, "box_units": "pixels"}, capabilities=ALL),
 }
 # Headers every call carries from httpx, or a key: not what a provider chooses to send.
 TRANSPORT = {"host", "accept", "accept-encoding", "connection", "user-agent", "content-length", "content-type", "authorization"}
@@ -85,32 +95,38 @@ def _read(response: Any) -> dict[str, Any]:
 
 def _http(provider: str) -> dict[str, Any]:
     out = {}
-    with respx.mock(assert_all_called=False) as mock:
-        route = mock.post().mock(return_value=httpx.Response(200, json=REPLIES[provider]))
-        for name, state in (("text", TEXT), ("image", WITH_IMAGE)):
-            if name == "image" and not MODELS[provider].capabilities.image:
-                continue
-            got = Client().responses.create(model=MODELS[provider], state=state, questions=QUESTIONS)
+    asks = [("text", TEXT, QUESTIONS, REPLIES), ("image", WITH_IMAGE, QUESTIONS, REPLIES), ("box", WITH_IMAGE, BOX, BOX_REPLIES)]
+    for name, state, questions, replies in asks:
+        if provider not in replies:
+            continue
+        with respx.mock(assert_all_called=False) as mock:
+            route = mock.post().mock(return_value=httpx.Response(200, json=replies[provider]))
+            got = Client().responses.create(model=MODELS[provider], state=state, questions=questions)
             out[name] = {"sent": _sent(route.calls.last.request), "read": _read(got)}
     return out
 
 
-def _llm(monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]:
+def _llm(monkeypatch: pytest.MonkeyPatch, model: str) -> dict[str, Any]:
+    """Each sample of a sampled model writes the next of these, so its distribution is read from different answers."""
     import litellm
 
     calls: list[dict[str, Any]] = []
-    content = json.dumps({"kind": "kind/bug", "refund": False, "urgency": 1})
+    written = [{"kind": "kind/bug", "refund": False, "urgency": 1, "where": {"top": 100, "bottom": 500, "left": 200, "right": 900}},
+               {"kind": "kind/question", "refund": True, "urgency": 0, "where": {"top": 120, "bottom": 520, "left": 180, "right": 880}}]
 
     async def acompletion(**kwargs: Any) -> Any:
         calls.append({k: v for k, v in kwargs.items() if k != "api_key"})
+        asked = kwargs["response_format"]["json_schema"]["schema"]["properties"]
+        content = json.dumps({k: v for k, v in written[(len(calls) - 1) % 2].items() if k in asked})
         usage = SimpleNamespace(prompt_tokens=90, completion_tokens=12, model_dump=lambda mode=None: {"prompt_tokens": 90})
         return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content=content))], usage=usage, _hidden_params={})
 
     monkeypatch.setattr(litellm, "acompletion", acompletion)
     out = {}
-    for name, state in (("text", TEXT), ("image", WITH_IMAGE)):
-        got = Client().responses.create(model=MODELS["llm"], state=state, questions=QUESTIONS)
-        out[name] = {"sent": calls[-1], "read": _read(got)}
+    for name, state, questions in (("text", TEXT, QUESTIONS), ("image", WITH_IMAGE, QUESTIONS), ("box", WITH_IMAGE, BOX)):
+        calls.clear()
+        got = Client().responses.create(model=MODELS[model], state=state, questions=questions)
+        out[name] = {"sent": calls, "read": _read(got)} if len(calls) > 1 else {"sent": calls[0], "read": _read(got)}
     return out
 
 
@@ -135,7 +151,7 @@ def test_what_is_sent_and_read_is_what_the_identity_formats_name(monkeypatch):
     monkeypatch.setenv("CLEF_RELAY_URL", "https://relay.test")
     now = {
         "request": identity.REQUEST, "execution": identity.EXECUTION,
-        "providers": {p: _http(p) for p in REPLIES} | {"llm": _llm(monkeypatch)},
+        "providers": {p: _http(p) for p in REPLIES} | {m: _llm(monkeypatch, m) for m in ("llm", "llm sampled")},
         "decisions": _decisions(),
     }
     text = json.dumps(now, ensure_ascii=False, indent=1) + "\n"  # key order kept: the order sent is compared too
