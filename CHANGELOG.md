@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.0a4 (2026-11-12)
+
+### Changed
+
+- Every model call sends the state with the keys of each JSON object sorted, at any depth; lists keep their order.
+  The request identity already ignored key order, so an evaluation case and a production call that differed only in
+  key order counted as the same request while the model read different text. As after every release, `run` calls
+  the models again instead of reusing answers recorded by an earlier one.
+
 ## 0.1.0a3 (2026-11-10)
 
 ### Changed
