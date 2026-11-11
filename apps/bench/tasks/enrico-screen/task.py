@@ -4,10 +4,10 @@
 topic, seed 1, leaving out the 10 its issues.csv flags for a faulty screenshot. Enrico's labels are noisy: every
 drawn screen was looked at against its topic's description, and a second reviewer, not told which screens the first
 had flagged, judged the flagged ones mixed with kept ones. The 69 both judged plainly something else (a login form
-labelled gallery, a news article labelled terms) are listed in mislabelled.csv and replaced by further draws; maps,
-camera and calculator have too few screens left for 12. Screens that fit two topics (a login form is also a form)
-keep Enrico's. Stored as WebP (quality 80) at Enrico's 540x960 to keep the repository small. The topic descriptions
-are Enrico's own.
+labelled gallery, a news article labelled terms) are listed in mislabelled.csv and replaced by further draws; chat,
+terms, camera, maps and calculator have too few screens left for 12. Screens that fit two topics (a login form is
+also a form) keep Enrico's. Stored as WebP (quality 80), each scaled to 540x960 (some of Rico's are 1080x1920), to
+keep the repository small. The topic descriptions are Enrico's own.
 """
 
 from s1flow.eval import Task
