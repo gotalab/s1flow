@@ -54,12 +54,6 @@ provider = "openrouter"
 id = "jaredpalmer/kev-4b"
 capabilities.context_tokens = 8192
 
-[models."mercury@openrouter"]
-provider = "openrouter"
-id = "inception/mercury-decide"  # the paid slug: the :free one is held to 18 calls a minute
-capabilities.context_tokens = 32768
-capabilities.image = true
-
 # Added 2026-10-17 from OpenRouter's decision models (GET /api/v1/models?output_modalities=decisions).
 # `s1flow models --verify` on 2026-10-31: each takes boolean, choice and score; none takes box.
 [models."decision-1@openrouter"]
@@ -163,3 +157,25 @@ provider = "openrouter"
 id = "baseten/mammoth-1"
 capabilities.image = true
 note = "Baseten mammoth-1, 27B (2026-10-21)."
+
+# Added 2026-11-11 from OpenRouter's decision models. No direct-API provider for these yet.
+[models."gemini-decision@openrouter"]
+provider = "openrouter"
+id = "google/gemini-decision-1"
+capabilities.context_tokens = 262144
+capabilities.image = true
+note = "Google Gemini Decision 1 (2026-11-11); Google's own Decisions API has no provider here yet."
+
+[models."reflex@openrouter"]
+provider = "openrouter"
+id = "morph/reflex"
+capabilities.context_tokens = 65536
+capabilities.image = true
+note = "Morph Reflex, 27B (2026-11-03)."
+
+[models."clef-omni@openrouter"]
+provider = "openrouter"
+id = "cloudflare/clef-omni"
+capabilities.context_tokens = 65536
+capabilities.image = true
+note = "Cloudflare Clef Omni, 30B-A3B MoE (2026-10-09 on OpenRouter)."

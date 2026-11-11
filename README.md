@@ -20,13 +20,13 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/automation-share-dark.svg">
-  <img alt="Ruff issues, 361 cases. Share each model can route on its own while staying 95% accurate, accuracy over all cases, median latency and API cost per 10,000 cases: Drex Max 87%, 91%, 298 ms, $0.28; d1-ultra 86%, 91%, 212 ms, $0.17; mammoth-1 86%, 91%, 222 ms, $0.47; Decider 85%, 90%, 218 ms, $0.09; Span-02 79%, 89%, 176 ms, $0.05; Jev 1.14 76%, 85%, 143 ms, $0.29; Clef 70%, 86%, 345 ms, $1.11." src="docs/images/automation-share.svg">
+  <img alt="Ruff issues, 361 cases. Share each model can route on its own while staying 95% accurate, accuracy over all cases, median latency and API cost per 10,000 cases: Drex Max 89%, 91%, 295 ms, $0.28; Decider 88%, 92%, 281 ms, $0.09; mammoth-1 87%, 90%, 288 ms, $0.47; d1-ultra 86%, 90%, 272 ms, $0.17; Span-02 82%, 88%, 274 ms, $0.05; Jev 1.14 77%, 85%, 105 ms, $0.29; Clef 70%, 86%, 352 ms, $1.13." src="docs/images/automation-share.svg">
 </picture>
 
-Routing Ruff's issues to the area they concern, these seven models are within 6 points of each other on
-accuracy, yet the share of issues each can route on its own while staying 95% accurate ranges from 70% to 87%.
+Routing Ruff's issues to the area they concern, these seven models are within 7 points of each other on
+accuracy, yet the share of issues each can route on its own while staying 95% accurate ranges from 70% to 89%.
 That share needs a confidence with every answer, so the uncertain issues can go to a person while the rest are
-acted on. Latency and cost differ too, and do not follow the share. The numbers are a snapshot of seven of the 17
+acted on. Latency and cost differ too, and do not follow the share. The numbers are a snapshot of seven of the 19
 decision models in the [reports](apps/bench/reports), each task scored by its own objective, not a ranking of
 providers; latency depends on where you call from. Your own cases may tell a different story,
 which is exactly why you measure them.
