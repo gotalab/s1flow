@@ -1,6 +1,6 @@
 # Data attribution
 
-`tasks/*/data.jsonl` (and the screenshots they point to) are seeded, stratified samples of the sources below.
+`tasks/*/data.jsonl` (and the images they point to) are seeded, stratified samples of the sources below.
 
 | Task | Source | License | Sample |
 |---|---|---|---|
@@ -8,6 +8,7 @@
 | ja-toxicity | [LLM-jp Toxicity Dataset](https://gitlab.llm-jp.nii.ac.jp/datasets/llm-jp-toxicity-dataset) via [p1atdev/LLM-jp-Toxicity-Dataset](https://huggingface.co/datasets/p1atdev/LLM-jp-Toxicity-Dataset), LLM-jp | CC BY 4.0 | texts up to 1,000 characters, 150 toxic / 150 nontoxic (300) |
 | helpsteer2-helpfulness | [HelpSteer2](https://huggingface.co/datasets/nvidia/HelpSteer2) (revision 990b271), NVIDIA | CC BY 4.0 | validation split, prompt and response under 4,000 characters, 60 per helpfulness level (300); `ratings` from its disagreements file |
 | enrico-screen | [Enrico](https://github.com/luileito/enrico) design topics (Leiva, Hota and Oulasvirta, MobileHCI 2020) on [Rico](https://interactionmining.org/rico) screenshots | labels MIT ([notice](enrico-screen/LICENSE-enrico)), screenshots CC BY 4.0 | up to 12 screens per topic, minus the 10 its `issues.csv` flags for a faulty screenshot; 69 screens two reviewers judged mislabelled (listed in `enrico-screen/mislabelled.csv`) replaced by further draws (221); screenshots scaled to 540x960 and re-encoded as WebP |
+| visa-defect | [VisA](https://github.com/amazon-science/spot-diff) (Visual Anomaly dataset; Zou et al., ECCV 2022), Amazon | CC BY 4.0 | test split of its 1cls setup, 10 defective and 10 good photos per item, 12 items (240); photos scaled to 768 px on the long side and re-encoded as WebP |
 | gh-gemini-* | public issues and pull requests of [google-gemini/gemini-cli](https://github.com/google-gemini/gemini-cli), fetched with the Skill's `github.py fetch` | written by their authors on GitHub; authors reduced to their role | see each task's `data.jsonl` |
 | gh-ruff-* | public issues and pull requests of [astral-sh/ruff](https://github.com/astral-sh/ruff), fetched with the Skill's `github.py fetch` | written by their authors on GitHub; authors reduced to their role | see each task's `data.jsonl` |
 
