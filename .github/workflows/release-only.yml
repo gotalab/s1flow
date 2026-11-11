@@ -1,0 +1,33 @@
+# A pull request that changes pyproject.toml's version is a release and does nothing else (docs/development.md):
+# outside CHANGELOG.md, every line it changes names the old or the new version. A change users see merges without
+# a version change and ships with the next release.
+name: release only
+on:
+  pull_request:
+    paths: [pyproject.toml]
+permissions:
+  contents: read
+jobs:
+  release-only:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 2  # the pull request merged into its base (HEAD) and that base (HEAD^1)
+          persist-credentials: false
+      - shell: bash
+        run: |
+          version_at() { git show "$1:pyproject.toml" | python3 -c 'import sys, tomllib; print(tomllib.load(sys.stdin.buffer)["project"]["version"])'; }
+          old=$(version_at HEAD^1)
+          new=$(version_at HEAD)
+          if [ "$old" = "$new" ]; then
+            echo "The version stays $old: not a release"
+            exit 0
+          fi
+          other=$(git diff -U0 HEAD^1 HEAD -- . ':(exclude)CHANGELOG.md' | grep -E '^[-+]' | grep -vE '^(\+\+\+|---) ' | grep -vF -e "$old" -e "$new" || true)
+          if [ -n "$other" ]; then
+            echo "::error::this pull request releases $new, so it changes only the version: merge these lines in a pull request of their own"
+            echo "$other"
+            exit 1
+          fi
+          echo "Releases $old -> $new and changes nothing else"
