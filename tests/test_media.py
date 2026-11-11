@@ -85,6 +85,8 @@ def test_materialize_loads_media_and_enforces_the_shared_limits(tmp_path):
     (tmp_path / "half.mp4").write_bytes(MP4 + b"\x00" * (media.MAX_AUDIO_VIDEO_BYTES // 2))
     with pytest.raises(DataError, match="audio and video"):
         media.materialize([{"type": "video", "path": "half.mp4"}] * 2 + [{"type": "audio", "path": "a.wav"}], tmp_path)
+    (tmp_path / "full.mp4").write_bytes(MP4 + b"\x00" * (media.MAX_AUDIO_VIDEO_BYTES - len(MP4)))  # exactly the limit
+    assert media.materialize([{"type": "video", "path": "full.mp4"}], tmp_path)[0].type == "video"
 
 
 def test_the_same_file_is_the_same_input_and_another_file_is_not(tmp_path):

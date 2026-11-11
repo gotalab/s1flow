@@ -138,7 +138,7 @@ def materialize(state: Any, base_dir: Path) -> State:
     if not refs:
         return state
     out: list[Part] = [_load(x, base_dir) if _is_ref(x) else x for x in state]
-    av = sum(len(x.data) * 3 // 4 for x in out if isinstance(x, Media) and x.type in ("audio", "video"))
+    av = sum(len(x.data) * 3 // 4 - x.data[-2:].count("=") for x in out if isinstance(x, Media) and x.type in ("audio", "video"))
     if av > MAX_AUDIO_VIDEO_BYTES:
         raise DataError(f"{av} bytes of audio and video in one state; at most {MAX_AUDIO_VIDEO_BYTES}")
     return out
