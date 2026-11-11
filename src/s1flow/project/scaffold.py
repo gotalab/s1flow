@@ -73,7 +73,7 @@ def init(
         done.append(f"wrote {show(project / place.CONFIG)}")
     ignore = project / ".gitignore"
     lines = ignore.read_text().splitlines() if ignore.exists() else []
-    missing = [x for x in (".cache/", ".env") if x not in lines]  # answers and keys stay out of git
+    missing = [x for x in (".cache/", ".env", ".write.lock") if x not in lines]  # answers, keys and the policy store's lock stay out of git
     if missing:
         ignore.write_text("\n".join([*lines, *missing]) + "\n")
         done.append(f"added {', '.join(missing)} to {show(ignore)}")

@@ -103,7 +103,7 @@ def test_a_copy_an_earlier_version_wrote_is_updated_and_a_copy_made_by_hand_is_n
     m["s1flow_version"], m["files"]["references/learn.md"] = "0.0.1", skill._hash(old.read_bytes())
     m["files"]["references/gone.md"] = skill._hash((copy / "references" / "gone.md").read_bytes())
     (copy / skill.MARKER).write_text(json.dumps(m))
-    assert skill.stale(repo) == [f"{copy} is from s1flow 0.0.1, this is {skill.version()}: s1flow init --skill --force updates it"]
+    assert skill.stale(repo) == [f"{copy} is from s1flow 0.0.1, this is {skill.version()}: s1flow init --skill updates it"]
 
     done = skill.install(repo / ".claude/skills")
     assert (done.updated, done.removed, done.skipped) == (["references/learn.md"], ["references/gone.md"], [])
@@ -113,6 +113,20 @@ def test_a_copy_an_earlier_version_wrote_is_updated_and_a_copy_made_by_hand_is_n
     shutil.copytree(skill.source(), by_hand / "s1flow")
     (by_hand / "s1flow" / "SKILL.md").write_text("edited\n")
     assert skill.install(by_hand).skipped == ["SKILL.md"]  # no marker: s1flow cannot tell it wrote this
+
+
+@pytest.mark.parametrize("was, now, stale", [
+    ("0.1.0a2", "0.1.0a3", True),  # releases are alphas for now: the number after `a` is what moves
+    ("0.1.0a9", "0.1.0a10", True), ("0.1.0a3", "0.1.0b1", True), ("0.1.0rc1", "0.1.0", True), ("0.1.0", "0.1.1a1", True),
+    ("0.1.0a3", "0.1.0a3", False), ("0.1.0a3", "0.1.0a2", False), ("0.1.0", "0.1.0rc1", False),
+])
+def test_a_copy_from_an_earlier_prerelease_is_stale(repo, monkeypatch, was, now, stale):
+    copy = repo / ".claude/skills/s1flow"
+    skill.install(repo / ".claude/skills")
+    m = json.loads((copy / skill.MARKER).read_text())
+    (copy / skill.MARKER).write_text(json.dumps(m | {"s1flow_version": was}))
+    monkeypatch.setattr(skill, "version", lambda: now)
+    assert bool(skill.stale(repo)) is stale
 
 
 def test_a_link_to_the_package_copy_is_left_alone(repo, capsys):

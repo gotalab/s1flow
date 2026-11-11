@@ -2,8 +2,8 @@
 from the environment and never reads a file. The standard library alone, so the base install reads them too.
 
 The common form: `KEY=value` or `export KEY=value`, one per line; `'...'` taken as is, `"..."` with the
-escapes \\n \\t \\" \\\\; after an unquoted value, ` #` starts a comment. No `${VAR}` expansion, no value
-over several lines.
+escapes \\n \\t \\" \\\\; after a value, ` #` starts a comment. No `${VAR}` expansion, no value over several
+lines.
 """
 
 from __future__ import annotations
@@ -16,6 +16,7 @@ from . import place
 from .errors import ConfigError
 
 _LINE = re.compile(r"(?:export\s+)?([A-Za-z_][A-Za-z0-9_.-]*)\s*=\s*(.*)")
+_QUOTED = re.compile(r"""('[^']*'|"(?:[^"\\]|\\.)*")\s+#.*""")  # a quoted value, then a comment
 _ESCAPES = {"n": "\n", "t": "\t", '"': '"', "\\": "\\"}
 
 
@@ -26,6 +27,8 @@ def parse(text: str) -> dict[str, str]:
         if not line or line.startswith("#") or not (m := _LINE.fullmatch(line)):
             continue
         key, value = m.group(1), m.group(2)
+        if q := _QUOTED.fullmatch(value):
+            value = q.group(1)
         if len(value) >= 2 and value[0] == value[-1] == "'":
             value = value[1:-1]
         elif len(value) >= 2 and value[0] == value[-1] == '"':

@@ -19,6 +19,11 @@ def test_sha_is_the_head_of_the_repository_the_project_is_in(tmp_path):
     assert git.sha(inside) == head and git.sha(beside) != head
 
 
+def test_sha_is_none_where_git_has_no_commit_to_name(tmp_path):
+    subprocess.run(["git", "init", "-q", "-b", "main"], cwd=tmp_path, check=True, capture_output=True)
+    assert git.sha(tmp_path) is None  # `git rev-parse HEAD` fails there and prints the word HEAD
+
+
 def test_the_evaluation_runs_no_command():
     import importlib
     import pkgutil

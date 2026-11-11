@@ -2,16 +2,21 @@
 from __future__ import annotations
 from conftest import fake_client, runtime_spec, ship
 
+import asyncio
 import json
+import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
 
+import httpx
 import pytest
+import respx
 from pydantic import ValidationError
 
-from s1flow import ConfigError, DataError, ProviderError
+from s1flow import Client, ConfigError, DataError, ProviderError, TimedOut
 from s1flow.client.answers import BooleanAnswer, Response
+from s1flow.client.lineup import Lineup
 from s1flow.client.models import Capabilities, ModelSpec, Version
 from s1flow.client.state import Image
 from s1flow.policies import DecisionPolicy, DecisionRule, Policies, PolicySpec, asked, load
@@ -276,3 +281,62 @@ def test_policy_schema_matches_runtime_question_scope() -> None:
         assert list(validator.iter_errors(invalid))
         with pytest.raises(ValidationError):
             PolicySpec.model_validate(invalid)
+
+
+def test_timeout_cancels_the_call_and_logs_it_failed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    c, _ = fake_client(monkeypatch)
+    cancelled: list[bool] = []
+    class Slow:
+        id, concurrency, capabilities = 'fixed-v1', 1, Capabilities()
+        async def decide(self, state: Any, questions: Any, **kw: Any) -> Response:
+            try:
+                await asyncio.sleep(30)
+            except asyncio.CancelledError:
+                cancelled.append(True)
+                raise
+            raise AssertionError('not cancelled')
+    monkeypatch.setattr(c.connections, 'build', lambda *args, **kw: Slow())
+    log = tmp_path / 'events.jsonl'
+    policy = DecisionPolicy(runtime_spec(), client=c, log=log)
+    started = time.perf_counter()
+    with pytest.raises(TimedOut, match='0.05s'):
+        policy.decide('input', case_id='c1', timeout=0.05)
+    with pytest.raises(ProviderError):  # a fallback on ProviderError covers it
+        asyncio.run(policy.adecide('input', timeout=0.05))
+    assert time.perf_counter() - started < 5 and cancelled == [True, True]
+    events = [json.loads(line) for line in log.read_text().splitlines()]
+    assert [(e['type'], e['error'].partition(':')[0]) for e in events] == [('failed', 'TimedOut')] * 2
+
+
+def test_timeout_does_not_rename_the_models_own_timeout(monkeypatch: pytest.MonkeyPatch) -> None:
+    c, _ = fake_client(monkeypatch)
+    class Raises:
+        id, concurrency, capabilities = 'fixed-v1', 1, Capabilities()
+        async def decide(self, state: Any, questions: Any, **kw: Any) -> Response:
+            raise TimeoutError('its own')
+    monkeypatch.setattr(c.connections, 'build', lambda *args, **kw: Raises())
+    with pytest.raises(TimeoutError, match='its own') as e:
+        DecisionPolicy(runtime_spec(), client=c).decide('input', timeout=5)
+    assert not isinstance(e.value, TimedOut)
+
+
+def test_timeout_stops_retrying_a_throttled_provider(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Without a timeout, four 429s take 3.5 s of backoff before failing; the timeout ends it at its limit."""
+    monkeypatch.setenv('TYPESAFE_API_KEY', 'test')
+    c = Client(connections=Lineup(default=[], models={'trusted': ModelSpec(provider='typesafe', id='fixed-v1')}))
+    with respx.mock:
+        route = respx.post(url__startswith='https://api.typesafe.ai/').mock(return_value=httpx.Response(429))
+        started = time.perf_counter()
+        with pytest.raises(TimedOut):
+            DecisionPolicy(runtime_spec(), client=c).decide('input', timeout=0.8)
+        elapsed = time.perf_counter() - started
+    assert elapsed < 2 and route.call_count == 2  # sent at 0 s and 0.5 s; the third would go at 1.5 s
+
+
+@pytest.mark.parametrize('timeout', [0, -1, float('nan'), float('inf'), True, '5'])
+def test_timeout_must_be_positive_seconds(monkeypatch: pytest.MonkeyPatch, timeout: Any) -> None:
+    c, calls = fake_client(monkeypatch)
+    policy = DecisionPolicy(runtime_spec(), client=c)
+    with pytest.raises(ConfigError, match='timeout'):
+        policy.decide('input', timeout=timeout)
+    assert calls == []  # no model built or asked

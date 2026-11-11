@@ -1,6 +1,28 @@
 # Changelog
 
-## Unreleased
+## 0.1.0a5 (2026-11-12)
+
+### Added
+
+- `policy.decide(state, timeout=SECONDS)` (and `adecide`) caps how long one decision may take, retries and their
+  waits included. Past it the call is cancelled and `TimedOut`, a `ProviderError`, is raised and logged as
+  `failed`. Without a limit, a throttled provider could hold one decision for minutes.
+
+### Fixed
+
+- An `llm` model on the AI Gateway fetched the gateway's price list on the event loop, holding every other call
+  on it (and a timeout) until the fetch ended. It is fetched off the loop now.
+
+## 0.1.0a4 (2026-11-12)
+
+### Changed
+
+- Every model call sends the state with the keys of each JSON object sorted, at any depth; lists keep their order.
+  The request identity already ignored key order, so an evaluation case and a production call that differed only in
+  key order counted as the same request while the model read different text. As after every release, `run` calls
+  the models again instead of reusing answers recorded by an earlier one.
+
+## 0.1.0a3 (2026-11-10)
 
 ### Changed
 
@@ -13,11 +35,22 @@
 
 ### Added
 
-- `doctor --policy TASK --path policies.json` checks a policy from an exported file, outside an s1flow project.
+- `doctor --policy TASK --path policies.json --connections FILE` checks a policy from an exported file, outside an
+  s1flow project.
 
 ### Fixed
 
 - The `policies.load(...)` line `export` prints names `client=`.
+- `report` on a task whose cases file is missing, and `feedback measure` on a log that is missing, print one error
+  line (exit 2) instead of a traceback.
+- `doctor` names a project's Skill copy written by an earlier alpha (0.1.0a2 under 0.1.0a3); the alpha number was
+  ignored. Its hint is `s1flow init --skill`, which already updates the files s1flow wrote, without `--force`.
+- `init` adds `.write.lock` (the policy store's lock file) to the project's `.gitignore`.
+- A `.env` value in quotes followed by a comment (`KEY="value" # note`) is read without the quotes and the comment.
+- `adopt` records no `git_sha` in a repository without a commit; it recorded the word `HEAD`.
+- The Skill's `scripts/github.py`: the day after a labelling is 24 hours in every time zone (it was 23 where summer
+  time applies), and a call that keeps hitting GitHub's secondary rate limit stops with that reason.
+- The generated check workflow's comment gives the `doctor --policy` command with the `--connections` it needs.
 
 ## 0.1.0a2 (2026-11-01)
 
