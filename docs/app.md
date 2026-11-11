@@ -158,3 +158,6 @@ response = Client(connections="connections.toml").responses.create(
 
 The Client supports yes/no (`boolean`), choice, score and box questions, and several questions in one request, as far as
 the provider supports them. Evaluation compares all four. A policy holds one yes/no or choice question.
+
+Every call sends the state with the keys of each JSON object in sorted order, so a case in an evaluation and a
+call in production that differ only in key order send the same request. Lists keep their order.
