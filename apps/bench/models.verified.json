@@ -91,6 +91,36 @@
     }
    }
   },
+  "clef-omni@openrouter": {
+   "at": "2026-11-11T19:27:46Z",
+   "answered_by": "cloudflare/clef-omni-20261009",
+   "checks": {
+    "boolean": {
+     "ok": true,
+     "detail": "P(true) 0.98 / 0.01"
+    },
+    "choice": {
+     "ok": true,
+     "detail": "blue 0.94 / red 0.95"
+    },
+    "score": {
+     "ok": true,
+     "detail": "2.96 / 1.02 (want 3 / 1)"
+    },
+    "image": {
+     "ok": true,
+     "detail": "red 0.96 / blue 0.95"
+    },
+    "images": {
+     "ok": true,
+     "detail": "red 0.96 / blue 0.90"
+    },
+    "box": {
+     "ok": false,
+     "detail": "Rejected: rejected by the provider (400): {\"error\":{\"message\":\"Cloudflare does not accept box questions; question 1 is a box\",\"code\":400}}"
+    }
+   }
+  },
   "clef@openrouter": {
    "at": "2026-10-31T05:07:07Z",
    "answered_by": "cloudflare/clef",
@@ -361,6 +391,36 @@
     }
    }
   },
+  "gemini-decision@openrouter": {
+   "at": "2026-11-11T19:28:58Z",
+   "answered_by": "google/gemini-decision-1-20261111",
+   "checks": {
+    "boolean": {
+     "ok": true,
+     "detail": "P(true) 0.99 / 0.03"
+    },
+    "choice": {
+     "ok": true,
+     "detail": "blue 1.00 / red 1.00"
+    },
+    "score": {
+     "ok": true,
+     "detail": "2.99 / 1.02 (want 3 / 1)"
+    },
+    "image": {
+     "ok": true,
+     "detail": "red 0.99 / blue 1.00"
+    },
+    "images": {
+     "ok": true,
+     "detail": "red 1.00 / blue 1.00"
+    },
+    "box": {
+     "ok": false,
+     "detail": "Rejected: rejected by the provider (400): {\"error\":{\"message\":\"Google AI Studio does not accept box questions; question 1 is a box\",\"code\":400}}"
+    }
+   }
+  },
   "jev": {
    "at": "2026-10-31T05:52:55Z",
    "answered_by": "jev-1.14.0",
@@ -541,9 +601,9 @@
     }
    }
   },
-  "mercury@openrouter": {
-   "at": "2026-10-31T05:07:07Z",
-   "answered_by": "inception/mercury-decide-20260930",
+  "reflex@openrouter": {
+   "at": "2026-11-11T19:27:46Z",
+   "answered_by": "morph/reflex-20261103",
    "checks": {
     "boolean": {
      "ok": true,
@@ -567,7 +627,7 @@
     },
     "box": {
      "ok": false,
-     "detail": "Rejected: rejected by the provider (400): {\"error\":{\"message\":\"Inception does not accept box questions; question \\\"disc\\\" is a box\",\"code\":400}}"
+     "detail": "Rejected: rejected by the provider (400): {\"error\":{\"message\":\"Morph does not accept box questions; question 1 is a box\",\"code\":400}}"
     }
    }
   },
