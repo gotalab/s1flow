@@ -281,3 +281,33 @@ def test_an_llm_without_its_key_sends_a_stand_in_and_names_the_key_when_refused(
     monkeypatch.setattr(litellm, "acompletion", answer)
     monkeypatch.setenv(env, "real")
     assert asyncio.run(llm.complete(model, [])).response == "response" and sent[-1] == "real"
+
+
+def test_an_llm_fetching_its_price_list_does_not_hold_the_event_loop(monkeypatch):
+    """The gateway's price list is fetched with blocking I/O on first use; a caller's timeout still cancels the call."""
+    import time
+    from types import SimpleNamespace
+
+    from s1flow import Client
+    from s1flow.client import ModelSpec
+    from s1flow.client.lineup import Lineup
+    from s1flow.client.providers import llm
+
+    model = Client(connections=Lineup(default=[], models={"m": ModelSpec(provider="llm", id="vercel_ai_gateway/x/m")})).connections.build("m")
+
+    async def answered(*args, **kwargs):
+        r = SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content="{}"))],
+                            usage=SimpleNamespace(prompt_tokens=1, completion_tokens=1))
+        return llm.Completed(r, 1.0, 0)
+
+    monkeypatch.setattr(llm, "complete", answered)
+    monkeypatch.setattr(llm, "response_cost", lambda *a: time.sleep(1))
+
+    async def within_limit():
+        started = time.perf_counter()
+        with pytest.raises(TimeoutError):
+            async with asyncio.timeout(0.2):
+                await model.decide("text", {"q": Boolean(instructions="?")})
+        return time.perf_counter() - started
+
+    assert asyncio.run(within_limit()) < 0.8  # asyncio.run itself then waits for the abandoned fetch to end

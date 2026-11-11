@@ -5,17 +5,22 @@ from __future__ import annotations
 
 import json
 import os
+import threading
 import time
 from pathlib import Path
 
 MODELS_URL = "https://ai-gateway.vercel.sh/v1/models"
 _prices: dict[str, tuple[float, float]] | None = None
+_loading = threading.Lock()  # callers fetch it off the event loop, several at once: one fetches, the rest wait
 
 
 def _load(cache_dir: Path | None) -> dict[str, tuple[float, float]]:
+    with _loading:
+        return _prices if _prices is not None else _fetch(cache_dir)
+
+
+def _fetch(cache_dir: Path | None) -> dict[str, tuple[float, float]]:
     global _prices
-    if _prices is not None:
-        return _prices
     path = cache_dir / "gateway-models.json" if cache_dir else None
     if path and path.exists() and time.time() - path.stat().st_mtime < 86_400:
         text = path.read_text()
