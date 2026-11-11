@@ -5,7 +5,7 @@
 name = "s1flow-bench"
 version = "0"
 requires-python = ">=3.13"
-dependencies = ["s1flow[eval,llm,optimize]"]
+dependencies = ["s1flow[eval,images,llm,optimize]"]
 
 [tool.uv]
 package = false
