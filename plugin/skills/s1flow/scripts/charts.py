@@ -5,8 +5,6 @@
 Create the input with `s1flow report TASK --out DIR` (DIR/comparison.json). This renderer
 uses only the Python standard library: no model calls, evaluation or rescoring.
 """
-from __future__ import annotations
-
 import argparse
 import html
 import json

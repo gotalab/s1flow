@@ -1,7 +1,5 @@
 """`s1flow init`: make a project, and with --skill write the Agent Skill. The base install runs it."""
 
-from __future__ import annotations
-
 import argparse
 from pathlib import Path
 from typing import Any

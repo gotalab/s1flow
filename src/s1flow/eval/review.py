@@ -9,8 +9,6 @@ read too (`sample`): its relabel share is the label error rate the list cannot s
 when unclear and missing are too many, depend on what the task is for; the Skill says how to choose, not this code.
 """
 
-from __future__ import annotations
-
 import json
 import random
 from typing import Any

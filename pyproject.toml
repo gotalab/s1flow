@@ -109,7 +109,10 @@ dev = [
 
 # Pyflakes alone: unused imports and variables, undefined names, redefinitions. Formatting is not checked.
 [tool.ruff.lint]
-select = ["F"]
+select = ["F", "TID251"]
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"__future__.annotations".msg = "Not needed: quote a forward reference instead (Python 3.13 evaluates annotations eagerly)."
 
 [tool.mypy]
 python_version = "3.13"

@@ -16,8 +16,6 @@ LiteLLM is imported when a model is built, not with this module, so the declarat
 base install.
 """
 
-from __future__ import annotations
-
 import asyncio
 import json
 import os

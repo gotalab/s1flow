@@ -1,7 +1,5 @@
 """What a decision model reads: a state of text, JSON, or a list of parts whose images are prepared."""
 
-from __future__ import annotations
-
 from typing import Any, Literal, TypeGuard
 
 from pydantic import BaseModel, ConfigDict, model_validator
@@ -17,7 +15,7 @@ class ImageRef(BaseModel):
     url: str | None = None
 
     @model_validator(mode="after")
-    def _one_source(self) -> ImageRef:
+    def _one_source(self) -> "ImageRef":
         if (self.path is None) == (self.url is None):
             raise ValueError("an image needs exactly one of path or url")
         return self

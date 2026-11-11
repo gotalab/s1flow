@@ -24,8 +24,6 @@ A model with a `price` in s1flow.toml has it compared with the list its provider
 is a warning, not a failure. A provider that declares no list cannot have its price checked, and says so.
 """
 
-from __future__ import annotations
-
 import asyncio
 import datetime as dt
 import io
@@ -126,7 +124,7 @@ BOX_TRUTH = BoxEdges(top=40 / 300, bottom=160 / 300, left=40 / 400, right=160 / 
 BOX_Q: Questions = {"disc": Box(instructions="the red disc in the picture")}
 
 
-def _png(im: PILImage.Image) -> Image:
+def _png(im: "PILImage.Image") -> Image:
     buf = io.BytesIO()
     im.save(buf, "PNG")
     return images.prepare(buf.getvalue())

@@ -1,6 +1,4 @@
 """Configuration options are advertised and accepted only where they affect the command."""
-from __future__ import annotations
-
 from pathlib import Path
 
 import pytest

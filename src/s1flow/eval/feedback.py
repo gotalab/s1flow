@@ -4,8 +4,6 @@ A case_id never identifies a call. Only decision_id plus the policy digest can
 join feedback; ambiguous references are reported and excluded. Feedback share
 measures observation, and cannot establish that labels are unbiased.
 """
-from __future__ import annotations
-
 import datetime as dt
 import json
 from dataclasses import dataclass

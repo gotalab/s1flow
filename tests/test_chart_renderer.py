@@ -1,6 +1,4 @@
 """The portable renderer consumes snapshots without model/evaluation dependencies."""
-from __future__ import annotations
-
 import json
 from pathlib import Path
 import subprocess

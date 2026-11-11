@@ -19,8 +19,6 @@ maintainers' comments around the labelling; the Skill's scripts/github.py ration
 model being optimized.
 """
 
-from __future__ import annotations
-
 import asyncio
 import re
 from dataclasses import dataclass

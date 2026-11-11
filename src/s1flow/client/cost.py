@@ -6,8 +6,6 @@ reports (`Listed`), marked `list`. A list cost is an estimate, and the evaluatio
 recorded tokens when it reports (eval/metrics.py), so a corrected price needs no call.
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from typing import Any, Literal
 

@@ -5,8 +5,6 @@ typed `questions`, keyed by name. Every provider translates these into its own w
 is `noul` on TypeSafe's, `predicate` on OpenAI's).
 """
 
-from __future__ import annotations
-
 from typing import Annotated, Literal, Union
 
 from pydantic import BaseModel, ConfigDict, Field

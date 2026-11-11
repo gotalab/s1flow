@@ -10,8 +10,6 @@ chosen on the fit side and applied to the other), with a 95% bootstrap interval 
 computed. `test` is the held-out share, read at the thresholds chosen on the rest.
 """
 
-from __future__ import annotations
-
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -206,7 +204,7 @@ class Evaluation(_Frozen):
         return [] if self.objective is None else [self.objective, *self.tiebreak]
 
     @model_validator(mode="after")
-    def _population(self) -> Evaluation:
+    def _population(self) -> "Evaluation":
         if len(self.answered_ids) != self.n:  # rank compares candidates only on the same answered cases
             raise ValueError(f"answered_ids names {len(self.answered_ids)} cases, n is {self.n}")
         return self

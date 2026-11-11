@@ -4,8 +4,6 @@ Collecting is the agent's work (any source, converted in a few lines to the task
 this is the one place that says whether the result is usable.
 """
 
-from __future__ import annotations
-
 import json
 from collections import Counter
 

@@ -3,8 +3,6 @@
 The runtime owns interpretation and label validation. These explicit subclasses add
 only scoring, supported objectives and report measures; they never replace reading.
 """
-from __future__ import annotations
-
 from typing import Any, ClassVar, Protocol
 
 from ..client.answers import BoxEdges

@@ -2,8 +2,6 @@
 
 It never asks a model, and it neither ranks nor recommends: ``metrics`` owns the numbers, ``eval.select`` the ranking.
 """
-from __future__ import annotations
-
 import json
 import math
 from collections.abc import Sequence

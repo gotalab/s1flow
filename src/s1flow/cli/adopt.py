@@ -1,7 +1,5 @@
 """`s1flow adopt`: the one command that switches a task's current policy (history.jsonl says why, each time)."""
 
-from __future__ import annotations
-
 import argparse
 import json
 import sys

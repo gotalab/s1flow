@@ -8,8 +8,6 @@ Images are `image_url` parts with a base64 data URL in the top-level state array
 TypeSafe's `assets` is dropped without an error, so it must not be sent here (2026-10-15).
 """
 
-from __future__ import annotations
-
 import asyncio
 import time
 from pathlib import Path

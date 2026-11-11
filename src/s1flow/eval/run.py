@@ -13,8 +13,6 @@ the `Response` is kept under sha256(model id, request) in .cache/answers/, so a 
 with the same settings costs nothing. Whatever a call ends with is recorded as its outcome, never raised.
 """
 
-from __future__ import annotations
-
 import asyncio
 import hashlib
 import json
@@ -183,7 +181,7 @@ class Conditions:
     runs: dict[str, str]  # candidate name -> its run's digest
 
     @classmethod
-    def now(cls, task: Task, candidates: Iterable[Candidate], resolve: Callable[[str], ModelSpec]) -> Conditions:
+    def now(cls, task: Task, candidates: Iterable[Candidate], resolve: Callable[[str], ModelSpec]) -> "Conditions":
         cands = tuple(candidates)
         return cls(
             candidates=cands, data=task.data_digest, input_adapter=task.input_adapter_digest,

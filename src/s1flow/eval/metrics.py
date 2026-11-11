@@ -14,8 +14,6 @@ interval, and the held-out test share is read at the rules chosen on the rest.
                         policy has no rule (None).
 """
 
-from __future__ import annotations
-
 import json
 from collections.abc import Sequence
 from dataclasses import dataclass, field, replace

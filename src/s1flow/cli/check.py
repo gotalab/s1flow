@@ -1,7 +1,5 @@
 """`s1flow check`: the CI gate, two versions compared case by case on today's test cases."""
 
-from __future__ import annotations
-
 import argparse
 from pathlib import Path
 from typing import Any
