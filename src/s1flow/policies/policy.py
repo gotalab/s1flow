@@ -1,7 +1,9 @@
 """Execute a PolicySpec only through the Client explicitly supplied by its application."""
 from __future__ import annotations
 
+import asyncio
 import json
+import math
 import time
 from pathlib import Path
 from typing import Any
@@ -13,7 +15,7 @@ from ..client.identity import execution_digest, state_digest
 from ..client.models import ModelSpec
 from ..client.state import State, has_unprepared_image
 from ..core import clock, place
-from ..core.errors import ConfigError, DataError, NotFound, ProviderError, Rejected
+from ..core.errors import ConfigError, DataError, NotFound, ProviderError, Rejected, TimedOut
 from . import log as logs
 from . import policy_set as policy_sets
 from .file import Policies, PolicySpec, Ref, read_file
@@ -61,14 +63,18 @@ class DecisionPolicy:
             raise ConfigError(f'{self.spec.ref}: {e}') from None
         return trusted.model_copy(deep=True)
 
-    def decide(self, state: State, case_id: str | None = None) -> Decision:
-        return loop.run(self._decide(state, case_id))
+    def decide(self, state: State, case_id: str | None = None, *, timeout: float | None = None) -> Decision:
+        """`timeout`: seconds the whole model call may take, retries and their waits included. Past it the call is
+        cancelled and `TimedOut` is raised (and logged as failed); None waits as long as the retries take."""
+        return loop.run(self._decide(state, case_id, timeout))
 
-    async def adecide(self, state: State, case_id: str | None = None) -> Decision:
-        return await self._decide(state, case_id)
+    async def adecide(self, state: State, case_id: str | None = None, *, timeout: float | None = None) -> Decision:
+        return await self._decide(state, case_id, timeout)
 
-    async def _decide(self, state: State, case_id: str | None) -> Decision:
+    async def _decide(self, state: State, case_id: str | None, timeout: float | None) -> Decision:
         spec = self.spec
+        if timeout is not None and (isinstance(timeout, bool) or not isinstance(timeout, (int, float)) or not math.isfinite(timeout) or timeout <= 0):
+            raise ConfigError(f'timeout must be a positive number of seconds, not {timeout!r}')
         started = time.perf_counter()
         try:
             input_digest = state_digest(state)
@@ -79,8 +85,14 @@ class DecisionPolicy:
                 raise DataError('policy input has an image reference; prepare an Image explicitly before deciding')
             if spec.state_schema is not None and (wrong := mismatch(spec.state_schema, state)):
                 raise DataError(f'{spec.ref}: input shape mismatch: {"; ".join(wrong[:3])}')
-            result = await self._aio.responses.create(model=self.model_spec, state=state,
-                                                       questions={spec.question_id: spec.question})
+            try:
+                async with asyncio.timeout(timeout) as limit:
+                    result = await self._aio.responses.create(model=self.model_spec, state=state,
+                                                               questions={spec.question_id: spec.question})
+            except TimeoutError:
+                if not limit.expired():
+                    raise
+                raise TimedOut(f'{spec.ref}: no answer within the {timeout:g}s timeout') from None
             answer = result.answers[spec.question_id]
             if isinstance(answer, Refusal):
                 raise Rejected(f'{spec.ref}: the model refused {spec.question_id}' + (f': {answer.reason}' if answer.reason else ''))

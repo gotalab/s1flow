@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0a4 (2026-11-11)
+
+### Added
+
+- `policy.decide(state, timeout=SECONDS)` (and `adecide`) caps how long one decision may take, retries and their
+  waits included. Past it the call is cancelled and `TimedOut`, a `ProviderError`, is raised and logged as
+  `failed`. Without a limit, a throttled provider could hold one decision for minutes.
+
 ## 0.1.0a3 (2026-11-10)
 
 ### Changed

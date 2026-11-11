@@ -6,6 +6,7 @@
 | `DataError`     | a case is wrong (no state, a label outside the options, an image) | 2        |
 | `NotFound`      | no such task, run, policy or channel                             | 2        |
 | `ProviderError` | the model call failed (auth, 4xx, 5xx, timeouts after retries)    | 2        |
+| `TimedOut`      | a policy decision ran past the time limit its caller gave          | 2        |
 | `Unsupported`   | the model does not take this question type, image or option       | 2        |
 | `Rejected`      | the provider refused the input after the call (413, 422, ...)      | 2        |
 
@@ -42,6 +43,11 @@ class ProviderError(S1flowError):
     def __init__(self, message: str, status: int | None = None):
         super().__init__(message)
         self.status = status
+
+
+class TimedOut(ProviderError):
+    """A policy decision passed the `timeout` its caller gave, retries included; the call was cancelled.
+    A `ProviderError`, so code that falls back on a failed call falls back on this one too."""
 
 
 class Unsupported(ProviderError):
