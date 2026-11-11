@@ -123,9 +123,9 @@ task = Task(
   objective that sets the threshold (any binary objective but Coverage and AUROC).
 - Images, audio, video and PDFs go as top-level items of a list state, by path from the task folder or URL:
   `state=lambda r: ["Voicemail:", {"type": "audio", "path": r["file"]}]` (`"image"`, `"audio"` WAV/MP3,
-  `"video"` MP4, `"pdf"`). Every model gets the same bytes; one state holds at most 4 images, 4 audio clips,
-  2 videos (16 MiB of audio and video together) and 1 PDF. Only models that declare the kind are compared on it
-  (`s1flow models`).
+  `"video"` MP4, `"pdf"`). Every model gets the same bytes. Only models that declare the kind are compared on
+  it (`s1flow models`); how many and how large each takes is the model's limit (Clef Omni: 4 audio clips of
+  8 MiB, 2 videos; ScaleDown: 1 PDF), and a case past it counts as refused for that model.
 - `optimizer=Gepa(budget=300, reflection=None)` is what `optimize` runs (`measure.md`).
 - How the team already decides (a triage policy, CONTRIBUTING, a bot's prompt) goes in `tasks/<id>/context.md`:
   `optimize` reads it, the model never does. `criteria.md` is for the person's decision criteria, not the model.

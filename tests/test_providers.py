@@ -37,6 +37,8 @@ URL = "https://example.test/v1/systemone"
     (422, "too long", Rejected),
     (413, "payload too large", Rejected),
     (400, '{"error":{"message":"Phala does not accept \\"image_url\\" parts in state"}}', Rejected),
+    (400, '{"error":{"message":"Clef Omni accepts at most 4 audio clips, got 5","code":400}}', Rejected),
+    (400, '{"error":{"message":"ScaleDown reads one document per request; state has 2 media parts","code":400}}', Rejected),
     (400, '{"detail":{"error_type":"api_usage_error","message":"Invalid request."}}', ProviderError),
     (400, '{"error":"response_format not supported"}', ProviderError),  # a bare "not supported" stays a failure
     (401, "unauthorized", ProviderError),

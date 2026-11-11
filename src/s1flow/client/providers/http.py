@@ -30,9 +30,10 @@ RETRY_STATUS = frozenset({408, 409, 429, 500, 502, 503, 504})
 AUTH_STATUS = frozenset({401, 403})
 REFUSAL_STATUS = frozenset({413, 422})
 # 400s that name a refused part (OpenRouter: 'Phala does not accept "image_url" parts in state',
-# 'Inception does not accept box questions', 2026-10-16). A bare 400 stays a failure: it is
+# 'Inception does not accept box questions', 2026-10-16; 'Clef Omni accepts at most 4 audio clips, got 5',
+# 'ScaleDown reads one document per request', 2026-11-12). A bare 400 stays a failure: it is
 # more often our request than the model's limit.
-REFUSAL_HINTS = ("does not accept", "too large", "exceeds the maximum")
+REFUSAL_HINTS = ("does not accept", "too large", "exceeds the maximum", "accepts at most", "per request")
 
 _clients: dict[int, httpx.AsyncClient] = {}
 

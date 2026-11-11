@@ -65,7 +65,7 @@ def test_prepare_refuses_formats_not_every_model_takes(kind, data):
         media.prepare(kind, data)
 
 
-def test_materialize_loads_media_and_enforces_the_shared_limits(tmp_path):
+def test_materialize_loads_media_and_leaves_counts_and_sizes_to_the_model(tmp_path):
     (tmp_path / "a.wav").write_bytes(raw(WAV))
     (tmp_path / "v.mp4").write_bytes(MP4)
     (tmp_path / "i.pdf").write_bytes(PDF)
@@ -73,20 +73,11 @@ def test_materialize_loads_media_and_enforces_the_shared_limits(tmp_path):
     assert out[0] == "留守電" and [x.type for x in out[1:]] == ["audio", "video", "pdf"]
     with pytest.raises(DataError, match="top-level"):
         media.materialize({"call": {"type": "audio", "path": "a.wav"}}, tmp_path)
-    with pytest.raises(DataError, match="at most 4"):
-        media.materialize([{"type": "audio", "path": "a.wav"}] * 5, tmp_path)
-    with pytest.raises(DataError, match="at most 1"):
-        media.materialize([{"type": "pdf", "path": "i.pdf"}] * 2, tmp_path)
     with pytest.raises(DataError, match="audio file not found"):
         media.materialize([{"type": "audio", "path": "missing.wav"}], tmp_path)
-    (tmp_path / "big.mp3").write_bytes(MP3 + b"\x00" * media.MAX_BYTES["audio"])
-    with pytest.raises(DataError, match="at most"):
-        media.materialize([{"type": "audio", "path": "big.mp3"}], tmp_path)
-    (tmp_path / "half.mp4").write_bytes(MP4 + b"\x00" * (media.MAX_AUDIO_VIDEO_BYTES // 2))
-    with pytest.raises(DataError, match="audio and video"):
-        media.materialize([{"type": "video", "path": "half.mp4"}] * 2 + [{"type": "audio", "path": "a.wav"}], tmp_path)
-    (tmp_path / "full.mp4").write_bytes(MP4 + b"\x00" * (media.MAX_AUDIO_VIDEO_BYTES - len(MP4)))  # exactly the limit
-    assert media.materialize([{"type": "video", "path": "full.mp4"}], tmp_path)[0].type == "video"
+    (tmp_path / "big.mp3").write_bytes(MP3 + b"\x00" * (17 * 1024 * 1024))  # past every model's limit: the model refuses it, not s1flow
+    many = media.materialize([{"type": "audio", "path": "big.mp3"}] * 5 + [{"type": "pdf", "path": "i.pdf"}] * 2, tmp_path)
+    assert [x.type for x in many] == ["audio"] * 5 + ["pdf"] * 2
 
 
 def test_the_same_file_is_the_same_input_and_another_file_is_not(tmp_path):

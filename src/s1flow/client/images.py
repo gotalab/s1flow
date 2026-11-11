@@ -21,12 +21,11 @@ if TYPE_CHECKING:  # Pillow loads only when an image is prepared: a text-only ap
     from PIL.Image import Image as PILImage
 
 # The intersection of the providers' limits (2026-10-16):
-# Jev: 256..1568 px a side, 78,400..2,458,624 px; Clef through OpenRouter: about 300 KB a file,
-# and at most 4 images for Clef / Clef-flash.
+# Jev: 256..1568 px a side, 78,400..2,458,624 px; Clef through OpenRouter: about 300 KB a file.
+# These keep the pixels the same for every model; how many images a model takes is its own limit.
 SIDE_MIN, SIDE_MAX = 256, 1568
 PIXELS_MIN, PIXELS_MAX = 78_400, 2_458_624
 BYTES_MAX = 300_000
-MAX_IMAGES = 4
 
 
 def _fit(im: PILImage) -> PILImage:

@@ -62,8 +62,7 @@ def test_materialize_loads_paths_once_and_rejects_bad_placement(tmp_path):
     assert media.materialize("text only", tmp_path) == "text only"
     with pytest.raises(DataError, match="top-level"):
         media.materialize({"shot": {"type": "image", "path": "a.png"}}, tmp_path)
-    with pytest.raises(DataError, match="at most"):
-        media.materialize([{"type": "image", "path": "a.png"}] * 5, tmp_path)
+    assert len(media.materialize([{"type": "image", "path": "a.png"}] * 5, tmp_path)) == 5  # the model's limit, not s1flow's
     with pytest.raises(DataError, match="not found"):
         media.materialize([{"type": "image", "path": "missing.png"}], tmp_path)
     with pytest.raises(DataError, match="exactly one"):

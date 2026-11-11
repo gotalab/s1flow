@@ -10,8 +10,9 @@ in a state are a task error.
 
 Images are resized and re-encoded (images.prepare). Audio, video and PDFs are sent as the file's
 own bytes, never transcoded, in the formats every model that reads them takes (2026-11-11:
-Gemini Decision 1, Clef Omni, ScaleDown Classify 1): WAV or MP3, MP4, PDF. The limits are the
-tightest of those models', so one case goes to each of them unchanged.
+Gemini Decision 1, Clef Omni, ScaleDown Classify 1): WAV or MP3, MP4, PDF. s1flow checks the format,
+because it must name it on the wire, and nothing else: how many and how large is each model's own
+limit, and a model that refuses an input says so (Rejected), which an evaluation counts as refused.
 """
 
 from __future__ import annotations
@@ -27,16 +28,7 @@ from pydantic import ValidationError
 
 from ..core.errors import DataError
 from . import images
-from .state import MEDIA_KINDS, Image, Media, MediaKind, MediaRef, Part, State, is_media_dict
-
-MiB = 1024 * 1024
-# How many of each kind one state may hold, and how large each may be (2026-11-11): Clef takes at most
-# 4 images, Clef Omni 4 audio clips of 8 MiB and 2 videos of 16 MiB (16 MiB of audio and video together),
-# ScaleDown one document. No model publishes a PDF size limit; 16 MiB is s1flow's own cap, the same as a video's.
-MAX_COUNT: dict[MediaKind, int] = {"image": images.MAX_IMAGES, "audio": 4, "video": 2, "pdf": 1}
-MAX_BYTES: dict[MediaKind, int] = {"audio": 8 * MiB, "video": 16 * MiB, "pdf": 16 * MiB}
-MAX_AUDIO_VIDEO_BYTES = 16 * MiB
-
+from .state import Image, Media, MediaKind, MediaRef, Part, State, is_media_dict
 
 def _sniff(kind: MediaKind, raw: bytes) -> str | None:
     """The media type the bytes are, among those `kind` accepts; None when they are none of them."""
@@ -64,8 +56,6 @@ def prepare(kind: MediaKind, raw: bytes) -> Image | Media:
     media_type = _sniff(kind, raw)
     if media_type is None:
         raise DataError(f"not {ACCEPTED[kind]}: {kind} is sent as the file's own bytes, so only the formats every model takes are accepted")
-    if len(raw) > MAX_BYTES[kind]:
-        raise DataError(f"{kind} of {len(raw)} bytes; at most {MAX_BYTES[kind]}")
     return Media.model_validate({"type": kind, "media_type": media_type, "data": base64.b64encode(raw).decode(),
                                  "sha256": hashlib.sha256(raw).hexdigest()})
 
@@ -117,31 +107,18 @@ def _nested(x: Any) -> bool:
     return False
 
 
-def _kind_of(x: Any) -> MediaKind:
-    return x.type if isinstance(x, (Image, Media, MediaRef)) else x["type"]
-
-
 def materialize(state: Any, base_dir: Path) -> State:
     """Load and prepare the media of a state. A state without media comes back unchanged.
-    Raises DataError for media in the wrong place, too many, too large, or that cannot be loaded."""
+    Raises DataError for media in the wrong place, in a format s1flow does not send, or that cannot be loaded."""
     if not isinstance(state, list):
         if _nested(state):
             raise DataError("media go as top-level items of a list state, e.g. ['text', {'type': 'audio', 'path': ...}]")
         return state  # type: ignore[no-any-return]
     if any(not _is_ref(x) and _nested(x) for x in state):
         raise DataError("media go as top-level items of a list state, not inside other items")
-    refs = [x for x in state if _is_ref(x)]
-    for kind in MEDIA_KINDS:
-        n = sum(_kind_of(x) == kind for x in refs)
-        if n > MAX_COUNT[kind]:
-            raise DataError(f"{n} {kind} items in one state; at most {MAX_COUNT[kind]}")
-    if not refs:
+    if not any(_is_ref(x) for x in state):
         return state
-    out: list[Part] = [_load(x, base_dir) if _is_ref(x) else x for x in state]
-    av = sum(len(x.data) * 3 // 4 - x.data[-2:].count("=") for x in out if isinstance(x, Media) and x.type in ("audio", "video"))
-    if av > MAX_AUDIO_VIDEO_BYTES:
-        raise DataError(f"{av} bytes of audio and video in one state; at most {MAX_AUDIO_VIDEO_BYTES}")
-    return out
+    return [_load(x, base_dir) if _is_ref(x) else x for x in state]
 
 
 # Translations. Each takes a state that has_media() narrowed to a list of parts.
