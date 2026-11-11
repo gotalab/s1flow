@@ -1,7 +1,5 @@
 """`s1flow models`: the line-up in s1flow.toml, and what --verify found each model takes."""
 
-from __future__ import annotations
-
 import argparse
 import json
 from typing import Any

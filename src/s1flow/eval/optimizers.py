@@ -12,8 +12,6 @@ the model calls it made, what it spent beside them, and what only it records (`d
 (task.Optimized) the same way for every optimizer, then asks the new question about every case.
 """
 
-from __future__ import annotations
-
 from dataclasses import asdict, dataclass, field
 from importlib.metadata import entry_points
 from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
@@ -32,11 +30,11 @@ GROUP = "s1flow.optimizers"
 class Problem:
     """What an optimizer is given."""
 
-    task: Task
+    task: "Task"
     model: str  # the model the question is written for: a name of s1flow.toml, model[:version]
     start: Question  # the question it begins from
-    train: list[Case]  # cases to learn from
-    val: list[Case]  # cases to select on; the test share is in neither
+    train: "list[Case]"  # cases to learn from
+    val: "list[Case]"  # cases to select on; the test share is in neither
 
 
 @dataclass

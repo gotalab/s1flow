@@ -1,7 +1,5 @@
 """The CLI as an agent drives it: one exit table, a usage error as one `error:` line, a warning as a `notice:` line."""
 
-from __future__ import annotations
-
 import json
 
 import pytest

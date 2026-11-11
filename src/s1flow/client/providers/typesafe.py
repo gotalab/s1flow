@@ -9,8 +9,6 @@ same header and jev 1.14: 1.13 (still `jev-latest` on 2026-10-16) answers a bare
 declares box on the 1.14 version only.
 """
 
-from __future__ import annotations
-
 from typing import Any
 
 from ..answers import Response, Usage

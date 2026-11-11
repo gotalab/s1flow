@@ -13,8 +13,6 @@ were all measured alike, at one concurrency. Otherwise it is skipped and `unlike
 Candidates whose latency intervals overlap the fastest's are not told apart by it.
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import Any
 

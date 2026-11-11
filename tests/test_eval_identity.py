@@ -1,6 +1,4 @@
 """Current evidence requires the request measured then, and dev stays separate."""
-from __future__ import annotations
-
 import asyncio
 import json
 

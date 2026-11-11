@@ -4,8 +4,6 @@ call is made. When the candidates tied at the top change, the weights decide the
 owner's to set (s1flow has no default for them). report shows it.
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from . import metrics

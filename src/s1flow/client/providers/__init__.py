@@ -5,8 +5,6 @@ loads one provider (and not LiteLLM unless that policy is an `llm` one). Each de
 hosts its models need (needs.py, `s1flow doctor`); a provider of your own may, with `declares`.
 """
 
-from __future__ import annotations
-
 import importlib
 from importlib.metadata import entry_points
 from pathlib import Path

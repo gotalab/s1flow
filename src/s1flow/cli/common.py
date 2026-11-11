@@ -1,8 +1,6 @@
 """What every command module shares: the argparse frame (one `error:` line, the exit codes in every --help) and the
 project, client and path helpers. Nothing here imports the evaluation stack."""
 
-from __future__ import annotations
-
 import argparse
 import json
 import sys
@@ -78,7 +76,7 @@ def positive(text: str) -> int:
 # ---------- the project, its clients and paths ----------
 
 
-def project(a: argparse.Namespace) -> Project:
+def project(a: argparse.Namespace) -> "Project":
     from ..project import Project
 
     root = project_root(a, required=True)
@@ -109,7 +107,7 @@ def connections_path(a: argparse.Namespace) -> Path | None:
     return place.absolute(value, "connections") if value is not None else None
 
 
-def client(a: argparse.Namespace, root: Path | None) -> Client:
+def client(a: argparse.Namespace, root: Path | None) -> "Client":
     from ..client import Client
 
     config = connections_path(a)
@@ -121,7 +119,7 @@ def client(a: argparse.Namespace, root: Path | None) -> Client:
     return Client(connections=config)
 
 
-def policy_client(a: argparse.Namespace) -> Client:
+def policy_client(a: argparse.Namespace) -> "Client":
     """Policy execution explicitly grants the connections in this invocation's file."""
     from ..client import Client
 

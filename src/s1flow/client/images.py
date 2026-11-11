@@ -15,8 +15,6 @@ encoded as PNG (JPEG when PNG is too large). Different pixels per provider would
 model comparison an image comparison.
 """
 
-from __future__ import annotations
-
 import base64
 import functools
 import hashlib
@@ -49,7 +47,7 @@ def _is_ref(x: Any) -> bool:
     return isinstance(x, (Image, ImageRef)) or (isinstance(x, dict) and x.get("type") == "image")
 
 
-def _fit(im: PILImage) -> PILImage:
+def _fit(im: "PILImage") -> "PILImage":
     from PIL import Image as PIL
 
     w, h = im.size
@@ -70,7 +68,7 @@ def _fit(im: PILImage) -> PILImage:
     return im
 
 
-def _encode(im: PILImage) -> tuple[bytes, str]:
+def _encode(im: "PILImage") -> tuple[bytes, str]:
     from PIL import Image as PIL
 
     while True:

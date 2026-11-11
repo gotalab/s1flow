@@ -2,8 +2,6 @@
 the objectives a kind takes, the numbers it reports, the measures that exist for it and the comparison's metric
 definitions. One row per kind. Names, units and directions are METRICS' (declare.py), the rest MEASURES'."""
 
-from __future__ import annotations
-
 from typing import Any
 
 import pytest

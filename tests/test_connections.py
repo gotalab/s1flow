@@ -1,6 +1,4 @@
 """Connection ownership and path resolution are stable across application and CLI contexts."""
-from __future__ import annotations
-
 import asyncio
 import json
 import subprocess

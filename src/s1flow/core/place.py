@@ -5,8 +5,6 @@ stops at the nearest repository root. Outside Git, only the starting directory a
 its s1flow/ child are checked; choose --project explicitly from deeper directories.
 """
 
-from __future__ import annotations
-
 import re
 from pathlib import Path
 

@@ -20,8 +20,6 @@ policy in production (policy.py) read a case alike: `average` then `reading`, he
 rescaled by the number of options). pydantic only: production imports it.
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import Any, ClassVar, Protocol, Sequence, Union
 

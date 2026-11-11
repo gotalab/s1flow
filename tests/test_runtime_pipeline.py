@@ -1,6 +1,4 @@
 """Installed CLI/SDK behavior through a real local HTTP provider, without paid API calls."""
-from __future__ import annotations
-
 from contextlib import contextmanager
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json

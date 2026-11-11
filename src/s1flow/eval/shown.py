@@ -1,8 +1,6 @@
 """How a number reads where s1flow shows it (the report, the check's PR comment, production from feedback, the CLI's
 tables): a share in percent, its interval, a plain number, an API cost, a latency. Not known is a dash."""
 
-from __future__ import annotations
-
 DASH = "—"
 
 

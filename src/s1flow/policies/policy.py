@@ -1,6 +1,4 @@
 """Execute a PolicySpec only through the Client explicitly supplied by its application."""
-from __future__ import annotations
-
 import asyncio
 import json
 import math
