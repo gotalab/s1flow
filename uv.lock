@@ -2243,11 +2243,11 @@ name = "s1flow-bench"
 version = "0"
 source = { virtual = "apps/bench" }
 dependencies = [
-    { name = "s1flow", extra = ["eval", "llm", "optimize"] },
+    { name = "s1flow", extra = ["eval", "images", "llm", "optimize"] },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "s1flow", extras = ["eval", "llm", "optimize"], editable = "." }]
+requires-dist = [{ name = "s1flow", extras = ["eval", "images", "llm", "optimize"], editable = "." }]
 
 [[package]]
 name = "s3transfer"

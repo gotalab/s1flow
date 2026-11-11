@@ -1,0 +1,240 @@
+{"id": "candle-anomaly-008", "object": "candle", "defective": true, "defect": "chunk of wax missing", "image": "items/candle-anomaly-008.webp"}
+{"id": "candle-anomaly-015", "object": "candle", "defective": true, "defect": "chunk of wax missing", "image": "items/candle-anomaly-015.webp"}
+{"id": "candle-anomaly-017", "object": "candle", "defective": true, "defect": "damaged corner of packaging,different colour spot", "image": "items/candle-anomaly-017.webp"}
+{"id": "candle-anomaly-032", "object": "candle", "defective": true, "defect": "weird candle wick", "image": "items/candle-anomaly-032.webp"}
+{"id": "candle-anomaly-057", "object": "candle", "defective": true, "defect": "different colour spot", "image": "items/candle-anomaly-057.webp"}
+{"id": "candle-anomaly-060", "object": "candle", "defective": true, "defect": "extra wax in candle", "image": "items/candle-anomaly-060.webp"}
+{"id": "candle-anomaly-063", "object": "candle", "defective": true, "defect": "extra wax in candle", "image": "items/candle-anomaly-063.webp"}
+{"id": "candle-anomaly-072", "object": "candle", "defective": true, "defect": "foreign particals on candle", "image": "items/candle-anomaly-072.webp"}
+{"id": "candle-anomaly-083", "object": "candle", "defective": true, "defect": "foreign particals on candle", "image": "items/candle-anomaly-083.webp"}
+{"id": "candle-anomaly-097", "object": "candle", "defective": true, "defect": "wax melded out of the candle", "image": "items/candle-anomaly-097.webp"}
+{"id": "candle-normal-0024", "object": "candle", "defective": false, "defect": null, "image": "items/candle-normal-0024.webp"}
+{"id": "candle-normal-0172", "object": "candle", "defective": false, "defect": null, "image": "items/candle-normal-0172.webp"}
+{"id": "candle-normal-0306", "object": "candle", "defective": false, "defect": null, "image": "items/candle-normal-0306.webp"}
+{"id": "candle-normal-0545", "object": "candle", "defective": false, "defect": null, "image": "items/candle-normal-0545.webp"}
+{"id": "candle-normal-0552", "object": "candle", "defective": false, "defect": null, "image": "items/candle-normal-0552.webp"}
+{"id": "candle-normal-0629", "object": "candle", "defective": false, "defect": null, "image": "items/candle-normal-0629.webp"}
+{"id": "candle-normal-0684", "object": "candle", "defective": false, "defect": null, "image": "items/candle-normal-0684.webp"}
+{"id": "candle-normal-0784", "object": "candle", "defective": false, "defect": null, "image": "items/candle-normal-0784.webp"}
+{"id": "candle-normal-0985", "object": "candle", "defective": false, "defect": null, "image": "items/candle-normal-0985.webp"}
+{"id": "candle-normal-0994", "object": "candle", "defective": false, "defect": null, "image": "items/candle-normal-0994.webp"}
+{"id": "capsules-anomaly-000", "object": "capsules", "defective": true, "defect": "bubble", "image": "items/capsules-anomaly-000.webp"}
+{"id": "capsules-anomaly-003", "object": "capsules", "defective": true, "defect": "bubble", "image": "items/capsules-anomaly-003.webp"}
+{"id": "capsules-anomaly-013", "object": "capsules", "defective": true, "defect": "bubble", "image": "items/capsules-anomaly-013.webp"}
+{"id": "capsules-anomaly-029", "object": "capsules", "defective": true, "defect": "bubble", "image": "items/capsules-anomaly-029.webp"}
+{"id": "capsules-anomaly-034", "object": "capsules", "defective": true, "defect": "bubble,discolor", "image": "items/capsules-anomaly-034.webp"}
+{"id": "capsules-anomaly-040", "object": "capsules", "defective": true, "defect": "bubble,discolor", "image": "items/capsules-anomaly-040.webp"}
+{"id": "capsules-anomaly-057", "object": "capsules", "defective": true, "defect": "bubble,discolor,scratch,leak,misshape", "image": "items/capsules-anomaly-057.webp"}
+{"id": "capsules-anomaly-075", "object": "capsules", "defective": true, "defect": "bubble,discolor,scratch,leak,misshape", "image": "items/capsules-anomaly-075.webp"}
+{"id": "capsules-anomaly-089", "object": "capsules", "defective": true, "defect": "bubble,discolor,scratch", "image": "items/capsules-anomaly-089.webp"}
+{"id": "capsules-anomaly-092", "object": "capsules", "defective": true, "defect": "bubble,discolor,scratch", "image": "items/capsules-anomaly-092.webp"}
+{"id": "capsules-normal-011", "object": "capsules", "defective": false, "defect": null, "image": "items/capsules-normal-011.webp"}
+{"id": "capsules-normal-013", "object": "capsules", "defective": false, "defect": null, "image": "items/capsules-normal-013.webp"}
+{"id": "capsules-normal-170", "object": "capsules", "defective": false, "defect": null, "image": "items/capsules-normal-170.webp"}
+{"id": "capsules-normal-240", "object": "capsules", "defective": false, "defect": null, "image": "items/capsules-normal-240.webp"}
+{"id": "capsules-normal-288", "object": "capsules", "defective": false, "defect": null, "image": "items/capsules-normal-288.webp"}
+{"id": "capsules-normal-333", "object": "capsules", "defective": false, "defect": null, "image": "items/capsules-normal-333.webp"}
+{"id": "capsules-normal-423", "object": "capsules", "defective": false, "defect": null, "image": "items/capsules-normal-423.webp"}
+{"id": "capsules-normal-457", "object": "capsules", "defective": false, "defect": null, "image": "items/capsules-normal-457.webp"}
+{"id": "capsules-normal-483", "object": "capsules", "defective": false, "defect": null, "image": "items/capsules-normal-483.webp"}
+{"id": "capsules-normal-594", "object": "capsules", "defective": false, "defect": null, "image": "items/capsules-normal-594.webp"}
+{"id": "cashew-anomaly-003", "object": "cashew", "defective": true, "defect": "burnt", "image": "items/cashew-anomaly-003.webp"}
+{"id": "cashew-anomaly-028", "object": "cashew", "defective": true, "defect": "different colour spot", "image": "items/cashew-anomaly-028.webp"}
+{"id": "cashew-anomaly-029", "object": "cashew", "defective": true, "defect": "different colour spot", "image": "items/cashew-anomaly-029.webp"}
+{"id": "cashew-anomaly-044", "object": "cashew", "defective": true, "defect": "same colour spot", "image": "items/cashew-anomaly-044.webp"}
+{"id": "cashew-anomaly-056", "object": "cashew", "defective": true, "defect": "same colour spot", "image": "items/cashew-anomaly-056.webp"}
+{"id": "cashew-anomaly-063", "object": "cashew", "defective": true, "defect": "small holes", "image": "items/cashew-anomaly-063.webp"}
+{"id": "cashew-anomaly-067", "object": "cashew", "defective": true, "defect": "small holes", "image": "items/cashew-anomaly-067.webp"}
+{"id": "cashew-anomaly-070", "object": "cashew", "defective": true, "defect": "small holes", "image": "items/cashew-anomaly-070.webp"}
+{"id": "cashew-anomaly-086", "object": "cashew", "defective": true, "defect": "small scratches", "image": "items/cashew-anomaly-086.webp"}
+{"id": "cashew-anomaly-097", "object": "cashew", "defective": true, "defect": "stuck together", "image": "items/cashew-anomaly-097.webp"}
+{"id": "cashew-normal-012", "object": "cashew", "defective": false, "defect": null, "image": "items/cashew-normal-012.webp"}
+{"id": "cashew-normal-087", "object": "cashew", "defective": false, "defect": null, "image": "items/cashew-normal-087.webp"}
+{"id": "cashew-normal-130", "object": "cashew", "defective": false, "defect": null, "image": "items/cashew-normal-130.webp"}
+{"id": "cashew-normal-166", "object": "cashew", "defective": false, "defect": null, "image": "items/cashew-normal-166.webp"}
+{"id": "cashew-normal-239", "object": "cashew", "defective": false, "defect": null, "image": "items/cashew-normal-239.webp"}
+{"id": "cashew-normal-309", "object": "cashew", "defective": false, "defect": null, "image": "items/cashew-normal-309.webp"}
+{"id": "cashew-normal-342", "object": "cashew", "defective": false, "defect": null, "image": "items/cashew-normal-342.webp"}
+{"id": "cashew-normal-384", "object": "cashew", "defective": false, "defect": null, "image": "items/cashew-normal-384.webp"}
+{"id": "cashew-normal-405", "object": "cashew", "defective": false, "defect": null, "image": "items/cashew-normal-405.webp"}
+{"id": "cashew-normal-484", "object": "cashew", "defective": false, "defect": null, "image": "items/cashew-normal-484.webp"}
+{"id": "chewinggum-anomaly-015", "object": "chewinggum", "defective": true, "defect": "chunk of gum missing,small cracks", "image": "items/chewinggum-anomaly-015.webp"}
+{"id": "chewinggum-anomaly-037", "object": "chewinggum", "defective": true, "defect": "corner missing", "image": "items/chewinggum-anomaly-037.webp"}
+{"id": "chewinggum-anomaly-042", "object": "chewinggum", "defective": true, "defect": "chunk of gum missing,corner missing", "image": "items/chewinggum-anomaly-042.webp"}
+{"id": "chewinggum-anomaly-054", "object": "chewinggum", "defective": true, "defect": "chunk of gum missing", "image": "items/chewinggum-anomaly-054.webp"}
+{"id": "chewinggum-anomaly-064", "object": "chewinggum", "defective": true, "defect": "chunk of gum missing,small cracks", "image": "items/chewinggum-anomaly-064.webp"}
+{"id": "chewinggum-anomaly-080", "object": "chewinggum", "defective": true, "defect": "corner missing,similar colour spot,small cracks", "image": "items/chewinggum-anomaly-080.webp"}
+{"id": "chewinggum-anomaly-085", "object": "chewinggum", "defective": true, "defect": "corner missing,similar colour spot", "image": "items/chewinggum-anomaly-085.webp"}
+{"id": "chewinggum-anomaly-091", "object": "chewinggum", "defective": true, "defect": "corner missing,similar colour spot", "image": "items/chewinggum-anomaly-091.webp"}
+{"id": "chewinggum-anomaly-092", "object": "chewinggum", "defective": true, "defect": "similar colour spot", "image": "items/chewinggum-anomaly-092.webp"}
+{"id": "chewinggum-anomaly-095", "object": "chewinggum", "defective": true, "defect": "similar colour spot", "image": "items/chewinggum-anomaly-095.webp"}
+{"id": "chewinggum-normal-013", "object": "chewinggum", "defective": false, "defect": null, "image": "items/chewinggum-normal-013.webp"}
+{"id": "chewinggum-normal-148", "object": "chewinggum", "defective": false, "defect": null, "image": "items/chewinggum-normal-148.webp"}
+{"id": "chewinggum-normal-244", "object": "chewinggum", "defective": false, "defect": null, "image": "items/chewinggum-normal-244.webp"}
+{"id": "chewinggum-normal-245", "object": "chewinggum", "defective": false, "defect": null, "image": "items/chewinggum-normal-245.webp"}
+{"id": "chewinggum-normal-309", "object": "chewinggum", "defective": false, "defect": null, "image": "items/chewinggum-normal-309.webp"}
+{"id": "chewinggum-normal-352", "object": "chewinggum", "defective": false, "defect": null, "image": "items/chewinggum-normal-352.webp"}
+{"id": "chewinggum-normal-367", "object": "chewinggum", "defective": false, "defect": null, "image": "items/chewinggum-normal-367.webp"}
+{"id": "chewinggum-normal-369", "object": "chewinggum", "defective": false, "defect": null, "image": "items/chewinggum-normal-369.webp"}
+{"id": "chewinggum-normal-398", "object": "chewinggum", "defective": false, "defect": null, "image": "items/chewinggum-normal-398.webp"}
+{"id": "chewinggum-normal-482", "object": "chewinggum", "defective": false, "defect": null, "image": "items/chewinggum-normal-482.webp"}
+{"id": "fryum-anomaly-022", "object": "fryum", "defective": true, "defect": "similar colour spot", "image": "items/fryum-anomaly-022.webp"}
+{"id": "fryum-anomaly-031", "object": "fryum", "defective": true, "defect": "different colour spot", "image": "items/fryum-anomaly-031.webp"}
+{"id": "fryum-anomaly-046", "object": "fryum", "defective": true, "defect": "fryum stuck together", "image": "items/fryum-anomaly-046.webp"}
+{"id": "fryum-anomaly-051", "object": "fryum", "defective": true, "defect": "fryum stuck together", "image": "items/fryum-anomaly-051.webp"}
+{"id": "fryum-anomaly-053", "object": "fryum", "defective": true, "defect": "fryum stuck together", "image": "items/fryum-anomaly-053.webp"}
+{"id": "fryum-anomaly-070", "object": "fryum", "defective": true, "defect": "middle breakage", "image": "items/fryum-anomaly-070.webp"}
+{"id": "fryum-anomaly-085", "object": "fryum", "defective": true, "defect": "different colour spot,similar colour spot", "image": "items/fryum-anomaly-085.webp"}
+{"id": "fryum-anomaly-089", "object": "fryum", "defective": true, "defect": "similar colour spot", "image": "items/fryum-anomaly-089.webp"}
+{"id": "fryum-anomaly-095", "object": "fryum", "defective": true, "defect": "small scratches", "image": "items/fryum-anomaly-095.webp"}
+{"id": "fryum-anomaly-099", "object": "fryum", "defective": true, "defect": "similar colour spot", "image": "items/fryum-anomaly-099.webp"}
+{"id": "fryum-normal-084", "object": "fryum", "defective": false, "defect": null, "image": "items/fryum-normal-084.webp"}
+{"id": "fryum-normal-087", "object": "fryum", "defective": false, "defect": null, "image": "items/fryum-normal-087.webp"}
+{"id": "fryum-normal-104", "object": "fryum", "defective": false, "defect": null, "image": "items/fryum-normal-104.webp"}
+{"id": "fryum-normal-276", "object": "fryum", "defective": false, "defect": null, "image": "items/fryum-normal-276.webp"}
+{"id": "fryum-normal-337", "object": "fryum", "defective": false, "defect": null, "image": "items/fryum-normal-337.webp"}
+{"id": "fryum-normal-367", "object": "fryum", "defective": false, "defect": null, "image": "items/fryum-normal-367.webp"}
+{"id": "fryum-normal-369", "object": "fryum", "defective": false, "defect": null, "image": "items/fryum-normal-369.webp"}
+{"id": "fryum-normal-435", "object": "fryum", "defective": false, "defect": null, "image": "items/fryum-normal-435.webp"}
+{"id": "fryum-normal-446", "object": "fryum", "defective": false, "defect": null, "image": "items/fryum-normal-446.webp"}
+{"id": "fryum-normal-482", "object": "fryum", "defective": false, "defect": null, "image": "items/fryum-normal-482.webp"}
+{"id": "macaroni1-anomaly-003", "object": "macaroni1", "defective": true, "defect": "chip around edge and corner", "image": "items/macaroni1-anomaly-003.webp"}
+{"id": "macaroni1-anomaly-005", "object": "macaroni1", "defective": true, "defect": "chip around edge and corner,small scratches", "image": "items/macaroni1-anomaly-005.webp"}
+{"id": "macaroni1-anomaly-039", "object": "macaroni1", "defective": true, "defect": "middle breakage,small scratches", "image": "items/macaroni1-anomaly-039.webp"}
+{"id": "macaroni1-anomaly-047", "object": "macaroni1", "defective": true, "defect": "middle breakage,small scratches", "image": "items/macaroni1-anomaly-047.webp"}
+{"id": "macaroni1-anomaly-050", "object": "macaroni1", "defective": true, "defect": "similar colour spot", "image": "items/macaroni1-anomaly-050.webp"}
+{"id": "macaroni1-anomaly-060", "object": "macaroni1", "defective": true, "defect": "similar colour spot", "image": "items/macaroni1-anomaly-060.webp"}
+{"id": "macaroni1-anomaly-062", "object": "macaroni1", "defective": true, "defect": "similar colour spot", "image": "items/macaroni1-anomaly-062.webp"}
+{"id": "macaroni1-anomaly-078", "object": "macaroni1", "defective": true, "defect": "small cracks,small scratches", "image": "items/macaroni1-anomaly-078.webp"}
+{"id": "macaroni1-anomaly-090", "object": "macaroni1", "defective": true, "defect": "small scratches", "image": "items/macaroni1-anomaly-090.webp"}
+{"id": "macaroni1-anomaly-093", "object": "macaroni1", "defective": true, "defect": "small scratches", "image": "items/macaroni1-anomaly-093.webp"}
+{"id": "macaroni1-normal-0013", "object": "macaroni1", "defective": false, "defect": null, "image": "items/macaroni1-normal-0013.webp"}
+{"id": "macaroni1-normal-0261", "object": "macaroni1", "defective": false, "defect": null, "image": "items/macaroni1-normal-0261.webp"}
+{"id": "macaroni1-normal-0303", "object": "macaroni1", "defective": false, "defect": null, "image": "items/macaroni1-normal-0303.webp"}
+{"id": "macaroni1-normal-0363", "object": "macaroni1", "defective": false, "defect": null, "image": "items/macaroni1-normal-0363.webp"}
+{"id": "macaroni1-normal-0569", "object": "macaroni1", "defective": false, "defect": null, "image": "items/macaroni1-normal-0569.webp"}
+{"id": "macaroni1-normal-0688", "object": "macaroni1", "defective": false, "defect": null, "image": "items/macaroni1-normal-0688.webp"}
+{"id": "macaroni1-normal-0764", "object": "macaroni1", "defective": false, "defect": null, "image": "items/macaroni1-normal-0764.webp"}
+{"id": "macaroni1-normal-0768", "object": "macaroni1", "defective": false, "defect": null, "image": "items/macaroni1-normal-0768.webp"}
+{"id": "macaroni1-normal-0804", "object": "macaroni1", "defective": false, "defect": null, "image": "items/macaroni1-normal-0804.webp"}
+{"id": "macaroni1-normal-0994", "object": "macaroni1", "defective": false, "defect": null, "image": "items/macaroni1-normal-0994.webp"}
+{"id": "macaroni2-anomaly-029", "object": "macaroni2", "defective": true, "defect": "color spot similar to the object", "image": "items/macaroni2-anomaly-029.webp"}
+{"id": "macaroni2-anomaly-034", "object": "macaroni2", "defective": true, "defect": "different color spot", "image": "items/macaroni2-anomaly-034.webp"}
+{"id": "macaroni2-anomaly-044", "object": "macaroni2", "defective": true, "defect": "different color spot", "image": "items/macaroni2-anomaly-044.webp"}
+{"id": "macaroni2-anomaly-045", "object": "macaroni2", "defective": true, "defect": "small chip around edge", "image": "items/macaroni2-anomaly-045.webp"}
+{"id": "macaroni2-anomaly-051", "object": "macaroni2", "defective": true, "defect": "small chip around edge", "image": "items/macaroni2-anomaly-051.webp"}
+{"id": "macaroni2-anomaly-058", "object": "macaroni2", "defective": true, "defect": "small chip around edge", "image": "items/macaroni2-anomaly-058.webp"}
+{"id": "macaroni2-anomaly-065", "object": "macaroni2", "defective": true, "defect": "small chip around edge,small scratches", "image": "items/macaroni2-anomaly-065.webp"}
+{"id": "macaroni2-anomaly-069", "object": "macaroni2", "defective": true, "defect": "small chip around edge", "image": "items/macaroni2-anomaly-069.webp"}
+{"id": "macaroni2-anomaly-070", "object": "macaroni2", "defective": true, "defect": "small scratches", "image": "items/macaroni2-anomaly-070.webp"}
+{"id": "macaroni2-anomaly-073", "object": "macaroni2", "defective": true, "defect": "small cracks", "image": "items/macaroni2-anomaly-073.webp"}
+{"id": "macaroni2-normal-0011", "object": "macaroni2", "defective": false, "defect": null, "image": "items/macaroni2-normal-0011.webp"}
+{"id": "macaroni2-normal-0196", "object": "macaroni2", "defective": false, "defect": null, "image": "items/macaroni2-normal-0196.webp"}
+{"id": "macaroni2-normal-0552", "object": "macaroni2", "defective": false, "defect": null, "image": "items/macaroni2-normal-0552.webp"}
+{"id": "macaroni2-normal-0690", "object": "macaroni2", "defective": false, "defect": null, "image": "items/macaroni2-normal-0690.webp"}
+{"id": "macaroni2-normal-0694", "object": "macaroni2", "defective": false, "defect": null, "image": "items/macaroni2-normal-0694.webp"}
+{"id": "macaroni2-normal-0735", "object": "macaroni2", "defective": false, "defect": null, "image": "items/macaroni2-normal-0735.webp"}
+{"id": "macaroni2-normal-0784", "object": "macaroni2", "defective": false, "defect": null, "image": "items/macaroni2-normal-0784.webp"}
+{"id": "macaroni2-normal-0844", "object": "macaroni2", "defective": false, "defect": null, "image": "items/macaroni2-normal-0844.webp"}
+{"id": "macaroni2-normal-0953", "object": "macaroni2", "defective": false, "defect": null, "image": "items/macaroni2-normal-0953.webp"}
+{"id": "macaroni2-normal-0964", "object": "macaroni2", "defective": false, "defect": null, "image": "items/macaroni2-normal-0964.webp"}
+{"id": "pcb1-anomaly-007", "object": "pcb1", "defective": true, "defect": "bent", "image": "items/pcb1-anomaly-007.webp"}
+{"id": "pcb1-anomaly-025", "object": "pcb1", "defective": true, "defect": "melt", "image": "items/pcb1-anomaly-025.webp"}
+{"id": "pcb1-anomaly-026", "object": "pcb1", "defective": true, "defect": "melt", "image": "items/pcb1-anomaly-026.webp"}
+{"id": "pcb1-anomaly-046", "object": "pcb1", "defective": true, "defect": "missing", "image": "items/pcb1-anomaly-046.webp"}
+{"id": "pcb1-anomaly-054", "object": "pcb1", "defective": true, "defect": "missing", "image": "items/pcb1-anomaly-054.webp"}
+{"id": "pcb1-anomaly-061", "object": "pcb1", "defective": true, "defect": "melt", "image": "items/pcb1-anomaly-061.webp"}
+{"id": "pcb1-anomaly-070", "object": "pcb1", "defective": true, "defect": "melt", "image": "items/pcb1-anomaly-070.webp"}
+{"id": "pcb1-anomaly-071", "object": "pcb1", "defective": true, "defect": "melt", "image": "items/pcb1-anomaly-071.webp"}
+{"id": "pcb1-anomaly-072", "object": "pcb1", "defective": true, "defect": "melt", "image": "items/pcb1-anomaly-072.webp"}
+{"id": "pcb1-anomaly-099", "object": "pcb1", "defective": true, "defect": "scratch", "image": "items/pcb1-anomaly-099.webp"}
+{"id": "pcb1-normal-0011", "object": "pcb1", "defective": false, "defect": null, "image": "items/pcb1-normal-0011.webp"}
+{"id": "pcb1-normal-0514", "object": "pcb1", "defective": false, "defect": null, "image": "items/pcb1-normal-0514.webp"}
+{"id": "pcb1-normal-0518", "object": "pcb1", "defective": false, "defect": null, "image": "items/pcb1-normal-0518.webp"}
+{"id": "pcb1-normal-0617", "object": "pcb1", "defective": false, "defect": null, "image": "items/pcb1-normal-0617.webp"}
+{"id": "pcb1-normal-0619", "object": "pcb1", "defective": false, "defect": null, "image": "items/pcb1-normal-0619.webp"}
+{"id": "pcb1-normal-0684", "object": "pcb1", "defective": false, "defect": null, "image": "items/pcb1-normal-0684.webp"}
+{"id": "pcb1-normal-0688", "object": "pcb1", "defective": false, "defect": null, "image": "items/pcb1-normal-0688.webp"}
+{"id": "pcb1-normal-0725", "object": "pcb1", "defective": false, "defect": null, "image": "items/pcb1-normal-0725.webp"}
+{"id": "pcb1-normal-0730", "object": "pcb1", "defective": false, "defect": null, "image": "items/pcb1-normal-0730.webp"}
+{"id": "pcb1-normal-0797", "object": "pcb1", "defective": false, "defect": null, "image": "items/pcb1-normal-0797.webp"}
+{"id": "pcb2-anomaly-003", "object": "pcb2", "defective": true, "defect": "bent", "image": "items/pcb2-anomaly-003.webp"}
+{"id": "pcb2-anomaly-022", "object": "pcb2", "defective": true, "defect": "melt", "image": "items/pcb2-anomaly-022.webp"}
+{"id": "pcb2-anomaly-029", "object": "pcb2", "defective": true, "defect": "melt", "image": "items/pcb2-anomaly-029.webp"}
+{"id": "pcb2-anomaly-042", "object": "pcb2", "defective": true, "defect": "missing", "image": "items/pcb2-anomaly-042.webp"}
+{"id": "pcb2-anomaly-058", "object": "pcb2", "defective": true, "defect": "melt", "image": "items/pcb2-anomaly-058.webp"}
+{"id": "pcb2-anomaly-070", "object": "pcb2", "defective": true, "defect": "melt", "image": "items/pcb2-anomaly-070.webp"}
+{"id": "pcb2-anomaly-074", "object": "pcb2", "defective": true, "defect": "melt", "image": "items/pcb2-anomaly-074.webp"}
+{"id": "pcb2-anomaly-076", "object": "pcb2", "defective": true, "defect": "melt", "image": "items/pcb2-anomaly-076.webp"}
+{"id": "pcb2-anomaly-078", "object": "pcb2", "defective": true, "defect": "melt", "image": "items/pcb2-anomaly-078.webp"}
+{"id": "pcb2-anomaly-081", "object": "pcb2", "defective": true, "defect": "melt", "image": "items/pcb2-anomaly-081.webp"}
+{"id": "pcb2-normal-0016", "object": "pcb2", "defective": false, "defect": null, "image": "items/pcb2-normal-0016.webp"}
+{"id": "pcb2-normal-0026", "object": "pcb2", "defective": false, "defect": null, "image": "items/pcb2-normal-0026.webp"}
+{"id": "pcb2-normal-0159", "object": "pcb2", "defective": false, "defect": null, "image": "items/pcb2-normal-0159.webp"}
+{"id": "pcb2-normal-0168", "object": "pcb2", "defective": false, "defect": null, "image": "items/pcb2-normal-0168.webp"}
+{"id": "pcb2-normal-0170", "object": "pcb2", "defective": false, "defect": null, "image": "items/pcb2-normal-0170.webp"}
+{"id": "pcb2-normal-0294", "object": "pcb2", "defective": false, "defect": null, "image": "items/pcb2-normal-0294.webp"}
+{"id": "pcb2-normal-0400", "object": "pcb2", "defective": false, "defect": null, "image": "items/pcb2-normal-0400.webp"}
+{"id": "pcb2-normal-0648", "object": "pcb2", "defective": false, "defect": null, "image": "items/pcb2-normal-0648.webp"}
+{"id": "pcb2-normal-0735", "object": "pcb2", "defective": false, "defect": null, "image": "items/pcb2-normal-0735.webp"}
+{"id": "pcb2-normal-0892", "object": "pcb2", "defective": false, "defect": null, "image": "items/pcb2-normal-0892.webp"}
+{"id": "pcb3-anomaly-001", "object": "pcb3", "defective": true, "defect": "bent", "image": "items/pcb3-anomaly-001.webp"}
+{"id": "pcb3-anomaly-014", "object": "pcb3", "defective": true, "defect": "bent", "image": "items/pcb3-anomaly-014.webp"}
+{"id": "pcb3-anomaly-023", "object": "pcb3", "defective": true, "defect": "melt", "image": "items/pcb3-anomaly-023.webp"}
+{"id": "pcb3-anomaly-031", "object": "pcb3", "defective": true, "defect": "melt", "image": "items/pcb3-anomaly-031.webp"}
+{"id": "pcb3-anomaly-034", "object": "pcb3", "defective": true, "defect": "melt", "image": "items/pcb3-anomaly-034.webp"}
+{"id": "pcb3-anomaly-035", "object": "pcb3", "defective": true, "defect": "melt", "image": "items/pcb3-anomaly-035.webp"}
+{"id": "pcb3-anomaly-037", "object": "pcb3", "defective": true, "defect": "melt", "image": "items/pcb3-anomaly-037.webp"}
+{"id": "pcb3-anomaly-044", "object": "pcb3", "defective": true, "defect": "missing", "image": "items/pcb3-anomaly-044.webp"}
+{"id": "pcb3-anomaly-079", "object": "pcb3", "defective": true, "defect": "melt,scratch", "image": "items/pcb3-anomaly-079.webp"}
+{"id": "pcb3-anomaly-096", "object": "pcb3", "defective": true, "defect": "scratch", "image": "items/pcb3-anomaly-096.webp"}
+{"id": "pcb3-normal-0107", "object": "pcb3", "defective": false, "defect": null, "image": "items/pcb3-normal-0107.webp"}
+{"id": "pcb3-normal-0237", "object": "pcb3", "defective": false, "defect": null, "image": "items/pcb3-normal-0237.webp"}
+{"id": "pcb3-normal-0261", "object": "pcb3", "defective": false, "defect": null, "image": "items/pcb3-normal-0261.webp"}
+{"id": "pcb3-normal-0400", "object": "pcb3", "defective": false, "defect": null, "image": "items/pcb3-normal-0400.webp"}
+{"id": "pcb3-normal-0417", "object": "pcb3", "defective": false, "defect": null, "image": "items/pcb3-normal-0417.webp"}
+{"id": "pcb3-normal-0457", "object": "pcb3", "defective": false, "defect": null, "image": "items/pcb3-normal-0457.webp"}
+{"id": "pcb3-normal-0705", "object": "pcb3", "defective": false, "defect": null, "image": "items/pcb3-normal-0705.webp"}
+{"id": "pcb3-normal-0811", "object": "pcb3", "defective": false, "defect": null, "image": "items/pcb3-normal-0811.webp"}
+{"id": "pcb3-normal-0869", "object": "pcb3", "defective": false, "defect": null, "image": "items/pcb3-normal-0869.webp"}
+{"id": "pcb3-normal-0940", "object": "pcb3", "defective": false, "defect": null, "image": "items/pcb3-normal-0940.webp"}
+{"id": "pcb4-anomaly-003", "object": "pcb4", "defective": true, "defect": "burnt,dirt", "image": "items/pcb4-anomaly-003.webp"}
+{"id": "pcb4-anomaly-014", "object": "pcb4", "defective": true, "defect": "damage,dirt", "image": "items/pcb4-anomaly-014.webp"}
+{"id": "pcb4-anomaly-039", "object": "pcb4", "defective": true, "defect": "extra,dirt", "image": "items/pcb4-anomaly-039.webp"}
+{"id": "pcb4-anomaly-041", "object": "pcb4", "defective": true, "defect": "extra", "image": "items/pcb4-anomaly-041.webp"}
+{"id": "pcb4-anomaly-043", "object": "pcb4", "defective": true, "defect": "scratch,extra", "image": "items/pcb4-anomaly-043.webp"}
+{"id": "pcb4-anomaly-049", "object": "pcb4", "defective": true, "defect": "missing", "image": "items/pcb4-anomaly-049.webp"}
+{"id": "pcb4-anomaly-058", "object": "pcb4", "defective": true, "defect": "missing,damage,extra", "image": "items/pcb4-anomaly-058.webp"}
+{"id": "pcb4-anomaly-060", "object": "pcb4", "defective": true, "defect": "missing,damage", "image": "items/pcb4-anomaly-060.webp"}
+{"id": "pcb4-anomaly-063", "object": "pcb4", "defective": true, "defect": "missing", "image": "items/pcb4-anomaly-063.webp"}
+{"id": "pcb4-anomaly-089", "object": "pcb4", "defective": true, "defect": "missing,wrong place", "image": "items/pcb4-anomaly-089.webp"}
+{"id": "pcb4-normal-0174", "object": "pcb4", "defective": false, "defect": null, "image": "items/pcb4-normal-0174.webp"}
+{"id": "pcb4-normal-0297", "object": "pcb4", "defective": false, "defect": null, "image": "items/pcb4-normal-0297.webp"}
+{"id": "pcb4-normal-0306", "object": "pcb4", "defective": false, "defect": null, "image": "items/pcb4-normal-0306.webp"}
+{"id": "pcb4-normal-0400", "object": "pcb4", "defective": false, "defect": null, "image": "items/pcb4-normal-0400.webp"}
+{"id": "pcb4-normal-0402", "object": "pcb4", "defective": false, "defect": null, "image": "items/pcb4-normal-0402.webp"}
+{"id": "pcb4-normal-0619", "object": "pcb4", "defective": false, "defect": null, "image": "items/pcb4-normal-0619.webp"}
+{"id": "pcb4-normal-0629", "object": "pcb4", "defective": false, "defect": null, "image": "items/pcb4-normal-0629.webp"}
+{"id": "pcb4-normal-0690", "object": "pcb4", "defective": false, "defect": null, "image": "items/pcb4-normal-0690.webp"}
+{"id": "pcb4-normal-0784", "object": "pcb4", "defective": false, "defect": null, "image": "items/pcb4-normal-0784.webp"}
+{"id": "pcb4-normal-0957", "object": "pcb4", "defective": false, "defect": null, "image": "items/pcb4-normal-0957.webp"}
+{"id": "pipe_fryum-anomaly-002", "object": "pipe_fryum", "defective": true, "defect": "burnt", "image": "items/pipe_fryum-anomaly-002.webp"}
+{"id": "pipe_fryum-anomaly-004", "object": "pipe_fryum", "defective": true, "defect": "burnt", "image": "items/pipe_fryum-anomaly-004.webp"}
+{"id": "pipe_fryum-anomaly-018", "object": "pipe_fryum", "defective": true, "defect": "corner and edge breakage", "image": "items/pipe_fryum-anomaly-018.webp"}
+{"id": "pipe_fryum-anomaly-020", "object": "pipe_fryum", "defective": true, "defect": "corner and edge breakage", "image": "items/pipe_fryum-anomaly-020.webp"}
+{"id": "pipe_fryum-anomaly-028", "object": "pipe_fryum", "defective": true, "defect": "corner and edge breakage", "image": "items/pipe_fryum-anomaly-028.webp"}
+{"id": "pipe_fryum-anomaly-050", "object": "pipe_fryum", "defective": true, "defect": "similar colour spot", "image": "items/pipe_fryum-anomaly-050.webp"}
+{"id": "pipe_fryum-anomaly-057", "object": "pipe_fryum", "defective": true, "defect": "similar colour spot", "image": "items/pipe_fryum-anomaly-057.webp"}
+{"id": "pipe_fryum-anomaly-064", "object": "pipe_fryum", "defective": true, "defect": "similar colour spot", "image": "items/pipe_fryum-anomaly-064.webp"}
+{"id": "pipe_fryum-anomaly-090", "object": "pipe_fryum", "defective": true, "defect": "stuck together", "image": "items/pipe_fryum-anomaly-090.webp"}
+{"id": "pipe_fryum-anomaly-092", "object": "pipe_fryum", "defective": true, "defect": "stuck together", "image": "items/pipe_fryum-anomaly-092.webp"}
+{"id": "pipe_fryum-normal-166", "object": "pipe_fryum", "defective": false, "defect": null, "image": "items/pipe_fryum-normal-166.webp"}
+{"id": "pipe_fryum-normal-324", "object": "pipe_fryum", "defective": false, "defect": null, "image": "items/pipe_fryum-normal-324.webp"}
+{"id": "pipe_fryum-normal-337", "object": "pipe_fryum", "defective": false, "defect": null, "image": "items/pipe_fryum-normal-337.webp"}
+{"id": "pipe_fryum-normal-369", "object": "pipe_fryum", "defective": false, "defect": null, "image": "items/pipe_fryum-normal-369.webp"}
+{"id": "pipe_fryum-normal-377", "object": "pipe_fryum", "defective": false, "defect": null, "image": "items/pipe_fryum-normal-377.webp"}
+{"id": "pipe_fryum-normal-402", "object": "pipe_fryum", "defective": false, "defect": null, "image": "items/pipe_fryum-normal-402.webp"}
+{"id": "pipe_fryum-normal-446", "object": "pipe_fryum", "defective": false, "defect": null, "image": "items/pipe_fryum-normal-446.webp"}
+{"id": "pipe_fryum-normal-460", "object": "pipe_fryum", "defective": false, "defect": null, "image": "items/pipe_fryum-normal-460.webp"}
+{"id": "pipe_fryum-normal-467", "object": "pipe_fryum", "defective": false, "defect": null, "image": "items/pipe_fryum-normal-467.webp"}
+{"id": "pipe_fryum-normal-487", "object": "pipe_fryum", "defective": false, "defect": null, "image": "items/pipe_fryum-normal-487.webp"}
