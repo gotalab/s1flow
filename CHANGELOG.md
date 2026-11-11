@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.0a5 (2026-11-12)
+
+### Added
+
+- `policy.decide(state, timeout=SECONDS)` (and `adecide`) caps how long one decision may take, retries and their
+  waits included. Past it the call is cancelled and `TimedOut`, a `ProviderError`, is raised and logged as
+  `failed`. Without a limit, a throttled provider could hold one decision for minutes.
+
+### Fixed
+
+- An `llm` model on the AI Gateway fetched the gateway's price list on the event loop, holding every other call
+  on it (and a timeout) until the fetch ended. It is fetched off the loop now.
+
 ## 0.1.0a4 (2026-11-12)
 
 ### Changed

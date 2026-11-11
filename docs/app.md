@@ -101,6 +101,26 @@ If a provider returns an invalid response, s1flow raises `ProviderError` instead
 refused question comes back as `Refusal` from the Client and as `Rejected` when a policy runs. Configuration
 errors, bad input and unsupported features each raise their own subclass of `S1flowError`.
 
+## Time limit
+
+A provider that throttles (429), fails on the server or times out is retried, up to four attempts with waits of
+0.5, 1 and 2 seconds, and each attempt can take up to 60 seconds. Without a limit, one decision can therefore take
+minutes. When a person is waiting on the answer, give the decision a limit in seconds:
+
+```python
+from s1flow import ProviderError
+
+try:
+    decision = policy.decide(state, case_id="ticket-42", timeout=1.5)
+except ProviderError:
+    ...  # no decision in time, or the call failed: send the case to a person or a fallback
+```
+
+The limit covers the whole call, retries and waits included. When it passes, s1flow cancels the call and raises
+`TimedOut`, a `ProviderError`, so code that already falls back on a failed call also falls back on a late one.
+The log records it as `failed` with the error `TimedOut: ...`, apart from other failures. `adecide` takes the same
+`timeout`. Without one, a decision takes as long as its retries do.
+
 ## Images and logged input
 
 Images must be passed as `Image` values that your code prepares before the policy runs. Input JSON can't make the

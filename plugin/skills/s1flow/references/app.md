@@ -33,6 +33,9 @@ policy.feedback(decision.decision_id, True)   # when the right label is known: t
 - The direct `Client` asks boolean, choice, score and box questions where the provider supports them; a policy
   holds one boolean or choice.
 - Store `decision_id` when a label may arrive later. `case_id` is log context only and may repeat.
+- `decide(..., timeout=SECONDS)` caps the whole call, retries included (without it, retries can take minutes). Past
+  it the call is cancelled and `TimedOut` (a `ProviderError`) is raised and logged as failed. Where the app sends
+  a case when there is no decision in time is the app's decision, as with low-probability answers.
 
 ## Low-probability answers
 
@@ -55,7 +58,7 @@ s1flow decide --model jev --boolean "Is this a bug report?" --state @state.json 
 
 ## GitHub Actions
 
-`gotalab/s1flow/decide@v0.1.0a4` answers one case. Required inputs: `policy`, `state`, `connections`. Optional:
+`gotalab/s1flow/decide@v0.1.0a5` answers one case. Required inputs: `policy`, `state`, `connections`. Optional:
 `case-id`, `log`, `keep-state`, `path`, `working-directory`, `package`. Outputs: `answer`, `probability`,
 `below_min_probability`, `decision_id`, `policy`. It installs s1flow in the workflow when the repository does not
 list it. Keys stay in repository secrets. A failed step has no decision to record, so `continue-on-error` leaves
@@ -87,7 +90,7 @@ jobs:
             echo 'S1FLOW_EOF'
           } >> "$GITHUB_OUTPUT"
       - id: s1
-        uses: gotalab/s1flow/decide@v0.1.0a4
+        uses: gotalab/s1flow/decide@v0.1.0a5
         continue-on-error: true
         with:
           working-directory: s1flow
