@@ -236,3 +236,18 @@ def test_an_upgrade_keeps_the_identities_earlier_releases_wrote(monkeypatch):
     now = request_digest(spec, sorted_state, qs), execution_digest(spec, 'policy')
     monkeypatch.setattr(identity, 'SDK_VERSION', '9.9.9')
     assert (request_digest(spec, sorted_state, qs), execution_digest(spec, 'policy')) == now
+
+
+def test_a_format_bump_retires_what_earlier_releases_wrote(monkeypatch):
+    """A bumped REQUEST says saved answers no longer stand: neither do those earlier releases wrote, nor the
+    adoptions measured on them."""
+    from s1flow.client import identity
+    from s1flow.client.identity import execution_digests, request_digests
+
+    spec = ModelSpec(provider='typesafe', id='jev-1.14.0')
+    qs = {'bug': Boolean(instructions='Is it a bug?')}
+    execution = execution_digest(spec, 'policy')
+    monkeypatch.setattr(identity, 'REQUEST', 's1flow/request@4')
+    assert request_digests(spec, {'body': 'x'}, qs) == (request_digest(spec, {'body': 'x'}, qs),)
+    assert execution_digests(spec, 'policy') == (execution_digest(spec, 'policy'),)
+    assert execution_digest(spec, 'policy') != execution

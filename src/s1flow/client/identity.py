@@ -61,7 +61,7 @@ def _public(value: Any) -> Any:
 # Bump when a built-in provider sends different bytes for the same input and question, or reads
 # the same reply into a different answer (tests/test_wire_format.py names the change).
 REQUEST = "s1flow/request@3"
-# Bump when a policy turns the same answers into different decisions.
+# Bump when a policy turns the same answers into different decisions. An execution names REQUEST too.
 EXECUTION = "s1flow/execution@3"
 
 try:
@@ -102,7 +102,7 @@ def request_digest(spec: ModelSpec, state: State, questions: Questions) -> str:
 
 def execution_digest(spec: ModelSpec, policy_digest: str) -> str:
     """Shared runtime conditions; evaluation records preprocessing identity separately."""
-    return digest({"schema": EXECUTION, "model": model_digest(spec), "policy": policy_digest,
+    return digest({"schema": EXECUTION, "request": REQUEST, "model": model_digest(spec), "policy": policy_digest,
                    "declared_concurrency": spec.concurrency, "dependencies": _dependency_revision(spec)})
 
 
@@ -129,7 +129,9 @@ def require_provider_revision(spec: ModelSpec) -> None:
 # upgrade made every saved answer look unasked. They send what this release sends and read answers as it does,
 # except that 0.1.0a2 and 0.1.0a3 sent a state's keys in the order written (0.1.0a4 sorts them): their answers
 # stand only for a state whose keys were already sorted, and their policies were measured on such requests.
-# Saved runs, cache entries and adoptions keep the identity they were written with, so keep this table.
+# Saved runs, cache entries and adoptions keep the identity they were written with, so keep this table. It names
+# the formats those releases sent and decided as: a bump of either retires it.
+_RELEASED_AS = ("s1flow/request@3", "s1flow/execution@3")
 _RELEASED: dict[str, tuple[str, bool]] = {  # version -> (its source revision, whether it sent keys sorted)
     "0.1.0a2": ("be5b78a24f470d18042ddfc443235b0cc990ae21551a4b6d87cb2c7145114b8d", False),
     "0.1.0a3": ("3abe4d1a43437172e57cb9f39ec63198767b0ef4ef3661bf8c5ae7bbc5f6a756", False),
@@ -148,6 +150,8 @@ def _keys_sorted(x: Any) -> bool:
 
 def request_digests(spec: ModelSpec, state: State, questions: Questions) -> tuple[str, ...]:
     """The request's identity, then the ones the releases above wrote for the same request."""
+    if REQUEST != _RELEASED_AS[0]:
+        return (request_digest(spec, state, questions),)
     sent_as_now = _keys_sorted(state)
     common = {"model": model_digest(spec), "state": state, "questions": questions, "dependencies": _dependency_revision(spec)}
     return (request_digest(spec, state, questions), *(
@@ -157,6 +161,8 @@ def request_digests(spec: ModelSpec, state: State, questions: Questions) -> tupl
 
 def execution_digests(spec: ModelSpec, policy_digest: str) -> tuple[str, ...]:
     """The execution's identity, then the ones the releases that sent keys sorted wrote for it."""
+    if (REQUEST, EXECUTION) != _RELEASED_AS:
+        return (execution_digest(spec, policy_digest),)
     common = {"model": model_digest(spec), "policy": policy_digest, "declared_concurrency": spec.concurrency,
               "dependencies": _dependency_revision(spec)}
     return (execution_digest(spec, policy_digest), *(
