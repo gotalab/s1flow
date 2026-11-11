@@ -2,10 +2,10 @@
  "schema": "s1flow/report@1",
  "task": "enrico-screen",
  "variant": "base",
- "at": "2026-11-11T22:41:39Z",
+ "at": "2026-11-11T23:18:13Z",
  "data_digest": "24664965e4132e85f7fd24c514cb8ca7876ae0d66fef0d10032a297aec593694",
  "evaluation_contract_digest": "8286e909bf379060e7c1af700bd64ada1858f006f77186f728b2151a75b2ec78",
- "input_adapter_digest": "a35c10e8d9845f7f2b9937fd5e56caca86f21b2061d6a1a3eba6f520eb4abe3d",
+ "input_adapter_digest": "abfea862e2f4b8d350632e202d0e250d2c1322f0f5f9ca5f5067524ec3fe2a33",
  "evaluations": [
   {
    "candidate": {

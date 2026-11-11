@@ -2,10 +2,11 @@
 
 240 photos from VisA's test split (Amazon's Visual Anomaly dataset), 10 defective and 10 good per item, seed 1:
 four circuit boards, capsules, candles, two kinds of macaroni, cashews, chewing gum and two fried snacks. Defects
-are small: scratches, cracks, spots, missing or bent parts, burns. The state names the item and shows its photo;
-`defect` keeps VisA's description of what is wrong, for reading the misses. Stored as WebP (quality 75) scaled to
-768 px on the long side (VisA's are about 1,300 x 1,100) to keep the repository small; the defects looked at
-stay visible at that size. Half defective, far more than a production line sees: compare models with each other.
+are small: melted wax, bubbles, scratches, cracks, spots, missing, bent, extra or stuck parts, burns. The state
+names the item and shows its photo; `defect` keeps VisA's description of what is wrong, for reading the misses.
+Stored as WebP (quality 75) scaled to 768 px on the long side (VisA's are 1,270 to 1,560 px wide) to keep the
+repository small; the defects looked at stay visible at that size. Half defective, far more than a production line
+sees: compare models with each other.
 """
 
 from s1flow.eval import Task
