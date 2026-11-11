@@ -11,7 +11,7 @@ from uuid import uuid4
 
 from ..client import AsyncClient, Client, loop
 from ..client.answers import Refusal
-from ..client.identity import execution_digest, state_digest
+from ..client.identity import execution_digest, execution_digests, state_digest
 from ..client.models import ModelSpec
 from ..client.state import State, has_unprepared_image
 from ..core import clock, place
@@ -47,6 +47,10 @@ class DecisionPolicy:
     @property
     def execution_digest(self) -> str:
         return execution_digest(self.model_spec, self.spec.digest)
+
+    def same_execution(self, recorded: str) -> bool:
+        """Whether a recorded execution digest is this one's, also as an earlier release wrote it."""
+        return recorded in execution_digests(self.model_spec, self.spec.digest)
 
     def _bind(self) -> ModelSpec:
         connection, wanted = self.spec.connection, self.spec.model_id

@@ -30,7 +30,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from ..client import AsyncClient
 from ..client._client import AsyncResponses, ModelRef, validate_questions
 from ..client.answers import Response
-from ..client.identity import digest, execution_digest, request_digest, require_provider_revision, model_digest
+from ..client.identity import digest, execution_digest, request_digests, require_provider_revision, model_digest
 from ..client.models import DecisionModel, ModelSpec
 from ..client.questions import Question, Questions
 from ..client.state import State
@@ -41,12 +41,6 @@ from . import evalset, records
 from .records import PredictionRecord
 from .cases import Case
 from .task import Task
-
-
-def cache_key(spec: ModelSpec, state: State, questions: Questions) -> str:
-    """The effective binding and actual input, with the request implementation revision."""
-    require_provider_revision(spec)
-    return request_digest(spec, state, questions)
 
 
 def prompt_hash(questions: Questions) -> str:
@@ -73,7 +67,8 @@ def cache_path(cache_dir: Path, key: str) -> Path:
 
 def cached(cache_dir: Path, spec: ModelSpec, state: State, questions: Questions) -> bool:
     """Whether the cache holds the answer `call` would read for this call (no call is made)."""
-    return cache_path(cache_dir, cache_key(spec, state, questions)).exists()
+    require_provider_revision(spec)
+    return any(cache_path(cache_dir, key).exists() for key in request_digests(spec, state, questions))
 
 
 async def call(
@@ -81,16 +76,18 @@ async def call(
     concurrency: int | None = None, *, spec: ModelSpec,
 ) -> tuple[Cached, bool]:
     """A cached call keeps the latency and concurrency of the call that made it."""
-    key = cache_key(spec, state, questions)
-    path = cache_path(cache_dir, key)
-    if path.exists() and not fresh:
+    require_provider_revision(spec)
+    paths = [cache_path(cache_dir, key) for key in request_digests(spec, state, questions)]
+    found = None if fresh else next((p for p in paths if p.exists()), None)  # an earlier release's key too
+    if found is not None:
         try:
-            return Cached.model_validate_json(path.read_text()), True
+            return Cached.model_validate_json(found.read_text()), True
         except ValidationError:  # not a failed call: recorded as one, it would stay failed until --fresh
-            raise ConfigError(f"{path}: an answer cached in an older shape; rewrite the cache entry "
+            raise ConfigError(f"{found}: an answer cached in an older shape; rewrite the cache entry "
                               "by rerunning with --fresh, or explicitly remove this entry before rerunning") from None
     d = await client.responses.create(model=model, state=state, questions=questions)
     got = Cached(response=d, concurrency=concurrency or model.concurrency)
+    path = paths[0]
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(got.dump())
     return got, False
@@ -234,16 +231,16 @@ async def run_model(
     # Identity is checked per materialized input. An unchanged id/prompt alone is
     # insufficient, and legacy history without an identity never becomes current.
     inputs: dict[str, State] = {}
-    identities: dict[str, str] = {}
+    identities: dict[str, tuple[str, ...]] = {}  # the current one first, then those earlier releases wrote
     for case in cases:
         try:
             inputs[case.id] = task.model_state(case)
-            identities[case.id] = request_digest(spec, inputs[case.id], questions)
+            identities[case.id] = request_digests(spec, inputs[case.id], questions)
         except ConfigError:
             raise
         except Exception:
             pass  # one() records the input error using the normal outcome path
-    done_before = {r.id for r in previous if r.request_digest and r.request_digest == identities.get(r.id)
+    done_before = {r.id for r in previous if r.request_digest and r.request_digest in identities.get(r.id, ())
                    and (r.answered or r.outcome in records.REFUSED)}
     todo = [c for c in cases if c.id not in done_before]
     sem = asyncio.Semaphore(width)
@@ -255,7 +252,7 @@ async def run_model(
         base: dict[str, Any] = {
             "id": case.id, "label": case.label, "model": model_name, "variant": variant,
             "prompt": prompt, "distribution": model.capabilities.distribution,
-            "request_digest": identities.get(case.id),
+            "request_digest": identities[case.id][0] if case.id in identities else None,
         }
         now = clock.now  # stamped when the call ends
         async with sem:

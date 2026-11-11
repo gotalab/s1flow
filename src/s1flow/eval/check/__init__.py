@@ -158,7 +158,7 @@ def compare(
             fresh_notes.append(f"{name} ({v.spec.ref}) was adopted without an evaluation (adopt --spec): this check is its first measurement")
             continue
         runtime = DecisionPolicy(v.spec, client=task.where.client())
-        if (runtime.execution_digest != r.evidence.execution_digest or
+        if (not runtime.same_execution(r.evidence.execution_digest) or
                 task.input_adapter_digest != r.evidence.input_adapter_digest):
             fresh_notes.append(f"{name}: execution conditions changed; measured again with the current binding and input adapter")
         if r.selection.forced:

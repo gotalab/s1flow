@@ -216,3 +216,23 @@ def test_cached_client_reports_stale_timing_without_rebuying_raw_answer(task):
     response = asyncio.run(cached.responses.create(model=spec.model_copy(update={'concurrency': 8}), state={'i': 0}, questions=task.questions()))
     assert cached.responses.hit(response) and not cached.responses.timing_current(response)
     assert Parity.calls == before + 1
+
+
+def test_an_upgrade_keeps_the_identities_earlier_releases_wrote(monkeypatch):
+    """Digests as s1flow 0.1.0a2 and 0.1.0a5 from PyPI computed them for this input. A release's version and
+    source are in no identity now, and those releases' identities still name the same request and execution.
+    0.1.0a2 sent the keys as written, so its answer stands for a state whose keys were already sorted only."""
+    from s1flow.client import identity
+    from s1flow.client.identity import execution_digests, request_digests
+
+    spec = ModelSpec(provider='typesafe', id='jev-1.14.0')
+    qs = {'bug': Boolean(instructions='Is it a bug?')}
+    a2, a5 = '34b3a29c64ae0c289a4b2e6d15c6b4b6b051509bdef49d11d4419a54a4f81a01', 'de2ef803970cc25a361632b851d7e3c6dca791469ccc4ab13cb860facac406e9'
+    sorted_state, as_written = {'body': 'x', 'title': 'y'}, {'title': 'y', 'body': 'x'}
+    assert {a2, a5} <= set(request_digests(spec, sorted_state, qs))
+    assert a5 in request_digests(spec, as_written, qs) and a2 not in request_digests(spec, as_written, qs)
+    assert 'df0411239e2e708d86a65104c529c0f1031f0893a04a060d027b92609ae1d38f' in execution_digests(spec, 'policy')  # 0.1.0a5
+    assert '81a6a455e10757041c4df11777abee74b41e0e246d83c8e58ce521a9fc58c702' not in execution_digests(spec, 'policy')  # 0.1.0a2
+    now = request_digest(spec, sorted_state, qs), execution_digest(spec, 'policy')
+    monkeypatch.setattr(identity, 'SDK_VERSION', '9.9.9')
+    assert (request_digest(spec, sorted_state, qs), execution_digest(spec, 'policy')) == now

@@ -10,7 +10,7 @@ import datetime as dt
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 import numpy as np
 from pydantic import BaseModel, Field, TypeAdapter, ValidationError
@@ -18,7 +18,7 @@ from pydantic import BaseModel, Field, TypeAdapter, ValidationError
 from ..client.identity import digest, state_digest
 from ..core import clock
 from ..core.errors import ConfigError, DataError, NotFound
-from ..policies import log
+from ..policies import DecisionPolicy, log
 from ..policies.file import Ref
 from ..policies.log import AnsweredLog, Decision, FailedLog, FeedbackLog
 from . import evalset
@@ -28,6 +28,7 @@ from .kinds import kind_of
 from .objectives import measure
 from .objectives.declare import Objective
 from .objectives.measure import bound, cp_interval
+from .policy import EvaluatedPolicy
 from .shown import band, pct
 from .task import Task
 
@@ -234,6 +235,16 @@ def _objective_estimate(b: measure.Bound, pairs: measure.Pairs, show_interval: b
     return Estimate(value=value, interval=measure.interval(draws))
 
 
+def _same_execution(task: Task, adopted: EvaluatedPolicy) -> Callable[[str, str], bool]:
+    """Logged and adopted execution digests are the same execution when equal, or when both are the one the policy
+    runs under today as this or an earlier release wrote it (an app and the adoption on different releases)."""
+    try:
+        runtime = DecisionPolicy(adopted.spec, client=task.where.client())
+    except ConfigError:
+        return str.__eq__  # its connection is not declared here: only stored digests to compare
+    return lambda logged, evidence: logged == evidence or (runtime.same_execution(logged) and runtime.same_execution(evidence))
+
+
 def production(task: Task, cs: list[Answered], failed: list[FailedLog]) -> list[InProduction]:
     """Measure the adopted objective and rule, never substitute accuracy for its comparison."""
     out = []
@@ -246,10 +257,12 @@ def production(task: Task, cs: list[Answered], failed: list[FailedLog]) -> list[
         reason = None
         kind = task.kind
         adopted = None
+        same_execution: Callable[[str, str], bool] = str.__eq__
         try:
             parsed = Ref.parse(ref)
             adopted = task.policies.evaluated(parsed.task, parsed.version)
             kind = kind_of(adopted.spec.question, adopted.spec.asked.kind)
+            same_execution = _same_execution(task, adopted)
         except (ConfigError, NotFound) as e:
             reason = f"adoption evidence unavailable: {e}"
         known = [c for c in rows if c.label is not MISSING and kind.label_error(c.label) is None]
@@ -265,7 +278,7 @@ def production(task: Task, cs: list[Answered], failed: list[FailedLog]) -> list[
             if primary is None:
                 reason = "adoption evidence has no primary objective"
             elif any(c.decision.policy_digest != adopted.spec.digest or
-                     c.decision.execution_digest != adopted.evidence.execution_digest for c in rows):
+                     not same_execution(c.decision.execution_digest, adopted.evidence.execution_digest) for c in rows):
                 reason = "logged policy or execution identity differs from the adoption evidence"
             elif primary.code_sha256 and (primary.key not in task.custom or
                                           task.custom[primary.key].objective.code_sha256 != primary.code_sha256):

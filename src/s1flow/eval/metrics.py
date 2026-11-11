@@ -25,7 +25,7 @@ import numpy as np
 
 from ..client import cost
 from ..client.answers import CostSource
-from ..client.identity import request_digest, require_provider_revision, model_digest
+from ..client.identity import request_digests, require_provider_revision, model_digest
 from ..client.models import ModelSpec, Price
 from ..core.errors import NotFound
 from ..policies.kinds import Reading
@@ -125,13 +125,13 @@ def load(task: Task, variant: str, model: str, *, include_test: bool = False) ->
     # the identity measured at the call, and match the current materialized input.
     effective = task.where.lineup().resolved(model)
     require_provider_revision(effective)
-    expected: dict[str, str] = {}
+    expected: dict[str, tuple[str, ...]] = {}
     for c in cases:
         try:
-            expected[c.id] = request_digest(effective, task.model_state(c), task.questions(variant))
+            expected[c.id] = request_digests(effective, task.model_state(c), task.questions(variant))
         except Exception:
             continue  # unmaterializable input has no reusable answer
-    lines = [r for r in records.read(path) if r.request_digest and r.request_digest == expected.get(r.id)]
+    lines = [r for r in records.read(path) if r.request_digest and r.request_digest in expected.get(r.id, ())]
     meta_path = path.with_suffix(".meta.json")
     meta = json.loads(meta_path.read_text()) if meta_path.exists() else {}
     requested = meta.get("requested", {})
