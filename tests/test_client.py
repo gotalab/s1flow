@@ -350,3 +350,30 @@ def test_a_spec_that_is_not_utf8_is_a_clean_cli_error(tmp_path):
     assert done.returncode == 2
     assert 'Traceback' not in done.stderr and 'Traceback' not in done.stdout
     assert 'not a v2 policy' in done.stderr + done.stdout
+
+
+def test_a_state_is_sent_with_its_keys_sorted_as_its_identity_hashes_it(toml):
+    """request_digest treats key order as no difference, so every model receives one order: an evaluation
+    case and a production call that differ only in key order send the same bytes."""
+    from s1flow.client.identity import request_digest
+
+    class Recorder:
+        def __init__(self, inner):
+            self.inner, self.sent = inner, []
+            self.id, self.concurrency, self.capabilities = inner.id, inner.concurrency, inner.capabilities
+
+        async def decide(self, state, questions, *, options=None):
+            self.sent.append(json.dumps(state, ensure_ascii=False))
+            return await self.inner.decide(state, questions, options=options)
+
+    client = Client(toml)
+    model = Recorder(client.connections.build("toy"))
+    a = {"title": "bug", "meta": {"z": 1, "a": [{"y": 2, "b": 3}]}}
+    b = {"meta": {"a": [{"b": 3, "y": 2}], "z": 1}, "title": "bug"}
+    qs = {"bug": QS["bug"]}
+    spec = client.connections.resolved("toy")
+    assert request_digest(spec, a, qs) == request_digest(spec, b, qs)
+    for state in (a, b):
+        client.responses.create(model=model, state=state, questions=qs)
+    assert model.sent[0] == model.sent[1] == '{"meta": {"a": [{"b": 3, "y": 2}], "z": 1}, "title": "bug"}'
+    assert list(a) == ["title", "meta"]  # the caller's value is not changed
