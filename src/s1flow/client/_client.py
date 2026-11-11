@@ -28,7 +28,7 @@ from .models import DecisionModel, ModelSpec
 from .providers import build_one
 from .providers.contract import validate_response
 from .questions import Question, Questions
-from .state import State
+from .state import State, sorted_keys
 
 ModelRef = str | ModelSpec | DecisionModel
 _QUESTIONS: TypeAdapter[Questions] = TypeAdapter(Questions)
@@ -135,11 +135,13 @@ class AsyncResponses:
         self, *, model: ModelRef, state: State, questions: Mapping[str, Question | dict[str, Any]], options: dict[str, Any] | None = None,
     ) -> Response:
         """Ask `model` every question about `state` in one call. A question the model declined is a `Refusal`;
-        a type or an image the model does not take raises `Unsupported` before the call, a failed call `ProviderError`."""
+        a type or an image the model does not take raises `Unsupported` before the call, a failed call `ProviderError`.
+        The state is sent with its keys sorted (state.sorted_keys), the order its request identity hashes."""
         qs = validate_questions(questions)
         m = self._model(model)
+        sent = sorted_keys(state)
         try:
-            d = await m.decide(state, qs, options=options)
+            d = await m.decide(sent, qs, options=options)
             return validate_response(d, qs, m.id)  # in the try: a value that skipped pydantic fails here too
         except (AttributeError, KeyError, TypeError, ValueError, ValidationError) as e:
             raise ProviderError(f"{m.id} returned a malformed response outside the contract: {e}") from e

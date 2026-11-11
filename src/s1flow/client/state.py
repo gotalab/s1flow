@@ -42,6 +42,22 @@ Part = str | dict[str, Any] | list[Any] | int | float | bool | None | Image
 State = str | dict[str, Any] | list[Part]
 
 
+def sorted_keys(state: State) -> State:
+    """The state with every object's keys in sorted order, as every model receives it. Key order is no
+    difference to the request identity (identity.digest sorts keys), so it is none to what is sent either:
+    an evaluation case and a production call that differ only in key order send the same request."""
+    sent: State = _sorted(state)
+    return sent
+
+
+def _sorted(x: Any) -> Any:
+    if isinstance(x, dict):
+        return {k: _sorted(x[k]) for k in sorted(x, key=str)}  # by the key as JSON writes it, as identity.digest
+    if isinstance(x, (list, tuple)):
+        return [_sorted(v) for v in x]
+    return x
+
+
 def has_image(state: State) -> TypeGuard[list[Part]]:
     return isinstance(state, list) and any(isinstance(x, Image) for x in state)
 
