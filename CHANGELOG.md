@@ -4,6 +4,9 @@
 
 ### Added
 
+- A built-in `gemini` provider for Google's own Decisions API on the Gemini API (`GEMINI_API_KEY`): Gemini
+  Decision 1 without OpenRouter in between, with text, images, audio, video and PDFs. An input Google's safety
+  filters block counts as refused for that case.
 - `s1flow init`'s line-up adds Gemini Decision 1 (through OpenRouter, the same key), so a new project has a model
   that hears audio, watches video and reads PDFs. The line-up is now four models.
 - Audio, video and PDFs as input: `{"type": "audio" | "video" | "pdf", "path" | "url"}` as top-level items of a

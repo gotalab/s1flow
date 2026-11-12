@@ -5,7 +5,7 @@ A task writes media as a top-level item of a list state, by path (relative to th
     state = ["A voicemail:", {"type": "audio", "path": row["call"]}]
 
 That is the only placement every media-taking provider can express (OpenRouter's parts in the
-state array, TypeSafe `assets`, OpenAI `input_image`, Workers AI's own arrays), so media elsewhere
+state array, TypeSafe `assets`, OpenAI `input_image`, Google's content blocks, Workers AI's own arrays), so media elsewhere
 in a state are a task error.
 
 Images are resized and re-encoded (images.prepare). Audio, video and PDFs are sent as the file's
@@ -189,4 +189,21 @@ def chat_parts(state: list[Part]) -> list[Part]:
             out.append({"type": "file", "file": {"file_data": data_url(x)}})
         else:
             out.append(x)
+    return out
+
+
+GEMINI_BLOCKS = {"image": "image", "audio": "audio", "video": "video", "pdf": "document"}
+
+
+def gemini_blocks(state: list[Part]) -> list[dict[str, str]]:
+    """Google's Decisions API: content blocks (`text`, `image`, `audio`, `video`, `document`) with base64 `data`.
+    It joins adjacent text blocks with no separator, so adjacent text parts go as one block, a newline between."""
+    out: list[dict[str, str]] = []
+    for x in state:
+        if isinstance(x, (Image, Media)):
+            out.append({"type": GEMINI_BLOCKS[x.type], "data": x.data, "mime_type": x.media_type})
+        elif out and out[-1]["type"] == "text":
+            out[-1]["text"] += "\n" + text_of(x)
+        else:
+            out.append({"type": "text", "text": text_of(x)})
     return out

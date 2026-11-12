@@ -25,6 +25,7 @@ BUILTIN: dict[str, str] = {
     "openrouter": "openrouter:build",  # OpenRouter /systemone
     "cloudflare": "cloudflare:build",  # Workers AI, through clef-proxy/
     "openai-decisions": "openai_decisions:build",  # OpenAI Decisions API
+    "gemini": "gemini:build",  # Google's Decisions API on the Gemini API
     "llm": "llm:build",  # any LLM LiteLLM reaches, asked for JSON
 }
 

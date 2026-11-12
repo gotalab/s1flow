@@ -58,6 +58,7 @@ differ from the defaults. Built-in providers and the key each reads:
 | `typesafe` | TypeSafe's own | `TYPESAFE_API_KEY` |
 | `cloudflare` | Workers AI, through s1flow's `clef-proxy/` relay (`CLEF_RELAY_URL`) | none (a `wrangler` login) |
 | `openai-decisions` | OpenAI's Decisions API | `OPENAI_API_KEY` |
+| `gemini` | Google's Decisions API on the Gemini API (Gemini Decision 1) | `GEMINI_API_KEY` |
 | `llm` | an LLM through LiteLLM (`s1flow[llm]`) | the one its LiteLLM prefix reads |
 
 OpenRouter and the Gateway return what each call billed and `llm` prices from LiteLLM's list; for the others,

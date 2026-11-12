@@ -391,8 +391,50 @@
     }
    }
   },
+  "gemini-decision@google": {
+   "at": "2026-11-12T18:47:41Z",
+   "answered_by": "gemini-decision-1",
+   "checks": {
+    "boolean": {
+     "ok": true,
+     "detail": "P(true) 0.99 / 0.03"
+    },
+    "choice": {
+     "ok": true,
+     "detail": "blue 1.00 / red 1.00"
+    },
+    "score": {
+     "ok": true,
+     "detail": "2.99 / 1.02 (want 3 / 1)"
+    },
+    "image": {
+     "ok": true,
+     "detail": "red 0.99 / blue 1.00"
+    },
+    "audio": {
+     "ok": true,
+     "detail": "red 1.00 / blue 0.99"
+    },
+    "video": {
+     "ok": true,
+     "detail": "blue 0.99 / red 1.00"
+    },
+    "pdf": {
+     "ok": true,
+     "detail": "P(true) 0.99 / 0.04"
+    },
+    "images": {
+     "ok": true,
+     "detail": "red 1.00 / blue 1.00"
+    },
+    "box": {
+     "ok": false,
+     "detail": "ProviderError: 400: {\"error\":{\"message\":\"The value 'box' is not supported for 'type' at 'questions.disc'. Supported values: 'choice', 'noul', 'score'.\",\"code\":\"invalid_request"
+    }
+   }
+  },
   "gemini-decision@openrouter": {
-   "at": "2026-11-11T19:28:58Z",
+   "at": "2026-11-12T18:47:43Z",
    "answered_by": "google/gemini-decision-1-20261111",
    "checks": {
     "boolean": {
@@ -410,6 +452,18 @@
     "image": {
      "ok": true,
      "detail": "red 0.99 / blue 1.00"
+    },
+    "audio": {
+     "ok": true,
+     "detail": "red 1.00 / blue 0.99"
+    },
+    "video": {
+     "ok": true,
+     "detail": "blue 0.99 / red 1.00"
+    },
+    "pdf": {
+     "ok": true,
+     "detail": "P(true) 0.99 / 0.04"
     },
     "images": {
      "ok": true,
