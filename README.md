@@ -82,11 +82,19 @@ No labels yet? You can [ship a policy today](docs/app.md) and evaluate it later.
 - **All the major decision models, plus LLMs for comparison.** Jev (TypeSafe), Clef (Cloudflare), d1 (Liquid) and pplx-decider (Perplexity) through TypeSafe's API, OpenRouter, Vercel AI Gateway or Workers AI, OpenAI's Decisions API, LLMs through LiteLLM, or a provider you write yourself.
 - **Production feedback becomes new cases.** Record the correct answer for a decision ID, and it goes into the next comparison.
 
+## What s1flow leaves to your app
+
+s1flow runs one decision the way you measured it, and records the correct answer once you know it so it goes into
+the next comparison. What happens around the decision stays in your code or your agent framework: acting on the answer, where unsure answers go (a person, a
+larger model, a default), falling back when a call fails, the order and branching of several decisions, and
+combining scores. s1flow runs inside your Python app or as the CLI, with no server of its own.
+[Why, and what it means for your app](docs/app.md#what-s1flow-leaves-to-your-app).
+
 ## Docs
 
 | Page | What it covers |
 |---|---|
-| [Run decisions in your app](docs/app.md) | your first policy, the SDK, calling a model directly |
+| [Run decisions in your app](docs/app.md) | your first policy, the SDK, what stays in your app, calling a model directly |
 | [Evaluate and compare](docs/evaluate.md) | cases, `report`, charts, thresholds |
 | [Policies, evidence and releases](docs/policies.md) | versions, evidence, releasing with a pull request, schemas |
 | [Feedback and improvement](docs/feedback.md) | recording correct answers, measuring in production, prompt optimization |
