@@ -4,6 +4,8 @@
 
 ### Added
 
+- `s1flow init`'s line-up adds Gemini Decision 1 (through OpenRouter, the same key), so a new project has a model
+  that hears audio, watches video and reads PDFs. The line-up is now four models.
 - Audio, video and PDFs as input: `{"type": "audio" | "video" | "pdf", "path" | "url"}` as top-level items of a
   list state, like images, and `decide --audio`, `--video`, `--pdf`. They are sent as the file's own bytes
   (WAV or MP3, MP4, PDF), the same to every model. How many and how large is each model's own limit: a model

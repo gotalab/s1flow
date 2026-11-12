@@ -42,7 +42,10 @@ s1flow models --verify [--models jev:1.15]   # ask plain questions; check every 
 ```
 
 A model and its versions are declared in `s1flow.toml` (`[models."jev@openrouter".versions."1.15"]`, `id = ...`).
-`--verify` checks only what is declared; finding new versions is in `measure.md`.
+`--verify` asks every model every check, declared or not (`images` and `box` only once `image` works); finding new versions is in `measure.md`. When it
+shows `works, not declared` (`+` in `s1flow models`), propose that one line for the model's entry, such as
+`capabilities.audio = true`, for the person to review like a new entry. Add only what `--verify` showed working,
+and before a run, not during one: capabilities are part of the model's binding, so a changed entry is asked again.
 
 To add a model, the person reviews a new `[models."NAME"]` entry (by convention `model@api`): `provider`, the
 `id` the API takes, and `capabilities` (`question_types`, `image`, `audio`, `video`, `pdf`, `context_tokens`, `max_options`) where they
@@ -62,14 +65,10 @@ declare a list price (`price.input_per_mtok`, `price.as_of`, `price.source`) or 
 your own is `"package.module:factory"` and needs `provider_revision` to be evaluated. Then `s1flow doctor --models
 NAME` and `s1flow models --verify --models NAME`.
 
-For audio, video or PDF cases, the models that read them (`s1flow models --verify`, 2026-11-11) are all on OpenRouter:
+For audio, video or PDF cases, `init`'s line-up already has `gemini-decision@openrouter`, which reads all three.
+The others that read them (`s1flow models --verify`, 2026-11-11) are also on OpenRouter:
 
 ```toml
-[models."gemini-decision@openrouter"]
-provider = "openrouter"
-id = "google/gemini-decision-1"
-capabilities = { image = true, audio = true, video = true, pdf = true }
-
 [models."clef-omni@openrouter"]
 provider = "openrouter"
 id = "cloudflare/clef-omni"

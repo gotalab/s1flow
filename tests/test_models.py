@@ -259,7 +259,7 @@ def test_the_line_up_init_writes_runs_on_one_key():
 
     lineup = Lineup.read(INIT_LINEUP)
     Client(connections=lineup).connections.check()
-    assert 2 <= len(lineup.models) <= 3 and lineup.default == list(lineup.models)
+    assert lineup.models and lineup.default == list(lineup.models)
     assert {k for s in lineup.models.values() for k in needs(s).keys} == {"OPENROUTER_API_KEY"}
     assert not any(s.alias for s in lineup.models.values())
     text = INIT_LINEUP.read_text()

@@ -1,6 +1,6 @@
 """`s1flow init`: make `s1flow/` (or another directory) a project (core.place finds it by its s1flow.toml).
 
-    s1flow.toml                          the line-up, to edit: three models on one key (OPENROUTER_API_KEY)
+    s1flow.toml                          the line-up, to edit: four models on one key (OPENROUTER_API_KEY)
     tasks/<dir>/task.py                 a task to fill in, with --task
     .gitignore                          .cache/ and .env (answers and keys, kept out of git)
     <git root>/.github/workflows/s1flow-check.yml   check on PRs that change the project, with the Action; with --ci
