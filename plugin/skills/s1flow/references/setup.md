@@ -66,8 +66,19 @@ declare a list price (`price.input_per_mtok`, `price.as_of`, `price.source`) or 
 your own is `"package.module:factory"` and needs `provider_revision` to be evaluated. Then `s1flow doctor --models
 NAME` and `s1flow models --verify --models NAME`.
 
-For audio, video or PDF cases, `init`'s line-up already has `gemini-decision@openrouter`, which reads all three.
-The others that read them (`s1flow models --verify`, 2026-11-11) are also on OpenRouter:
+For audio, video or PDF cases, `init`'s line-up already has `gemini-decision@openrouter`, which reads all three. The same model on
+Google's own API answered about 130-200 ms sooner at the median (2026-11-12, US East), with the same answers and
+price; for a policy where latency matters, add it with `GEMINI_API_KEY`:
+
+```toml
+[models."gemini-decision@google"]
+provider = "gemini"
+id = "gemini-decision-1"
+capabilities = { image = true, audio = true, video = true, pdf = true, context_tokens = 262144 }
+price = { input_per_mtok = 0.10, as_of = "2026-11-12", source = "https://aistudio.google.com/docs/pricing#gemini-decision" }
+```
+
+Others that read them (`s1flow models --verify`, 2026-11-11) are on OpenRouter:
 
 ```toml
 [models."clef-omni@openrouter"]
