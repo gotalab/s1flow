@@ -11,8 +11,6 @@ Every case ends in exactly one outcome:
 | `data_error`  | `DataError`                   | data errors: the task is wrong, not the model    |
 """
 
-from __future__ import annotations
-
 import json
 from pathlib import Path
 from typing import Any, Literal
@@ -61,7 +59,7 @@ class PredictionRecord(BaseModel):
         return str(v)
 
     @model_validator(mode="after")
-    def _consistent(self) -> PredictionRecord:
+    def _consistent(self) -> "PredictionRecord":
         if (self.answered or self.outcome in REFUSED) and not self.request_digest:
             raise ValueError("answered/refused records need request_digest")
         if (self.outcome == "answered") != (self.answer is not None):

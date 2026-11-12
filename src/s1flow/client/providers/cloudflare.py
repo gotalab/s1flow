@@ -8,8 +8,6 @@ Images go in Clef's own top-level `images[]` (data URLs, at most 4), which the m
 before the state; `[image n]` stays in the state where each one was. `assets` is refused.
 """
 
-from __future__ import annotations
-
 import re
 from typing import Any
 

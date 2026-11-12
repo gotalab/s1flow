@@ -8,8 +8,6 @@ Images go as `input_image` parts (base64 data URL) in a user message, so a state
 with images is sent as one message whose content alternates text and images.
 """
 
-from __future__ import annotations
-
 import json
 from typing import Any
 

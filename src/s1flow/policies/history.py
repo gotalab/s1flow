@@ -2,8 +2,6 @@
 switches current (a measured candidate, an unmeasured spec) and each time it refuses a candidate the held-out test
 shows below, so a choice made by trying candidates on the test share leaves a trace. Nothing else writes it.
 """
-from __future__ import annotations
-
 from pathlib import Path
 from typing import Literal
 

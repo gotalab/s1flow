@@ -1,8 +1,6 @@
 """`s1flow decide`: call a model with questions given here (--model), or decide with a task's policy (--policy).
 The base install runs it."""
 
-from __future__ import annotations
-
 import argparse
 import json
 import os
@@ -75,7 +73,7 @@ def _questions(a: argparse.Namespace) -> dict[str, Any] | None:
     return json_arg(a.questions, "--questions") if a.questions else None
 
 
-def _state(a: argparse.Namespace) -> State:
+def _state(a: argparse.Namespace) -> "State":
     from ..client import media
     from ..client.state import MEDIA_KINDS, has_unprepared_media
     from ..core.errors import DataError
@@ -92,7 +90,7 @@ def _state(a: argparse.Namespace) -> State:
     return cast("State", state)
 
 
-def _line(qid: str, x: Answer) -> str:
+def _line(qid: str, x: "Answer") -> str:
     from ..client.answers import BooleanAnswer, BoxAnswer, ChoiceAnswer, ScoreAnswer
 
     if isinstance(x, BooleanAnswer):
@@ -111,7 +109,7 @@ def _line(qid: str, x: Answer) -> str:
     return f"{qid}: refused" + (f" ({x.reason})" if x.reason else "")
 
 
-def _print_response(d: Response) -> None:
+def _print_response(d: "Response") -> None:
     for qid, x in d.answers.items():
         print(_line(qid, x))
     cost = "" if d.usage.cost_usd is None else f" · ${d.usage.cost_usd:.6f}"

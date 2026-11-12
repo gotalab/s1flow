@@ -15,8 +15,6 @@ because it must name it on the wire, and nothing else: how many and how large is
 limit, and a model that refuses an input says so (Rejected), which an evaluation counts as refused.
 """
 
-from __future__ import annotations
-
 import base64
 import functools
 import hashlib

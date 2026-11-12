@@ -20,8 +20,6 @@ Everything goes through `gh api graphql` with the user's own login. GraphQL allo
 arrive and the cursor is saved, so an interrupted fetch resumes where it stopped.
 """
 
-from __future__ import annotations
-
 import argparse
 import calendar
 import collections

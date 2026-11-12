@@ -6,8 +6,6 @@
 Tasks are loaded by `s1flow.eval.task.load(project, id)`. Nothing happens on import: s1flow.toml is read only when asked.
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -62,7 +60,7 @@ class Project:
             self._client.append(c)
         return self._client[0]
 
-    def declared_connections(self) -> Connections:
+    def declared_connections(self) -> "Connections":
         """The line-up's names and specs, nothing built: what reading and ranking saved runs needs (no provider's extra)."""
         if self._client:
             return self._client[0].connections

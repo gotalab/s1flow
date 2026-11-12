@@ -13,8 +13,6 @@ that of the answering attempt alone: failed attempts and the backoff between the
 model's speed, and are counted in `retries` instead.
 """
 
-from __future__ import annotations
-
 import asyncio
 import os
 import time

@@ -6,8 +6,6 @@ encoded as PNG (JPEG when PNG is too large). Different pixels per provider would
 model comparison an image comparison.
 """
 
-from __future__ import annotations
-
 import base64
 import hashlib
 import io
@@ -28,7 +26,7 @@ PIXELS_MIN, PIXELS_MAX = 78_400, 2_458_624
 BYTES_MAX = 300_000
 
 
-def _fit(im: PILImage) -> PILImage:
+def _fit(im: "PILImage") -> "PILImage":
     from PIL import Image as PIL
 
     w, h = im.size
@@ -49,7 +47,7 @@ def _fit(im: PILImage) -> PILImage:
     return im
 
 
-def _encode(im: PILImage) -> tuple[bytes, str]:
+def _encode(im: "PILImage") -> tuple[bytes, str]:
     from PIL import Image as PIL
 
     while True:

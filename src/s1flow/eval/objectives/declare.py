@@ -38,8 +38,6 @@ Every value is measured out of fold (a rule is chosen on the fit side) and carri
 interval. Only the built-ins hold a constraint.
 """
 
-from __future__ import annotations
-
 import json
 from dataclasses import dataclass
 from typing import Any, Callable, Literal, cast

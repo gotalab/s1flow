@@ -8,8 +8,6 @@
 With --skill, the CLI also writes the Agent Skill (skill.py); the plugin brings it too.
 """
 
-from __future__ import annotations
-
 import os
 import shutil
 from importlib import metadata

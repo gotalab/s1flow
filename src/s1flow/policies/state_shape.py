@@ -1,8 +1,6 @@
 """The shape of the states a policy was evaluated on: a small JSON Schema every evaluated state fits.
 A loaded policy compares the app's states with it, so a state that changed shape is noticed."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from ..client.state import MEDIA_KINDS, Image, Media, is_media_dict

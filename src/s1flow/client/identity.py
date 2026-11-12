@@ -4,8 +4,6 @@ These are equality checks, not signatures. Credentials never contribute to them.
 source revision accompanies the SDK version so editable installs cannot certify old
 answers after the request builder or answer interpretation changes.
 """
-from __future__ import annotations
-
 import hashlib
 import json
 import re

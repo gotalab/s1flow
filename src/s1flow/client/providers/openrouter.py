@@ -10,8 +10,6 @@ be sent here (2026-10-15). Gemini Decision 1, Clef Omni and ScaleDown read audio
 through `/systemone` too (2026-11-11).
 """
 
-from __future__ import annotations
-
 import asyncio
 import time
 from pathlib import Path

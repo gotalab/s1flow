@@ -1,7 +1,5 @@
 """`s1flow run`: ask the models about a task's cases (cached)."""
 
-from __future__ import annotations
-
 import argparse
 import json
 import sys

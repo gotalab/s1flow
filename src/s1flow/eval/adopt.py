@@ -14,8 +14,6 @@ optimized question competes with the original). The policy's rule is the one the
 (`Objective.sets`), as chosen on all the dev cases.
 """
 
-from __future__ import annotations
-
 import warnings
 from dataclasses import dataclass, field
 

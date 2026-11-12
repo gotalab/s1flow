@@ -7,8 +7,6 @@ jev through the gateway is text-only ("TypeSafe AI accepts text and JSON state o
 and Laya answers 422.
 """
 
-from __future__ import annotations
-
 from pathlib import Path
 from typing import Any
 

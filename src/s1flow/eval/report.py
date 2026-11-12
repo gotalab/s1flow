@@ -1,8 +1,6 @@
 """Reports: <out>/<variant>.md and <variant>.json (`s1flow report --out DIR` writes them to DIR/questions/), from the evaluations alone. What was measured
 on the answers (the comparison, the objectives) and what the calls took (latency, API cost) are separate sections."""
 
-from __future__ import annotations
-
 import datetime as dt
 import json
 from pathlib import Path

@@ -1,8 +1,6 @@
 """`s1flow report`: every candidate on the saved runs by the task's objective; with no task, every task's current
 version and why."""
 
-from __future__ import annotations
-
 import argparse
 import json
 import sys

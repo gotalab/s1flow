@@ -11,8 +11,6 @@ A `ModelSpec` (one entry of s1flow.toml) is turned into a `DecisionModel` by a `
 built in (s1flow.client.providers) or your own ("package.module:factory").
 """
 
-from __future__ import annotations
-
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -140,7 +138,7 @@ class ModelSpec(BaseModel):
         """The version whose id `id` is, if it is one."""
         return next((k for k, v in (self.versions or {}).items() if v.id == self.id), None)
 
-    def at(self, version: str) -> ModelSpec:
+    def at(self, version: str) -> "ModelSpec":
         """The model as one version: that version's id as `id`, its capabilities over the model's, and no versions."""
         if self.versions is None or version not in self.versions:
             known = ", ".join(self.versions or {}) or "none"
@@ -152,7 +150,7 @@ class ModelSpec(BaseModel):
             update["capabilities"] = Capabilities.model_validate(own)
         return self.model_copy(update=update)
 
-    def resolved(self) -> ModelSpec:
+    def resolved(self) -> "ModelSpec":
         """What the model sends as it is: the version `id` is, when it is one."""
         return self if self.version is None else self.at(self.version)
 

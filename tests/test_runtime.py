@@ -1,5 +1,4 @@
 """Runtime-only boundaries: no evaluation imports or external provider calls."""
-from __future__ import annotations
 from conftest import fake_client, runtime_spec, ship
 
 import asyncio

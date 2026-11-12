@@ -1,7 +1,5 @@
 """`s1flow cases check | review | correct`: a task's cases, and their labels reviewed and corrected."""
 
-from __future__ import annotations
-
 import argparse
 from typing import Any, cast
 
