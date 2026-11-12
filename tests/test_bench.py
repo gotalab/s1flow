@@ -60,5 +60,5 @@ def test_a_model_has_a_list_price_exactly_when_its_api_returns_no_cost():
     for name, spec in lineup.models.items():
         if spec.provider in ("gateway", "openrouter"):
             assert spec.price is None, f"{name} is billed by {spec.provider}: drop its price"
-        elif spec.provider in ("typesafe", "cloudflare", "openai-decisions"):
+        elif spec.provider in ("typesafe", "cloudflare", "openai-decisions", "gemini"):
             assert spec.price is not None, f"{name}: {spec.provider} returns no cost, so it needs a list price"

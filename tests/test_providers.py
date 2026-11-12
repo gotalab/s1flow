@@ -1,6 +1,7 @@
 """Provider contract on recorded responses (no network)."""
 
 import asyncio
+import json
 
 import httpx
 import pytest
@@ -146,6 +147,67 @@ def test_decisions_wire_format_and_answers(monkeypatch):
     assert r.answers["urgency"].score == 0.41 and r.answers["urgency"].probabilities == {"0": 0.59, "1": 0.41}
     # The provider knows no price: s1flow.toml's list price estimates it (tests/test_prices.py).
     assert r.usage.input_tokens == 375 and r.usage.cost_usd is None and r.usage.raw == {"input_tokens": 375, "output_tokens": 0, "total_tokens": 375}
+
+
+# The response shape as documented (https://aistudio.google.com/docs/decisions-api) and returned on 2026-11-12.
+GEMINI = {
+    "answers": {
+        "route": {"type": "choice", "choice": "billing", "probabilities": {"billing": 0.99, "technical": 0.01}, "confidence": 0.99},
+        "refund": {"type": "noul", "noul": 0.03, "confidence": 0.97},
+        "urgency": {"type": "score", "score": 1.12, "legend": {"0": "low", "1": "high"},
+                    "probabilities": {"0": 0.03, "1": 0.97}, "confidence": 0.97},
+    },
+    "usage": {"total_input_tokens": 100, "input_tokens_by_modality": [{"modality": "text", "tokens": 100}],
+              "total_output_tokens": 0, "total_tokens": 100},
+}
+
+
+@respx.mock
+def test_gemini_sends_input_and_reads_system_one_answers(monkeypatch):
+    from s1flow.client.providers.gemini import BASE_URL as GEMINI_URL, GeminiModel
+
+    monkeypatch.setenv("GEMINI_API_KEY", "test")
+    route = respx.post(f"{GEMINI_URL}/decisions").mock(return_value=httpx.Response(200, json=GEMINI))
+    qs = QS | {"urgency": Score(instructions="緊急度", criteria=["low", "high"]),
+               "defect": Boolean(instructions="不良か", criteria={"true": "壊れている", "false": "好みの問題"})}
+    gemini = GEMINI | {"answers": GEMINI["answers"] | {"defect": {"type": "noul", "noul": 0.5, "confidence": 0.5}}}
+    route.mock(return_value=httpx.Response(200, json=gemini))
+    r = asyncio.run(GeminiModel("gemini-decision-1").decide({"message": "二重に請求された"}, qs))
+    req = route.calls[0].request
+    sent = json.loads(req.read())
+    assert req.headers["x-goog-api-key"] == "test" and "authorization" not in req.headers
+    assert sent["input"] == '{\n "message": "二重に請求された"\n}'  # JSON goes as its text
+    assert sent["questions"]["route"]["criteria"] == {"billing": "請求", "technical": ""}
+    assert sent["questions"]["refund"] == {"type": "noul", "instructions": "返金を求めているか"}
+    assert sent["questions"]["defect"]["criteria"] == {"true_description": "壊れている", "false_description": "好みの問題"}
+    assert sent["questions"]["urgency"] == {"type": "score", "instructions": "緊急度", "criteria": ["low", "high"]}
+    assert r.answers["route"].choice == "billing" and r.answers["route"].confidence == 0.99
+    assert r.answers["refund"].type == "boolean" and r.answers["refund"].probability == 0.03
+    assert r.answers["urgency"].score == 1.12 and r.answers["urgency"].probabilities == {"0": 0.03, "1": 0.97}
+    assert r.answered_by == "gemini-decision-1"
+    assert r.usage.input_tokens == 100 and r.usage.cost_usd is None and r.usage.raw == GEMINI["usage"]
+
+
+@respx.mock
+def test_gemini_safety_block_is_a_refusal_and_other_400s_are_failures(monkeypatch):
+    from s1flow.client.providers.gemini import BASE_URL as GEMINI_URL, GeminiModel
+
+    monkeypatch.setenv("GEMINI_API_KEY", "test")
+    blocked = {"error": {"code": "prohibited_content", "message": "Request blocked due to safety violations."}}
+    respx.post(f"{GEMINI_URL}/decisions").mock(return_value=httpx.Response(400, json=blocked))
+    with pytest.raises(Rejected, match="safety filters") as e:
+        asyncio.run(GeminiModel("gemini-decision-1").decide("x", QS))
+    assert e.value.status == 400
+    bad = {"error": {"code": 400, "message": "Invalid question key", "status": "INVALID_ARGUMENT"}}
+    respx.post(f"{GEMINI_URL}/decisions").mock(return_value=httpx.Response(400, json=bad))
+    with pytest.raises(ProviderError) as e:
+        asyncio.run(GeminiModel("gemini-decision-1").decide("x", QS))
+    assert type(e.value) is ProviderError
+    bad_key = {"error": {"code": 400, "message": "API key not valid. Please pass a valid API key.", "status": "INVALID_ARGUMENT",
+                         "details": [{"reason": "API_KEY_INVALID", "domain": "googleapis.com"}]}}
+    respx.post(f"{GEMINI_URL}/decisions").mock(return_value=httpx.Response(400, json=bad_key))
+    with pytest.raises(ProviderError, match="did not accept GEMINI_API_KEY .*check the key"):
+        asyncio.run(GeminiModel("gemini-decision-1").decide("x", QS))
 
 
 def test_clef_option_names_are_made_safe_and_mapped_back():

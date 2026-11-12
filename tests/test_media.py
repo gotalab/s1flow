@@ -110,6 +110,26 @@ def test_openrouter_sends_chat_completions_parts(monkeypatch):
     ]
 
 
+@respx.mock
+def test_gemini_sends_content_blocks(monkeypatch):
+    from s1flow.client.providers.gemini import BASE_URL as GEMINI_URL, GeminiModel
+
+    monkeypatch.setenv("GEMINI_API_KEY", "t")
+    answers = {"callback": {"type": "choice", "choice": "yes", "probabilities": {"yes": 0.9, "no": 0.1}, "confidence": 0.9}}
+    route = respx.post(f"{GEMINI_URL}/decisions").mock(return_value=httpx.Response(200, json={"answers": answers}))
+    mp3, video, pdf = media.prepare("audio", MP3), media.prepare("video", MP4), media.prepare("pdf", PDF)
+    caps = Capabilities(audio=True, video=True, pdf=True)
+    asyncio.run(GeminiModel("gemini-decision-1", capabilities=caps).decide(["留守電", {"from": "店"}, WAV, mp3, video, pdf, "以上"], Q))
+    assert json.loads(route.calls[0].request.read())["input"] == [
+        {"type": "text", "text": '留守電\n{\n "from": "店"\n}'},  # adjacent text joined: the API adds no separator
+        {"type": "audio", "data": WAV.data, "mime_type": "audio/wav"},
+        {"type": "audio", "data": mp3.data, "mime_type": "audio/mpeg"},
+        {"type": "video", "data": video.data, "mime_type": "video/mp4"},
+        {"type": "document", "data": pdf.data, "mime_type": "application/pdf"},
+        {"type": "text", "text": "以上"},
+    ]
+
+
 def test_a_model_takes_only_the_kinds_it_declares():
     model = OpenRouterModel("cloudflare/clef-omni", capabilities=Capabilities(image=True, audio=True, video=True))
     check_supported(model, ["x", WAV], Q)

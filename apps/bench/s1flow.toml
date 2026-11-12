@@ -22,7 +22,7 @@
 # per_request, per_image, as_of (when it was read) and source (where to check it).
 #
 # `provider` is a built-in kind (s1flow/client/providers/__init__.py: typesafe, gateway, openrouter,
-# cloudflare, openai-decisions, llm) or your own as "package.module:factory".
+# cloudflare, openai-decisions, gemini, llm) or your own as "package.module:factory".
 
 # What `s1flow run` compares without --models.
 # Each needs only a key. The full comparison names its models with --models (the bench's reports list them).
@@ -164,7 +164,20 @@ provider = "openrouter"
 id = "google/gemini-decision-1"
 capabilities.context_tokens = 262144
 capabilities.image = true
-note = "Google Gemini Decision 1 (2026-11-11); Google's own Decisions API has no provider here yet."
+note = "Google Gemini Decision 1 (2026-11-11), through OpenRouter. gemini-decision@google is the same model on Google's own API."
+
+[models."gemini-decision@google"]
+provider = "gemini"
+id = "gemini-decision-1"
+capabilities.context_tokens = 262144
+capabilities.image = true
+capabilities.audio = true
+capabilities.video = true
+capabilities.pdf = true
+price.input_per_mtok = 0.10
+price.as_of = "2026-11-12"
+price.source = "https://aistudio.google.com/docs/pricing#gemini-decision (paid tier; no output charge)"
+note = "Google Gemini Decision 1 on Google's own Decisions API (2026-11-12)."
 
 [models."reflex@openrouter"]
 provider = "openrouter"

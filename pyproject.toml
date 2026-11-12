@@ -210,7 +210,7 @@ ignore_imports = ["s1flow.client.images -> PIL", "s1flow.client.providers.llm ->
 [[tool.importlinter.contracts]]
 name = "Decision-model providers need no LiteLLM or evaluation stack"
 type = "forbidden"
-source_modules = ["s1flow.client.providers.typesafe", "s1flow.client.providers.gateway", "s1flow.client.providers.openrouter", "s1flow.client.providers.cloudflare", "s1flow.client.providers.openai_decisions"]
+source_modules = ["s1flow.client.providers.typesafe", "s1flow.client.providers.gateway", "s1flow.client.providers.openrouter", "s1flow.client.providers.cloudflare", "s1flow.client.providers.openai_decisions", "s1flow.client.providers.gemini"]
 forbidden_modules = ["numpy", "scipy", "sklearn", "litellm", "PIL", "s1flow.client.providers.llm"]
 ignore_imports = ["s1flow.client.images -> PIL"]  # inside the functions that prepare an image
 
