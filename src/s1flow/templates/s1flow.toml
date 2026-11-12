@@ -41,6 +41,7 @@ capabilities.image = true
 [models."gemini-decision@openrouter"]
 provider = "openrouter"
 id = "google/gemini-decision-1"  # the one here that also hears audio, watches video and reads PDFs (2026-11-12)
+capabilities.context_tokens = 262144
 capabilities.image = true
 capabilities.audio = true
 capabilities.video = true

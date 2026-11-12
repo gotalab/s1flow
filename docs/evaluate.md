@@ -40,7 +40,7 @@ labelled cases to hold out a test share, `run` still asks the models and writes 
 `s1flow init` creates an `s1flow/` project and nothing else. With `--ci` it also writes a pull request check to
 `.github/workflows/`; with `--skill`, the Agent Skill (or install it as a plugin, as step 2 of the
 [quick start](../README.md#quick-start) shows). The project's line-up compares four decision models that all work with a single key, `OPENROUTER_API_KEY`
-(about $0.02 per 1,000 calls on issue-sized inputs). Cases can come from GitHub issues, app logs or labels you
+($0.01 to $0.05 per 1,000 calls on issue-sized inputs). Cases can come from GitHub issues, app logs or labels you
 already have. Fetching cases from GitHub (the Skill's `scripts/github.py`) needs the `gh` CLI, installed and signed in.
 
 A `Task` defines an evaluation: the data, how to read the label, the question, the objective, the constraints
