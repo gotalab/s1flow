@@ -3,7 +3,7 @@ A loaded policy compares the app's states with it, so a state that changed shape
 
 from typing import Any
 
-from ..client.state import Image
+from ..client.state import MEDIA_KINDS, Image, Media, is_media_dict
 
 JSONSchema = dict[str, Any]  # a JSON Schema document is free-form by definition
 
@@ -25,10 +25,10 @@ def schema_of(values: list[Any]) -> JSONSchema:
 
 
 def _kind(v: Any) -> str:
-    if isinstance(v, Image):
-        return "image"
+    if isinstance(v, (Image, Media)):
+        return v.type
     if isinstance(v, dict):
-        return "image" if v.get("type") == "image" else "object"
+        return v["type"] if is_media_dict(v) else "object"
     if isinstance(v, bool):
         return "boolean"
     if isinstance(v, (int, float)):
@@ -46,8 +46,8 @@ def mismatch(schema: JSONSchema, value: Any, at: str = "state") -> list[str]:
         tries = [mismatch(s, value, at) for s in schema["anyOf"]]
         return [] if any(not t for t in tries) else min(tries, key=len)
     want = schema.get("type")
-    if want == "image":
-        return [] if _kind(value) == "image" else [f"{at}: expected an image"]
+    if want in MEDIA_KINDS:
+        return [] if _kind(value) == want else [f"{at}: expected {want}"]
     got = _kind(value)
     if want == "integer" and isinstance(value, int) and not isinstance(value, bool):
         return []
@@ -79,7 +79,7 @@ def validate_schema(schema: JSONSchema) -> None:
     known = {"type", "properties", "required", "items", "anyOf", "additionalProperties"}
     if set(schema) - known:
         raise ValueError(f"unsupported input shape keywords: {sorted(set(schema) - known)}")
-    if "type" in schema and schema["type"] not in {"object", "array", "string", "number", "integer", "boolean", "null", "image"}:
+    if "type" in schema and schema["type"] not in {"object", "array", "string", "number", "integer", "boolean", "null", *MEDIA_KINDS}:
         raise ValueError("unsupported input shape type")
     if "anyOf" in schema and set(schema) != {"anyOf"}:
         raise ValueError("input shape anyOf cannot combine with other keywords")

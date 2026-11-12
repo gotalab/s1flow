@@ -11,7 +11,7 @@ from ..client import AsyncClient, Client, loop
 from ..client.answers import Refusal
 from ..client.identity import execution_digest, state_digest
 from ..client.models import ModelSpec
-from ..client.state import State, has_unprepared_image
+from ..client.state import State, has_unprepared_media
 from ..core import clock, place
 from ..core.errors import ConfigError, DataError, NotFound, ProviderError, Rejected, TimedOut
 from . import log as logs
@@ -77,10 +77,10 @@ class DecisionPolicy:
         try:
             input_digest = state_digest(state)
         except (ValueError, TypeError) as e:
-            raise DataError(f"policy input is not finite JSON or prepared Image data: {e}") from None
+            raise DataError(f"policy input is not finite JSON or prepared media: {e}") from None
         try:
-            if has_unprepared_image(state):
-                raise DataError('policy input has an image reference; prepare an Image explicitly before deciding')
+            if has_unprepared_media(state):
+                raise DataError('policy input has a media reference; prepare it explicitly (media.prepare) before deciding')
             if spec.state_schema is not None and (wrong := mismatch(spec.state_schema, state)):
                 raise DataError(f'{spec.ref}: input shape mismatch: {"; ".join(wrong[:3])}')
             try:

@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Audio, video and PDFs as input: `{"type": "audio" | "video" | "pdf", "path" | "url"}` as top-level items of a
+  list state, like images, and `decide --audio`, `--video`, `--pdf`. They are sent as the file's own bytes
+  (WAV or MP3, MP4, PDF), the same to every model. How many and how large is each model's own limit: a model
+  that refuses an input counts as refused for that case.
+  A model declares `capabilities.audio`, `video`, `pdf`, and `s1flow models --verify` checks each with an input
+  only a model that hears, watches or reads it can answer. Through OpenRouter, Gemini Decision 1 takes all three,
+  Clef Omni audio and video, ScaleDown Classify 1 PDFs (the Skill's setup reference has their entries).
+
+### Changed
+
+- `ImageRef` is now `MediaRef`, and state preparation moved from `s1flow.client.images` to `s1flow.client.media`
+  (`media.materialize`, `media.prepare(kind, data)`).
+- s1flow no longer caps a state at 4 images; a model that takes fewer refuses the case, which counts as refused.
+
 ## 0.1.0a5 (2026-11-12)
 
 ### Added

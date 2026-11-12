@@ -13,7 +13,7 @@ from typing import Any
 
 from ...core.errors import Unsupported
 from ..answers import Answer, BooleanAnswer, ChoiceAnswer, Response, ScoreAnswer, Usage
-from ..images import openai_content
+from ..media import openai_content, images_only
 from ..models import Capabilities, ModelBuild, ModelSpec, check_supported
 from ..questions import Questions
 from ..state import State, has_image
@@ -70,6 +70,7 @@ class DecisionsModel:
         self.capabilities = capabilities or Capabilities()
 
     def request(self, state: State, questions: Questions, *, options: dict[str, Any] | None = None) -> Request:
+        images_only(state, self.id)
         if has_image(state):
             input_: Any = [{"role": "user", "content": openai_content(state)}]
         else:

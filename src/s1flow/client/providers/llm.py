@@ -32,7 +32,7 @@ from . import pricing
 from ...core.errors import ConfigError, ProviderError, Rejected
 from ..answers import Answer, BooleanAnswer, BoxAnswer, BoxEdges, ChoiceAnswer, Response, ScoreAnswer, Usage
 from ..boxes import iou
-from ..images import data_url, placeholders
+from ..media import data_url, images_only, placeholders
 from ..models import Capabilities, ModelBuild, ModelSpec, Price, check_supported
 from ..questions import Boolean, Choice, Questions, Score
 from ..state import Image, State, has_image
@@ -104,6 +104,7 @@ def render_prompt(state: State, questions: Questions, box_units: BoxUnits = "k10
 
 
 def user_content(state: State, questions: Questions, box_units: BoxUnits = "k1000") -> str | list[dict[str, Any]]:
+    images_only(state, "the LLM baseline")
     if not has_image(state):
         return render_prompt(state, questions, box_units)
     text_state, imgs = placeholders(state)
