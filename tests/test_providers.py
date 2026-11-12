@@ -203,6 +203,11 @@ def test_gemini_safety_block_is_a_refusal_and_other_400s_are_failures(monkeypatc
     with pytest.raises(ProviderError) as e:
         asyncio.run(GeminiModel("gemini-decision-1").decide("x", QS))
     assert type(e.value) is ProviderError
+    bad_key = {"error": {"code": 400, "message": "API key not valid. Please pass a valid API key.", "status": "INVALID_ARGUMENT",
+                         "details": [{"reason": "API_KEY_INVALID", "domain": "googleapis.com"}]}}
+    respx.post(f"{GEMINI_URL}/decisions").mock(return_value=httpx.Response(400, json=bad_key))
+    with pytest.raises(ProviderError, match="did not accept GEMINI_API_KEY .*check the key"):
+        asyncio.run(GeminiModel("gemini-decision-1").decide("x", QS))
 
 
 def test_clef_option_names_are_made_safe_and_mapped_back():
