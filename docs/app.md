@@ -92,8 +92,30 @@ promise that production inputs have the same shape as the ones you evaluated.
 A `DecisionRule` can set a `threshold` (for a yes/no question, or a choice question with a positive option) and a
 `min_probability`.
 `Decision.below_min_probability` is `None` when no minimum is set, `True` when the answer's probability is below it, and
-`False` otherwise. It doesn't mean the answer is right, or that the action is allowed. Your app decides what to
-do, who is allowed to do it, and when to escalate or fall back.
+`False` otherwise. It doesn't mean the answer is right, or that the action is allowed. What happens next is up to
+your app (see [What s1flow leaves to your app](#what-s1flow-leaves-to-your-app)).
+
+## What s1flow leaves to your app
+
+s1flow keeps something only if changing it would change what your evaluation measured (the request sent to the
+model, the model version, how the answer is read against the threshold, enforcing the time limit you pass), or if it
+is needed to record the correct answer later (decision IDs, the log, feedback). Everything around a decision belongs
+to your code or your agent framework, because changing it doesn't change the numbers you measured for that decision:
+
+- **Acting on the answer.** s1flow returns the decision. What your app does with it, and whether it is allowed to,
+  is your code.
+- **Where unsure answers go.** When `below_min_probability` is `True`, the answer's probability is below your
+  minimum. Sending it to a person, a larger model or a default is your code.
+- **Falling back when a call fails.** A failed call, or one past its [time limit](#time-limit), raises
+  `ProviderError`. s1flow doesn't switch to another model: another model is a separate thing to measure.
+- **Order, branching and loops.** Which decisions run, in what order and how many times, belongs to your code or a
+  framework. Call `policy.decide` inside it.
+- **Combining scores.** Weighting, ranking or choosing from several scores is your own calculation.
+
+s1flow runs in two ways: as a library inside your Python app, which is the path for production, and as the CLI, for
+CI, GitHub Actions, scripts and hooks that run now and then. Each CLI call starts a new process and opens a new
+connection, which adds a few hundred milliseconds, so it doesn't suit decisions a person or a loop is waiting on.
+s1flow has no server of its own; to serve decisions over HTTP, wrap `policy.decide` in your web framework.
 
 ## Errors
 
