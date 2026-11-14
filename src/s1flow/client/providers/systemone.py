@@ -9,8 +9,6 @@ providers is changing this module.
 OpenAI's Decisions API (openai_decisions.py) and the LLMs (llm.py) speak their own.
 """
 
-from __future__ import annotations
-
 from typing import Any
 
 from ..answers import Answer, BooleanAnswer, BoxAnswer, BoxEdges, ChoiceAnswer, ScoreAnswer

@@ -2,8 +2,6 @@
 a s1flow.toml whose models are this module's fakes, and tasks attached to them; the CLI in this process;
 a runtime policy and a client for it; tasks and evaluations written in a test."""
 
-from __future__ import annotations
-
 import contextlib
 import io
 import json

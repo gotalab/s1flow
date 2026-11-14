@@ -31,8 +31,6 @@ Here the versions are chosen and the verdict given; calls.py asks them, paired.p
 writes the PR comment. Nothing is written but the answer cache.
 """
 
-from __future__ import annotations
-
 import asyncio
 import random
 from typing import Literal

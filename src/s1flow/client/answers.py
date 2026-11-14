@@ -6,8 +6,6 @@ Field names follow the decision-model SDKs (TypeSafe, OpenAI, OpenRouter, Worker
 declined is a `Refusal`, the others of the same call still answered (OpenAI's per-question refusal).
 """
 
-from __future__ import annotations
-
 from typing import Annotated, Any, Literal, Union
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -23,13 +21,13 @@ class BoxEdges(BaseModel):
     right: float = Field(ge=0, le=1)
 
     @model_validator(mode="after")
-    def _ordered(self) -> BoxEdges:
+    def _ordered(self) -> "BoxEdges":
         if self.top > self.bottom or self.left > self.right:
             raise ValueError(f"box edges out of order: {self}")
         return self
 
     @classmethod
-    def clipped(cls, top: float, bottom: float, left: float, right: float) -> BoxEdges:
+    def clipped(cls, top: float, bottom: float, left: float, right: float) -> "BoxEdges":
         """A model's box, clipped into the image and put in order (a float a hair past 1 is not a failure)."""
         c = lambda v: min(1.0, max(0.0, float(v)))
         (t, b), (l, r) = sorted((c(top), c(bottom))), sorted((c(left), c(right)))

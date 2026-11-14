@@ -15,10 +15,10 @@ from .answers import Answer, BooleanAnswer, BoxAnswer, BoxEdges, ChoiceAnswer, R
 from .models import Capabilities, DecisionModel, ModelBuild, ModelSpec, Price, ProviderFactory
 from .providers.needs import Needs, declares
 from .questions import Boolean, Box, Choice, Question, Questions, QuestionType, Score
-from .state import Image, ImageRef, State
+from .state import Image, Media, MediaRef, State
 
 __all__ = [
     "Answer", "AsyncClient", "Boolean", "BooleanAnswer", "Box", "BoxAnswer", "BoxEdges", "Capabilities", "Choice", "ChoiceAnswer",
-    "Client", "Response", "DecisionModel", "Given", "Image", "ImageRef", "ModelBuild", "ConnectionInfo", "ModelSpec", "Needs", "Price", "ProviderFactory",
+    "Client", "Response", "DecisionModel", "Given", "Image", "Media", "MediaRef", "ModelBuild", "ConnectionInfo", "ModelSpec", "Needs", "Price", "ProviderFactory",
     "Question", "QuestionType", "Questions", "Refusal", "Score", "ScoreAnswer", "State", "Usage", "declares",
 ]

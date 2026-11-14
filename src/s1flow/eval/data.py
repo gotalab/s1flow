@@ -4,15 +4,13 @@ Collecting is the agent's work (any source, converted in a few lines to the task
 this is the one place that says whether the result is usable.
 """
 
-from __future__ import annotations
-
 import json
 from collections import Counter
 
 from pydantic import BaseModel
 
 from ..core.errors import DataError
-from ..client.state import has_unprepared_image
+from ..client.state import has_unprepared_media
 from . import evalset
 from .cases import Case
 from .shown import pct
@@ -56,7 +54,7 @@ def check(task: Task) -> DataCheck:
             errors.append(f"{c.id}: {wrong}")
         if c.state in (None, "", [], {}):
             errors.append(f"{c.id}: the state is empty")
-        elif has_unprepared_image(c.state):
+        elif has_unprepared_media(c.state):
             try:
                 task.model_state(c)
             except DataError as e:

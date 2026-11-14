@@ -1,8 +1,6 @@
 """What check measures on each version's answers, with objectives/measure.py's measures: a summary of each, and
 the paired bootstrap of the difference between two (both read on the same resamples of the cases)."""
 
-from __future__ import annotations
-
 from typing import Callable, Literal
 
 import numpy as np

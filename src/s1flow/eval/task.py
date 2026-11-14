@@ -2,8 +2,6 @@
 states and labels, how it is split and what it optimizes. Its cases are read by eval/cases.py.
 """
 
-from __future__ import annotations
-
 import hashlib
 import importlib.util
 import inspect
@@ -14,7 +12,7 @@ from typing import TYPE_CHECKING, Any, Callable, Literal, cast
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from ..client import images
+from ..client import media
 from ..client.identity import digest
 from ..client.questions import Question
 from ..client.state import State
@@ -105,7 +103,7 @@ class Task:
     show: Callable[[Row], str] | None = None  # one line per case in reports
     dir: Path = Path()
     optimized: dict[str, Optimized] = field(default_factory=dict)  # tasks/<id>/optimized/*.json, by variant
-    project: Project | None = field(default=None, repr=False)
+    project: "Project | None" = field(default=None, repr=False)
     _cases: Cases | None = field(default=None, init=False, repr=False)
     custom: dict[str, Custom] = field(default_factory=dict, init=False, repr=False)  # the task's custom objectives, by key
     objectives: list[Objective] = field(default_factory=list, init=False, repr=False)  # the objective, then those in `tiebreak`
@@ -163,7 +161,7 @@ class Task:
 
     @property
     def data_digest(self) -> str:
-        """Current source data and materialized model inputs, including referenced image bytes."""
+        """Current source data and materialized model inputs, including referenced media bytes."""
         cases = self.load_cases()
         cases.forget()
         return digest({"source": cases.data_sha256(), "cases": [
@@ -194,13 +192,13 @@ class Task:
                        "source": source, "module_source": module_source})
 
     @property
-    def where(self) -> Project:
+    def where(self) -> "Project":
         if self.project is None:
             raise ConfigError(f"{self.id} was not loaded from a project (Project.task)")
         return self.project
 
     @property
-    def policies(self) -> Store:
+    def policies(self) -> "Store":
         """The project's policies, with their evidence (eval/policy.py)."""
         from .policy import Store
 
@@ -215,7 +213,7 @@ class Task:
         """What measures the task's custom objectives, by key (measure.bound)."""
         return {k: x.measure for k, x in self.custom.items()}
 
-    def copy(self, **changes: Any) -> Task:
+    def copy(self, **changes: Any) -> "Task":
         """The same task with some fields changed (another objective, tiebreak, constraints), the cases it read kept.
         A resolved custom objective passed back (one of `objectives`) is declared again with its function."""
         mine = lambda x: self.custom.get(x.key, x) if isinstance(x, Objective) else x  # noqa: E731
@@ -248,8 +246,8 @@ class Task:
         self.variants[art.variant] = art.question
 
     def model_state(self, case: Case) -> State:
-        """The state a model receives: images loaded and prepared (client/images.materialize)."""
-        return images.materialize(case.state, self.dir)
+        """The state a model receives: media loaded and prepared (client/media.materialize)."""
+        return media.materialize(case.state, self.dir)
 
     def load_cases(self) -> Cases:
         """The task's cases (eval/cases.py): its rows, production's feedback, the corrections. Read once."""
@@ -258,7 +256,7 @@ class Task:
         return self._cases
 
 
-def load(project: Project, task_id: str) -> Task:
+def load(project: "Project", task_id: str) -> Task:
     path = project.task_dir(task_id) / "task.py"
     spec = importlib.util.spec_from_file_location(f"s1flow_task_{path.parent.name}", path)
     if spec is None or spec.loader is None:

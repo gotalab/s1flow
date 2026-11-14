@@ -1,7 +1,5 @@
 """The PR comment a check writes (`s1flow check --markdown`), found again by its marker."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -39,7 +37,7 @@ def error_markdown(task_id: str, message: str) -> str:
     return "\n".join([MARKER.format(task=task_id), f"### s1flow check · {task_id}: ⚠️ could not run", "", f"- {message}"]) + "\n"
 
 
-def markdown(task: Task, r: CheckResult) -> str:
+def markdown(task: Task, r: "CheckResult") -> str:
     o0 = task.primary
     if r.verdict == "pending":
         return "\n".join([MARKER.format(task=task.id), f"### s1flow check · {task.id}: ⏸ pending", "", *[f"- {x}" for x in r.reasons + r.notes]]) + "\n"

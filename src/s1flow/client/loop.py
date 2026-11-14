@@ -5,8 +5,6 @@ under a running loop), keeps the HTTP connections between calls, and carries the
 OTel parent span).
 """
 
-from __future__ import annotations
-
 import asyncio
 import contextvars
 import threading

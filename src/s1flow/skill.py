@@ -9,8 +9,6 @@ content no longer matches its recorded hash was changed here and is kept unless 
 does not know (a copy made by hand).
 """
 
-from __future__ import annotations
-
 import hashlib
 import json
 import os

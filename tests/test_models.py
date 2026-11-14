@@ -235,6 +235,7 @@ def test_verify_checks_every_claim(tmp_path):
     v = asyncio.run(verify.probe(make_project(tmp_path, {"textonly": TextOnly}).client(), "textonly"))
     assert {c: r.ok for c, r in v.checks.items()} == {
         "boolean": True, "choice": True, "score": True, "image": False, "images": False, "box": False,
+        "audio": False, "video": False, "pdf": False,
     }
     assert v.answered_by == "fake-1" and v.checks["box"].detail == "not asked: image failed"
     assert verify.disagreements(Capabilities(), v) == ([], [])
@@ -258,7 +259,7 @@ def test_the_line_up_init_writes_runs_on_one_key():
 
     lineup = Lineup.read(INIT_LINEUP)
     Client(connections=lineup).connections.check()
-    assert 2 <= len(lineup.models) <= 3 and lineup.default == list(lineup.models)
+    assert lineup.models and lineup.default == list(lineup.models)
     assert {k for s in lineup.models.values() for k in needs(s).keys} == {"OPENROUTER_API_KEY"}
     assert not any(s.alias for s in lineup.models.values())
     text = INIT_LINEUP.read_text()

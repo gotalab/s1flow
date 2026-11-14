@@ -1,7 +1,5 @@
 """Asking a version about the test cases as production does (policies.Policy), through the evaluation's cache."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import dataclass, field
 

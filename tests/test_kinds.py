@@ -1,7 +1,5 @@
 """policies/kinds.py: one class per type of question, the one place that reads its answers and checks its labels."""
 
-from __future__ import annotations
-
 import pytest
 
 from s1flow.client import Boolean, BooleanAnswer, Box, BoxAnswer, BoxEdges, Choice, ChoiceAnswer, Score

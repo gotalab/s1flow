@@ -14,8 +14,6 @@ interval, and the held-out test share is read at the rules chosen on the rest.
                         policy has no rule (None).
 """
 
-from __future__ import annotations
-
 import json
 from collections.abc import Sequence
 from dataclasses import dataclass, field, replace
@@ -136,7 +134,7 @@ def load(task: Task, variant: str, model: str, *, include_test: bool = False) ->
     meta = json.loads(meta_path.read_text()) if meta_path.exists() else {}
     requested = meta.get("requested", {})
     expected_concurrency = effective.concurrency
-    if requested.get("model_digest") == model_digest(effective) and requested.get("declared_concurrency") == effective.concurrency:
+    if requested.get("model_digest") in (model_digest(effective), model_digest(effective, released=True)) and requested.get("declared_concurrency") == effective.concurrency:
         expected_concurrency = requested.get("concurrency")
     # Reuse a genuine raw answer while refusing to carry its timing into a
     # different measurement configuration. Only --fresh can measure that width.

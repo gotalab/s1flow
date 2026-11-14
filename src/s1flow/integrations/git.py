@@ -1,8 +1,6 @@
 """git, for the commands that record what was decided: the commit a policy was made at, and who picked it.
 The evaluation itself runs no command and changes nothing outside the project (its runs, split files and policies)."""
 
-from __future__ import annotations
-
 import subprocess
 from pathlib import Path
 

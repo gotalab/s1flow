@@ -7,8 +7,6 @@ Lineup owns configuration data, validation and name/version resolution only. It 
 providers nor owns a provider cache. Client.connections owns those runtime operations.
 """
 
-from __future__ import annotations
-
 import re
 import tomllib
 from pathlib import Path
@@ -36,13 +34,13 @@ class Lineup(BaseModel):
         return v
 
     @model_validator(mode="after")
-    def _default_known(self) -> Lineup:
+    def _default_known(self) -> "Lineup":
         if unknown := [n for n in self.default if n not in self.models]:
             raise ValueError(f"default names models that are not in the line-up: {unknown}")
         return self
 
     @classmethod
-    def read(cls, path: Path) -> Lineup:
+    def read(cls, path: Path) -> "Lineup":
         """Read s1flow.toml and check its shape; nothing is built."""
         path = place.absolute(path, "connections")
         try:

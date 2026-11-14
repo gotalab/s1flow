@@ -1,8 +1,6 @@
 """Per-token prices from the AI Gateway model list, fetched once per process (and kept for a day in
 the project's cache when there is one)."""
 
-from __future__ import annotations
-
 import json
 import os
 import threading

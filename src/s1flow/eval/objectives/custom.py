@@ -18,8 +18,6 @@ and nothing is registered globally. A reading is None where the call failed. No 
 one, a custom one does not (yet).
 """
 
-from __future__ import annotations
-
 import hashlib
 import inspect
 import json

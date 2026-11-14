@@ -6,8 +6,6 @@
 A format change edits the type, its schema (this script) and its fixtures (schema/fixtures/) in one commit.
 """
 
-from __future__ import annotations
-
 import argparse
 import json
 import sys

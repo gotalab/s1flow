@@ -1,5 +1,4 @@
 """A portable set of v2 execution specifications, without evaluation records."""
-from __future__ import annotations
 from pathlib import Path
 from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
@@ -16,7 +15,7 @@ class Entry(BaseModel):
     policy: PolicySpec
 
     @model_validator(mode='after')
-    def _content(self) -> Entry:
+    def _content(self) -> "Entry":
         if self.policy.version != self.version or self.policy.digest != self.digest:
             raise ValueError('exported policy does not match its version or digest')
         return self
@@ -29,7 +28,7 @@ class PolicySet(BaseModel):
     policies: dict[str, Entry]
 
     @model_validator(mode='after')
-    def _references(self) -> PolicySet:
+    def _references(self) -> "PolicySet":
         if any(task != entry.policy.task for task, entry in self.policies.items()):
             raise ValueError('exported task does not match its specification')
         return self

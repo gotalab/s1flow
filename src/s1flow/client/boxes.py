@@ -1,7 +1,5 @@
 """Bounding boxes: IoU between two `BoxEdges`."""
 
-from __future__ import annotations
-
 from .answers import BoxEdges
 
 

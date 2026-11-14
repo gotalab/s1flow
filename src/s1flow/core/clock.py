@@ -2,8 +2,6 @@
 millisecond (`2026-10-22T05:00:00.123Z`). Every file s1flow writes names it `at`. Such strings sort as the times do.
 """
 
-from __future__ import annotations
-
 import datetime as dt
 
 

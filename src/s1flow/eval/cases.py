@@ -8,8 +8,6 @@ label after reading it, kept apart so the collected label and the reason it chan
 Everything downstream (runs, metrics, the evaluation set) sees cases only, with corrections applied.
 """
 
-from __future__ import annotations
-
 import hashlib
 import json
 from dataclasses import dataclass, field, replace

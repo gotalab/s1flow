@@ -20,13 +20,13 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/automation-share-dark.svg">
-  <img alt="Ruff issues, 361 cases. Share each model can route on its own while staying 95% accurate, accuracy over all cases, median latency and API cost per 10,000 cases: Drex Max 87%, 91%, 298 ms, $0.28; d1-ultra 86%, 91%, 212 ms, $0.17; mammoth-1 86%, 91%, 222 ms, $0.47; Decider 85%, 90%, 218 ms, $0.09; Span-02 79%, 89%, 176 ms, $0.05; Jev 1.14 76%, 85%, 143 ms, $0.29; Clef 70%, 86%, 345 ms, $1.11." src="docs/images/automation-share.svg">
+  <img alt="Ruff issues, 361 cases. Share each model can route on its own while staying 95% accurate, accuracy over all cases, median latency and API cost per 10,000 cases: Drex Max 88%, 91%, 310 ms, $0.28; Decider 87%, 92%, 233 ms, $0.09; d1-ultra 87%, 90%, 256 ms, $0.17; mammoth-1 87%, 90%, 184 ms, $0.47; Span-02 83%, 88%, 252 ms, $0.05; Jev 1.14 76%, 86%, 108 ms, $0.29; Clef 71%, 86%, 352 ms, $1.12." src="docs/images/automation-share.svg">
 </picture>
 
-Routing Ruff's issues to the area they concern, these seven models are within 6 points of each other on
-accuracy, yet the share of issues each can route on its own while staying 95% accurate ranges from 70% to 87%.
+Routing Ruff's issues to the area they concern, these seven models are within 7 points of each other on
+accuracy, yet the share of issues each can route on its own while staying 95% accurate ranges from 71% to 88%.
 That share needs a confidence with every answer, so the uncertain issues can go to a person while the rest are
-acted on. Latency and cost differ too, and do not follow the share. The numbers are a snapshot of seven of the 17
+acted on. Latency and cost differ too, and do not follow the share. The numbers are a snapshot of seven of the 19
 decision models in the [reports](apps/bench/reports), each task scored by its own objective, not a ranking of
 providers; latency depends on where you call from. Your own cases may tell a different story,
 which is exactly why you measure them.
@@ -82,11 +82,19 @@ No labels yet? You can [ship a policy today](docs/app.md) and evaluate it later.
 - **All the major decision models, plus LLMs for comparison.** Jev (TypeSafe), Clef (Cloudflare), d1 (Liquid) and pplx-decider (Perplexity) through TypeSafe's API, OpenRouter, Vercel AI Gateway or Workers AI, OpenAI's Decisions API, LLMs through LiteLLM, or a provider you write yourself.
 - **Production feedback becomes new cases.** Record the correct answer for a decision ID, and it goes into the next comparison.
 
+## What s1flow leaves to your app
+
+s1flow runs one decision the way you measured it, and records the correct answer once you know it so it goes into
+the next comparison. What happens around the decision stays in your code or your agent framework: acting on the answer, where unsure answers go (a person, a
+larger model, a default), falling back when a call fails, the order and branching of several decisions, and
+combining scores. s1flow runs inside your Python app or as the CLI, with no server of its own.
+[Why, and what it means for your app](docs/app.md#what-s1flow-leaves-to-your-app).
+
 ## Docs
 
 | Page | What it covers |
 |---|---|
-| [Run decisions in your app](docs/app.md) | your first policy, the SDK, calling a model directly |
+| [Run decisions in your app](docs/app.md) | your first policy, the SDK, what stays in your app, calling a model directly |
 | [Evaluate and compare](docs/evaluate.md) | cases, `report`, charts, thresholds |
 | [Policies, evidence and releases](docs/policies.md) | versions, evidence, releasing with a pull request, schemas |
 | [Feedback and improvement](docs/feedback.md) | recording correct answers, measuring in production, prompt optimization |

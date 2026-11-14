@@ -3,8 +3,6 @@
 Runtime files contain only execution settings. Evaluation records are separate files
 owned by s1flow.eval; reading a policy never reads those records.
 """
-from __future__ import annotations
-
 import os
 import re
 import sys
@@ -62,7 +60,7 @@ class Ref:
             raise ConfigError('a policy version is a positive integer')
 
     @classmethod
-    def parse(cls, text: str) -> Ref:
+    def parse(cls, text: str) -> "Ref":
         task, at, which = text.partition('@')
         n = version_number(which) if at else None
         if at and n is None:
@@ -87,7 +85,7 @@ class Asked(BaseModel):
     rule: DecisionRule
 
     @model_validator(mode='after')
-    def _applicable(self) -> Asked:
+    def _applicable(self) -> "Asked":
         kind = self.of()
         if self.question.type == 'choice' and not kind.options:
             raise ValueError('a choice question requires at least one option')
@@ -118,7 +116,7 @@ class PolicySpec(BaseModel):
     state_schema: JSONSchema | None = None
 
     @model_validator(mode='after')
-    def _valid(self) -> PolicySpec:
+    def _valid(self) -> "PolicySpec":
         try:
             if self.state_schema is not None:
                 validate_schema(self.state_schema)
@@ -161,7 +159,7 @@ class PolicySpec(BaseModel):
         """Hash the complete runtime specification; evaluation never enters this content."""
         return digest(self.model_dump(mode='json', by_alias=True))
 
-    def with_question(self, question: Question) -> PolicySpec:
+    def with_question(self, question: Question) -> "PolicySpec":
         data = self.model_dump(mode='python', by_alias=True)
         data['questions'] = {self.question_id: asked(question, self.rule, self.asked.kind)}
         return PolicySpec.model_validate(data)
@@ -176,7 +174,7 @@ class ChannelsFile(BaseModel):
     channels: dict[str, int] = Field(default_factory=dict)
 
     @model_validator(mode='after')
-    def _valid(self) -> ChannelsFile:
+    def _valid(self) -> "ChannelsFile":
         if set(self.channels) - {CURRENT}:
             raise ValueError('the one channel is `current`')
         for version in self.channels.values():

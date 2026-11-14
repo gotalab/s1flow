@@ -1,7 +1,5 @@
 """What every dialect reads alike: an answer that does not fit `Answer`, and a question the model declined."""
 
-from __future__ import annotations
-
 import math
 from collections.abc import Iterable, Iterator
 from contextlib import contextmanager

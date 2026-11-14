@@ -30,7 +30,7 @@ def test_decision_model_providers_build_without_litellm():
         "import sys; sys.modules['litellm'] = sys.modules['numpy'] = None\n"
         "from s1flow.client import ModelSpec\n"
         "from s1flow.client.providers import build_one\n"
-        "for p, m in [('typesafe', 'jev'), ('gateway', 'd1'), ('openrouter', 'clef'), ('cloudflare', 'kev'), ('openai-decisions', 'gpt-5-mini')]:\n"
+        "for p, m in [('typesafe', 'jev'), ('gateway', 'd1'), ('openrouter', 'clef'), ('cloudflare', 'kev'), ('openai-decisions', 'gpt-5-mini'), ('gemini', 'gemini-decision-1')]:\n"
         "    build_one('m', ModelSpec(provider=p, id=m))\n"
         "print('ok')\n"
     )

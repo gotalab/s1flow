@@ -1,7 +1,5 @@
 """`s1flow report`: one command reads the saved runs (it replaces compare and rank)."""
 
-from __future__ import annotations
-
 import json
 
 import pytest

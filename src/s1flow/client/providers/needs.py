@@ -13,8 +13,6 @@ The declaration is optional: for a provider without one, `s1flow doctor` says it
 It reads the spec alone and imports nothing the provider calls with, so it runs on the base install.
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import Any, Callable, Protocol, TypeVar, runtime_checkable
 from urllib.parse import urlsplit

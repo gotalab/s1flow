@@ -1,7 +1,5 @@
 """Focused evidence and chart tests for the canonical development comparison."""
 
-from __future__ import annotations
-
 import asyncio
 import copy
 import json

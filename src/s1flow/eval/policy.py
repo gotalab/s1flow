@@ -1,6 +1,4 @@
 """Evaluation records compose with, and reference, separately stored runtime specs."""
-from __future__ import annotations
-
 from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 from ..client.models import ModelSpec
@@ -57,7 +55,7 @@ class EvaluatedPolicy(BaseModel):
     answered_by: str
 
     @model_validator(mode='after')
-    def _same_candidate(self) -> EvaluatedPolicy:
+    def _same_candidate(self) -> "EvaluatedPolicy":
         if self.candidate != self.evidence.evaluation.candidate:
             raise ValueError('evaluation candidate does not match the selected candidate')
         if self.candidate.model != self.spec.connection:
@@ -77,12 +75,12 @@ class EvaluationRecord(BaseModel):
     answered_by: str
 
     @classmethod
-    def from_policy(cls, policy: EvaluatedPolicy) -> EvaluationRecord:
+    def from_policy(cls, policy: EvaluatedPolicy) -> "EvaluationRecord":
         return cls(policy_digest=policy.spec.digest, candidate=policy.candidate, selection=policy.selection,
                    evidence=policy.evidence, answered_by=policy.answered_by)
 
     @model_validator(mode='after')
-    def _forced_below(self) -> EvaluationRecord:
+    def _forced_below(self) -> "EvaluationRecord":
         forced_rule(self.selection, self.evidence)
         return self
 

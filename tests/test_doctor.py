@@ -64,6 +64,7 @@ def test_each_built_in_provider_declares_its_keys_and_hosts(monkeypatch):
     assert needs(spec("gateway")) == Needs(keys=("AI_GATEWAY_API_KEY",), hosts=("https://ai-gateway.vercel.sh",))
     assert needs(spec("openrouter")) == Needs(keys=("OPENROUTER_API_KEY",), hosts=("https://openrouter.ai",))
     assert needs(spec("openai-decisions")) == Needs(keys=("OPENAI_API_KEY",), hosts=("https://api.openai.com",))
+    assert needs(spec("gemini")) == Needs(keys=("GEMINI_API_KEY",), hosts=("https://generativelanguage.googleapis.com",))
     clef = needs(spec("cloudflare", "clef"))
     assert clef is not None and clef.keys == () and clef.hosts == ("http://localhost:8788",) and "wrangler" in clef.note
     monkeypatch.setenv("CLEF_RELAY_URL", "https://relay.example.com/x")

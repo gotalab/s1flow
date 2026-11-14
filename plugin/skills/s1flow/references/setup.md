@@ -42,10 +42,13 @@ s1flow models --verify [--models jev:1.15]   # ask plain questions; check every 
 ```
 
 A model and its versions are declared in `s1flow.toml` (`[models."jev@openrouter".versions."1.15"]`, `id = ...`).
-`--verify` checks only what is declared; finding new versions is in `measure.md`.
+`--verify` asks every model every check, declared or not (`images` and `box` only once `image` works); finding new versions is in `measure.md`. When it
+shows `works, not declared` (`+` in `s1flow models`), propose that one line for the model's entry, such as
+`capabilities.audio = true`, for the person to review like a new entry. Add only what `--verify` showed working,
+and before a run, not during one: capabilities are part of the model's binding, so a changed entry is asked again.
 
 To add a model, the person reviews a new `[models."NAME"]` entry (by convention `model@api`): `provider`, the
-`id` the API takes, and `capabilities` (`question_types`, `image`, `context_tokens`, `max_options`) where they
+`id` the API takes, and `capabilities` (`question_types`, `image`, `audio`, `video`, `pdf`, `context_tokens`, `max_options`) where they
 differ from the defaults. Built-in providers and the key each reads:
 
 | `provider` | API | key |
@@ -55,12 +58,39 @@ differ from the defaults. Built-in providers and the key each reads:
 | `typesafe` | TypeSafe's own | `TYPESAFE_API_KEY` |
 | `cloudflare` | Workers AI, through s1flow's `clef-proxy/` relay (`CLEF_RELAY_URL`) | none (a `wrangler` login) |
 | `openai-decisions` | OpenAI's Decisions API | `OPENAI_API_KEY` |
+| `gemini` | Google's Decisions API on the Gemini API (Gemini Decision 1) | `GEMINI_API_KEY` |
 | `llm` | an LLM through LiteLLM (`s1flow[llm]`) | the one its LiteLLM prefix reads |
 
 OpenRouter and the Gateway return what each call billed and `llm` prices from LiteLLM's list; for the others,
 declare a list price (`price.input_per_mtok`, `price.as_of`, `price.source`) or cost stays unknown. A provider of
 your own is `"package.module:factory"` and needs `provider_revision` to be evaluated. Then `s1flow doctor --models
 NAME` and `s1flow models --verify --models NAME`.
+
+For audio, video or PDF cases, `init`'s line-up already has `gemini-decision@openrouter`, which reads all three. The same model on
+Google's own API answered about 130-200 ms sooner at the median (2026-11-12, US East), with the same answers and
+price; for a policy where latency matters, add it with `GEMINI_API_KEY`:
+
+```toml
+[models."gemini-decision@google"]
+provider = "gemini"
+id = "gemini-decision-1"
+capabilities = { image = true, audio = true, video = true, pdf = true, context_tokens = 262144 }
+price = { input_per_mtok = 0.10, as_of = "2026-11-12", source = "https://aistudio.google.com/docs/pricing#gemini-decision" }
+```
+
+Others that read them (`s1flow models --verify`, 2026-11-11) are on OpenRouter:
+
+```toml
+[models."clef-omni@openrouter"]
+provider = "openrouter"
+id = "cloudflare/clef-omni"
+capabilities = { image = true, audio = true, video = true, context_tokens = 65536 }
+
+[models."classify@openrouter"]
+provider = "openrouter"
+id = "scaledown/classify-1"
+capabilities = { pdf = true }  # one PDF a request; it reads one image too, but not two
+```
 
 ## Project and connection discovery
 

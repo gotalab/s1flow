@@ -8,14 +8,12 @@ Images go in Clef's own top-level `images[]` (data URLs, at most 4), which the m
 before the state; `[image n]` stays in the state where each one was. `assets` is refused.
 """
 
-from __future__ import annotations
-
 import re
 from typing import Any
 
 from ..answers import ChoiceAnswer, Response, Usage
 from ..endpoints import cloudflare_relay
-from ..images import data_url, placeholders
+from ..media import data_url, placeholders, images_only
 from ..models import Capabilities, ModelBuild, ModelSpec, check_supported
 from ..questions import Questions
 from ..state import State, has_image
@@ -48,6 +46,7 @@ class CloudflareModel:
         self.capabilities = capabilities or Capabilities()
 
     def request(self, state: State, questions: Questions, *, options: dict[str, Any] | None = None) -> Request:
+        images_only(state, self.id)
         sent, _ = safe_options(questions)
         body: dict[str, Any] = {"model": self.model, "state": state, "questions": systemone.questions(sent)}
         if has_image(state):

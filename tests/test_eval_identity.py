@@ -1,6 +1,4 @@
 """Current evidence requires the request measured then, and dev stays separate."""
-from __future__ import annotations
-
 import asyncio
 import json
 
@@ -251,3 +249,13 @@ def test_a_format_bump_retires_what_earlier_releases_wrote(monkeypatch):
     assert request_digests(spec, {'body': 'x'}, qs) == (request_digest(spec, {'body': 'x'}, qs),)
     assert execution_digests(spec, 'policy') == (execution_digest(spec, 'policy'),)
     assert execution_digest(spec, 'policy') != execution
+
+
+def test_a_capability_left_at_its_default_is_in_no_identity():
+    """A release that adds a capability (audio, video and pdf came after 0.1.0a5) changes no saved identity;
+    declaring one does."""
+    from s1flow.client.models import Capabilities
+
+    spec = ModelSpec(provider='typesafe', id='jev-1.14.0')
+    assert model_digest(spec) == model_digest(spec.model_copy(update={'capabilities': Capabilities(audio=False, context_tokens=32_000)}))
+    assert model_digest(spec) != model_digest(spec.model_copy(update={'capabilities': Capabilities(image=True)}))

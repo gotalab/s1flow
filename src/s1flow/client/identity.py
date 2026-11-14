@@ -6,8 +6,6 @@ answer the same way keeps every saved answer, cache entry and adoption. REQUEST 
 EXECUTION are bumped by hand when that stops being true; tests/test_wire_format.py fails
 when what is sent or how an answer is read changes, so the bump is not forgotten.
 """
-from __future__ import annotations
-
 import hashlib
 import json
 import re
@@ -17,7 +15,7 @@ from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from pydantic import BaseModel, SecretBytes, SecretStr
 
-from .models import ModelSpec
+from .models import Capabilities, ModelSpec
 from .endpoints import cloudflare_relay
 from .questions import Questions
 from .state import State
@@ -70,16 +68,24 @@ except PackageNotFoundError:
     SDK_VERSION = "source"
 
 
-def model_digest(spec: ModelSpec) -> str:
-    """Effective provider, concrete id, options and capabilities; no prices or notes."""
+_UNDECLARED = Capabilities().model_dump(mode="json")
+_SINCE_0_1_0A5 = ("audio", "video", "pdf")  # capabilities the releases in _RELEASED did not have
+
+
+def model_digest(spec: ModelSpec, *, released: bool = False) -> str:
+    """Effective provider, concrete id, options and declared capabilities; no prices or notes. A capability left
+    at its default is not hashed, so a release that adds one changes no identity. `released`: as 0.1.0a2 to
+    0.1.0a5 hashed it, every capability they had."""
     s = spec.resolved()
+    declared = s.capabilities.model_dump(mode="json")
     return digest({
         "endpoint": _public(cloudflare_relay()) if s.provider == "cloudflare" else None,
         "provider": s.provider,
         "provider_revision": s.provider_revision,
         "id": s.id,
         "options": _public(s.options),
-        "capabilities": s.capabilities,
+        "capabilities": ({k: v for k, v in declared.items() if k not in _SINCE_0_1_0A5} if released
+                         else {k: v for k, v in declared.items() if v != _UNDECLARED[k]}),
     })
 
 
@@ -153,7 +159,8 @@ def request_digests(spec: ModelSpec, state: State, questions: Questions) -> tupl
     if REQUEST != _RELEASED_AS[0]:
         return (request_digest(spec, state, questions),)
     sent_as_now = _keys_sorted(state)
-    common = {"model": model_digest(spec), "state": state, "questions": questions, "dependencies": _dependency_revision(spec)}
+    common = {"model": model_digest(spec, released=True), "state": state, "questions": questions,
+              "dependencies": _dependency_revision(spec)}
     return (request_digest(spec, state, questions), *(
         digest(common | {"schema": "s1flow/request@2", "sdk": sdk, "implementation": revision})
         for sdk, (revision, sorted_sent) in _RELEASED.items() if sorted_sent or sent_as_now))
@@ -163,7 +170,7 @@ def execution_digests(spec: ModelSpec, policy_digest: str) -> tuple[str, ...]:
     """The execution's identity, then the ones the releases that sent keys sorted wrote for it."""
     if (REQUEST, EXECUTION) != _RELEASED_AS:
         return (execution_digest(spec, policy_digest),)
-    common = {"model": model_digest(spec), "policy": policy_digest, "declared_concurrency": spec.concurrency,
+    common = {"model": model_digest(spec, released=True), "policy": policy_digest, "declared_concurrency": spec.concurrency,
               "dependencies": _dependency_revision(spec)}
     return (execution_digest(spec, policy_digest), *(
         digest(common | {"schema": "s1flow/execution@2", "sdk": sdk, "implementation": revision})

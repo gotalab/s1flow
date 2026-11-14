@@ -1,7 +1,5 @@
 """`s1flow export`: each task's current policy in one file (policies.json). The base install runs it."""
 
-from __future__ import annotations
-
 import argparse
 from pathlib import Path
 from typing import Any

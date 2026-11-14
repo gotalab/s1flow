@@ -6,8 +6,6 @@ request per host, without a key: any answer, even a 404, means the host is reach
 A provider that declares nothing is shown as such and checked no further.
 """
 
-from __future__ import annotations
-
 import importlib.util
 from collections.abc import Collection, Iterable
 from dataclasses import asdict, dataclass, field

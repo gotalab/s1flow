@@ -11,8 +11,6 @@
 for a provider without one, --verify says the price cannot be checked. Nothing here runs on a call.
 """
 
-from __future__ import annotations
-
 import datetime as dt
 from pathlib import Path
 from typing import Any, Callable, Protocol, TypeVar, runtime_checkable

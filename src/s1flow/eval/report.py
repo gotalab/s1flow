@@ -1,8 +1,6 @@
 """Reports: <out>/<variant>.md and <variant>.json (`s1flow report --out DIR` writes them to DIR/questions/), from the evaluations alone. What was measured
 on the answers (the comparison, the objectives) and what the calls took (latency, API cost) are separate sections."""
 
-from __future__ import annotations
-
 import datetime as dt
 import json
 from pathlib import Path
@@ -241,7 +239,7 @@ def render(task: Task, variant: str, evs: list[Evaluation], preds: dict[str, met
     if box:
         L.append(f"Box: right at IoU {kind.iou:g} or more with the label's box. The probability is what jev returns; for an LLM, the agreement (IoU) of its repeated boxes. AUROC and ECE say how well that probability separates right from wrong.")
     if any(e.failures.unsupported for e in evs):
-        L.append("Refused / unsupported: inputs the model did not take (question type, image, length limits). The model's limit, "
+        L.append("Refused / unsupported: inputs the model did not take (question type, image, audio, video, PDF, length limits). The model's limit, "
                  "not a failed call: left out of the denominator, the candidate kept.")
     if any(e.failures.data_errors for e in evs):
         L.append("Data errors: " + ", ".join(f"{e.candidate.name} {e.failures.data_errors}" for e in evs if e.failures.data_errors)

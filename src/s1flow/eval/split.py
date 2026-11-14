@@ -5,8 +5,6 @@ Under `SMALL` dev cases, leave-one-out; from there on, stratified k-fold (k-fold
 than k cases). Nothing here calls a model: splits are recomputed over cached answers.
 """
 
-from __future__ import annotations
-
 from collections import Counter
 from dataclasses import dataclass
 from typing import Iterator

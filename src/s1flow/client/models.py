@@ -2,7 +2,7 @@
 
 What crosses the boundary:
 
-- in: a `State` (text, JSON, or a list of parts whose images are prepared `Image`s) and `Questions`
+- in: a `State` (text, JSON, or a list of parts whose media are prepared `Image`s and `Media`) and `Questions`
 - out: a `Response` (a `Refusal` for a question the model declined), or one of four errors
   (`Unsupported`, `Rejected`, `ProviderError`, `DataError`, core/errors.py)
 - declared up front: each model's `Capabilities` (s1flow.toml), checked before any call
@@ -10,8 +10,6 @@ What crosses the boundary:
 A `ModelSpec` (one entry of s1flow.toml) is turned into a `DecisionModel` by a `ProviderFactory`,
 built in (s1flow.client.providers) or your own ("package.module:factory").
 """
-
-from __future__ import annotations
 
 import re
 from dataclasses import dataclass
@@ -23,18 +21,21 @@ from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_valid
 from ..core.errors import DataError, NotFound, Unsupported
 from .answers import Response
 from .questions import TEXT_TYPES, Choice, Questions, QuestionType
-from .state import State, has_image, has_unprepared_image
+from .state import MediaKind, State, has_unprepared_media, kinds_in
 
 VERSION = re.compile(r"[^\s:/,]+")  # a version's name (ModelSpec.versions)
 
 
 class Capabilities(BaseModel):
     """Declared per model in s1flow.toml and checked before any call. Each claim is one that
-    `s1flow models --verify` tests (question types, image, box): a 200 does not prove a model sees the image."""
+    `s1flow models --verify` tests (question types, image, audio, video, pdf, box): a 200 does not prove a model sees the input."""
 
     model_config = ConfigDict(extra="forbid")
     question_types: frozenset[QuestionType] = TEXT_TYPES
     image: bool = False
+    audio: bool = False  # WAV or MP3 (media.py)
+    video: bool = False  # MP4
+    pdf: bool = False
     distribution: Literal["native", "sampled", "none"] = "native"
     context_tokens: int = Field(default=32_000, gt=0)
     max_options: int | None = Field(default=None, gt=0)
@@ -45,6 +46,9 @@ class Capabilities(BaseModel):
     # Requests a minute the model allows (a free tier's limit). The provider paces its calls to it, and
     # choosing a model shows it; it is the model's declaration, not something --verify can test.
     per_minute: int | None = Field(default=None, gt=0)
+
+    def takes(self, kind: MediaKind) -> bool:
+        return bool(getattr(self, kind))
 
     @field_serializer("question_types")
     def _sorted(self, v: frozenset[QuestionType]) -> list[QuestionType]:
@@ -134,7 +138,7 @@ class ModelSpec(BaseModel):
         """The version whose id `id` is, if it is one."""
         return next((k for k, v in (self.versions or {}).items() if v.id == self.id), None)
 
-    def at(self, version: str) -> ModelSpec:
+    def at(self, version: str) -> "ModelSpec":
         """The model as one version: that version's id as `id`, its capabilities over the model's, and no versions."""
         if self.versions is None or version not in self.versions:
             known = ", ".join(self.versions or {}) or "none"
@@ -146,7 +150,7 @@ class ModelSpec(BaseModel):
             update["capabilities"] = Capabilities.model_validate(own)
         return self.model_copy(update=update)
 
-    def resolved(self) -> ModelSpec:
+    def resolved(self) -> "ModelSpec":
         """What the model sends as it is: the version `id` is, when it is one."""
         return self if self.version is None else self.at(self.version)
 
@@ -165,13 +169,14 @@ ProviderFactory = Callable[[ModelBuild], DecisionModel]
 
 
 def check_supported(model: DecisionModel, state: State, questions: Questions) -> None:
-    if has_unprepared_image(state):  # the case is wrong whatever the model takes
-        raise DataError("the state has image references that were never prepared; pass task.model_state(case)")
+    if has_unprepared_media(state):  # the case is wrong whatever the model takes
+        raise DataError("the state has media references that were never prepared; pass task.model_state(case)")
     caps = model.capabilities
     for qid, q in questions.items():
         if q.type not in caps.question_types:
             raise Unsupported(f"{model.id} does not take {q.type} questions ({qid})")
         if caps.max_options and isinstance(q, Choice) and len(q.criteria) > caps.max_options:
             raise Unsupported(f"{model.id} takes at most {caps.max_options} options ({qid})")
-    if has_image(state) and not caps.image:
-        raise Unsupported(f"{model.id} does not take images")
+    for kind in sorted(kinds_in(state)):
+        if not caps.takes(kind):
+            raise Unsupported(f"{model.id} does not take {kind}" + ("s" if kind == "image" else ""))

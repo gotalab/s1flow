@@ -1,7 +1,5 @@
 """`s1flow optimize`: a new candidate question from task.py's optimizer; it ships nothing."""
 
-from __future__ import annotations
-
 import argparse
 from typing import Any
 

@@ -545,6 +545,86 @@
       }
      }
     }
+   },
+   "audio, video, pdf": {
+    "sent": {
+     "url": "https://openrouter.ai/api/v1/systemone",
+     "headers": {},
+     "body": {
+      "model": "typesafe/jev",
+      "state": [
+       "Listen, watch and read:",
+       {
+        "type": "input_audio",
+        "input_audio": {
+         "data": "SUQz",
+         "format": "mp3"
+        }
+       },
+       {
+        "type": "video_url",
+        "video_url": {
+         "url": "data:video/mp4;base64,AAAAGGZ0eXA="
+        }
+       },
+       {
+        "type": "file",
+        "file": {
+         "file_data": "data:application/pdf;base64,JVBERi0="
+        }
+       }
+      ],
+      "questions": {
+       "kind": {
+        "type": "choice",
+        "instructions": "What kind of issue?",
+        "criteria": {
+         "kind/bug": "it is broken",
+         "kind/question": null
+        }
+       },
+       "refund": {
+        "type": "noul",
+        "instructions": "Does it ask for a refund?"
+       },
+       "urgency": {
+        "type": "score",
+        "instructions": "How urgent?",
+        "criteria": [
+         "low",
+         "high"
+        ]
+       }
+      }
+     }
+    },
+    "read": {
+     "answered_by": "typesafe/jev",
+     "answers": {
+      "kind": {
+       "type": "choice",
+       "choice": "kind/bug",
+       "probabilities": {
+        "kind/bug": 0.8,
+        "kind/question": 0.2
+       },
+       "confidence": 0.7
+      },
+      "refund": {
+       "type": "boolean",
+       "probability": 0.1
+      },
+      "urgency": {
+       "type": "score",
+       "score": 0.6,
+       "probabilities": {
+        "0": 0.4,
+        "1": 0.6
+       },
+       "confidence": null
+      }
+     }
+    }
    }
   },
   "cloudflare": {
@@ -857,6 +937,215 @@
     },
     "read": {
      "answered_by": "gpt-6-luna",
+     "answers": {
+      "kind": {
+       "type": "choice",
+       "choice": "kind/bug",
+       "probabilities": {
+        "kind/bug": 0.8,
+        "kind/question": 0.2
+       },
+       "confidence": 0.7
+      },
+      "refund": {
+       "type": "boolean",
+       "probability": 0.1
+      },
+      "urgency": {
+       "type": "score",
+       "score": 0.6,
+       "probabilities": {
+        "0": 0.4,
+        "1": 0.6
+       },
+       "confidence": null
+      }
+     }
+    }
+   }
+  },
+  "gemini": {
+   "text": {
+    "sent": {
+     "url": "https://generativelanguage.googleapis.com/v1beta/decisions",
+     "headers": {},
+     "body": {
+      "model": "gemini-decision-1",
+      "input": "{\n \"meta\": {\n  \"a\": [\n   {\n    \"b\": 3,\n    \"y\": 2\n   }\n  ],\n  \"z\": 1\n },\n \"title\": \"Crash on start\"\n}",
+      "questions": {
+       "kind": {
+        "type": "choice",
+        "instructions": "What kind of issue?",
+        "criteria": {
+         "kind/bug": "it is broken",
+         "kind/question": ""
+        }
+       },
+       "refund": {
+        "type": "noul",
+        "instructions": "Does it ask for a refund?"
+       },
+       "urgency": {
+        "type": "score",
+        "instructions": "How urgent?",
+        "criteria": [
+         "low",
+         "high"
+        ]
+       }
+      }
+     }
+    },
+    "read": {
+     "answered_by": "gemini-decision-1",
+     "answers": {
+      "kind": {
+       "type": "choice",
+       "choice": "kind/bug",
+       "probabilities": {
+        "kind/bug": 0.8,
+        "kind/question": 0.2
+       },
+       "confidence": 0.7
+      },
+      "refund": {
+       "type": "boolean",
+       "probability": 0.1
+      },
+      "urgency": {
+       "type": "score",
+       "score": 0.6,
+       "probabilities": {
+        "0": 0.4,
+        "1": 0.6
+       },
+       "confidence": null
+      }
+     }
+    }
+   },
+   "image": {
+    "sent": {
+     "url": "https://generativelanguage.googleapis.com/v1beta/decisions",
+     "headers": {},
+     "body": {
+      "model": "gemini-decision-1",
+      "input": [
+       {
+        "type": "text",
+        "text": "The screen shows:"
+       },
+       {
+        "type": "image",
+        "data": "iVBORw0KGgo=",
+        "mime_type": "image/png"
+       }
+      ],
+      "questions": {
+       "kind": {
+        "type": "choice",
+        "instructions": "What kind of issue?",
+        "criteria": {
+         "kind/bug": "it is broken",
+         "kind/question": ""
+        }
+       },
+       "refund": {
+        "type": "noul",
+        "instructions": "Does it ask for a refund?"
+       },
+       "urgency": {
+        "type": "score",
+        "instructions": "How urgent?",
+        "criteria": [
+         "low",
+         "high"
+        ]
+       }
+      }
+     }
+    },
+    "read": {
+     "answered_by": "gemini-decision-1",
+     "answers": {
+      "kind": {
+       "type": "choice",
+       "choice": "kind/bug",
+       "probabilities": {
+        "kind/bug": 0.8,
+        "kind/question": 0.2
+       },
+       "confidence": 0.7
+      },
+      "refund": {
+       "type": "boolean",
+       "probability": 0.1
+      },
+      "urgency": {
+       "type": "score",
+       "score": 0.6,
+       "probabilities": {
+        "0": 0.4,
+        "1": 0.6
+       },
+       "confidence": null
+      }
+     }
+    }
+   },
+   "audio, video, pdf": {
+    "sent": {
+     "url": "https://generativelanguage.googleapis.com/v1beta/decisions",
+     "headers": {},
+     "body": {
+      "model": "gemini-decision-1",
+      "input": [
+       {
+        "type": "text",
+        "text": "Listen, watch and read:"
+       },
+       {
+        "type": "audio",
+        "data": "SUQz",
+        "mime_type": "audio/mpeg"
+       },
+       {
+        "type": "video",
+        "data": "AAAAGGZ0eXA=",
+        "mime_type": "video/mp4"
+       },
+       {
+        "type": "document",
+        "data": "JVBERi0=",
+        "mime_type": "application/pdf"
+       }
+      ],
+      "questions": {
+       "kind": {
+        "type": "choice",
+        "instructions": "What kind of issue?",
+        "criteria": {
+         "kind/bug": "it is broken",
+         "kind/question": ""
+        }
+       },
+       "refund": {
+        "type": "noul",
+        "instructions": "Does it ask for a refund?"
+       },
+       "urgency": {
+        "type": "score",
+        "instructions": "How urgent?",
+        "criteria": [
+         "low",
+         "high"
+        ]
+       }
+      }
+     }
+    },
+    "read": {
+     "answered_by": "gemini-decision-1",
      "answers": {
       "kind": {
        "type": "choice",

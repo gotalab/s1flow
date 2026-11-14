@@ -1,8 +1,6 @@
 """A provider of your own, as s1flow.toml names one ("toy_provider:build"): it answers all four question types
 from the words of the state, so a test can call it without a network. Imports s1flow.client and its errors alone."""
 
-from __future__ import annotations
-
 import os
 from typing import Any
 

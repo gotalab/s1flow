@@ -25,7 +25,7 @@
 # per_request, per_image, as_of (when it was read) and source (where to check it).
 #
 # `provider` is a built-in kind (s1flow/client/providers/__init__.py: typesafe, gateway, openrouter,
-# cloudflare, openai-decisions, llm) or your own as "package.module:factory".
+# cloudflare, openai-decisions, gemini, llm) or your own as "package.module:factory".
 
 # What `s1flow run` compares without --models.
 # Each needs only a key. The full comparison names its models with --models (the bench's reports list them).

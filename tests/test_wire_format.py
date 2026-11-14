@@ -21,6 +21,7 @@ import pytest
 import respx
 
 from s1flow.client import BooleanAnswer, ChoiceAnswer, Client, Image
+from s1flow.client.state import Media
 from s1flow.client import identity
 from s1flow.client.models import Capabilities, ModelSpec
 from s1flow.client.questions import Boolean, Box, Choice, Score
@@ -38,6 +39,9 @@ QUESTIONS = {
 TEXT = {"title": "Crash on start", "meta": {"z": 1, "a": [{"y": 2, "b": 3}]}}
 PIXEL = Image(media_type="image/png", data="iVBORw0KGgo=", sha256="0" * 64, width=1000, height=600)
 WITH_IMAGE = ["The screen shows:", PIXEL]
+OTHER_MEDIA = ["Listen, watch and read:", Media(type="audio", media_type="audio/mpeg", data="SUQz", sha256="1" * 64),
+               Media(type="video", media_type="video/mp4", data="AAAAGGZ0eXA=", sha256="2" * 64),
+               Media(type="pdf", media_type="application/pdf", data="JVBERi0=", sha256="3" * 64)]
 BOX = {"where": Box(instructions="Where is the error message?")}
 BOX_ANSWER = {"type": "box", "box": {"top": 0.1, "bottom": 0.5, "left": 0.2, "right": 0.9}, "confidence": 0.6}
 
@@ -69,17 +73,21 @@ BOX_REPLIES: dict[str, dict[str, Any]] = {
     "cloudflare": {"result": {"model": "clef", "answers": {"where": BOX_ANSWER}}},
 }
 ALL = Capabilities(image=True, question_types=frozenset({"boolean", "choice", "score", "box"}))
+REPLIES["gemini"] = {"model": "gemini-decision-1", "answers": SYSTEM_ONE, "usage": {"total_input_tokens": 90}}
+MEDIA_REPLIES = {p: REPLIES[p] for p in ("openrouter", "gemini")}  # the providers that send audio, video and PDFs
+EVERY = ALL.model_copy(update={"audio": True, "video": True, "pdf": True})
 MODELS = {
     "typesafe": ModelSpec(provider="typesafe", id="jev-1.14.0", capabilities=ALL),
     "gateway": ModelSpec(provider="gateway", id="typesafe-ai/jev", capabilities=ALL),
-    "openrouter": ModelSpec(provider="openrouter", id="typesafe/jev", capabilities=ALL),
+    "openrouter": ModelSpec(provider="openrouter", id="typesafe/jev", capabilities=EVERY),
+    "gemini": ModelSpec(provider="gemini", id="gemini-decision-1", capabilities=EVERY.model_copy(update={"question_types": frozenset({"boolean", "choice", "score"})})),
     "cloudflare": ModelSpec(provider="cloudflare", id="clef", capabilities=ALL),
     "openai-decisions": ModelSpec(provider="openai-decisions", id="gpt-6-luna", capabilities=Capabilities(image=True)),
     "llm": ModelSpec(provider="llm", id="openai/gpt-test", options={"box_units": "k1000"}, capabilities=ALL),
     "llm sampled": ModelSpec(provider="llm", id="openai/gpt-test", options={"samples": 2, "box_units": "pixels"}, capabilities=ALL),
 }
 # Headers every call carries from httpx, or a key: not what a provider chooses to send.
-TRANSPORT = {"host", "accept", "accept-encoding", "connection", "user-agent", "content-length", "content-type", "authorization"}
+TRANSPORT = {"host", "accept", "accept-encoding", "connection", "user-agent", "content-length", "content-type", "authorization", "x-goog-api-key"}
 
 
 def _sent(request: httpx.Request) -> dict[str, Any]:
@@ -93,7 +101,8 @@ def _read(response: Any) -> dict[str, Any]:
 
 def _http(provider: str) -> dict[str, Any]:
     out = {}
-    asks = [("text", TEXT, QUESTIONS, REPLIES), ("image", WITH_IMAGE, QUESTIONS, REPLIES), ("box", WITH_IMAGE, BOX, BOX_REPLIES)]
+    asks = [("text", TEXT, QUESTIONS, REPLIES), ("image", WITH_IMAGE, QUESTIONS, REPLIES), ("box", WITH_IMAGE, BOX, BOX_REPLIES),
+            ("audio, video, pdf", OTHER_MEDIA, QUESTIONS, MEDIA_REPLIES)]
     for name, state, questions, replies in asks:
         if provider not in replies:
             continue
@@ -144,7 +153,7 @@ def _decisions() -> dict[str, Any]:
 
 
 def test_what_is_sent_and_read_is_what_the_identity_formats_name(monkeypatch):
-    for env in ("TYPESAFE_API_KEY", "AI_GATEWAY_API_KEY", "OPENROUTER_API_KEY", "OPENAI_API_KEY"):
+    for env in ("TYPESAFE_API_KEY", "AI_GATEWAY_API_KEY", "OPENROUTER_API_KEY", "OPENAI_API_KEY", "GEMINI_API_KEY"):
         monkeypatch.delenv(env, raising=False)
     monkeypatch.setenv("CLEF_RELAY_URL", "https://relay.test")
     now = {

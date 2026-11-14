@@ -13,8 +13,6 @@
 A check that runs and finds the change worse is a result (exit 1), not an error.
 """
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -59,7 +57,7 @@ class Rejected(Unsupported):
     that says it does not accept a part of the request. Not counted as a failure."""
 
 
-def invalid(e: ValidationError, limit: int = 3) -> str:
+def invalid(e: "ValidationError", limit: int = 3) -> str:
     """A pydantic error as one line, for an error message: `models.b.colour: Extra inputs are not permitted`."""
     parts = [f"{'.'.join(str(x) for x in err['loc']) or 'value'}: {err['msg']}" for err in e.errors()[:limit]]
     more = f" (and {e.error_count() - limit} more)" if e.error_count() > limit else ""

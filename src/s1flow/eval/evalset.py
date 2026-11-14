@@ -14,8 +14,6 @@ How often the test share was looked at is not counted here: a count kept only wh
 CI, told nothing. `adopt` records each candidate it tried on it, refused or not, in history.jsonl.
 """
 
-from __future__ import annotations
-
 import hashlib
 import math
 import random

@@ -10,8 +10,6 @@ One call is one request: no threshold (a policy reads its answer, the evaluation
 `ModelSpec`, or a `DecisionModel` you built. Keys come from the environment (`TYPESAFE_API_KEY`, ...).
 """
 
-from __future__ import annotations
-
 import builtins
 from collections.abc import Mapping
 from pathlib import Path

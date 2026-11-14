@@ -1,7 +1,5 @@
 """`s1flow feedback record` (the base install) and `s1flow feedback measure` (s1flow[eval])."""
 
-from __future__ import annotations
-
 import argparse
 import json
 from pathlib import Path

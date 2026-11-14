@@ -1,5 +1,4 @@
 """The model and question variant compared by evaluation."""
-from __future__ import annotations
 import re
 from pydantic import BaseModel, ConfigDict
 from ..core.errors import ConfigError
@@ -23,7 +22,7 @@ class Candidate(BaseModel):
         return self.model if self.variant == 'base' else f'{self.model}/{self.variant}'
 
     @classmethod
-    def parse(cls, name: str) -> Candidate:
+    def parse(cls, name: str) -> "Candidate":
         model, slash, variant = name.partition('/')
         if not model or (slash and not variant) or '/' in variant or any(c.isspace() for c in name):
             raise ConfigError(f'candidate {name!r}: model[:version][/variant], no spaces')

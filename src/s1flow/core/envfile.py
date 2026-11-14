@@ -6,8 +6,6 @@ escapes \\n \\t \\" \\\\; after a value, ` #` starts a comment. No `${VAR}` expa
 lines.
 """
 
-from __future__ import annotations
-
 import os
 import re
 from pathlib import Path

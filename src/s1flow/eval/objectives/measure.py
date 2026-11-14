@@ -14,8 +14,6 @@ A constraint is a share an objective keeps on one side of a bound (Coverage: the
 answered; Recall: the false alarms among the negatives). Only the built-ins hold one.
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass, replace
 from typing import Any, Callable, Sequence
 
@@ -56,7 +54,7 @@ class Pairs:
     def __len__(self) -> int:
         return len(self.y)
 
-    def __getitem__(self, idx: np.ndarray) -> Pairs:
+    def __getitem__(self, idx: np.ndarray) -> "Pairs":
         return Pairs(  # not dataclasses.replace: a bootstrap takes thousands of these
             measured=self.measured, options=self.options, levels=self.levels, y=self.y[idx], ok=self.ok[idx], value=self.value[idx], unsure=self.unsure[idx], min_probability_set=self.min_probability_set[idx], correct=self.correct[idx],
             probability=self.probability[idx], p_positive=self.p_positive[idx], confidence=self.confidence[idx],
@@ -76,7 +74,7 @@ class Pairs:
         """What a rule field is compared with: P(positive) for a threshold, the probability for a min probability."""
         return self.p_positive if field == "threshold" else self.probability
 
-    def at(self, threshold: float | np.ndarray | None = None, min_probability: float | np.ndarray | None = None) -> Pairs:
+    def at(self, threshold: float | np.ndarray | None = None, min_probability: float | np.ndarray | None = None) -> "Pairs":
         """The answered cases, read at the plain rule, read again at another one (per case, when arrays):
         a threshold makes the value P(positive) at or above it, a min probability marks what is under it unsure.
         inf reads nothing as True, or every case as unsure."""

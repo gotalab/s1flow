@@ -1,7 +1,5 @@
 """`s1flow doctor`: the keys and hosts the models need, and whether they are there. The base install runs it."""
 
-from __future__ import annotations
-
 import argparse
 import json
 import os

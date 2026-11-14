@@ -32,8 +32,6 @@ Exit codes, the same for every command (EXITS), shown in every --help:
        check pending (answers needed that only a run with keys can get); a bug in s1flow prints its traceback too
 """
 
-from __future__ import annotations
-
 import argparse
 import difflib
 import sys

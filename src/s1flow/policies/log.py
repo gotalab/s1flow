@@ -1,6 +1,4 @@
 """Versioned decision and label events, shared with evaluation readers."""
-from __future__ import annotations
-
 import json
 from typing import Annotated, Any, Literal, Union
 from pydantic import BaseModel, ConfigDict, Field
