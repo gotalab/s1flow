@@ -71,7 +71,12 @@ def test_a_case_with_no_answer_stays_wrong_and_unsure_at_every_rule():
         assert list(q.correct) == [True, True, False, False], rule
         assert list(q.sure) == [True, True, False, False] and list(q.said) == [True, False, False, False], rule
     cov = bound(Coverage(target_accuracy=0.9), kind)
-    assert cov.value(pairs.at(min_probability=metrics.search(cov, pairs))) == 0.5  # 2 of the 4 labelled cases, not 2 of 2
+    cut = metrics.search(cov, pairs)
+    assert cut == 0.8  # the lowest probability an answer had: a case with no answer offers no cut of its own (not 0.0)
+    assert cov.value(pairs.at(min_probability=cut)) == 0.5  # 2 of the 4 labelled cases, not 2 of 2
+    recall = bound(Recall(max_false_alarm=0.5), kind)
+    assert metrics.search(recall, pairs) == 0.2  # nor a threshold at its placeholder P(positive)
+    assert metrics.search(cov, pairs[np.array([2, 3])]) == np.inf  # nothing answered: no rule
 
 
 def test_the_sweep_counts_a_positive_with_no_answer_a_miss_and_a_negative_with_none_no_alarm():

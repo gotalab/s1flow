@@ -354,7 +354,7 @@
      "type": "string"
     },
     "n": {
-     "description": "Answered labelled development cases scored for this candidate",
+     "description": "Labelled development cases scored for this candidate: the ones it answered and the ones it refused",
      "minimum": 0,
      "title": "N",
      "type": "integer"

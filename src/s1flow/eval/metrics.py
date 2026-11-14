@@ -266,7 +266,7 @@ def search(b: Bound, p: Pairs, grid: np.ndarray = GRID, floors: Sequence[Constra
         ties = [t for t, v in zip(grid, values) if v == best]
         return float(min(ties, key=lambda t: abs(t - 0.5)))
     cut, value = np.inf, None
-    for t in np.unique(p.reads(at)):  # ascending: a tie keeps the lower
+    for t in np.unique(p.reads(at)[p.ok]):  # what the answers gave (a case with no answer offers no cut); ascending: a tie keeps the lower
         q = p.at(**{at: t})
         if any(c.holds(*c.count(q)) is False for c in keeps):
             continue

@@ -59,7 +59,7 @@ class ComparisonRow(BaseModel):
     candidate: str
     model: str
     variant: str
-    n: int = Field(ge=0, description='Answered labelled development cases scored for this candidate')
+    n: int = Field(ge=0, description='Labelled development cases scored for this candidate: the ones it answered and the ones it refused')
     value: float | None
     interval: tuple[float, float] | None
     rule: DecisionRule | None

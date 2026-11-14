@@ -221,6 +221,7 @@ def test_rank_leaves_out_a_candidate_whose_calls_failed_on_some_cases(tmp_path):
         assert e.accuracy.value == pytest.approx(56 / 84), name
         assert e.selective[0].coverage.value == pytest.approx(56 / 84) and e.selective[0].accuracy == 1.0, name
     assert evs["picky"].answered_ids == evs["m"].answered_ids  # the same cases, so the two are compared
+    assert evs["picky"].objective.rule == evs["m"].objective.rule == DecisionRule(min_probability=0.8)  # a refusal sets no rule
     md = report.write(task, "base", task.where.root / "out")
     assert "| picky | 84 | 66.7%" in md and "| 33.3% (28/84) | 0/84 |" in md  # the refusal rate, of the scored cases
     assert "flaky ✕ | 56 |" in md and "Not compared: flaky (28 cases whose every call failed)" in md and "`s1flow run toy --models flaky`" in md
