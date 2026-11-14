@@ -49,7 +49,8 @@ held-out test share and never marks a pick. Text, JSON and the chart page read t
 - `order` says what ordered the tied: `by` (the tiebreak entries used), `skipped` (entries that could not be
   used, such as latency measured at different concurrency) and `why`. With no tiebreak, the tied are listed by
   name, unordered.
-- Scores use answered cases only. Refusals are counted apart; read the answered count beside the score.
+- Scores use every labelled case the model answered or refused. A refused or unsupported case counts as no answer:
+  wrong for accuracy, not accepted for coverage. `refused` beside `n` is the share of the scored cases it refused.
 - Latency compares only between candidates run at one concurrency; otherwise `report` says
   so and how to run them again.
 

@@ -56,7 +56,7 @@ SMALL_GRID = np.array([0.1, 0.3, 0.5, 0.7, 0.9])  # under splitting.SMALL dev ca
 class Preds:
     model: str
     ids: list[str]
-    pairs: Pairs  # each scored case's label and the reading of its answer, at the plain rule
+    pairs: Pairs  # each scored case's label and the reading of its answer, at the plain rule (None: it refused the case)
     probabilities: bool  # False when the model returned single answers only
     distribution: DistributionEvidence | None = None  # actual current answer evidence
     latency_ms: np.ndarray = field(default_factory=lambda: np.array([]))
@@ -75,7 +75,7 @@ class Preds:
     unlabeled: int = 0
     never_asked: list[str] = field(default_factory=list)  # labelled cases with no record under this question
     failed_cases: list[str] = field(default_factory=list)  # labelled cases asked, no answer: every call failed (like never asked)
-    refused_cases: list[str] = field(default_factory=list)  # labelled cases refused or unsupported: the model's limit, not scored
+    refused_cases: list[str] = field(default_factory=list)  # labelled cases refused or unsupported: scored as no answer
     measured: dict[str, int] | None = None  # wall time of the last uncached run (run.py)
     version: str | None = None  # the answering model scored here (Response.answered_by)
     versions: list[str] = field(default_factory=list)  # every answering model on file, latest first
@@ -171,11 +171,13 @@ def load(task: Task, variant: str, model: str, *, include_test: bool = False) ->
         if expected_concurrency is None or measured.get("concurrency") == expected_concurrency:
             pr.measured = measured
     labels: list[Any] = []
-    readings: list[Reading] = []
+    readings: list[Reading | None] = []
     dist_seen: list[bool] = []
     latency: list[float] = []
     # Scored against the task's labels as they are now (corrections and edits included), not the label a record
-    # was written with; a case no longer in the task is left out.
+    # was written with; a case no longer in the task is left out. A refused case is scored as no answer (wrong and
+    # unsure), so refusing a case never makes a model look better. A case whose every call failed is not scored:
+    # the model was never heard on it (comparison and adopt leave such a candidate out).
     current = {c.id: c.label for c in cases}
     pr.never_asked = [cid for cid, label in current.items() if label is not None and cid not in asked]
     for r in recs:
@@ -187,17 +189,21 @@ def load(task: Task, variant: str, model: str, *, include_test: bool = False) ->
             pr.unlabeled += 1
             continue
         if (a := r.given) is None:
-            if r.outcome in records.REFUSED:
-                pr.refused_cases.append(cid)
-            elif r.outcome == "failed":
+            if r.outcome == "failed":
                 pr.failed_cases.append(cid)
-            continue
-        avg = kind.average([a])
-        readings.append(kind.reading(avg, PLAIN))
-        dist_seen.append(avg.distributed)
+            if r.outcome not in records.REFUSED:
+                continue
+            pr.refused_cases.append(cid)
+            readings.append(None)
+        else:
+            avg = kind.average([a])
+            readings.append(kind.reading(avg, PLAIN))
+            dist_seen.append(avg.distributed)
         labels.append(label)
         pr.ids.append(cid)
         latency.append(np.nan if r.latency_ms is None else float(r.latency_ms))
+    if not dist_seen:  # nothing answered: no measurement of the model, and its refusals stay a count
+        labels, readings, latency, pr.ids = [], [], [], []
     pr.pairs = measure.pairs(kind, labels, readings)
     pr.case_latency_ms = np.array(latency, dtype=float)
     recorded_distributions = {r.distribution for r in ok}
@@ -273,8 +279,11 @@ def search(b: Bound, p: Pairs, grid: np.ndarray = GRID, floors: Sequence[Constra
 SWEEP = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]  # the miss / false-alarm table's thresholds, the chosen one added
 
 
-def sweep(y: np.ndarray, p: np.ndarray, thresholds: list[float]) -> list[SweepRow]:
-    """nod's table: a positive whose P(positive) is below t is a miss, a negative at or above t a false alarm."""
+def sweep(y: np.ndarray, p: np.ndarray, thresholds: list[float], ok: np.ndarray | None = None) -> list[SweepRow]:
+    """nod's table: a positive whose P(positive) is below t is a miss, a negative at or above t a false alarm.
+    A case with no answer (`ok` False) raises no alarm: a miss when positive, never a false alarm."""
+    if ok is not None:
+        p = np.where(ok, p, -np.inf)
     pos, neg = p[y], p[~y]
     return [
         SweepRow(threshold=t, misses=int((pos < t).sum()), positives=int(pos.size), false_alarms=int((neg >= t).sum()), negatives=int(neg.size))
@@ -442,7 +451,7 @@ def evaluate(task: Task, pr: Preds, target: float | None = None, variant: str = 
         auroc=Estimate(value=auroc.value(p0[dev]), interval=au_i),
         brier=measure.measure("brier", p0[dev]), ece=measure.measure("ece", p0[dev]),
         selective=selective, error_loss_threshold=threshold, floors=floor_rows,
-        sweep=sweep(p0.y[dev], p0.p_positive[dev], sorted({*SWEEP, threshold.chosen})) if threshold else None,
+        sweep=sweep(p0.y[dev], p0.p_positive[dev], sorted({*SWEEP, threshold.chosen}), p0.ok[dev]) if threshold else None,
         objective=_score(primary, dev, primary_i), tiebreak=[_score(r, dev, i) for r, i in zip(later, later_i)],
         test=test, high_confidence_errors=high, calls=calls(pr, dev, of_dev),
     )
@@ -655,17 +664,18 @@ def chart_data(task: Task, pr: Preds, evaluation: Evaluation) -> ChartData:
                                              misses=int((p.y & ~p.said).sum()), false_alarms=int((~p.y & p.said).sum())))
     distribution = []
     calibration = []
-    probability = pairs.p_positive
+    given = pairs[pairs.ok]  # a refused case gave no probability to draw
+    probability = given.p_positive
     for index in range(20):
         lower, upper = index / 20, (index + 1) / 20
         mask = (probability >= lower) & ((probability < upper) if index < 19 else (probability <= upper))
-        distribution.append(ProbabilityBin(lower=lower, upper=upper, positives=int(pairs.y[mask].sum()),
-                                           negatives=int((~pairs.y[mask]).sum())))
+        distribution.append(ProbabilityBin(lower=lower, upper=upper, positives=int(given.y[mask].sum()),
+                                           negatives=int((~given.y[mask]).sum())))
     for index in range(10):
         mask = np.minimum(9, (probability * 10).astype(int)) == index
         n = int(mask.sum())
         if n >= 5:
-            calibration.append(CalibrationPoint(probability=float(probability[mask].mean()), observed=float(pairs.y[mask].mean()), n=n))
+            calibration.append(CalibrationPoint(probability=float(probability[mask].mean()), observed=float(given.y[mask].mean()), n=n))
     return ChartData(
         n=len(dev), raw_value=raw_value, cv_value=cv_value,
         threshold_sweep=threshold_points, distribution=distribution, calibration=calibration,

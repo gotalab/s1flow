@@ -87,8 +87,8 @@ class Row(BaseModel):
     """One candidate as the list shows it: measured on train + val (the test share is not shown)."""
 
     candidate: str  # Candidate.name
-    n: int  # labelled train + val cases it answered; refusals remain visible in their own count
-    refused: int  # labelled cases it refused or does not support: the model's limit, left out of its denominator
+    n: int  # labelled train + val cases it is scored on: the ones it answered and the ones it refused
+    refused: int  # labelled cases it refused or does not support: the model's limit, scored as no answer (within n)
     tied: bool  # the primary objective cannot tell it from the best on it
     excluded: list[str]  # constraints it breaks; it cannot be picked
     scores: list[ObjectiveScore]  # one per objective, the primary first: measured on the answers

@@ -284,13 +284,13 @@ def _metric_definitions(task: Task, evaluations: Sequence[Evaluation]) -> list[M
                 if task.primary.sets is not None
                 else "primary plain rule"
             )
-        basis = f"{where}; {reading_basis}; denominator: answered labelled dev cases"
+        basis = f"{where}; {reading_basis}; denominator: labelled dev cases"
         add(_objective_metric_key(objective), objective.label, objective.unit, basis, objective.direction)
 
     targets = sorted({s.target_accuracy for e in evaluations for s in e.selective})
     for target in targets:
         key = _target_key(target)
-        coverage_basis = f"target reference {key}; target-specific CV chosen rule; observed accepted / answered labelled dev cases"
+        coverage_basis = f"target reference {key}; target-specific CV chosen rule; observed accepted / labelled dev cases"
         accepted_basis = f"target reference {key}; target-specific CV chosen rule; observed correct accepted / accepted labelled dev cases"
         add(f"coverage:{key}", f"coverage (target reference {100 * target:g}%)", "share", coverage_basis, "max")
         add(f"accepted_accuracy:{key}", f"accepted accuracy (target reference {100 * target:g}%)", "share", accepted_basis, "max")
@@ -424,7 +424,7 @@ def collect(task: Task, *, variants: Sequence[str] | None = None, only: Sequence
         )
 
     if len({tuple(sorted(e.answered_ids)) for e in population_evaluations}) > 1:
-        notices.append("answered populations differ across candidates; each candidate remains visible and no candidate is selected")
+        notices.append("scored populations differ across candidates; each candidate remains visible and no candidate is selected")
     latency_notice = select.unlike(list(evaluations.values()))
     if latency_notice:
         notices.append(latency_notice.en(task.id))
@@ -475,12 +475,15 @@ def _row_summary(row: ComparisonRow) -> dict[str, Any]:
         "excluded": row.excluded, "adoption_blocked": row.adoption_blocked,
         "probabilities": row.probabilities,
         "selection_basis": ("box confidence" if row.question.type == "box" else "selected-answer probability") if row.probabilities else None,
-        "failures": row.failures.model_dump(),
+        "failures": row.failures.model_dump(), "refusal_rate": row.failures.refusal_rate(row.n),
         "calls": {"latency": latency, "cost_per_10k_usd": calls.cost_per_10k_usd,
                   "cost_total_usd": calls.cost_total_usd, "cost_source": calls.cost_source,
                   "cost_unknown": calls.cost_unknown},
         "measurement": row.measurement.model_dump(mode="json"),
     }
+
+
+SCORING_POPULATION = "labelled dev cases; a refused or unsupported case counts as no answer (wrong, not accepted)"
 
 
 def summary(comparison: Comparison, *, offset: int = 0, limit: int = 12, candidate: str | None = None,
@@ -495,7 +498,7 @@ def summary(comparison: Comparison, *, offset: int = 0, limit: int = 12, candida
             "scope": comparison.scope, "as_of": comparison.at,
             "question_type": comparison.question_type,
             "kind_params": comparison.kind_params.model_dump(mode="json"),
-            "scoring_population": "answered labelled dev cases",
+            "scoring_population": SCORING_POPULATION,
             "provenance": "saved snapshot" if snapshot else "current comparison",
             "objective": comparison.objective.model_dump(mode="json"),
             "constraints": comparison.constraints.model_dump(mode="json"),
@@ -511,7 +514,7 @@ def summary(comparison: Comparison, *, offset: int = 0, limit: int = 12, candida
         "schema": "s1flow/comparison-summary@2", "task": comparison.task, "source": comparison.source[:500],
         "id": comparison.id, "as_of": comparison.at, "scope": comparison.scope, "question_type": comparison.question_type,
         "kind_params": comparison.kind_params.model_dump(mode="json"),
-        "scoring_population": "answered labelled dev cases",
+        "scoring_population": SCORING_POPULATION,
         "objective": comparison.objective.model_dump(mode="json"),
         "constraints": comparison.constraints.model_dump(mode="json"),
         "n": comparison.n, "candidate_count": len(rows), "offset": offset, "limit": limit,
@@ -562,8 +565,10 @@ def text(comparison: Comparison, *, offset: int = 0, limit: int = 12, candidate:
         cost = "unknown" if row.calls.cost_per_10k_usd is None or row.calls.cost_unknown else f"${row.calls.cost_per_10k_usd:.4g}/10k ({row.calls.cost_source or 'unknown'})"
         why = f" ({'; '.join(row.excluded)})" if row.excluded else ""
         blocked = f"; adoption blocked: {', '.join(row.adoption_blocked)}" if row.adoption_blocked else ""
+        rate = row.failures.refusal_rate(row.n)
+        refused = "—" if rate is None else f"{100 * rate:.1f}%"
         metric_text = "; ".join(f"{key}={format(estimate.value, '.4g') if estimate.value is not None else '—'}" for key, estimate in row.metrics.items())
-        lines.append(f"  {row.candidate:<28} n={row.n:<4} value={value}{interval} metrics={metric_text or '—'} cost={cost} basis={row.measurement.distribution} p90={p90} p99={p99}{why}{blocked}")
+        lines.append(f"  {row.candidate:<28} n={row.n:<4} refused={refused} value={value}{interval} metrics={metric_text or '—'} cost={cost} basis={row.measurement.distribution} p90={p90} p99={p99}{why}{blocked}")
     if len(comparison.candidates) > offset + limit:
         lines.append(f"… {len(comparison.candidates) - offset - limit} more; use --offset/--limit")
     if comparison.notices:

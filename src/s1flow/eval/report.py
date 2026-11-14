@@ -55,7 +55,7 @@ SOURCE = {"billed": "billed", "list": "estimated", "mixed": "billed and estimate
 
 def compared(task: Task, evs: list[Evaluation]) -> tuple[list[Evaluation], list[Ranked]]:
     """The candidates the report ranks, and their ranking (select.rank): those with an answer to every labelled case
-    but the ones they refused. One never asked some cases, or whose every call failed on some, is scored on the rest
+    (a refused case counts as no answer). One never asked some cases, or whose every call failed on some, is scored on the rest
     only, so it is not ranked."""
     scored = [e for e in evs if e.n and not e.failures.missing]
     return scored, rank(task.primary, task.ties, task.constraints, scored)
@@ -204,20 +204,20 @@ def render(task: Task, variant: str, evs: list[Evaluation], preds: dict[str, met
         "## Comparison",
         "",
         "| model | scored | " + " | ".join(METRICS[name].label for name in ("accuracy", own, "auroc", "ece"))
-        + " | coverage | sure accuracy (lower bound) | refused / unsupported | failed |",
+        + " | coverage | sure accuracy (lower bound) | refused | failed |",
         "|---|---|---|---|---|---|---|---|---|---|",
     ]
     for e in evs:
         f = e.failures
         if not e.n or not e.selective:
-            L.append(f"| {e.candidate.name} | 0 | — | | | | | | {f.unsupported}/{f.calls} | {f.failed}/{f.calls} |")
+            L.append(f"| {e.candidate.name} | 0 | — | | | | | | {f.unsupported}/{f.calls} calls | {f.failed}/{f.calls} |")
             continue
         s = e.selective[0]
         flag = "" if e.probabilities else " ※"
         acc = e.accuracy or Estimate(value=None)
         L.append(
             f"| {e.candidate.name}{flag}{' ✕' if f.missing else ''} | {e.n} | {pct(acc.value, 1)}{band(acc.interval)} | {num(e.measures[own].value if own in e.measures else None)} | {num(e.auroc.value if e.auroc else None)} | {num(e.ece)} "
-            f"| {pct(s.coverage.value)}{band(s.coverage.interval)} | {pct(s.accuracy, 1)} ({pct(s.lower, 1)}) | {f.unsupported}/{f.calls} | {f.failed}/{f.calls} |"
+            f"| {pct(s.coverage.value)}{band(s.coverage.interval)} | {pct(s.accuracy, 1)} ({pct(s.lower, 1)}) | {pct(f.refusal_rate(e.n), 1)} ({f.refused_cases}/{e.n}) | {f.failed}/{f.calls} |"
         )
     L += left_out(task, evs)
     L += ["", "Answered by: " + "; ".join(
@@ -232,15 +232,16 @@ def render(task: Task, variant: str, evs: list[Evaluation], preds: dict[str, met
         "",
         f"Coverage: answering the most probable first, the largest share whose sure accuracy keeps the target {pct(sel0.target_accuracy) if sel0 else ''}. "
         "The cut is chosen on each CV fold's fit side and measured on its eval side. The lower bound is a one-sided 95% Clopper-Pearson; [ ] is a 95% bootstrap interval.",
-        "Scored: answered dev cases only; held-out test results require an explicit final check. Refused / unsupported and failed both count calls.",
+        "Scored: every labelled dev case the model answered or refused; held-out test results require an explicit final check. "
+        "Refused: the share of the scored cases the model refused or does not support, each counted as no answer (wrong, and never sure). Failed counts calls.",
     ]
     if any(not e.probabilities for e in evs):
         L.append("※ a model that returns no distribution (one answer): its probability is 1 for every answer, so the coverage is all or nothing.")
     if box:
         L.append(f"Box: right at IoU {kind.iou:g} or more with the label's box. The probability is what jev returns; for an LLM, the agreement (IoU) of its repeated boxes. AUROC and ECE say how well that probability separates right from wrong.")
     if any(e.failures.unsupported for e in evs):
-        L.append("Refused / unsupported: inputs the model did not take (question type, image, audio, video, PDF, length limits). The model's limit, "
-                 "not a failed call: left out of the denominator, the candidate kept.")
+        L.append("Refused: inputs the model did not take (question type, image, audio, video, PDF, length limits) and answers it declined to give. "
+                 "The model's limit, not a failed call: the candidate is kept, and the case stays in every denominator.")
     if any(e.failures.data_errors for e in evs):
         L.append("Data errors: " + ", ".join(f"{e.candidate.name} {e.failures.data_errors}" for e in evs if e.failures.data_errors)
                  + ". The task's, not the model's (a missing image file, a state written wrong): counted neither as scored nor as failed.")
@@ -299,7 +300,7 @@ def disagreements(task: Task, preds: dict[str, metrics.Preds], cases: dict[str, 
     decided: dict[str, dict[str, tuple[bool | str, float]]] = {}
     for m, p in preds.items():
         for i, cid in enumerate(p.ids):
-            if cid in common and cid in cases:
+            if cid in common and cid in cases and p.pairs.ok[i]:  # a refused case gave no verdict
                 decided.setdefault(cid, {})[m] = (measure.plain(p.pairs.value[i]), float(p.pairs.probability[i]))
     split = [cid for cid, d in decided.items() if len({v for v, _ in d.values()}) > 1]
     if not split:
