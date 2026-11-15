@@ -47,7 +47,9 @@ task = Task(
         criteria=TOPICS,
     ),
     label=lambda r: r["label"],
-    objective=Coverage(target_accuracy=0.95),
+    # The topic is a tag for finding screens in a design library, kept only when sure. 90%: a wrong tag puts one
+    # screen in the wrong search result, and is corrected when someone sees it.
+    objective=Coverage(target_accuracy=0.90),
     tiebreak=[Accuracy()],
     source="Enrico (labels MIT) on Rico screenshots (CC BY 4.0): up to 12 screens per design topic, mislabelled ones replaced",
     show=lambda r: r["id"],

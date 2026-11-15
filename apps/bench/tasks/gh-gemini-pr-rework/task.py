@@ -6,7 +6,7 @@ review; review bots (gemini-code-assist) and the author's own reviews do not cou
 what is known when the PR opens: title, description, author association, size and touched paths.
 """
 
-from s1flow.objectives import Coverage, ExpectedLoss
+from s1flow.objectives import AUROC, ExpectedLoss
 from s1flow.eval import Task
 from s1flow.questions import Boolean
 
@@ -23,7 +23,9 @@ task = Task(
         },
     ),
     label=lambda r: r["label"],
-    objective=Coverage(target_accuracy=0.95), tiebreak=[ExpectedLoss(fn=1, fp=1)],
+    # A forecast: reviewers take the pull requests most likely to need rework first, and nothing is acted on
+    # alone. So what counts is whether the probability puts them in the right order.
+    objective=AUROC(), tiebreak=[ExpectedLoss(fn=1, fp=1)],
     source="Merged PRs of google-gemini/gemini-cli (review history via the GitHub API)",
     show=lambda r: r["title"],
 )

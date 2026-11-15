@@ -6,6 +6,7 @@ reading the numbers.
 """
 
 from s1flow.eval import Task
+from s1flow.objectives import Accuracy, Coverage
 from s1flow.questions import Boolean
 
 task = Task(
@@ -21,6 +22,10 @@ task = Task(
         },
     ),
     label=lambda r: r["label"] == "toxic",
+    # First pass: a sure answer publishes or removes the text, a moderator reads the rest. 99%: a miss publishes
+    # harmful text and a false alarm removes someone's post, with nobody looking.
+    objective=Coverage(target_accuracy=0.99),
+    tiebreak=[Accuracy()],
     source="LLM-jp Toxicity Dataset（LLM-jp, CC BY 4.0）の 1,000 字以下から toxic / nontoxic 各 150 件",
     show=lambda r: r["text"],
 )

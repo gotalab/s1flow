@@ -9,6 +9,7 @@ import json
 from pathlib import Path
 
 from s1flow.eval import Task
+from s1flow.objectives import Accuracy, Coverage
 from s1flow.questions import Choice
 
 INTENTS = json.loads((Path(__file__).parent / "intents.json").read_text())
@@ -29,6 +30,10 @@ task = Task(
     question_id="intent",
     question=Choice(instructions=INSTRUCTIONS, criteria=CRITERIA),
     label=lambda r: r["intent"],
+    # The assistant acts on a sure answer and asks back on the rest. 95%: a wrong intent runs another action
+    # (an alarm set, a message sent) before the person can stop it.
+    objective=Coverage(target_accuracy=0.95),
+    tiebreak=[Accuracy()],
     variants={
         "with_none": Choice(instructions=INSTRUCTIONS, criteria=CRITERIA | {"none": "どれにも当てはまらない"}),
     },

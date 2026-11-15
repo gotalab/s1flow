@@ -4,7 +4,7 @@ The `next` question with P(wake), on the 80 labelled cases in cases.json. In the
 a missed `must` is the failure that matters.
 """
 
-from s1flow.objectives import Coverage, ExpectedLoss
+from s1flow.objectives import Accuracy, ExpectedLoss
 from s1flow.eval import KindParams, Task
 from s1flow.questions import Choice
 
@@ -36,8 +36,9 @@ task = Task(
     ),
     kind_params=KindParams(positive="wake"),
     label=lambda r: {"must": True, "sleep": False}.get(r["label"]),  # either: no wrong answer
-    # A missed must drops work; a needless wake costs one LLM call.
-    objective=Coverage(target_accuracy=0.95), tiebreak=[ExpectedLoss(fn=10, fp=1)],
+    # A missed must drops work; a needless wake costs one LLM call. The miss is the heavy side, so the task weighs
+    # it 10 to 1 and puts no cap on the wakes.
+    objective=ExpectedLoss(fn=10, fp=1), tiebreak=[Accuracy()],
     variants={
         # Laya rejects option descriptions of ~100 Japanese characters; this one fits every model.
         "short": Choice(
