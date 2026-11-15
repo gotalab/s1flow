@@ -35,30 +35,30 @@
 
   <!-- collect: stacked cards -->
   <circle class="ca" cx="112" cy="122" r="40"/>
-  <rect class="ic" x="98" y="112" width="26" height="28" rx="4"/>
-  <path class="ic" d="M104 106H128V132"/>
-  <path class="ic" d="M110 100H134V126"/>
+  <rect class="ic" x="94" y="114" width="26" height="28" rx="4"/>
+  <path class="ic" d="M100 108H124V134"/>
+  <path class="ic" d="M106 102H130V128"/>
   <text class="lbl" x="112" y="196">Collect</text>
 
   <!-- compare: bars -->
   <circle class="ca" cx="290" cy="122" r="40"/>
-  <path class="ic" d="M274 140V122M286 140V106M298 140V116M310 140V128"/>
+  <path class="ic" d="M272 139V121M284 139V105M296 139V115M308 139V127"/>
   <text class="lbl" x="290" y="196">Compare</text>
 
   <!-- choose: check -->
   <circle class="cb" cx="466" cy="122" r="40"/>
-  <path class="ic" d="M450 123L461 134L483 110" style="stroke-width:4"/>
+  <path class="ic" d="M449.5 123L460.5 134L482.5 110" style="stroke-width:4"/>
   <text class="lbl" x="466" y="196">Choose</text>
 
   <!-- decide: policy file -->
   <circle class="cc" cx="622" cy="122" r="40"/>
-  <path class="ic" d="M610 104H628L638 114V140H610Z"/>
-  <path class="ic" d="M617 122H631M617 131H627"/>
+  <path class="ic" d="M608 104H626L636 114V140H608Z"/>
+  <path class="ic" d="M615 122H629M615 131H625"/>
   <text class="lbl" x="622" y="196">Decide</text>
 
   <!-- outcomes -->
   <rect class="ok" x="694" y="72" width="164" height="40" rx="20"/>
-  <path class="ic" d="M714 92L720 98L730 86" style="stroke-width:2.5"/>
+  <path class="ic" d="M713 92L719 98L729 86" style="stroke-width:2.5"/>
   <text class="pill" x="738" y="97">sure: act</text>
   <rect class="ask" x="694" y="132" width="164" height="40" rx="20"/>
   <circle class="icf" cx="721" cy="146" r="5"/>
