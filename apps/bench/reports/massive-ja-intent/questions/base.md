@@ -2,7 +2,7 @@
 
 2026-11-15 · 201 labelled dev cases (social_post 5, play_audiobook 5, email_query 5, general_quirky 5, qa_maths 5, iot_hue_lightoff 5, audio_volume_mute 5, datetime_convert 4, more) · split: stratified k-fold (no test case among these: CV numbers only) · source: MASSIVE 1.1 ja-JP test（Amazon, CC BY 4.0）から各意図 5 件まで
 
-**decider@openrouter** has the highest coverage at 95% accuracy, 93% [90, 97] (API cost $0.15 per 10k, p99 699ms). Its interval overlaps with mammoth@openrouter, decision-1@openrouter, clef@openrouter, drex-max@openrouter: the objective cannot tell them apart; interval overlap does not establish equivalence. The highest raw accuracy (dev) is decider@openrouter's, 91% [87, 95].
+decider@openrouter has the highest coverage at 95% accuracy, 93% [90, 97] (API cost $0.15 per 10k, p99 699ms). Its interval overlaps with mammoth@openrouter, decision-1@openrouter, clef@openrouter, drex-max@openrouter: the objective cannot tell them apart; interval overlap does not establish equivalence. The highest raw accuracy (dev) is decider@openrouter's, 91% [87, 95].
 
 ## Comparison
 
@@ -107,7 +107,7 @@ Where the API costs come from: billed: clef-omni@openrouter, clef@openrouter, d1
 Measured: the wall time of a run that called every case. When every answer came from the cache, estimated as the calls' time summed and divided by the concurrency. The time depends more on the concurrency and the provider's rate limit than on the model.
 
 Coverage: answering the most probable first, the largest share whose sure accuracy keeps the target 95%. The cut is chosen on each CV fold's fit side and measured on its eval side. The lower bound is a one-sided 95% Clopper-Pearson; [ ] is a 95% bootstrap interval.
-Scored: every labelled dev case the model answered or refused; held-out test results require an explicit final check. Refused: the share of the scored cases the model refused or does not support, each counted as no answer (wrong, and never sure). Failed counts calls.
+Scored: every labelled dev case the model answered or refused; held-out test results come only when a candidate is adopted. Refused: the share of the scored cases the model refused or does not support, each counted as no answer (wrong, and never sure). Failed counts calls.
 
 ## Wrong at a high probability (0.9 or more)
 

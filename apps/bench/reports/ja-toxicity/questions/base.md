@@ -2,7 +2,7 @@
 
 2026-11-15 · 210 labelled dev cases (True 105, False 105) · split: stratified k-fold (no test case among these: CV numbers only) · source: LLM-jp Toxicity Dataset（LLM-jp, CC BY 4.0）の 1,000 字以下から toxic / nontoxic 各 150 件
 
-**mammoth@openrouter** has the highest coverage at 99% accuracy, 99% [97, 100] (API cost $0.53 per 10k, p99 273ms). Its interval overlaps with drex-max@openrouter, clef-flash@openrouter, decider-flash@openrouter, elephant@openrouter, d1-ultra@openrouter, d1.1@openrouter, d1@vercel, jev:1.14, luna@decisions, reflex@openrouter, decision-1@openrouter: the objective cannot tell them apart; interval overlap does not establish equivalence. The highest raw accuracy (dev) is drex-max@openrouter's, 99% [97, 100]. Its sure accuracy is close to the target: showing it is 99% or more takes over 5,000 labels.
+mammoth@openrouter has the highest coverage at 99% accuracy, 99% [97, 100] (API cost $0.53 per 10k, p99 273ms). Its interval overlaps with drex-max@openrouter, clef-flash@openrouter, decider-flash@openrouter, elephant@openrouter, d1-ultra@openrouter, d1.1@openrouter, d1@vercel, jev:1.14, luna@decisions, reflex@openrouter, decision-1@openrouter: the objective cannot tell them apart; interval overlap does not establish equivalence. The highest raw accuracy (dev) is drex-max@openrouter's, 99% [97, 100]. Its sure accuracy is close to the target: showing it is 99% or more takes over 5,000 labels.
 
 ## Comparison
 
@@ -111,7 +111,7 @@ Where the API costs come from: billed: clef-flash@openrouter, clef-omni@openrout
 Measured: the wall time of a run that called every case. When every answer came from the cache, estimated as the calls' time summed and divided by the concurrency. The time depends more on the concurrency and the provider's rate limit than on the model.
 
 Coverage: answering the most probable first, the largest share whose sure accuracy keeps the target 99%. The cut is chosen on each CV fold's fit side and measured on its eval side. The lower bound is a one-sided 95% Clopper-Pearson; [ ] is a 95% bootstrap interval.
-Scored: every labelled dev case the model answered or refused; held-out test results require an explicit final check. Refused: the share of the scored cases the model refused or does not support, each counted as no answer (wrong, and never sure). Failed counts calls.
+Scored: every labelled dev case the model answered or refused; held-out test results come only when a candidate is adopted. Refused: the share of the scored cases the model refused or does not support, each counted as no answer (wrong, and never sure). Failed counts calls.
 Refused: inputs the model did not take (question type, image, audio, video, PDF, length limits) and answers it declined to give. The model's limit, not a failed call: the candidate is kept, and the case stays in every denominator.
 
 ## Threshold

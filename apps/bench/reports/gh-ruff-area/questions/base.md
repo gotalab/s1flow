@@ -2,7 +2,7 @@
 
 2026-11-15 · 361 labelled dev cases (linter 186, configuration 95, formatter 47, server 33) · split: stratified k-fold (no test case among these: CV numbers only) · source: GitHub issues of astral-sh/ruff (labels applied by maintainers)
 
-**drex-max@openrouter** has the highest coverage at 95% accuracy, 89% [85, 92] (API cost $0.28 per 10k, p99 1240ms). Its interval overlaps with d1-ultra@openrouter, decider@openrouter, mammoth@openrouter, span@openrouter: the objective cannot tell them apart; interval overlap does not establish equivalence. task.py names no tiebreak, so they are listed by name, unordered. The highest raw accuracy (dev) is decider@openrouter's, 92% [89, 94].
+drex-max@openrouter has the highest coverage at 95% accuracy, 89% [85, 92] (API cost $0.28 per 10k, p99 1240ms). Its interval overlaps with d1-ultra@openrouter, decider@openrouter, mammoth@openrouter, span@openrouter: the objective cannot tell them apart; interval overlap does not establish equivalence. task.py names no tiebreak, so they are listed by name, unordered. The highest raw accuracy (dev) is decider@openrouter's, 92% [89, 94].
 
 ## Comparison
 
@@ -111,7 +111,7 @@ Where the API costs come from: billed: clef-flash@openrouter, clef-omni@openrout
 Measured: the wall time of a run that called every case. When every answer came from the cache, estimated as the calls' time summed and divided by the concurrency. The time depends more on the concurrency and the provider's rate limit than on the model.
 
 Coverage: answering the most probable first, the largest share whose sure accuracy keeps the target 95%. The cut is chosen on each CV fold's fit side and measured on its eval side. The lower bound is a one-sided 95% Clopper-Pearson; [ ] is a 95% bootstrap interval.
-Scored: every labelled dev case the model answered or refused; held-out test results require an explicit final check. Refused: the share of the scored cases the model refused or does not support, each counted as no answer (wrong, and never sure). Failed counts calls.
+Scored: every labelled dev case the model answered or refused; held-out test results come only when a candidate is adopted. Refused: the share of the scored cases the model refused or does not support, each counted as no answer (wrong, and never sure). Failed counts calls.
 
 ## Wrong at a high probability (0.9 or more)
 

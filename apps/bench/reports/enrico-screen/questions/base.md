@@ -2,7 +2,7 @@
 
 2026-11-15 · 154 labelled dev cases (form 9, gallery 9, menu 9, settings 9, bare 8, chat 8, editor 8, list 8, more) · split: stratified k-fold (no test case among these: CV numbers only) · source: Enrico (labels MIT) on Rico screenshots (CC BY 4.0): up to 12 screens per design topic, mislabelled ones replaced
 
-**elephant@openrouter** has the highest coverage at 90% accuracy, 62% [55, 71] (API cost $0.31 per 10k, p99 384ms). Its interval overlaps with decider@openrouter, drex-max@openrouter, gemini-decision@google, jev:1.14, jev, clef@openrouter, clef-flash@openrouter, mammoth@openrouter, decider-flash@openrouter, d1-ultra@openrouter: the objective cannot tell them apart; interval overlap does not establish equivalence. The highest raw accuracy (dev) is decider@openrouter's, 73% [66, 80].
+elephant@openrouter has the highest coverage at 90% accuracy, 62% [55, 71] (API cost $0.31 per 10k, p99 384ms). Its interval overlaps with decider@openrouter, drex-max@openrouter, gemini-decision@google, jev:1.14, jev, clef@openrouter, clef-flash@openrouter, mammoth@openrouter, decider-flash@openrouter, d1-ultra@openrouter: the objective cannot tell them apart; interval overlap does not establish equivalence. The highest raw accuracy (dev) is decider@openrouter's, 73% [66, 80].
 
 ## Comparison
 
@@ -107,7 +107,7 @@ Where the API costs come from: billed: clef-flash@openrouter, clef-omni@openrout
 Measured: the wall time of a run that called every case. When every answer came from the cache, estimated as the calls' time summed and divided by the concurrency. The time depends more on the concurrency and the provider's rate limit than on the model.
 
 Coverage: answering the most probable first, the largest share whose sure accuracy keeps the target 90%. The cut is chosen on each CV fold's fit side and measured on its eval side. The lower bound is a one-sided 95% Clopper-Pearson; [ ] is a 95% bootstrap interval.
-Scored: every labelled dev case the model answered or refused; held-out test results require an explicit final check. Refused: the share of the scored cases the model refused or does not support, each counted as no answer (wrong, and never sure). Failed counts calls.
+Scored: every labelled dev case the model answered or refused; held-out test results come only when a candidate is adopted. Refused: the share of the scored cases the model refused or does not support, each counted as no answer (wrong, and never sure). Failed counts calls.
 
 ## Wrong at a high probability (0.9 or more)
 

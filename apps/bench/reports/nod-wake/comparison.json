@@ -1,9 +1,9 @@
 {
  "schema": "s1flow/comparison@2",
- "id": "fa85e9158607e177226c2a40be1a2fd644ec46dd9058b06deeabe67e85dc913f",
+ "id": "f52a2b9ba18226adea35b3cfe8a9d80a6e14c9856299686e363474ee74be1659",
  "task": "nod-wake",
  "source": "cases.json",
- "at": "2026-11-15T22:49:04Z",
+ "at": "2026-11-15T23:13:21Z",
  "scope": "dev",
  "question_type": "choice",
  "kind_params": {
@@ -29,7 +29,7 @@
   "min_recall": null
  },
  "data_digest": "2cf9c7143e5fb396d2f6756e8d9a33f9ec871b0310e51e20cb220fc64a4479c8",
- "evaluation_contract_digest": "f13643e2f43ac8e37e9529c8232e63ff88433d0ba2ad5c9cb03a81c4b97804a0",
+ "evaluation_contract_digest": "9e4e853e5bca543252b5723c9ff94831263951e41d49d45caf217511802adc16",
  "input_adapter_digest": "46434bbf9202e92eba8dd029dd828799b63a6dc5735b53349520626d43b52dd7",
  "binding_digests": {
   "clef": "f0ba18c14d995fef01ff2bbcbae8ef95ece632049c74340b3a7944140b86b542",

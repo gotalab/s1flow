@@ -1,9 +1,9 @@
 {
  "schema": "s1flow/comparison@2",
- "id": "9039b58a724f2d554493b673f2081a4acea1bfa775bc5a42315b187685bae422",
+ "id": "51c4f37c2ae111e0b54bad033c7352e58c14fb0094ffedff81f62e9e543465fc",
  "task": "visa-defect",
  "source": "VisA (Amazon, CC BY 4.0), test split: 10 defective and 10 good photos per item, 12 items",
- "at": "2026-11-15T22:50:53Z",
+ "at": "2026-11-15T23:15:09Z",
  "scope": "dev",
  "question_type": "boolean",
  "kind_params": {},
@@ -26,7 +26,7 @@
   "min_recall": null
  },
  "data_digest": "f546dc99148bdc3f8bb33c8b5a786d85ab9f8279bdbd49d6aad8710783ab5031",
- "evaluation_contract_digest": "f59326d5ec127de8cbaf03eeef97321cf24f03cb14a5e13fa9b9a55c8d210128",
+ "evaluation_contract_digest": "e49ca1b344a8f95107e9e965573864adcba1f137cb1b2c6f251e423d8acdd65c",
  "input_adapter_digest": "2a56d660d3bf4a8d57f9a2ffa665b41175888a0013fdd5d5a9b06f6b75096855",
  "binding_digests": {
   "clef": "f0ba18c14d995fef01ff2bbcbae8ef95ece632049c74340b3a7944140b86b542",
