@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 300" width="880" height="300" role="img" aria-labelledby="t d">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 322" width="880" height="322" role="img" aria-labelledby="t d">
   <title id="t">How s1flow works</title>
-  <desc id="d">Your coding agent, with the s1flow Skill, collects labelled cases and compares models and prompts on them. You choose one. Your app decides with that same policy: sure answers act, unsure ones go to a person. The answers people give become new cases.</desc>
+  <desc id="d">Your coding agent, with the s1flow Skill, collects your labeled cases and measures decision models on them. You choose one. Your app decides with what you measured: sure answers act, unsure ones go to a person. The answers people give become new cases.</desc>
   <defs>
     <marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
       <path d="M0 0L10 5L0 10z" class="ah"/>
@@ -10,6 +10,7 @@
       .bg { fill: #ffffff; }
       .tag { font-size: 12px; font-weight: 700; letter-spacing: .12em; }
       .lbl { font-size: 17px; font-weight: 650; fill: #1f2328; text-anchor: middle; }
+      .cap { font-size: 13px; font-weight: 500; fill: #57606a; text-anchor: middle; }
       .pill { font-size: 14px; font-weight: 650; fill: #ffffff; }
       .loop { font-size: 13px; font-weight: 600; fill: #57606a; text-anchor: middle; }
       .ic { fill: none; stroke: #ffffff; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
@@ -24,7 +25,7 @@
       @media all {
         .bg { fill: #0d1117; }
         .lbl { fill: #e6edf3; }
-        .loop { fill: #9198a1; }
+        .cap, .loop { fill: #9198a1; }
         .za { fill: #271a3d; } .ta { fill: #bc8cff; }
         .zb { fill: #2e2509; } .tb { fill: #d29922; }
         .zc { fill: #0c2541; } .tc { fill: #58a6ff; }
@@ -33,56 +34,15 @@
       }
     </style>
   </defs>
-  <rect class="bg" width="880" height="300" rx="16"/>
-
-  <!-- zones -->
-  <rect class="za" x="16" y="16" width="372" height="212" rx="18"/>
-  <rect class="zb" x="404" y="16" width="124" height="212" rx="18"/>
-  <rect class="zc" x="544" y="16" width="320" height="212" rx="18"/>
-  <text class="tag ta" x="36" y="44">YOUR AGENT</text>
-  <text class="tag tb" x="424" y="44">YOU</text>
-  <text class="tag tc" x="564" y="44">YOUR APP</text>
-
-  <!-- collect: stacked cards -->
-  <circle class="ca" cx="112" cy="122" r="40"/>
-  <rect class="ic" x="94" y="114" width="26" height="28" rx="4"/>
-  <path class="ic" d="M100 108H124V134"/>
-  <path class="ic" d="M106 102H130V128"/>
-  <text class="lbl" x="112" y="196">Collect</text>
-
-  <!-- compare: bars -->
-  <circle class="ca" cx="290" cy="122" r="40"/>
-  <path class="ic" d="M272 139V121M284 139V105M296 139V115M308 139V127"/>
-  <text class="lbl" x="290" y="196">Compare</text>
-
-  <!-- choose: check -->
-  <circle class="cb" cx="466" cy="122" r="40"/>
-  <path class="ic" d="M449.5 123L460.5 134L482.5 110" style="stroke-width:4"/>
-  <text class="lbl" x="466" y="196">Choose</text>
-
-  <!-- decide: policy file -->
-  <circle class="cc" cx="622" cy="122" r="40"/>
-  <path class="ic" d="M608 104H626L636 114V140H608Z"/>
-  <path class="ic" d="M615 122H629M615 131H625"/>
-  <text class="lbl" x="622" y="196">Decide</text>
-
-  <!-- outcomes -->
-  <rect class="ok" x="694" y="72" width="164" height="40" rx="20"/>
-  <path class="ic" d="M713 92L719 98L729 86" style="stroke-width:2.5"/>
-  <text class="pill" x="738" y="97">sure: act</text>
-  <rect class="ask" x="694" y="132" width="164" height="40" rx="20"/>
-  <circle class="icf" cx="721" cy="146" r="5"/>
-  <path class="icf" d="M712 162a9 8 0 0 1 18 0z"/>
-  <text class="pill" x="738" y="157">unsure: a person</text>
-
-  <!-- flow -->
-  <path class="ln" d="M156 122H242"/>
-  <path class="ln" d="M334 122H418"/>
-  <path class="ln" d="M510 122H574"/>
-  <path class="ln" d="M664 112L688 98"/>
-  <path class="ln" d="M664 132L688 146"/>
-
-  <!-- feedback loop -->
-  <path class="lp" d="M776 178V258Q776 276 758 276H50Q32 276 32 258V140Q32 122 50 122H66"/>
-  <text class="loop" x="404" y="266">the person’s answer becomes a new case</text>
+  <rect class="bg" width="880" height="322" rx="16"/>
+  <rect class="za" x="16" y="16" width="344" height="232" rx="18"/><text class="tag ta" x="36" y="44">YOUR AGENT + S1FLOW SKILL</text>
+  <rect class="zb" x="376" y="16" width="124" height="232" rx="18"/><text class="tag tb" x="396" y="44">YOU</text>
+  <rect class="zc" x="516" y="16" width="348" height="232" rx="18"/><text class="tag tc" x="536" y="44">YOUR APP</text>
+  <circle class="ca" cx="100" cy="122" r="40"/><rect class="ic" x="82" y="114" width="26" height="28" rx="4"/><path class="ic" d="M88 108H112V134"/><path class="ic" d="M94 102H118V128"/><text class="lbl" x="100" y="196">Collect</text><text class="cap" x="100" y="217">your labeled cases</text>
+  <circle class="ca" cx="268" cy="122" r="40"/><path class="ic" d="M250 139V121M262 139V105M274 139V115M286 139V127"/><text class="lbl" x="268" y="196">Measure</text><text class="cap" x="268" y="217">models on those cases</text>
+  <circle class="cb" cx="438" cy="122" r="40"/><path class="ic" d="M421.5 123L432.5 134L454.5 110" style="stroke-width:4"/><text class="lbl" x="438" y="196">Choose</text><text class="cap" x="438" y="217">the one you trust</text>
+  <circle class="cc" cx="598" cy="122" r="40"/><path class="ic" d="M584 104H602L612 114V140H584Z"/><path class="ic" d="M591 122H605M591 131H601"/><text class="lbl" x="598" y="196">Decide</text><text class="cap" x="598" y="217">exactly as measured</text>
+  <rect class="ok" x="676" y="72" width="176" height="40" rx="20"/><path class="ic" d="M695 92L701 98L711 86" style="stroke-width:2.5"/><text class="pill" x="720" y="97">sure: act</text><rect class="ask" x="676" y="132" width="176" height="40" rx="20"/><circle class="icf" cx="703" cy="146" r="5"/><path class="icf" d="M694 162a9 8 0 0 1 18 0z"/><text class="pill" x="720" y="157">unsure: a person</text>
+  <path class="ln" d="M144 122H220"/><path class="ln" d="M312 122H390"/><path class="ln" d="M482 122H550"/><path class="ln" d="M640 110L670 97"/><path class="ln" d="M640 134L670 147"/>
+  <path class="lp" d="M764 178V280Q764 298 746 298H42Q24 298 24 280V140Q24 122 42 122H54"/><text class="loop" x="398" y="288">the person’s answer becomes a new case</text>
 </svg>
