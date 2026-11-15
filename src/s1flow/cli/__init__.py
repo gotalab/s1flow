@@ -13,7 +13,7 @@ table (HELP), and a command that does not exist is one line naming the closest.
     s1flow feedback record gh-ruff-area@v3 DECISION_ID formatter --log log.jsonl   the right answer, once known
     s1flow feedback measure gh-ruff-area log.jsonl [--add]                   production from the logs (s1flow[eval])
     s1flow adopt --spec spec.json --reason "..." [--root policies] [--connections PATH]   save a spec as the next version, current
-    s1flow adopt --spec spec.json --check [--connections PATH]          validate it (and its binding) only
+    s1flow adopt --spec spec.json --validate [--connections PATH]       validate it (and its binding) only
     s1flow export [gh-ruff-area ...] --out policies.json                each task's current policy in one file, for an app to vendor
     s1flow doctor [--models jev,d1@vercel | --policy gh-ruff-area[@…] --connections PATH [--path policies.json]] [--reach] [--json]   the keys and hosts they need
     s1flow init --skill                                                 write the Agent Skill where agents read it (skill.py)

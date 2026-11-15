@@ -346,7 +346,7 @@ def test_help_on_the_base_install_lists_what_it_runs():
 def test_a_spec_that_is_not_utf8_is_a_clean_cli_error(tmp_path):
     source = tmp_path / 'invalid.json'
     source.write_bytes(b'\xff\xfeinvalid')
-    done = s1flow('adopt', '--spec', str(source), '--check', '--json', cwd=tmp_path)
+    done = s1flow('adopt', '--spec', str(source), '--validate', '--json', cwd=tmp_path)
     assert done.returncode == 2
     assert 'Traceback' not in done.stderr and 'Traceback' not in done.stdout
     assert 'not a v2 policy' in done.stderr + done.stdout

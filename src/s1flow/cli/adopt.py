@@ -17,9 +17,9 @@ def adopt(a: argparse.Namespace) -> int:
     it). The pull request that carries it ships it when
     it merges. A candidate the held-out test shows below is not written (exit 1) unless --force."""
     a.reason = (a.reason or "").strip()
-    if a.check and not a.spec:
-        raise S1flowError("adopt --check validates a spec: adopt --spec FILE --check")
-    if not a.reason and not a.check:
+    if a.validate and not a.spec:
+        raise S1flowError("adopt --validate validates a spec: adopt --spec FILE --validate")
+    if not a.reason and not a.validate:
         raise S1flowError("adopt records why: give --reason a sentence")
     if a.spec:
         return _adopt_spec(a)
@@ -66,7 +66,7 @@ def adopt(a: argparse.Namespace) -> int:
 
 def _adopt_spec(a: argparse.Namespace) -> int:
     """adopt --spec FILE: save a runtime spec as its task's next version, unevaluated, and make it current (with
-    --check, validate it only). No model is called and nothing is measured. In an s1flow project, its policies/ and
+    --validate, validate it only). No model is called and nothing is measured. In an s1flow project, its policies/ and
     s1flow.toml; in an app's repository, --root and --connections."""
     from ..integrations import git
     from ..policies import DecisionPolicy, Policies
@@ -76,13 +76,13 @@ def _adopt_spec(a: argparse.Namespace) -> int:
     if a.task or a.candidate or a.force:
         raise S1flowError("adopt --spec FILE takes no TASK, candidate or --force: the spec names its task and version, and nothing is measured")
     spec = read_file(a.spec)
-    # --check with --connections alone, outside a project: the binding only
-    found = None if a.root else project_root(a, required=not (a.check and a.connections))
+    # --validate with --connections alone, outside a project: the binding only
+    found = None if a.root else project_root(a, required=not (a.validate and a.connections))
     proj = project(a) if found else None
     DecisionPolicy(spec, client=proj.client() if proj else policy_client(a))  # it binds to an allowed model
     where = place.absolute(a.root, "policy root") if a.root else proj.policies_dir if proj else None
     store = Policies(where) if where else None
-    if a.check:
+    if a.validate:
         if store is not None and spec.version <= (latest := max(store.versions(spec.task), default=0)):
             raise ConfigError(f"{spec.task} already has v{latest}; a new policy is v{latest + 1}")
         print(json.dumps({"policy": spec.ref, "valid": True}) if a.json else f"{spec.ref}: valid (binds to {spec.connection}); nothing written")
@@ -105,7 +105,7 @@ def add(sub: Any) -> None:
     p.add_argument("candidate", nargs="?", help="the candidate, model[:version][/variant] as `s1flow report` names it")
     p.add_argument("--spec", type=Path, metavar="FILE", help="save this runtime spec as the next version, unevaluated, and make it current")
     p.add_argument("--root", type=Path, help="the policies directory, outside an s1flow project (an app's repository; with --connections for --spec)")
-    p.add_argument("--reason", help="why (kept in history.jsonl, and for a candidate in vN.evaluation.json); needed unless --spec FILE --check")
-    p.add_argument("--check", action="store_true", help="with --spec: validate the spec only (it binds to an allowed model); write nothing")
+    p.add_argument("--reason", help="why (kept in history.jsonl, and for a candidate in vN.evaluation.json); needed unless --spec FILE --validate")
+    p.add_argument("--validate", action="store_true", help="with --spec: validate the spec only (it binds to an allowed model); write nothing")
     p.add_argument("--force", action="store_true", help="write it even when the held-out test shows it below")
     p.add_argument("--json", action="store_true")

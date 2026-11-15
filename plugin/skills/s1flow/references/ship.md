@@ -14,7 +14,7 @@ Never run `adopt` or merge on your own judgement, and never pass `--force` unles
 ```bash
 s1flow adopt <task> <candidate> --reason "..."    # write vN, make it current, append to history.jsonl
 s1flow adopt --spec spec.json --reason "..."      # a runtime spec, saved unevaluated, made current
-s1flow adopt --spec spec.json --check             # validate only; save nothing
+s1flow adopt --spec spec.json --validate          # validate only; save nothing
 ```
 
 - `adopt TASK CANDIDATE` scores the chosen candidate on the held-out test and records the result. If the held-out

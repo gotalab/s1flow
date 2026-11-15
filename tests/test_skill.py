@@ -143,7 +143,7 @@ def test_the_skill_commands_run_on_the_base_install(tmp_path):
     done = subprocess.run([sys.executable, "-c", code.replace("ARGS", "['s1flow', 'init', '--skill', '--task', 't']")], capture_output=True, text=True, cwd=tmp_path)
     assert done.returncode == 0, done.stderr
     assert (tmp_path / ".claude/skills/s1flow/SKILL.md").is_file() and (tmp_path / "s1flow/tasks/t/task.py").is_file()
-    for args in (["export"], ["adopt", "--spec", "nope.json", "--check"]):  # the base install runs them (here: nothing to export, no file)
+    for args in (["export"], ["adopt", "--spec", "nope.json", "--validate"]):  # the base install runs them (here: nothing to export, no file)
         ran = subprocess.run([sys.executable, "-c", code.replace("ARGS", repr(["s1flow", *args]))], capture_output=True, text=True, cwd=tmp_path)
         assert "Traceback" not in ran.stderr and "s1flow[eval]" not in ran.stderr, ran.stderr
 

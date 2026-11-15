@@ -154,7 +154,7 @@ def test_nested_cli_options_and_missing_policy_authorization(tmp_path):
     source = tmp_path / "policy.json"
     source.write_text(runtime_spec().dump())
     # A connection grant before a nested subcommand is retained, and binding errors stay readable.
-    done = s1flow("--connections", str(config), "adopt", "--spec", str(source), "--check", cwd=tmp_path)
+    done = s1flow("--connections", str(config), "adopt", "--spec", str(source), "--validate", cwd=tmp_path)
     assert done.returncode == 2 and "unknown connection 'trusted'" in done.stderr
     assert "toy" in done.stderr and str(config) in done.stderr and "Traceback" not in done.stderr
     done = s1flow("decide", "--policy", "ticket@v1", "--path", str(source), "--state", '"bug"',

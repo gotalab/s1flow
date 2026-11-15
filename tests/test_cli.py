@@ -20,7 +20,7 @@ from s1flow.eval import metrics
     (("decide", "--bogus"), "error: unrecognized arguments: --bogus (see s1flow decide --help)"),
     (("export", "--bogus"), "error: unrecognized arguments: --bogus (see s1flow export --help)"),
     (("adopt", "t@v1"), "error: adopt records why: give --reason a sentence"),
-    (("adopt", "t@v1", "--check", "--reason", "x"), "error: adopt --check validates a spec: adopt --spec FILE --check"),
+    (("adopt", "t@v1", "--validate", "--reason", "x"), "error: adopt --validate validates a spec: adopt --spec FILE --validate"),
 ])
 def test_a_usage_error_is_one_line_and_exit_2(tmp_path, args, said):
     done = s1flow(*args, cwd=tmp_path)

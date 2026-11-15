@@ -19,6 +19,8 @@
 
 ### Changed
 
+- `adopt --spec FILE --check` is now `adopt --spec FILE --validate`. It still validates the spec and its binding
+  and writes nothing; "check" now names only `cases check`.
 - A case the model refused (or whose input it does not take) is now scored as no answer instead of being left
   out: wrong for accuracy, not accepted for coverage, so every number's denominator is all the labelled cases
   the model answered or refused, and refusing a hard case no longer raises accuracy or coverage. `report` shows

@@ -52,13 +52,13 @@ Now write `bug.json`. You don't need any evaluation data, model responses or pla
 ```
 
 ```bash
-s1flow adopt --spec bug.json --connections connections.toml --check --json
+s1flow adopt --spec bug.json --connections connections.toml --validate --json
 s1flow adopt --spec bug.json --root policies --connections connections.toml --reason "first rule" --json
 s1flow decide --policy ticket-bug@v1 --path policies/ticket-bug/v1.json \
   --connections connections.toml --state '{"text":"Crash on startup"}' --json
 ```
 
-`adopt --spec FILE --check` validates the spec and that the connection file (`--connections`, else the project's
+`adopt --spec FILE --validate` validates the spec and that the connection file (`--connections`, else the project's
 `s1flow.toml`) defines its connection and allows its model ID, without calling a model or saving anything. `adopt --spec` saves the policy as a new version that can't be changed,
 stamped with when it was created and which SDK version created it, and makes it current; it doesn't claim the
 policy has been evaluated.
