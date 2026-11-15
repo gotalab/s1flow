@@ -19,6 +19,8 @@
 
 ### Changed
 
+- The comparison page (`charts.py`) orders its columns by what a choice weighs: the task's objective first, then
+  latency, then API cost, then the other metrics. The column the table is sorted by carries a mark.
 - `optimize` is marked experimental in `--help`, the docs and the Skill: its options and the record it saves may
   change between releases. It works as before.
 - The summary `report --out` writes no longer sets a candidate's name in bold: `report` orders the candidates and

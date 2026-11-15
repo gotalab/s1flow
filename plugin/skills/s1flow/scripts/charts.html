@@ -26,6 +26,7 @@ th { text-align:right; font-weight:500; color:var(--muted); font-size:12px; bord
 th button { all:unset; cursor:pointer; display:inline-block; text-align:right; }
 th button:hover,th button:focus-visible { color:var(--ink); text-decoration:underline; }
 th[aria-sort] button { color:var(--ink); font-weight:600; }
+th .sorted { margin-left:4px; font-size:9px; color:var(--accent); }
 td { padding:8px 10px; text-align:right; border-bottom:1px solid var(--line); white-space:nowrap; }
 th.name,td.name { text-align:left; min-width:190px; white-space:normal; position:sticky; left:0; background:#fff; z-index:1; }
 td.name { font-weight:500; }
@@ -173,7 +174,8 @@ function renderMeasures() {
   for(const m of measures){const l=el('label'),i=el('input');i.type='checkbox';i.checked=shown.has(m.key);i.addEventListener('change',()=>{i.checked?shown.add(m.key):shown.delete(m.key);renderTable();renderRelationship();});l.append(i,m.label);l.title=m.basis;box.appendChild(l);}
 }
 function renderTable() {
-  const group=m=>isTask(m.key)?0:m.unit==='usd'||m.unit==='ms'?2:1;  // the task's objectives first, then the metrics, then the calls
+  // Columns: the task's objectives (the primary first), then what every choice weighs (latency, API cost), then the other metrics.
+  const group=m=>isTask(m.key)?0:m.unit==='ms'?1:m.unit==='usd'?2:3;
   const ms=measures.filter(m=>shown.has(m.key)).sort((a,b)=>group(a)-group(b)||(b.key===primaryKey)-(a.key===primaryKey));
   if(sortKey&&!shown.has(sortKey))sortKey=null;
   const best=new Map(ms.map(m=>{const v=compared.map(m.get).filter(finite);return [m.key,v.length?(m.direction==='min'?Math.min(...v):Math.max(...v)):null];}));
@@ -188,8 +190,10 @@ function renderTable() {
   const head=el('tr');head.appendChild(el('th','Candidate','name'));
   for(const m of ms){const th=el('th');const b=el('button',m.label);b.type='button';b.title=`${m.basis} ${m.direction==='min'?'Lower':'Higher'} is better. Sort by it.`;
     b.addEventListener('click',()=>{if(sortKey!==m.key){sortKey=m.key;sortAsc=true;}else if(sortAsc)sortAsc=false;else sortKey=null;renderTable();});
-    if(sortKey===m.key)th.setAttribute('aria-sort',(sortAsc===(m.direction==='max'))?'descending':'ascending');
-    b.textContent=`${m.label}\u00a0${m.direction==='min'?'↓':'↑'}`;th.appendChild(b);head.appendChild(th);}
+    // sortAsc: best first. The mark shows which way the values run down the column.
+    const down=sortAsc===(m.direction==='max');
+    if(sortKey===m.key){th.setAttribute('aria-sort',down?'descending':'ascending');b.append(el('span',down?'▼':'▲','sorted'));}
+    th.appendChild(b);head.appendChild(th);}
   $('compare-head').replaceChildren(head);
   const body=$('compare-body');body.replaceChildren();
   for(const r of order){const tr=el('tr',undefined,onFront.has(r)?'front':'');tr.appendChild(name(r,el('td',undefined,'name')));
@@ -198,7 +202,7 @@ function renderTable() {
       const i=m.interval?.(r);if(i)td.title=`95% interval ${fmt(i[0],m.unit)} – ${fmt(i[1],m.unit)}`;tr.appendChild(td);}
     body.appendChild(tr);}
   const key=$('key');key.replaceChildren();
-  key.append(el('b','◆'),` ${onFront.size} of ${compared.length}: no other candidate is at least as good on every measure shown and better on one. `,el('b','Blue'),': best in its column. Bars run from worst to best. Hover a value for its interval.');
+  key.append(el('b','◆'),` ${onFront.size} of ${compared.length}: no other candidate is at least as good on every measure shown and better on one. `,el('b','Blue'),': best in its column. Bars run from worst to best. Hover a value for its interval. Click a column to sort by it, best first; again for worst first; once more for the opening order.');
 }
 
 // Trade-off: any two measures; the ◆ candidates are named, the rest on hover.
