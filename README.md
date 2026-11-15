@@ -13,7 +13,7 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/how-it-works-dark.svg">
-  <img alt="Your coding agent collects labeled cases and compares decision models on them. You pick one, and your app runs it: answers above the confidence threshold are acted on, the rest go to a person, and the person's answers become new cases." src="docs/images/how-it-works.svg">
+  <img alt="Your coding agent, with the s1flow Skill, collects your labeled cases and measures decision models on those cases. You choose the one you trust, and your app decides with it exactly as measured: answers above the confidence threshold are acted on, the rest go to a person, and the person's answers become new cases." src="docs/images/how-it-works.svg">
 </picture>
 
 ## Accuracy hides what you can automate
