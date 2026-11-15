@@ -52,7 +52,7 @@ COMMANDS = (
     (run, "run", "ask the models about a task's cases (cached): runs/<task>/"),
     (report, "report", "every model and question variant on the saved runs by the task's objective (--out DIR writes it); no TASK: every task's current version and why"),
     (adopt, "adopt", "write a candidate as the task's current policy, with why (merging the change ships it)"),
-    (optimize, "optimize", "optimize the current policy's question into a new candidate; it ships nothing (s1flow[optimize])"),
+    (optimize, "optimize", "experimental: optimize the current policy's question into a new candidate; it ships nothing (s1flow[optimize])"),
     (cases, "cases", "check a task's cases; review and correct their labels"),
     (decide, "decide", "call a model (--model), or decide with a task's policy (--policy)"),
     (feedback, "feedback", "record the right answer for a case a policy decided (record); measure policies in production (measure, s1flow[eval])"),
