@@ -286,7 +286,7 @@ function renderNotCompared() {
 function renderDiagnostics() {
   const parent=$('diagnostic-figures');parent.replaceChildren();for(const key of [...figureStore.keys()])if(key.startsWith('diagnostic-'))figureStore.delete(key);
   const r=rows.find(r=>r.candidate===$('diagnostic-candidate').value);txt('diagnostic-unavailable','');if(!r)return;
-  const c=r.charts||{};const basis=`${r.candidate} · ${r.n} answered development cases`;
+  const c=r.charts||{};const basis=`${r.candidate} · ${r.n} scored development cases`;
   if(c.selection_sweep?.length)mountFigure(parent,'diagnostic-coverage',width=>plotFigure('Accepted share and accuracy',basis,width,c.selection_sweep.map(p=>[p.coverage,p.sure_accuracy]),'Accepted share','Accuracy of accepted',{target:D.objective.name==='coverage'?params.target_accuracy:null}));
   if(c.threshold_sweep?.length)mountFigure(parent,'diagnostic-precision-recall',width=>plotFigure('Precision and recall across cutoffs',basis,width,c.threshold_sweep.map(p=>[p.recall,p.precision]),'Recall','Precision'));
   if(c.calibration?.length)mountFigure(parent,'diagnostic-calibration',width=>plotFigure('Predicted and observed positive share',basis,width,c.calibration.map(p=>[p.probability,p.observed]),D.kind_params?.positive?`Predicted P(${D.kind_params.positive})`:'Predicted P(True)','Observed positive share',{diagonal:true}));
@@ -299,7 +299,7 @@ function renderContext() {
   if(targets.length)$('notices').appendChild(el('p',`Constraints recorded in task.py: ${targets.map(([k,v])=>`${k} = ${typeof v==='object'?JSON.stringify(v):v}`).join(' · ')}.`));
   for(const note of D.notices||[])$('notices').appendChild(el('p',note));
   for(const r of compared){const detail=el('details',undefined,'measurement');detail.appendChild(el('summary',r.candidate));const dl=el('dl');const l=r.calls?.latency||{};
-    const values=[['Answered / labelled',`${r.n} / ${D.n}`],['Refused / failed / missing',`${r.failures?.refused_cases??'unknown'} / ${r.failures?.failed_cases??'unknown'} / ${r.failures?.never_asked??'unknown'}`],['Provider / model',`${r.measurement?.provider} / ${r.measurement?.model_id}`],['Probability evidence',r.measurement?.distribution||'unknown'],['Recorded concurrency',(l.concurrency||[]).join(', ')||'unknown'],['p50 / p90 / p99',`${fmt(l.p50_ms,'ms')} / ${fmt(l.p90_ms,'ms')} / ${fmt(l.p99_ms,'ms')}`],['Cost basis',`${r.calls?.cost_source||'unknown'} · ${r.calls?.cost_unknown||0} unpriced calls`],['Fitted reading rule',JSON.stringify(r.rule)]];
+    const values=[['Scored / labelled',`${r.n} / ${D.n}`],['Refused (scored as no answer)',r.failures&&r.n?`${(100*r.failures.refused_cases/r.n).toFixed(1)}% (${r.failures.refused_cases} of ${r.n})`:'unknown'],['Failed / missing',`${r.failures?.failed_cases??'unknown'} / ${r.failures?.never_asked??'unknown'}`],['Provider / model',`${r.measurement?.provider} / ${r.measurement?.model_id}`],['Probability evidence',r.measurement?.distribution||'unknown'],['Recorded concurrency',(l.concurrency||[]).join(', ')||'unknown'],['p50 / p90 / p99',`${fmt(l.p50_ms,'ms')} / ${fmt(l.p90_ms,'ms')} / ${fmt(l.p99_ms,'ms')}`],['Cost basis',`${r.calls?.cost_source||'unknown'} · ${r.calls?.cost_unknown||0} unpriced calls`],['Fitted reading rule',JSON.stringify(r.rule)]];
     for(const [k,v] of values)dl.append(el('dt',k),el('dd',String(v)));detail.appendChild(dl);detail.appendChild(el('pre',JSON.stringify(r.question,null,2)));$('measurements').appendChild(detail);}
 }
 try {

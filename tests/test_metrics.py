@@ -61,6 +61,30 @@ def test_reading_again_at_a_rule_is_what_the_kind_reads():
             assert (np.asarray(getattr(again, col), dtype=object) == getattr(each, col)).all(), (rule, col)
 
 
+def test_a_case_with_no_answer_stays_wrong_and_unsure_at_every_rule():
+    """A refused case has no reading: no rule turns it into a right answer, a sure one or an alarm."""
+    kind = BooleanKind()
+    answered = [kind.reading(Average(distributed=True, p_positive=x), DecisionRule()) for x in (0.9, 0.2)]
+    pairs = measure.pairs(kind, [True, False, True, False], [*answered, None, None])
+    for rule in ({}, {"threshold": 0.3}, {"threshold": 0.7}, {"min_probability": 0.0}, {"threshold": 0.3, "min_probability": 0.0}):
+        q = pairs.at(**rule)
+        assert list(q.correct) == [True, True, False, False], rule
+        assert list(q.sure) == [True, True, False, False] and list(q.said) == [True, False, False, False], rule
+    cov = bound(Coverage(target_accuracy=0.9), kind)
+    cut = metrics.search(cov, pairs)
+    assert cut == 0.8  # the lowest probability an answer had: a case with no answer offers no cut of its own (not 0.0)
+    assert cov.value(pairs.at(min_probability=cut)) == 0.5  # 2 of the 4 labelled cases, not 2 of 2
+    recall = bound(Recall(max_false_alarm=0.5), kind)
+    assert metrics.search(recall, pairs) == 0.2  # nor a threshold at its placeholder P(positive)
+    assert metrics.search(cov, pairs[np.array([2, 3])]) == np.inf  # nothing answered: no rule
+
+
+def test_the_sweep_counts_a_positive_with_no_answer_a_miss_and_a_negative_with_none_no_alarm():
+    y, ok = np.array([True, True, False, False]), np.array([True, False, True, False])
+    rows = metrics.sweep(y, np.array([0.9, 0.5, 0.1, 0.5]), [0.3, 0.7], ok)
+    assert [(r.threshold, r.misses, r.positives, r.false_alarms, r.negatives) for r in rows] == [(0.3, 1, 2, 0, 2), (0.7, 1, 2, 0, 2)]
+
+
 @pytest.mark.parametrize("y", [
     np.array(["a", "b"] * 30),  # stratified k-fold
     np.array(["a"] * 57 + ["b"] * 3),  # a label with fewer than k cases: k-fold

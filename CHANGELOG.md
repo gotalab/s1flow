@@ -19,6 +19,12 @@
 
 ### Changed
 
+- A case the model refused (or whose input it does not take) is now scored as no answer instead of being left
+  out: wrong for accuracy, not accepted for coverage, so every number's denominator is all the labelled cases
+  the model answered or refused, and refusing a hard case no longer raises accuracy or coverage. `report` shows
+  the refusal rate (`refused`, the share of the scored cases) beside `n`. Numbers change only for a model that
+  refused at least one case. A model that answered nothing is still not measured, and a case whose every call
+  failed still keeps the candidate out of the comparison.
 - `ImageRef` is now `MediaRef`, and state preparation moved from `s1flow.client.images` to `s1flow.client.media`
   (`media.materialize`, `media.prepare(kind, data)`).
 - s1flow no longer caps a state at 4 images; a model that takes fewer refuses the case, which counts as refused.

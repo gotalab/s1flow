@@ -37,14 +37,14 @@
    "key": "accuracy",
    "label": "accuracy",
    "unit": "share",
-   "basis": "plain answers; denominator: answered labelled dev cases",
+   "basis": "plain answers; denominator: labelled dev cases",
    "direction": "max"
   },
   {
    "key": "objective:accuracy{}",
    "label": "accuracy (all)",
    "unit": "share",
-   "basis": "configured primary objective; CV chosen rule; denominator: answered labelled dev cases",
+   "basis": "configured primary objective; CV chosen rule; denominator: labelled dev cases",
    "direction": "max"
   }
  ],

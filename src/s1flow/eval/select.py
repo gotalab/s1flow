@@ -118,7 +118,7 @@ def rank(objective: Objective, then: list[Objective | CallKey], constraints: Con
     populations = {tuple(sorted(e.answered_ids)) for e in scored}
     if len(populations) > 1:
         for item in ranked:
-            item.excluded.append("different answered dev cases; automatic comparison refused")
+            item.excluded.append("different scored dev cases; automatic comparison refused")
     by = {e.candidate.name: e for e in scored}
 
     def by_value(o: Objective, s: ObjectiveScore) -> float:

@@ -15,11 +15,11 @@ from s1flow.objectives import AUROC, MAE, QWK, Accuracy, F1, MacroF1
 from s1flow.policies.kinds import KindParams
 
 AB = {"a": None, "b": None}
-PER_CASE = "over answered labelled dev cases"
+PER_CASE = "over labelled dev cases"
 P = "genuine model probabilities"
 SELECTIVE = [
     ("coverage:0.95", "coverage (target reference 95%)", "share", "max",
-     "target reference 0.95; target-specific CV chosen rule; observed accepted / answered labelled dev cases"),
+     "target reference 0.95; target-specific CV chosen rule; observed accepted / labelled dev cases"),
     ("accepted_accuracy:0.95", "accepted accuracy (target reference 95%)", "share", "max",
      "target reference 0.95; target-specific CV chosen rule; observed correct accepted / accepted labelled dev cases"),
 ]
@@ -27,15 +27,15 @@ SELECTIVE = [
 
 def binary(reading: str) -> list[tuple[str, str, str, str, str]]:
     return [
-        ("accuracy", "accuracy (all)", "share", "max", f"{reading}; correct / answered labelled dev cases"),
+        ("accuracy", "accuracy (all)", "share", "max", f"{reading}; correct / labelled dev cases"),
         ("f1", "F1", "number", "max", f"{reading}; harmonic mean of precision and recall {PER_CASE}"),
-        ("precision", "precision", "share", "max", f"{reading}; true positives / predicted positives among answered labelled dev cases"),
-        ("recall", "recall", "share", "max", f"{reading}; true positives / labelled positives among answered labelled dev cases"),
+        ("precision", "precision", "share", "max", f"{reading}; true positives / predicted positives among labelled dev cases"),
+        ("recall", "recall", "share", "max", f"{reading}; true positives / labelled positives among labelled dev cases"),
         ("auroc", "AUROC", "number", "max", f"{P}; binary positive-vs-negative AUROC {PER_CASE}"),
         ("brier", "Brier score", "number", "min", f"{P}; binary Brier score {PER_CASE}"),
         ("ece", "ECE", "number", "min", f"{P}; calibration of answer correctness {PER_CASE}"),
         ("objective:accuracy{}", "accuracy (all)", "share", "max",
-         "configured primary objective; CV chosen rule; denominator: answered labelled dev cases"),
+         "configured primary objective; CV chosen rule; denominator: labelled dev cases"),
         *SELECTIVE,
     ]
 
@@ -61,13 +61,13 @@ KINDS: dict[str, tuple[Any, KindParams, tuple[str, ...], tuple[str, ...], list[s
         Choice(instructions="?", criteria=AB), KindParams(), ("accuracy", "coverage", "auroc", "macro_f1", "loss"), ("macro_f1",),
         ["accuracy", "auroc", "brier", "coverage", "ece", "loss", "macro_f1"],
         [
-            ("accuracy", "accuracy (all)", "share", "max", f"{CHOICE_READING}; correct / answered labelled dev cases"),
+            ("accuracy", "accuracy (all)", "share", "max", f"{CHOICE_READING}; correct / labelled dev cases"),
             ("macro_f1", "macro-F1", "number", "max", f"{CHOICE_READING}; mean of per-class F1 {PER_CASE}"),
-            ("auroc", "AUROC", "number", "max", f"{P}; macro one-v-rest AUROC over options and answered labelled dev cases"),
+            ("auroc", "AUROC", "number", "max", f"{P}; macro one-v-rest AUROC over options and labelled dev cases"),
             ("brier", "Brier score", "number", "min", f"{P}; multiclass Brier score {PER_CASE}"),
             ("ece", "ECE", "number", "min", f"{P}; calibration of selected-answer correctness {PER_CASE}"),
             ("objective:accuracy{}", "accuracy (all)", "share", "max",
-             f"configured primary objective; {CHOICE_READING}; denominator: answered labelled dev cases"),
+             f"configured primary objective; {CHOICE_READING}; denominator: labelled dev cases"),
             *SELECTIVE,
         ],
     ),
@@ -75,14 +75,14 @@ KINDS: dict[str, tuple[Any, KindParams, tuple[str, ...], tuple[str, ...], list[s
         Score(instructions="?", criteria=["low", "mid", "high"]), KindParams(), ("mae", "qwk", "accuracy", "coverage", "auroc"), ("mae", "qwk"),
         ["accuracy", "auroc", "brier", "coverage", "ece", "mae", "qwk"],
         [
-            ("accuracy", "accuracy (all)", "share", "max", f"{SCORE_READING}; correct / answered labelled dev cases"),
+            ("accuracy", "accuracy (all)", "share", "max", f"{SCORE_READING}; correct / labelled dev cases"),
             ("mae", "MAE (levels)", "number", "min", f"expected level; mean absolute error in levels {PER_CASE}"),
             ("qwk", "QWK", "number", "max", f"{SCORE_READING}; quadratic weighted kappa {PER_CASE}"),
             ("auroc", "AUROC", "number", "max", f"{P}; mean over the cuts k of AUROC(label >= k, P(level >= k)) {PER_CASE}"),
             ("brier", "Brier score", "number", "min", f"{P}; ranked probability score over (levels - 1), {PER_CASE}"),
             ("ece", "ECE", "number", "min", f"{P}; calibration of the rounded level's correctness {PER_CASE}"),
             ("objective:mae{}", "MAE (levels)", "number", "min",
-             f"configured primary objective; {SCORE_READING}; denominator: answered labelled dev cases"),
+             f"configured primary objective; {SCORE_READING}; denominator: labelled dev cases"),
             *SELECTIVE,
         ],
     ),
@@ -90,13 +90,13 @@ KINDS: dict[str, tuple[Any, KindParams, tuple[str, ...], tuple[str, ...], list[s
         Box(instructions="?"), KindParams(), ("accuracy", "coverage", "auroc", "mean_iou"), ("mean_iou",),
         ["accuracy", "auroc", "brier", "coverage", "ece", "mean_iou"],
         [
-            ("accuracy", "accuracy (all)", "share", "max", f"{BOX_READING}; correct / answered labelled dev cases"),
+            ("accuracy", "accuracy (all)", "share", "max", f"{BOX_READING}; correct / labelled dev cases"),
             ("mean_iou", "mean IoU", "number", "max", f"{BOX_READING}; mean IoU {PER_CASE}"),
             ("auroc", "AUROC", "number", "max", f"recorded box confidence; hit-ranking AUROC {PER_CASE}"),
             ("brier", "Brier score", "number", "min", f"recorded box confidence; Brier score of hit correctness {PER_CASE}"),
             ("ece", "ECE", "number", "min", f"recorded box confidence; calibration of hit correctness {PER_CASE}"),
             ("objective:accuracy{}", "accuracy (all)", "share", "max",
-             f"configured primary objective; {BOX_READING}; denominator: answered labelled dev cases"),
+             f"configured primary objective; {BOX_READING}; denominator: labelled dev cases"),
             *SELECTIVE,
         ],
     ),

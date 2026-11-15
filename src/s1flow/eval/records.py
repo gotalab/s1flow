@@ -5,9 +5,9 @@ Every case ends in exactly one outcome:
 | outcome       | raised as                     | in the report                                    |
 |---------------|-------------------------------|--------------------------------------------------|
 | `answered`    | (a `Response`)                | scored                                           |
-| `unsupported` | `Unsupported`, before a call  | refused / unsupported; left out of the denominator |
-| `rejected`    | `Rejected`, after a call, or the question's `Refusal` | refused / unsupported; left out of the denominator |
-| `failed`      | `ProviderError`, or any other | failed                                           |
+| `unsupported` | `Unsupported`, before a call  | refused / unsupported; scored as no answer (wrong, not sure) |
+| `rejected`    | `Rejected`, after a call, or the question's `Refusal` | refused / unsupported; scored as no answer (wrong, not sure) |
+| `failed`      | `ProviderError`, or any other | failed; not scored (the candidate is not compared) |
 | `data_error`  | `DataError`                   | data errors: the task is wrong, not the model    |
 """
 
