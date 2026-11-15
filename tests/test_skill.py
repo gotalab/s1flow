@@ -149,22 +149,11 @@ def test_the_skill_commands_run_on_the_base_install(tmp_path):
 
 
 def test_init_writes_only_the_project_unless_asked(repo):
-    """The Skill only with --skill (the plugin brings it too), and the CI workflow only with --ci."""
+    """The Skill only with --skill (the plugin brings it too)."""
     done = cli("init")
     assert done.exit_code == 0, done.output
     assert (repo / "sub" / "s1flow" / "s1flow.toml").is_file()
     assert sorted(p.name for p in repo.iterdir()) == [".git", "sub"]
-
-    assert cli("init", "other", "--ci").exit_code == 0
-    assert (repo / ".github/workflows/s1flow-check.yml").is_file()
-    assert not (repo / ".claude").exists() and not (repo / ".agents").exists()
-
-
-def test_init_ci_outside_git_says_why_and_writes_nothing(tmp_path, monkeypatch):
-    monkeypatch.chdir(tmp_path)
-    done = cli("init", "--ci")
-    assert done.exit_code == 2 and "not in a Git repository: run git init first, or leave out --ci" in done.err
-    assert list(tmp_path.iterdir()) == []
 
 
 @pytest.mark.skipif(shutil.which("uv") is None, reason="needs uv to build the wheel")

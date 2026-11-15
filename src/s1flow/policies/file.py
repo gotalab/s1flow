@@ -159,11 +159,6 @@ class PolicySpec(BaseModel):
         """Hash the complete runtime specification; evaluation never enters this content."""
         return digest(self.model_dump(mode='json', by_alias=True))
 
-    def with_question(self, question: Question) -> "PolicySpec":
-        data = self.model_dump(mode='python', by_alias=True)
-        data['questions'] = {self.question_id: asked(question, self.rule, self.asked.kind)}
-        return PolicySpec.model_validate(data)
-
     def dump(self) -> str:
         return self.model_dump_json(by_alias=True, indent=1) + '\n'
 

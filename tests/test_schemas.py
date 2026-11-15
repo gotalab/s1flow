@@ -21,7 +21,7 @@ from s1flow.eval.records import PredictionRecord
 from s1flow.policies.policy_set import PolicySet
 from s1flow.policies.policy import DecisionPolicy
 from s1flow.policies.log import Decision, Log
-from s1flow.policies.file import PolicySpec, read_file
+from s1flow.policies.file import PolicySpec, asked, read_file
 from s1flow.policies.history import Switch
 from s1flow.questions import Choice
 
@@ -118,7 +118,7 @@ def test_a_log_written_by_a_policy_fits(tmp_path):
     loaded = DecisionPolicy(r, client=client, log=log, keep_state=True)
     d = loaded.decide({"title": "a bug in the formatter", "body": "x"}, case_id="#1")
     loaded.feedback(d.decision_id, "bug")
-    refusing = r.with_question(Choice(instructions="refuse this", criteria=dict(r.question.criteria)))  # type: ignore[union-attr]
+    refusing = r.model_copy(update={"questions": {r.question_id: asked(Choice(instructions="refuse this", criteria=dict(r.question.criteria)), r.rule)}})  # type: ignore[union-attr]
     with pytest.raises(Rejected):
         DecisionPolicy(refusing, client=client, log=log).decide({"title": "t", "body": "b"})
     lines = [json.loads(x) for x in log.read_text().splitlines()]

@@ -5,7 +5,7 @@
 version: 2
 updates:
   - package-ecosystem: github-actions
-    directories: ["/", "/decide"]  # the workflows, and the two composite Actions users run
+    directories: ["/", "/decide"]  # the workflows, and the decide Action users run
     schedule:
       interval: weekly
     cooldown:

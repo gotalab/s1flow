@@ -8,13 +8,13 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, NoReturn, TypeVar
 
 from ..core import envfile, place
-from ..core.errors import ConfigError, S1flowError
+from ..core.errors import ConfigError
 
 if TYPE_CHECKING:
     from ..client import Client
     from ..project import Project
 
-EXITS = "Exit codes: 0 done; 1 a gate failed or something was found (check fails, doctor or models --verify finds a problem); 2 usage, configuration, could not run, or check pending."
+EXITS = "Exit codes: 0 done; 1 a gate failed or something was found (adopt or feedback measure shows a policy below, cases check, doctor or models --verify finds a problem); 2 usage, configuration, or could not run."
 POLICY = "TASK[@vN]"  # how a command names a policy (policies.file.Ref)
 
 T = TypeVar("T")
@@ -134,15 +134,6 @@ def policy_root(a: argparse.Namespace) -> Path | None:
     root = project_root(a, required=True)
     assert root is not None
     return root / "policies"
-
-
-def guard(f: Callable[[], T], on_error: Callable[[str], None]) -> T:
-    """Run f; on an S1flowError, let `on_error` record why (e.g. for the PR) before it exits 2."""
-    try:
-        return f()
-    except S1flowError as e:
-        on_error(str(e.args[0] if e.args else e))
-        raise
 
 
 def shown(path: Path) -> str:

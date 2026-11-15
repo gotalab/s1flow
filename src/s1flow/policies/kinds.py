@@ -14,7 +14,7 @@ a policy ships it. Adding a type of question is adding a class here.
 | score              | a level, 0..L-1              | the expected level, rounded (.5 up)     | of that level        | min_probability            |
 | box                | {top, bottom, left, right}   | the first answer's box                  | none (`confidence`)  | min_probability            |
 
-Repeats are averaged before anything is read, so the evaluation (eval/metrics.py), `s1flow check` and a
+Repeats are averaged before anything is read, so the evaluation (eval/metrics.py) and a
 policy in production (policy.py) read a case alike: `average` then `reading`, here and nowhere else.
 `probability` is the probability of the value given, never a vendor's `confidence` (TypeSafe's is
 rescaled by the number of options). pydantic only: production imports it.

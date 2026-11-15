@@ -34,6 +34,14 @@
   current; answers from 0.1.0a2 and 0.1.0a3 stay current where the input's keys were already in sorted order (those
   releases sent the keys as written).
 
+### Removed
+
+- `s1flow check`, the check Action (`gotalab/s1flow@v...`, the repository's root `action.yml`) and `s1flow init --ci`
+  are gone. They measured a policy change on their own path, apart from `report` and `adopt`, so the two could
+  disagree. The held-out test verdict now comes from `adopt` alone: it tests the picked candidate and does not
+  save one that falls short. Delete `.github/workflows/s1flow-check.yml` from a project that has it. The decide
+  Action (`gotalab/s1flow/decide`) is unchanged.
+
 ## 0.1.0a5 (2026-11-12)
 
 ### Added

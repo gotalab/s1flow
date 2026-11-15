@@ -25,27 +25,20 @@ Evaluation records never change the policy itself, and the runtime never reads t
 `adopt` records the chosen candidate and your reason, and makes it current. It refuses evidence that is out of
 date, and writes nothing when the candidate falls short on the test set: `--force` ships it anyway, and the
 evaluation record marks it `forced`, with your reason as the why. `--force` overrides only the held-out test,
-never stale evidence. On the pull request, the `s1flow check` Action compares the version the base branch ships
-with the one the pull request makes current, on today's test cases, and fails when it is worse.
+never stale evidence. That held-out test is the one pass or fail s1flow gives a policy before it ships. The pull
+request that carries the new version shows the result in `vN.evaluation.json` and `history.jsonl`, and merging it is
+a person's call.
 
-The check asks both versions again rather than trusting what their evidence says, because the pull request could
-have written that evidence. So a version adopted with `--force` fails the check like any other version below; the
-comment shows that it was forced, by whom and why, and merging it anyway is a person's call. A pull request that rewrites, renames or
-removes a saved `vN.json` or `vN.evaluation.json` fails (and so does one whose files cannot be listed): versions are never rewritten, so both versions the check
-reads are the ones that shipped. A check that cannot measure (a pull request from a fork gets no keys, and some answers are not
-cached) is pending; the workflow `s1flow init --ci` writes fails on it (`on-pending: fail`; `warn` lets it pass).
-When the pull request edits a file under `tasks/<task>/` (`task.py`, `split.json`, the cases, their corrections)
-or `s1flow.toml`, which set the rules and the cases the check applies, the comment says so: the check used the
-edited files, so review that diff.
+A saved `vN.json` or `vN.evaluation.json` is never rewritten, renamed or removed: `adopt` only adds a version, so
+the version an app ran can always be read again as it shipped.
 
 A policy that was never evaluated, written by hand, is saved and made current by `adopt --spec FILE --reason
 "..."` with only the base runtime; s1flow reports that there is no evidence for it.
 
 To go back to a version that ran before, save it again as the next version: `adopt --spec` with its `vN.json`
 renumbered brings back exactly that spec, unevaluated; `s1flow adopt TASK CANDIDATE` with its candidate measures
-that candidate again on today's task, question and cases. Versions are only added, so the pull request is checked
-as any adopt is; reverting the one that adopted the newer version would remove a saved version, which the check
-Action refuses.
+that candidate again on today's task, question and cases. Don't revert the pull request that adopted the newer
+version: that removes a saved version.
 
 Only `adopt` points `current`, and each time it does, it appends why to `policies/<task>/history.jsonl` (when,
 which version, the one before, who, why, and for a measured candidate the held-out test's verdict). A candidate it

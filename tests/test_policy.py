@@ -438,7 +438,7 @@ def test_a_decision_names_the_content_that_made_it(store, tmp_path):
     copied.write_text(json.dumps(raw))
     assert runtime_load(path=copied).spec.digest != want  # other content, another digest
     r = store.evaluated("t")
-    assert r.spec.digest == want and r.spec.with_question(Choice(instructions="Other?", criteria={c: None for c in CLASSES})).digest != want
+    assert r.spec.digest == want and r.spec.model_copy(update={"questions": {"kind": asked(Choice(instructions="Other?", criteria={c: None for c in CLASSES}), r.spec.rule)}}).digest != want
 
 
 def test_a_question_keeps_what_its_type_leaves_open_in_a_task_and_a_policy():

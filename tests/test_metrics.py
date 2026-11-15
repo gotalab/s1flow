@@ -357,5 +357,5 @@ def test_clopper_pearson_brackets_the_share_and_broken_is_never_kept(kn, bound_)
     if k < n:
         assert metrics.cp_lower(k + 1, n) >= lo
     for at_least in (True, False):
-        c = measure.Constraint(count=lambda p: (k, n), bound=bound_, at_least=at_least, what="", limit="", excuse="", beside=None)
+        c = measure.Constraint(count=lambda p: (k, n), bound=bound_, at_least=at_least, what="", beside=None)
         assert not (c.broken(k, n) and c.holds(k, n))

@@ -25,11 +25,11 @@ changes it ships it when it merges. Only adopt points it (history.jsonl says why
 Exit codes, the same for every command (EXITS), shown in every --help:
 
     0  done
-    1  a gate failed or something was found: check fails, adopt or feedback measure shows the held-out test or
-       production below, cases check finds a wrong case, doctor a key or host missing, models --verify a
-       declared capability failing
-    2  usage (an `error:` line naming the --help to read), configuration, could not run (an S1flowError), or
-       check pending (answers needed that only a run with keys can get); a bug in s1flow prints its traceback too
+    1  a gate failed or something was found: adopt or feedback measure shows the held-out test or production
+       below, cases check finds a wrong case, doctor a key or host missing, models --verify a declared
+       capability failing
+    2  usage (an `error:` line naming the --help to read), configuration, or could not run (an S1flowError);
+       a bug in s1flow prints its traceback too
 """
 
 import argparse
@@ -41,18 +41,17 @@ from typing import Any, NoReturn
 
 from ..core import place
 from ..core.errors import S1flowError
-from . import adopt, cases, check, decide, doctor, export, feedback, init, models, optimize, report, run
+from . import adopt, cases, decide, doctor, export, feedback, init, models, optimize, report, run
 from .common import EXITS, Parser, usage_error
 
 BASE = ("init", "decide", "feedback", "export", "doctor", "models")  # what the base install runs (feedback record; adopt --spec; models without --verify)
 # Every command, in the order `s1flow --help` lists it: its module (cli/<name>.py) and its line in that list.
 COMMANDS = (
-    (init, "init", "make a project in ./s1flow: s1flow.toml, a task with --task, the CI workflow with --ci, the Agent Skill with --skill"),
+    (init, "init", "make a project in ./s1flow: s1flow.toml, a task with --task, the Agent Skill with --skill"),
     (models, "models", "the line-up in s1flow.toml, and what --verify found each model takes"),
     (run, "run", "ask the models about a task's cases (cached): runs/<task>/"),
     (report, "report", "every model and question variant on the saved runs by the task's objective (--out DIR writes it); no TASK: every task's current version and why"),
     (adopt, "adopt", "write a candidate as the task's current policy, with why (merging the change ships it)"),
-    (check, "check", "compare two versions on today's test cases, case by case (the CI gate)"),
     (optimize, "optimize", "optimize the current policy's question into a new candidate; it ships nothing (s1flow[optimize])"),
     (cases, "cases", "check a task's cases; review and correct their labels"),
     (decide, "decide", "call a model (--model), or decide with a task's policy (--policy)"),

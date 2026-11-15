@@ -3,8 +3,7 @@
 ## The CLI
 
 Every command has `--help`. Add `--json` for machine-readable output; notices and errors go to stderr. Exit code 0
-means success, 1 means a gate failed or something was found, and 2 means usage, configuration, could not run, or a
-pending check. To tell a pending check from an error, read `verdict` in `check --json`.
+means success, 1 means a gate failed or something was found, and 2 means usage, configuration or could not run.
 
 ## The Agent Skill
 
@@ -20,10 +19,9 @@ runs `cases check`, `run` and `report`, and leaves the choice of candidate to yo
 ## GitHub Actions
 
 `decide/action.yml` uses the base package and an explicit `connections` input, and outputs `answer`,
-`probability`, `below_min_probability`, `decision_id` and `policy`. Evaluation uses `action.yml` with the `eval`
-extra, and `s1flow init --ci` writes the workflow for it: on a pull request that adopts a policy, it checks the
-new version against the one the base branch ships and posts the result as a comment. What it compares, and when
-it passes, fails or is pending, is in [Policies, evidence and releases](policies.md#evidence-and-releases).
+`probability`, `below_min_probability`, `decision_id` and `policy`. Evaluation has no Action: `adopt` tests the
+candidate on the held-out test cases where you run it, and the pull request carries the result
+([Policies, evidence and releases](policies.md#evidence-and-releases)).
 
 Input is passed through files and environment variables, never pasted into shell commands. The workflow installs
 the package you choose up front; loading a policy at runtime never installs anything. In production workflows,

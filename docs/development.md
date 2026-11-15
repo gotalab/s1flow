@@ -29,21 +29,20 @@ change.
 
 ## Release
 
-A pull request that changes what users see (the CLI, the Python API, the Action, the Skill, file formats) adds a
+A pull request that changes what users see (the CLI, the Python API, the decide Action, the Skill, file formats) adds a
 line under the changelog's `## Unreleased` heading (creating it at the top when it is missing) and keeps the
 version. Merging it releases nothing: main can hold several such changes before they ship.
 
 A release is a pull request of its own, opened when main has an `Unreleased` section. It raises the alpha number in
 `pyproject.toml` (`0.1.0a3` → `0.1.0a4`) and `uv.lock`, renames `Unreleased` to that version and date, and pins the
-Action at `v<version>` and the package at `==<version>` in `examples/` and the Skill's `references/app.md`
+decide Action at `v<version>` and the package at `==<version>` in `examples/` and the Skill's `references/app.md`
 (`tests/test_docs.py` fails until they agree). It changes nothing else: outside the changelog, every line it changes
 names the old or the new version, and `.github/workflows/release-only.yml` fails a pull request that changes the
 version and more. What ships is main at the moment it merges, so changes merged while it is open ship in it too; put
 their changelog lines under its version.
 
 Merging it releases: the publish workflow sees the version change on main, runs the package checks on that commit,
-tags it `v<version>` (`s1flow init --ci` writes `gotalab/s1flow@v<version>` of the CLI that ran it, so every release
-needs its tag) and publishes to PyPI. Nothing runs on a local machine. Only a commit that changes the version
+tags it `v<version>` (the examples pin the decide Action at that tag) and publishes to PyPI. Nothing runs on a local machine. Only a commit that changes the version
 releases, so a later merge never ships in its place. If a job fails for a reason outside the code (a runner or PyPI
 outage), use "Re-run failed jobs" on that run; if the code needs a fix, merge it, then run the publish workflow from
 main (Actions → publish → Run workflow), which releases main's version when it has no tag yet.

@@ -1,4 +1,4 @@
-# Ship: adopt, the pull request, check
+# Ship: adopt and the pull request
 
 `adopt` is the only command that changes which version is current. Merging the pull request that carries it is
 the release.
@@ -27,7 +27,7 @@ s1flow adopt --spec spec.json --check             # validate only; save nothing
 - A saved `vN.json` is never overwritten. `channels.json` names the one `current` version.
 - To go back to an older version, save it again as the next one: `adopt --spec` with its `vN.json` renumbered
   brings back exactly that spec; `adopt <task> <its candidate>` measures the candidate again on today's task. Never
-  revert the adopt pull request: removing a saved version fails the check Action.
+  revert the adopt pull request: that removes a saved version.
 - Who adopted comes from `git config user.name`.
 
 ### The reason
@@ -44,34 +44,16 @@ Example: `"Picked by Ana: tied with gpt-x on ExpectedLoss(fn=3); half the p90 la
 
 ## The pull request
 
-```bash
-s1flow check <task> --against v<N>      # current against the version it replaces, on today's test cases
-```
-
 Open a pull request with the change to `policies/<task>/` (and `tasks/<task>/` if `task.py` or `split.json`
 changed). The body says:
 
 - the task and the switch (`v3 -> v4`, or an unevaluated `--spec`);
 - the reason, as recorded;
 - the report lines for the adopted candidate and what it was chosen over, below-target ones included;
-- the `check` verdict and its numbers;
+- the held-out test verdict `adopt` printed (`kept`, `inconclusive`, or `below` with `--force`) and its numbers;
 - that merging releases it, and that merging is the person's call.
 
-## Read check
-
-`check` is the CI gate (`init --ci` writes the workflow). It asks both versions again on the test cases and
-compares them case by case; stored evidence never passes it. Exit 0 pass, 1 worse, 2 could not run or pending.
-
-- **Worse** (exit 1): the new current loses on the test cases. Bring the numbers to the person.
-- **Forced**: a version adopted with `--force` fails; the comment shows its reason. The person decides whether to
-  merge anyway.
-- **Pending** (exit 2): answers are needed that only a run with keys can get (`--cached-only`, a fork). The
-  workflow `init --ci` writes sets `on-pending: fail`, so the check fails until it runs with keys.
-- **A rewritten `vN.json`** fails: saved versions are immutable. Adopt a new version instead.
-- **Edits under `tasks/<task>/` or to `s1flow.toml`** are flagged: they change what the next run measures. Say so
-  in the PR body.
-
-`--sample N` checks N test cases only (the workflow uses 40). `--markdown FILE` writes the PR comment.
-`--candidate draft` checks the task's edited question before anything is adopted.
+Edits under `tasks/<task>/` or to `s1flow.toml` change what the next run measures: say so in the PR body. Never
+edit a saved `vN.json` or `vN.evaluation.json`; adopt a new version instead.
 
 Bring the person the verdict, and leave the merge to them.

@@ -205,17 +205,6 @@ def test_comparison_identity_tracks_held_out_data_without_exposing_test_scores(t
 
 
 
-def test_cached_client_reports_stale_timing_without_rebuying_raw_answer(task):
-    cached = run.CachedClient(task.where.client(), task.where.cache_dir)
-    spec = task.where.lineup().resolved('fake').model_copy(update={'concurrency': 1})
-    before = Parity.calls
-    first = asyncio.run(cached.responses.create(model=spec, state={'i': 0}, questions=task.questions()))
-    assert cached.responses.timing_current(first)
-    response = asyncio.run(cached.responses.create(model=spec.model_copy(update={'concurrency': 8}), state={'i': 0}, questions=task.questions()))
-    assert cached.responses.hit(response) and not cached.responses.timing_current(response)
-    assert Parity.calls == before + 1
-
-
 def test_an_upgrade_keeps_the_identities_earlier_releases_wrote(monkeypatch):
     """Digests as s1flow 0.1.0a2 and 0.1.0a5 from PyPI computed them for this input. A release's version and
     source are in no identity now, and those releases' identities still name the same request and execution.

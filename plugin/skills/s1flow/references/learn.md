@@ -43,6 +43,6 @@ When production is below, or the labels show a pattern the question misses:
    `s1flow.toml`'s `default` on the task's own question), then `s1flow optimize <task>` for a changed
    question (`measure.md`). Optimize ships nothing.
 3. `s1flow report <task>`: show the candidates, the tied ones as tied.
-4. If the person picks one, `ship.md`: adopt with a reason, a pull request, `check`, and their merge.
+4. If the person picks one, `ship.md`: adopt with a reason, a pull request, and their merge.
 
 Never treat optimize's own score or a historical benchmark as production evidence.

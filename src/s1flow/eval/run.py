@@ -18,7 +18,7 @@ import hashlib
 import json
 import sys
 import time
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
@@ -26,11 +26,10 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from ..client import AsyncClient
-from ..client._client import AsyncResponses, ModelRef, validate_questions
 from ..client.answers import Response
 from ..client.identity import digest, execution_digest, request_digests, require_provider_revision, model_digest
 from ..client.models import DecisionModel, ModelSpec
-from ..client.questions import Question, Questions
+from ..client.questions import Questions
 from ..client.state import State
 from ..core import clock
 from ..core.errors import ConfigError, NotFound, S1flowError
@@ -63,12 +62,6 @@ def cache_path(cache_dir: Path, key: str) -> Path:
     return cache_dir / "answers" / key[:2] / f"{key}.json"
 
 
-def cached(cache_dir: Path, spec: ModelSpec, state: State, questions: Questions) -> bool:
-    """Whether the cache holds the answer `call` would read for this call (no call is made)."""
-    require_provider_revision(spec)
-    return any(cache_path(cache_dir, key).exists() for key in request_digests(spec, state, questions))
-
-
 async def call(
     cache_dir: Path, client: AsyncClient, model: DecisionModel, state: State, questions: Questions, fresh: bool = False,
     concurrency: int | None = None, *, spec: ModelSpec,
@@ -89,60 +82,6 @@ async def call(
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(got.dump())
     return got, False
-
-
-class CachedResponses(AsyncResponses):
-    """`responses.create` answered from the cache first (`call`). Counts, per decision returned, whether the
-    cache answered it (`hit`), and the calls made and the ones the cache answered."""
-
-    def __init__(self, inner: AsyncClient, cache_dir: Path):
-        super().__init__(inner.connections)
-        self._inner, self._cache_dir = inner, cache_dir
-        self.calls = self.cached = 0
-        self._hits: dict[int, bool] = {}
-        self._timing_current: dict[int, bool] = {}
-
-    async def create(
-        self, *, model: ModelRef, state: State, questions: Mapping[str, Question | dict[str, Any]], options: dict[str, Any] | None = None,
-    ) -> Response:
-        if options:
-            raise ConfigError("the evaluation's cache keys no per-call options")
-        if isinstance(model, str):
-            spec = self._connections.resolved(model)
-        elif isinstance(model, ModelSpec):
-            spec = model.resolved()
-        else:
-            # A free-standing object has no verified effective binding. Calling it is
-            # supported, but it cannot safely share a persistent answer cache.
-            d = await self._inner.responses.create(model=model, state=state, questions=questions)
-            self.calls += 1
-            self._hits[id(d)] = False
-            self._timing_current[id(d)] = True
-            return d
-        built = self._model(model)
-        got, hit = await call(self._cache_dir, self._inner, built, state, validate_questions(questions), spec=spec)
-        self.cached += hit
-        self.calls += not hit
-        self._hits[id(got.response)] = hit
-        self._timing_current[id(got.response)] = got.concurrency == built.concurrency
-        return got.response
-
-    def hit(self, d: Response) -> bool:
-        """Whether the cache answered this decision (one this object returned)."""
-        return self._hits[id(d)]
-
-    def timing_current(self, response: Response) -> bool:
-        """Whether this raw response's measured concurrency matches this execution."""
-        return self._timing_current[id(response)]
-
-
-class CachedClient(AsyncClient):
-    """An `AsyncClient` whose decisions come from the evaluation's cache first: what `check` passes to
-    `policies.load`, so a policy decides there as it does in production, and unchanged answers cost nothing."""
-
-    def __init__(self, inner: AsyncClient, cache_dir: Path):
-        self.connections = inner.connections
-        self.responses: CachedResponses = CachedResponses(inner, cache_dir)
 
 
 def run_path(task: Task, variant: str, model_name: str) -> Path:

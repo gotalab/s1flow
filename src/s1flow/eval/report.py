@@ -232,7 +232,7 @@ def render(task: Task, variant: str, evs: list[Evaluation], preds: dict[str, met
         "",
         f"Coverage: answering the most probable first, the largest share whose sure accuracy keeps the target {pct(sel0.target_accuracy) if sel0 else ''}. "
         "The cut is chosen on each CV fold's fit side and measured on its eval side. The lower bound is a one-sided 95% Clopper-Pearson; [ ] is a 95% bootstrap interval.",
-        "Scored: every labelled dev case the model answered or refused; held-out test results require an explicit final check. "
+        "Scored: every labelled dev case the model answered or refused; held-out test results come only when a candidate is adopted. "
         "Refused: the share of the scored cases the model refused or does not support, each counted as no answer (wrong, and never sure). Failed counts calls.",
     ]
     if any(not e.probabilities for e in evs):

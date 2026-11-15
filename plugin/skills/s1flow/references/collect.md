@@ -6,7 +6,7 @@
 s1flow init --task <id>      # s1flow/: s1flow.toml, tasks/<id>/task.py, .gitignore; nothing else
 ```
 
-Ask before passing `--ci` or `--skill` (`setup.md`). A task's directory is named its id.
+Ask before passing `--skill` (`setup.md`). A task's directory is named its id.
 
 ## Agree on the decision
 
@@ -36,7 +36,7 @@ For a score (levels 0..L-1): `MAE()` (the default, levels off on average), `QWK(
 or `Accuracy()` for the exact level. A level is the expected level, rounded.
 
 - **The held-out test share.** Ask how many cases to hold out (`split=Split(test=0.3, k=5, seed=1)` is the
-  default). The test share is never shown while choosing; `adopt` and `check` read it. Fewer than about 200
+  default). The test share is never shown while choosing; only `adopt` reads it. Fewer than about 200
   cases leaves a small test share.
 
 ## Collect the cases

@@ -148,8 +148,7 @@ print(json.dumps({"decision_id": decision.decision_id, "value": decision.value})
         adopted = cli('adopt', 'ticket-bug', 'local', '--reason', 'local HTTP integration proof', '--json')
         assert json.loads(adopted.stdout)['spec']['version'] == 3 and 'current' in adopted.stderr
         assert json.loads((root / 'policies/ticket-bug/channels.json').read_text())['channels'] == {'current': 3}  # merging ships it
-        checked = json.loads(cli('check', 'ticket-bug', '--json').stdout)  # v1 and v2 are unevaluated: current alone
-        assert checked['n'] == 12 and checked['verdict'] in ('pass', 'no_difference')
+        assert json.loads(adopted.stdout)['evidence']['test'] == 'kept'  # confirmed on the held-out test share
         deployed = json.loads(cli('decide', '--policy', 'ticket-bug@v3', '--path', root / 'policies/ticket-bug/v3.json',
                                   '--connections', models, '--state', '{"text":"bug again"}', '--case-id', 'same-ticket',
                                   '--log', log, '--keep-state', '--json', cwd=other).stdout)

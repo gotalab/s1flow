@@ -215,7 +215,7 @@ class Evaluation(_Frozen):
         return self
 
 
-COST_NOTE = "Where the API costs come from: "  # the line a report and a check write when an API cost is an estimate or not known
+COST_NOTE = "Where the API costs come from: "  # the line a report writes when an API cost is an estimate or not known
 
 
 def cost_note(costs: list[tuple[str, str | None, str | None, int]]) -> str | None:
