@@ -19,6 +19,8 @@
 
 ### Changed
 
+- `optimize` is marked experimental in `--help`, the docs and the Skill: its options and the record it saves may
+  change between releases. It works as before.
 - The summary `report --out` writes no longer sets a candidate's name in bold: `report` orders the candidates and
   picks none.
 - `adopt --spec FILE --check` is now `adopt --spec FILE --validate`. It still validates the spec and its binding

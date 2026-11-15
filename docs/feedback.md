@@ -29,6 +29,8 @@ collected without bias.
 
 ## Optimize the prompt
 
+`s1flow optimize` is experimental: its options and the record it saves may change between releases.
+
 `s1flow optimize` runs the optimizer task.py names (`optimizer=Gepa(budget=300, reflection=None)` in the
 template). GEPA searches for better prompts using a stand-in score (half correctness, half 1 − Brier score) on the
 train and validation cases; the test share is never given to it. s1flow then runs the best prompt on every case as

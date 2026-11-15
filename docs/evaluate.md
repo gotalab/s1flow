@@ -12,7 +12,7 @@ Install these in your development environment, not in the production image:
 |---|---|
 | `eval` | numpy, scipy and scikit-learn for evaluation, comparison and reports |
 | `llm` | LiteLLM, to compare against LLMs |
-| `optimize` | the `eval` and `llm` extras plus GEPA, for prompt optimization |
+| `optimize` | the `eval` and `llm` extras plus GEPA, for prompt optimization (experimental) |
 | `images` | Pillow, for preparing images |
 | `otel` | the OpenTelemetry API, for optional tracing spans |
 
