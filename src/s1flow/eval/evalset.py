@@ -107,7 +107,7 @@ def fixed(task: Task) -> SplitFile:
     """`current`, once the first run has written it: what adopt and optimize choose and confirm on."""
     if not path(task).exists():
         raise DataError(f"{task.id}: no {path(task).name} yet: the first `s1flow run {task.id}` fixes the held-out test share "
-                        "(commit it with the task, so CI checks on the same cases)")
+                        "(commit it with the task, so everyone measures on the same cases)")
     return current(task)
 
 

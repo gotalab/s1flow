@@ -4,7 +4,8 @@ import subprocess
 from pathlib import Path
 
 import pytest
-import yaml
+
+yaml = pytest.importorskip("yaml")
 
 ROOT = Path(__file__).resolve().parents[1]
 POLICIES = "apps/bench/policies/toy"
@@ -51,9 +52,19 @@ def test_adopting_a_new_version_passes(repo):
     lambda d: (d / "v1.evaluation.json").write_text("edited\n"),
     lambda d: (d / "v1.json").unlink(),
     lambda d: (d / "v1.json").rename(d / "v3.json"),
-], ids=["edited", "evidence edited", "removed", "renamed"])
+    lambda d: ((d / "v1.json").unlink(), (d / "v1.json").symlink_to("channels.json")),
+], ids=["edited", "evidence edited", "removed", "renamed", "replaced by a link"])
 def test_rewriting_a_saved_version_fails(repo, rewrite):
     rewrite(repo / POLICIES)
     done = run(repo)
     assert done.returncode == 1 and "::error::this pull request rewrites saved policy versions" in done.stdout
     assert f"{POLICIES}/v1." in done.stdout
+
+
+def test_a_diff_that_cannot_be_read_fails(tmp_path):
+    git(tmp_path, "init", "-q")
+    (tmp_path / "a").write_text("a\n")
+    git(tmp_path, "add", ".")
+    git(tmp_path, "commit", "-q", "-m", "the only commit: no HEAD^1")
+    done = subprocess.run(["bash", "-c", step()], cwd=tmp_path, capture_output=True, text=True)
+    assert done.returncode != 0 and "No saved policy version is rewritten" not in done.stdout

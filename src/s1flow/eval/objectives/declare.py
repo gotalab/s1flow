@@ -1,5 +1,5 @@
 """What a task optimizes and what it may not exceed, as declarations: the one shape that choosing,
-optimizing, checking in CI and measuring in production read, kept as is in a policy's evidence.
+optimizing and measuring in production read, kept as is in a policy's evidence.
 pydantic only; what a value is on a set of answers is eval/objectives/measure.py's (`MEASURES`).
 
     Coverage(target_accuracy=0.95)   # Objective(name="coverage", params={"target_accuracy": 0.95}, ...)
