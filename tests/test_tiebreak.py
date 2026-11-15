@@ -126,10 +126,10 @@ def test_the_report_names_what_ordered_the_tie_and_what_was_skipped():
     t = task([Coverage(), "latency", "cost"])
     a, b = timed("a", 0.80, 300, cost=5.0), timed("b", 0.79, 100, cost=0.1)
     alike = headline(t, [a, b])
-    assert "Ordered by task.py's tiebreak (p90 latency, then API cost), **b** comes first" in alike and "latency not compared" not in alike
+    assert "Ordered by task.py's tiebreak (p90 latency, then API cost), b comes first" in alike and "latency not compared" not in alike
     a8 = timed("a", 0.80, 300, cost=5.0, concurrency=8)
     unalike = headline(t, [a8, b])
-    assert "Ordered by task.py's tiebreak (API cost), **b** comes first" in unalike and "Latency not compared (concurrency 4, 8)" in unalike
+    assert "Ordered by task.py's tiebreak (API cost), b comes first" in unalike and "Latency not compared (concurrency 4, 8)" in unalike
     assert "chosen" not in alike + unalike and "recommend" not in alike + unalike  # it shows the order; a person picks
 
 
