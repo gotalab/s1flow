@@ -26,6 +26,8 @@ task = Task(
             "Fully helpful: it does what was asked, completely and correctly; little to improve.",
         ],
     ),
+    # A judge's score is used as a number, so it is measured by how far it is from people's (MAE, the default):
+    # annotators are 0.76 levels apart from each other, and no model can be sure of the exact level.
     tiebreak=[QWK(), Accuracy()],
     label=lambda r: r["label"],
     source="NVIDIA HelpSteer2 (CC BY 4.0), validation split: 60 responses per helpfulness level, under 4,000 characters",
