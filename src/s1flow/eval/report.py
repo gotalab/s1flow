@@ -96,7 +96,7 @@ def headline(task: Task, evs: list[Evaluation], scored: list[Evaluation], ranked
 
     limits = [k for k, v in (("p99", task.constraints.latency_p99_ms), ("API cost", task.constraints.cost_per_10k_usd), ("labels", task.constraints.min_labels)) if v is not None]
     pre = f"Among the models within the constraints ({', '.join(limits)}), " if limits else ""
-    parts = [f"{pre}**{leader.candidate}** has the {'highest' if o0.maximize else 'lowest'} {o0.label}, {fmt(task.kind, o0, leader.scores[0])}{tail(leader)}."]
+    parts = [f"{pre}{leader.candidate} has the {'highest' if o0.maximize else 'lowest'} {o0.label}, {fmt(task.kind, o0, leader.scores[0])}{tail(leader)}."]
     others = [x.candidate for x in tied if x is not leader]
     if others:
         parts.append(f"Its interval overlaps with {', '.join(others)}: the objective cannot tell them apart; interval overlap does not establish equivalence.")
@@ -106,7 +106,7 @@ def headline(task: Task, evs: list[Evaluation], scored: list[Evaluation], ranked
         if not task.ties:
             parts.append("task.py names no tiebreak, so they are listed by name, unordered.")
         elif first is not leader:
-            parts.append(f"Ordered by task.py's tiebreak ({', then '.join(words)}), **{first.candidate}** comes first{tail(first)}.")
+            parts.append(f"Ordered by task.py's tiebreak ({', then '.join(words)}), {first.candidate} comes first{tail(first)}.")
         if unlike:
             said = unlike.en(task.id)
             parts.append(said[0].upper() + said[1:] + ".")

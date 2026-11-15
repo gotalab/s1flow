@@ -19,6 +19,8 @@
 
 ### Changed
 
+- The summary `report --out` writes no longer sets a candidate's name in bold: `report` orders the candidates and
+  picks none.
 - `adopt --spec FILE --check` is now `adopt --spec FILE --validate`. It still validates the spec and its binding
   and writes nothing; "check" now names only `cases check`.
 - A case the model refused (or whose input it does not take) is now scored as no answer instead of being left
