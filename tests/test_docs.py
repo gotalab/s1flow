@@ -8,7 +8,7 @@ from pathlib import Path
 from conftest import cli
 
 ROOT = Path(__file__).resolve().parents[1]
-DOCS = [ROOT / "README.md", ROOT / "action.yml", ROOT / "decide" / "action.yml",
+DOCS = [ROOT / "README.md", ROOT / "decide" / "action.yml",
         *sorted(ROOT.glob("docs/*.md")), *sorted(ROOT.glob("plugin/skills/**/*.md")), *sorted(ROOT.glob("examples/*"))]
 VERSION = tomllib.loads((ROOT / "pyproject.toml").read_text())["project"]["version"]
 
@@ -36,7 +36,7 @@ def choices(*command: str) -> set[str]:
 
 def test_the_docs_name_only_commands_the_cli_has():
     commands = choices()
-    assert {"init", "run", "report", "adopt", "check", "decide"} <= commands  # the parse found the list
+    assert {"init", "run", "report", "adopt", "decide"} <= commands  # the parse found the list
     subcommands = {c: choices(c) for c in commands}
     assert subcommands["feedback"] == {"record", "measure"}  # and finds a command's sub-commands
     unknown = [f"{p.relative_to(ROOT)}: s1flow {c} {sub}".rstrip() for p in DOCS for c, sub in named(p.read_text())
@@ -45,7 +45,7 @@ def test_the_docs_name_only_commands_the_cli_has():
 
 
 def test_the_examples_and_the_skill_pin_the_release_of_this_version():
-    """`s1flow init --ci` writes gotalab/s1flow@v<version>; what people copy pins the same release (the Release steps
+    """What people copy pins the release of this version (the Release steps
     in docs/development.md: the PR that sets the version sets these, and merging it tags and publishes that commit)."""
     pins = [(p.relative_to(ROOT), want, ref) for p in DOCS for want, pin in PINS.items() for ref in pin.findall(p.read_text())]
     assert {want for _, want, _ in pins} == set(PINS)  # both kinds are there to check

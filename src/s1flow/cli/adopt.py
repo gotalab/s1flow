@@ -37,7 +37,6 @@ def adopt(a: argparse.Namespace) -> int:
     user = git.user(task.where.root)
     if not user:
         raise S1flowError("a policy records who adopted it: set git config user.name")
-    previous = task.policies.current(task.id)
     r = adopting.adopt(task, a.candidate, user, a.reason, listed=listed, git_sha=git.sha(task.where.root), force=a.force)
     held = r.evidence.test == "below" and not a.force
     d = task.policies.dir(task.id)
@@ -45,7 +44,6 @@ def adopt(a: argparse.Namespace) -> int:
              + shown(d / "history.jsonl") + " (the refusal)" if held else
              "wrote " + ", ".join(shown(f) for f in (d / f"v{r.spec.version}.json", d / "channels.json", d / "history.jsonl"))
              + " (the policy, current, why)")
-    check_it = None if held or previous is None else f"compare it with v{previous}: s1flow check {task.id} --against v{previous}"
     if a.json:  # stdout is the policy alone
         print(r.model_dump_json(by_alias=True, indent=1))
         print(wrote, file=sys.stderr)
@@ -63,8 +61,6 @@ def adopt(a: argparse.Namespace) -> int:
         print(f"  held-out test: n {e.test.n}, primary {e.test.primary.value}  -> {r.evidence.test}"
               + (" (written with --force; the reason is recorded as why)" if r.selection.forced else ""))
     print(wrote)
-    if check_it:
-        print(check_it)
     return 1 if held else 0
 
 

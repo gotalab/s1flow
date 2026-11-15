@@ -3,14 +3,12 @@
     s1flow.toml                          the line-up, to edit: four models on one key (OPENROUTER_API_KEY)
     tasks/<dir>/task.py                 a task to fill in, with --task
     .gitignore                          .cache/ and .env (answers and keys, kept out of git)
-    <git root>/.github/workflows/s1flow-check.yml   check on PRs that change the project, with the Action; with --ci
 
 With --skill, the CLI also writes the Agent Skill (skill.py); the plugin brings it too.
 """
 
 import os
 import shutil
-from importlib import metadata
 from pathlib import Path
 
 from ..core import place
@@ -18,18 +16,6 @@ from ..core.errors import ConfigError
 
 TEMPLATES = Path(__file__).resolve().parents[1] / "templates"
 LINEUP = TEMPLATES / place.CONFIG  # what `init` copies
-
-
-def _action() -> str:
-    """The check Action at the release this s1flow came from (tag vX = version X), so a user's CI keeps running
-    the version they installed; a source checkout with no installed version follows main."""
-    try:
-        return f"gotalab/s1flow@v{metadata.version('s1flow')}"
-    except metadata.PackageNotFoundError:
-        return "gotalab/s1flow@main"
-
-
-ACTION = _action()
 
 
 def stub(task_id: str, instructions: str) -> str:
@@ -41,15 +27,9 @@ def stub(task_id: str, instructions: str) -> str:
     return text
 
 
-def init(
-    project: Path, task_id: str | None = None, instructions: str = "Is this a bug report?", action: str = ACTION, workflow: bool = False,
-) -> list[str]:
+def init(project: Path, task_id: str | None = None, instructions: str = "Is this a bug report?") -> list[str]:
     """Returns what was written (an existing file is left as it is)."""
     project = project.resolve()
-    root = place.git_root(project)
-    if workflow and root is None:
-        raise ConfigError(f"--ci writes .github/workflows/ at the Git root, and {project} is not in a Git repository: "
-                          "run git init first, or leave out --ci")
     if task_id and (why := place.task_id_error(task_id)):
         raise ConfigError(why)
     project.mkdir(parents=True, exist_ok=True)
@@ -77,9 +57,4 @@ def init(
         done.append(f"added {', '.join(missing)} to {show(ignore)}")
     if task_id:
         write(project / "tasks" / task_id / "task.py", stub(task_id, instructions))  # its directory is named its id
-    if workflow and root is not None:
-        rel = os.path.relpath(project, root)
-        prefix = "" if rel == "." else rel.rstrip("/") + "/"
-        wf = (TEMPLATES / "workflow.yml").read_text().format(prefix=prefix, action=action, workdir=rel)
-        write(root / ".github" / "workflows" / "s1flow-check.yml", wf)
     return done

@@ -17,7 +17,6 @@ from s1flow.eval import metrics
     (("--connections", "c.toml", "skill", "install"), "error: no command 'skill'"),
     (("run",), "error: the following arguments are required: task (see s1flow run --help)"),
     (("run", "t", "--bogus"), "error: unrecognized arguments: --bogus (see s1flow run --help)"),
-    (("check", "t", "--sample", "0"), "error: argument --sample: 0 is not 1 or more (see s1flow check --help)"),
     (("decide", "--bogus"), "error: unrecognized arguments: --bogus (see s1flow decide --help)"),
     (("export", "--bogus"), "error: unrecognized arguments: --bogus (see s1flow export --help)"),
     (("adopt", "t@v1"), "error: adopt records why: give --reason a sentence"),
@@ -56,7 +55,7 @@ def test_every_command_takes_h_and_its_help_ends_with_the_exit_codes():
     from s1flow.cli import parser
 
     found = list(_commands(parser()))
-    assert ("cases", "review") in found and ("export",) in found and ("optimize",) in found and ("report",) in found and len(found) == 15
+    assert ("cases", "review") in found and ("export",) in found and ("optimize",) in found and ("report",) in found and len(found) == 14
     for words in found + [("cases",), ("feedback",)]:
         done = cli(*words, "-h")
         assert done.exit_code == 0 and " ".join(EXITS.split()) in " ".join(done.output.split()), words
@@ -135,8 +134,8 @@ task = Task(id="truth", cases="data.jsonl", state=lambda r: {"truth": r["truth"]
 '''
 
 
-def test_adopt_and_check_exit_as_the_table_says(tmp_path, monkeypatch):
-    """adopt: 0 written, 1 refused below on the held-out test. check: 0 pass, 1 worse, 2 pending (calls needed)."""
+def test_adopt_exits_as_the_table_says(tmp_path, monkeypatch):
+    """adopt: 0 written, 1 refused below on the held-out test."""
     project = make_project(tmp_path / "p", {"good": compare_fake("good"), "bad": compare_fake("bad")})
     d = project.tasks_dir / "truth"
     d.mkdir(parents=True)
@@ -154,10 +153,3 @@ def test_adopt_and_check_exit_as_the_table_says(tmp_path, monkeypatch):
         refused = run("adopt", "truth", "bad", "--reason", "try")
         assert refused.returncode == 1 and "not written" in refused.stdout
         assert run("adopt", "truth", "bad", "--reason", "anyway", "--force").returncode == 0
-    worse = run("check", "truth", "--against", "v1")  # current is v2, the bad one
-    assert worse.returncode == 1, worse.stdout + worse.stderr
-    better = run("check", "truth", "--against", "v2", "--candidate", "v1")
-    assert better.returncode == 0, better.stdout + better.stderr
-    (d / "task.py").write_text(TRUTH.replace("truth?", "Is it true?"))  # an edited question: its answers are not cached
-    pending = run("check", "truth", "--cached-only")
-    assert pending.returncode == 2, pending.stdout + pending.stderr

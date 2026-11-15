@@ -57,13 +57,6 @@ class Spend:
         self.sources.add(source)
 
     @property
-    def total_usd(self) -> float:
-        total = 0.0
-        for c in self.costs:  # in call order (sum() would compensate, and give other last digits)
-            total += c
-        return total
-
-    @property
     def source(self) -> Literal["billed", "list", "mixed"] | None:
         """billed, list (an estimate) or both; None when no known cost says."""
         return "mixed" if len(self.sources) > 1 else next(iter(self.sources), None)

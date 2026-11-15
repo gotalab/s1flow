@@ -23,22 +23,21 @@ uv tool install "s1flow[eval]"
 ## The commands
 
 ```bash
-s1flow init --task ticket-bug   # add --ci for the pull request check
+s1flow init --task ticket-bug
 # Fill in tasks/ticket-bug/task.py and add labeled data in the generated s1flow/ project.
 s1flow cases check ticket-bug
 s1flow run ticket-bug
 s1flow report ticket-bug
 s1flow adopt ticket-bug MODEL --reason "why this candidate" --json   # the new version is current
-# open a pull request: the s1flow check Action compares it with the version main ships; merging releases it
+# open a pull request with the change: merging releases it
 ```
 
 The first `s1flow run` on a task holds out its test share and writes `tasks/<task>/split.json`; commit it with
-`task.py`, because `adopt`, `optimize` and the pull request check read that file and refuse without it. No other
+`task.py`, because `adopt` and `optimize` read that file and refuse without it. No other
 command writes it. Cases added later are placed by a hash of their ID, so the file never moves. With too few
 labelled cases to hold out a test share, `run` still asks the models and writes the file on a later run.
 
-`s1flow init` creates an `s1flow/` project and nothing else. With `--ci` it also writes a pull request check to
-`.github/workflows/`; with `--skill`, the Agent Skill (or install it as a plugin, as step 2 of the
+`s1flow init` creates an `s1flow/` project and nothing else. With `--skill` it also writes the Agent Skill (or install it as a plugin, as step 2 of the
 [quick start](../README.md#quick-start) shows). The project's line-up compares four decision models that all work with a single key, `OPENROUTER_API_KEY`
 ($0.01 to $0.05 per 1,000 calls on issue-sized inputs). Cases can come from GitHub issues, app logs or labels you
 already have. Fetching cases from GitHub (the Skill's `scripts/github.py`) needs the `gh` CLI, installed and signed in.
@@ -54,7 +53,7 @@ validation and decision rules; metrics and optimization belong to evaluation alo
 terminal shows the candidates ordered by the task's objective, with the ones it cannot tell apart at the top marked
 `=` (ordered by `tiebreak` in task.py, or by name without one); it marks no pick. `--json` adds every
 metric of each candidate with the same candidate IDs and numbers, so a person, or an agent acting for them, can
-choose based on their own criteria. The final test-set result comes only when you adopt a candidate or run `check`.
+choose based on their own criteria. The final test-set result comes only when you adopt a candidate.
 
 `adopt --reason` records the choice and makes it current in your working tree; it goes live when the pull request
 that carries it merges (see [Policies, evidence and releases](policies.md)).

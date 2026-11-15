@@ -45,7 +45,7 @@ class Project:
 
     @property
     def cache_dir(self) -> Path:
-        return self.root / ".cache"  # the check Action keeps it in the Actions cache
+        return self.root / ".cache"
 
     @property
     def config(self) -> Path:

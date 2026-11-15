@@ -1,5 +1,5 @@
 """Custom objectives: a function in task.py, measured like a built-in (out of fold, an interval, the
-test share, check), on each label and the `Reading` of its answers.
+test share), on each label and the `Reading` of its answers.
 
     @per_case(direction="min", sets="threshold")
     def wake_loss(label: bool, reading: Reading | None, *, miss: float = 20.0) -> float:   # one case's value; the set's is the mean

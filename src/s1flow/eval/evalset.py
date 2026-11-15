@@ -7,8 +7,8 @@ nothing else does: from the labelled cases, `task.split.test` of them held out, 
 train / val within the rest (or from the split an optimization already used, so the cases GEPA never saw
 stay test). A case labelled later is assigned by a hash of its id when the file is read, so no case ever
 moves and the file never changes. Every evaluation holds out its test cases (metrics.evaluate) and
-`check` compares on them. Before the first run, `current` gives the assignment run will write; `adopt`,
-`check` and `optimize` refuse until the file is there (in CI: until it is committed).
+`adopt` confirms the picked candidate on them. Before the first run, `current` gives the assignment run will
+write; `adopt` and `optimize` refuse until the file is there.
 
 How often the test share was looked at is not counted here: a count kept only where it ran, and lost in
 CI, told nothing. `adopt` records each candidate it tried on it, refused or not, in history.jsonl.
@@ -104,7 +104,7 @@ def current(task: Task) -> SplitFile:
 
 
 def fixed(task: Task) -> SplitFile:
-    """`current`, once the first run has written it: what adopt, check and optimize choose and compare on."""
+    """`current`, once the first run has written it: what adopt and optimize choose and confirm on."""
     if not path(task).exists():
         raise DataError(f"{task.id}: no {path(task).name} yet: the first `s1flow run {task.id}` fixes the held-out test share "
                         "(commit it with the task, so CI checks on the same cases)")

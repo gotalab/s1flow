@@ -12,13 +12,13 @@ task holds the labelled cases and the question (`tasks/<id>/task.py`); a policy 
 
 Three principles:
 
-- **The CLI measures, records and switches. It decides nothing.** `run`, `report`, `check` and `feedback measure`
+- **The CLI measures, records and switches. It decides nothing.** `run`, `report` and `feedback measure`
   measure; `adopt` records why in `history.jsonl` and is the only command that changes which version is current.
   Which candidate to adopt, whether to merge, the objective, the labels, and whether to add production cases are
   decided by the person, or by you when the person has written down how.
 - **Rules live in files.** `task.py` and `s1flow.toml` hold every rule the CLI follows. `init` writes the defaults
   out so they can be read and changed.
-- **One command per purpose.** Flow: `cases`, `run`, `optimize`, `report`, `adopt`, `check`, `decide`, `feedback`.
+- **One command per purpose.** Flow: `cases`, `run`, `optimize`, `report`, `adopt`, `decide`, `feedback`.
   Setup and distribution: `init`, `doctor`, `models`, `export`.
 
 **`criteria.md`.** Before any of those decisions, read `tasks/<id>/criteria.md` if it exists: the person's written
@@ -32,7 +32,7 @@ Read the one reference for the stage at hand:
 |---|---|
 | Start a project, agree on the decision, collect cases, write `task.py`, review labels | `references/collect.md` |
 | Run models and question variants, optimize, read `report`, charts, a new model version | `references/measure.md` |
-| Adopt a candidate, write the reason and the PR body, read `check`, go back (adopt the older one again) | `references/ship.md` |
+| Adopt a candidate, write the reason and the PR body, go back (adopt the older one again) | `references/ship.md` |
 | Call a policy from an app, a workflow or another language; decision logs; `export` | `references/app.md` |
 | Record the right answers, measure production, add cases, improve the question | `references/learn.md` |
 | Keys and hosts in a sandbox or CI, `doctor`, `models`, exit codes, `--json`, names | `references/setup.md` |

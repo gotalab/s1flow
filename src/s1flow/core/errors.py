@@ -10,7 +10,7 @@
 | `Unsupported`   | the model does not take this question type, image or option       | 2        |
 | `Rejected`      | the provider refused the input after the call (413, 422, ...)      | 2        |
 
-A check that runs and finds the change worse is a result (exit 1), not an error.
+A gate that runs and finds a policy below is a result (exit 1), not an error.
 """
 
 from typing import TYPE_CHECKING

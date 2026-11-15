@@ -56,7 +56,6 @@ repository instead, so they change only when you run it again.
 
 The agent runs `s1flow init`, which creates an `s1flow/` folder and touches nothing else in your repository.
 The default line-up needs one key, `OPENROUTER_API_KEY`, and fetching issues needs the `gh` CLI, signed in.
-A CI check on pull requests is one flag away (`s1flow init --ci`) when you want it.
 
 **4. Run your pick in your app.** Your choice is saved as a *policy*: one JSON file holding the model, the
 question and the confidence threshold. Your app needs only the base package (`pip install s1flow`), which depends
@@ -78,7 +77,7 @@ No labels yet? You can [ship a policy today](docs/app.md) and evaluate it later.
 
 - **A comparison you can act on.** Pull cases from GitHub issues, app logs or labels you already have, and run every model and prompt against them. For each one you see how much it can handle at your target accuracy, with confidence intervals, cost and latency.
 - **What runs is what you measured.** A policy pins the model, prompt and threshold you evaluated. Change any of them, or the cases, and the old results no longer apply to it.
-- **A CI check on every policy change.** A GitHub Action tests the new policy against the current one on the test cases and posts the result on the pull request.
+- **A final test before a policy ships.** A share of your cases is held out while you compare. When you adopt a candidate, it is tested on that share, and one that falls short is not saved.
 - **All the major decision models, plus LLMs for comparison.** Jev (TypeSafe), Clef (Cloudflare), d1 (Liquid) and pplx-decider (Perplexity) through TypeSafe's API, OpenRouter, Vercel AI Gateway or Workers AI, OpenAI's Decisions API, LLMs through LiteLLM, or a provider you write yourself.
 - **Production feedback becomes new cases.** Record the correct answer for a decision ID, and it goes into the next comparison.
 
