@@ -72,14 +72,14 @@ def exercise_runtime(root: Path):
             'questions': {'bug': {'question': {'type': 'boolean', 'instructions': 'Is this a bug?'},
                                   'rule': {'threshold': .5}}},
         }))
-        checked = json.loads(cli('adopt', '--spec', source, '--connections', models, '--check', '--json').stdout)
+        checked = json.loads(cli('adopt', '--spec', source, '--connections', models, '--validate', '--json').stdout)
         assert checked == {'policy': 'ticket-bug@v1', 'valid': True} and not calls
         cli('adopt', '--spec', source, '--root', root / 'policies', '--connections', models, expected=2)  # it makes v1 current: why?
         created = json.loads(cli('adopt', '--spec', source, '--root', root / 'policies', '--connections', models, '--reason', 'the first', '--json').stdout)
         policy_path = Path(created['path'])
-        cli('adopt', '--spec', source, '--root', root / 'policies', '--connections', models, '--check', expected=2)  # v1 is saved, as the write says
-        cli('adopt', 'ticket-bug', '--spec', source, '--connections', models, '--check', expected=2)  # a spec names its task
-        cli('adopt', '--spec', source, '--connections', models, '--check', expected=2)  # in the project: its policies/ has v1
+        cli('adopt', '--spec', source, '--root', root / 'policies', '--connections', models, '--validate', expected=2)  # v1 is saved, as the write says
+        cli('adopt', 'ticket-bug', '--spec', source, '--connections', models, '--validate', expected=2)  # a spec names its task
+        cli('adopt', '--spec', source, '--connections', models, '--validate', expected=2)  # in the project: its policies/ has v1
         second = root / 'bug-v2.json'
         second.write_text(json.dumps({**json.loads(source.read_text()), 'version': 2}))
         adopted = json.loads(cli('adopt', '--spec', second, '--reason', 'try v2', '--json').stdout)  # the base install switches
@@ -124,9 +124,9 @@ print(json.dumps({"decision_id": decision.decision_id, "value": decision.value})
         assert len(calls) == 4
         bad = json.loads(source.read_text()); bad['provider'] = 'untrusted.module:factory'
         rejected = root / 'bad.json'; rejected.write_text(json.dumps(bad))
-        assert 'provider: Extra inputs are not permitted' in cli('adopt', '--spec', rejected, '--connections', models, '--check', expected=2).stderr
+        assert 'provider: Extra inputs are not permitted' in cli('adopt', '--spec', rejected, '--connections', models, '--validate', expected=2).stderr
         bad.pop('provider'); bad['model_id'] = 'not-allowed'; rejected.write_text(json.dumps(bad))
-        assert "does not allow model_id 'not-allowed'" in cli('adopt', '--spec', rejected, '--connections', models, '--check', expected=2).stderr
+        assert "does not allow model_id 'not-allowed'" in cli('adopt', '--spec', rejected, '--connections', models, '--validate', expected=2).stderr
         cli('decide', *common, '--state', '[{"type":"image","url":"http://127.0.0.1/secret"}]', expected=2)
         assert len(calls) == 4  # all three refusals above happen before network access
 
