@@ -235,6 +235,35 @@ def test_typesafe_direct_sends_noul_and_reports_tokens(monkeypatch):
     assert r.answered_by == "jev-1.13.0" and r.usage.input_tokens == 276 and r.usage.cost_usd is None and r.usage.cost_source is None
 
 
+@respx.mock
+def test_liquid_sends_images_in_the_state_and_reads_the_billed_cost_and_a_box_not_found(monkeypatch):
+    from s1flow.client import Box, Refusal
+    from s1flow.client.providers.liquid import BASE_URL as LIQUID_URL, LiquidModel
+
+    monkeypatch.setenv("LIQUID_API_KEY", "test")
+    img = Image(media_type="image/png", data="iVBORw0KGgo=", sha256="0" * 64, width=10, height=10)
+    qs = {"refund": QS["refund"], "stamp": Box(instructions="the stamp"), "sign": Box(instructions="the signature")}
+    box = {"top": 0.1, "bottom": 0.5, "left": 0.2, "right": 0.9}
+    reply = {"model": "d1.2", "usage": {"input_tokens": 300, "output_tokens": 0, "cost": 0.000006}, "answers": {
+        "refund": {"type": "noul", "noul": 0.84},
+        "stamp": {"type": "box", "box": box, "found": 0.97, "confidence": 0.8},
+        "sign": {"type": "box", "box": None, "found": 0.12, "confidence": 0.3}}}
+    route = respx.post(f"{LIQUID_URL}/systemone").mock(return_value=httpx.Response(200, json=reply))
+    caps = Capabilities(image=True, question_types={"boolean", "box"})
+    r = asyncio.run(LiquidModel("d1.2", capabilities=caps).decide(["請求書", img], qs))
+    sent = json.loads(route.calls[0].request.read())
+    assert route.calls[0].request.headers["authorization"] == "Bearer test"
+    assert sent["state"] == ["請求書", {"type": "image_url", "image_url": {"url": "data:image/png;base64,iVBORw0KGgo="}}]
+    assert sent["questions"]["refund"]["type"] == "noul" and "assets" not in sent and "images" not in sent
+    assert r.answers["refund"].probability == 0.84 and r.answers["stamp"].box.model_dump() == box
+    assert r.answers["sign"] == Refusal(reason="box not found (found 0.12)")  # s1flow's box has no "not found"
+    assert r.usage.cost_usd == 0.000006 and r.usage.cost_source == "billed" and r.answered_by == "d1.2"
+    wav = {"type": "audio", "media_type": "audio/wav", "data": "UklGRg==", "sha256": "1" * 64}
+    from s1flow.client.state import Media
+    with pytest.raises(Unsupported, match="cannot send audio"):
+        asyncio.run(LiquidModel("d1.2", capabilities=Capabilities(audio=True)).decide(["x", Media.model_validate(wav)], {"refund": QS["refund"]}))
+
+
 def test_an_answer_outside_the_contract_is_a_named_provider_failure():
     from s1flow.client.providers.systemone import answers as parse_answers
     from s1flow.client.providers.openai_decisions import parse_decisions
@@ -271,6 +300,7 @@ def test_the_system_one_dialect_is_one_module():
 
 def _keyed_models():
     from s1flow.client.providers.openrouter import BASE_URL as OR_URL, OpenRouterModel
+    from s1flow.client.providers.liquid import BASE_URL as LIQUID_URL, LiquidModel
     from s1flow.client.providers.typesafe import BASE_URL as TS_URL, TypeSafeModel
 
     return [  # each built-in provider that sends a key: the model, the URL it posts to, the key it reads
@@ -278,6 +308,7 @@ def _keyed_models():
         (lambda: OpenRouterModel("typesafe-ai/jev"), f"{OR_URL}/systemone", "OPENROUTER_API_KEY"),
         (lambda: TypeSafeModel("jev-latest"), f"{TS_URL}/systemone", "TYPESAFE_API_KEY"),
         (lambda: DecisionsModel("gpt-6-luna"), f"{OPENAI_URL}/decisions", "OPENAI_API_KEY"),
+        (lambda: LiquidModel("d1.2"), f"{LIQUID_URL}/systemone", "LIQUID_API_KEY"),
     ]
 
 
