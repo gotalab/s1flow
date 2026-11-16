@@ -24,6 +24,8 @@ from ...client.answers import BoxEdges
 from ...client.boxes import iou
 from ...core.errors import ConfigError
 from ...policies.kinds import ABSENT
+
+READ = ("text", "number", "date")  # a value read from the state, whose label may be ABSENT
 from ..kinds import Kind, Reading
 from .declare import Constraints, Objective
 
@@ -100,7 +102,7 @@ def pairs(kind: Kind, labels: Sequence[Any], readings: Sequence[Reading | None])
     normalized = [kind.as_label(label) for label in labels]
     y = np.empty(n, dtype=object)
     y[:] = normalized
-    if n and all(isinstance(v, bool) for v in normalized):
+    if n and kind.type not in READ and all(isinstance(v, bool) for v in normalized):  # a value read keeps ABSENT as it is
         y = y.astype(bool)
     value = np.empty(n, dtype=object)
     value[:] = [None if r is None else r.value for r in readings]
@@ -596,9 +598,14 @@ def shown(p: Pairs, i: int) -> tuple[bool | str, bool | str]:
     """One case's label and reading, as a list of errors writes them."""
     if p.measured == "box":
         return "box", f"IoU {_ious(p[np.array([i])])[0]:.2f}"
-    if p.measured in ("text", "number", "date"):
+    if p.measured in READ:
         return "absent" if p.y[i] is ABSENT else str(p.y[i]), "absent" if p.value[i] is None else str(p.value[i])
     return plain(p.y[i]), plain(p.value[i])
+
+
+def written(p: Pairs, v: Any) -> Any:
+    """A label or a reading as a report writes it: a value read that is not there is `absent`."""
+    return "absent" if p.measured in READ and (v is ABSENT or v is None) else plain(v)
 
 
 def plain(v: Any) -> Any:

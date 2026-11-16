@@ -207,3 +207,30 @@ def test_an_estimate_task_runs_reports_and_compares(tmp_path):
     row = next(r for r in comparison.collect(task).candidates if r.model == "reader")
     assert row.value == e.objective.value and {"mean_error", "brier"} <= set(row.metrics)
     assert row.adoption_blocked == ["estimate questions are comparable but cannot be adopted as runtime policies"]
+
+
+def test_a_task_whose_cases_all_have_no_value_is_measured_as_absent():
+    kind = kind_of(TEXT)
+    answers = [TextAnswer(value=None, p_null=0.9), TextAnswer(value="x", confidence=0.5), TextAnswer(value=None, p_null=0.7)]
+    p = measure.pairs(kind, [ABSENT] * 3, [kind.read([a], PLAIN) for a in answers])
+    assert measure.measure("value_accuracy", p) is None and measure.measure("absent_accuracy", p) == pytest.approx(2 / 3)
+    assert measure.shown(p, 1) == ("absent", "x") and measure.written(p, p.y[0]) == "absent"
+
+
+def test_an_empty_text_is_nothing_read_and_as_sure_as_p_null():
+    r = kind_of(TEXT).read([TextAnswer(value=" ", p_null=0.1, confidence=0.9)], PLAIN)
+    assert r.value is None and r.probability == pytest.approx(0.1)
+
+
+def test_a_date_label_is_written_as_text():
+    assert "YYYY-MM-DD" in kind_of(DATE).label_error(dt.date(2026, 9, 2))
+    assert kind_of(DATE).label_error("2026-09-02") is None
+
+
+def test_a_number_label_of_zero_is_not_the_absent_label(tmp_path):
+    p, state = _project(tmp_path)
+    (tmp_path / "data.jsonl").write_text("".join(json.dumps({"id": str(i), "n": i, "order": None, "boxes": 0}) + "\n" for i in range(30)))
+    task = attach(Task(id="zero-test", cases="data.jsonl", dir=tmp_path, state=state, question_id="total", question=NUMBER,
+                       label=lambda r: r["boxes"]), p)
+    fix = review.correct(task, "3", "relabel", reason="no total is stated", by="tester", label=ABSENT)
+    assert fix.was == 0 and fix.label is False

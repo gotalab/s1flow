@@ -137,7 +137,7 @@ answers them, and evaluation compares these too; a policy does not hold one yet.
 the value (a date as `YYYY-MM-DD`), or `False` when the case has none (`None` still leaves the case out); an answer
 is right when it reads the same value, or nothing on a case with none. The default objective is `Accuracy()`, and
 `Coverage` works as for a choice. For a `RangeEstimate` the label is the number, the default objective is
-`MeanError()` (how far off on average), and an answer counts as right within half a `step` of the label
+`MeanError()` (how far off on average), and an answer counts as right within half a `step` of the label, or 1% of the range without one
 (`kind_params=KindParams(tolerance=2)` on the Task widens it); a narrow p10 - p90 interval is what makes it sure. Name
 the question for what it reads (`question_id="order_number"`): some models read the name as well.
 

@@ -28,7 +28,7 @@
 - Evaluation compares those four types. A value read is right when it equals the label, or when nothing is read on
   a case labelled `False` (no value there); reports add the accuracy on the cases with a value and on those with
   none, and `Coverage` reads `p_null` and `confidence`. A `RangeEstimate` task defaults to the new `MeanError()`
-  objective, counts an answer as right within half a `step` (`KindParams(tolerance=...)`), and is sure where the
+  objective, counts an answer as right within half a `step`, or 1% of the range without one (`KindParams(tolerance=...)`), and is sure where the
   p10 - p90 interval is narrow. A policy does not hold these types yet, and `review` does not take them.
 
 ### Changed

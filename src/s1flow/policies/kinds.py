@@ -348,14 +348,15 @@ class _ReadKind(_Kind):
 
     def average(self, answers: Sequence[Answer]) -> Average:
         a = self._given(answers)[0]
-        if a.value is None:
-            return Average(distributed=a.p_null is not None, confidence=1.0 if a.p_null is None else float(a.p_null))
-        parts = [1 - float(a.p_null)] if a.p_null is not None else []
-        parts += [float(a.confidence)] if a.confidence is not None else []
         try:
-            value: Union[float, str, None] = self.canonical(a.value)
+            value: Union[float, str, None] = None if a.value is None else self.canonical(a.value)
         except ValueError:  # an empty text: nothing was read
             value = None
+        if value is None:  # how sure that nothing is there: p_null, else what an empty text came with (a guess's confidence is not it)
+            sure = a.p_null if a.p_null is not None else a.confidence if a.value is not None else None
+            return Average(distributed=sure is not None, confidence=1.0 if sure is None else float(sure))
+        parts = [1 - float(a.p_null)] if a.p_null is not None else []
+        parts += [float(a.confidence)] if a.confidence is not None else []
         return Average(distributed=bool(parts), confidence=math.prod(parts), value=value)
 
     def reading(self, average: Average, rule: DecisionRule) -> Reading:
@@ -390,6 +391,11 @@ class DateKind(_ReadKind):
 
     type: ClassVar[QuestionType] = "date"
     answer: ClassVar[tuple[Any, ...]] = (DateAnswer,)
+
+    def label_error(self, label: Any) -> str | None:
+        if isinstance(label, dt.date):  # a label is saved as JSON
+            return f"a date label is a day written as YYYY-MM-DD ({label.isoformat()[:10]!r}), got {label!r}"
+        return super().label_error(label)
 
     def canonical(self, value: Any) -> str:
         if isinstance(value, dt.date) and not isinstance(value, dt.datetime):

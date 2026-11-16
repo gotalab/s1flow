@@ -89,7 +89,7 @@ shared metrics. Box questions get the shared metrics and a confidence selection 
 (`Text`, `Number`, `Date`) is right when it equals the label, or when nothing is read on a case labelled `False`
 (no value there): the report shows the accuracy on the cases with a value and on those with none apart, and how sure
 an answer is comes from the model's `p_null` and `confidence`. A `RangeEstimate` is read by its mean error (the
-default objective, `MeanError()`), counts as right within half a `step` of the label, and is as sure as its
+default objective, `MeanError()`), counts as right within half a `step` of the label (1% of the range when it has no step), and is as sure as its
 p10 - p90 interval is narrow. These four are compared, not adopted: a policy holds a yes/no or a choice. Yes/no questions add
 precision/recall and calibration charts. Choice questions get a curve of the selected answer's probability when the
 model returns a real distribution. A provider's own confidence score is treated as a separate signal, and no

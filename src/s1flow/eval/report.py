@@ -313,11 +313,11 @@ def disagreements(task: Task, preds: dict[str, metrics.Preds], cases: dict[str, 
     for m, p in preds.items():
         for i, cid in enumerate(p.ids):
             if cid in common and cid in cases and p.pairs.ok[i]:  # a refused case gave no verdict
-                decided.setdefault(cid, {})[m] = (measure.plain(p.pairs.value[i]), float(p.pairs.probability[i]))
+                decided.setdefault(cid, {})[m] = (measure.written(p.pairs, p.pairs.value[i]), float(p.pairs.probability[i]))
     split = [cid for cid, d in decided.items() if len({v for v, _ in d.values()}) > 1]
     if not split:
         return ["", "## Cases the models disagree on", "", "None."]
-    label = {cid: measure.plain(p.y[i]) for p in preds.values() for i, cid in enumerate(p.ids)}
+    label = {cid: measure.written(p.pairs, p.y[i]) for p in preds.values() for i, cid in enumerate(p.ids)}
     names = list(preds)
     L = ["", f"## Cases the models disagree on (12 of {len(split)})", "", "| id | label | " + " | ".join(names) + " | case |", "|---|---|" + "---|" * len(names) + "---|"]
     for cid in sorted(split, key=lambda c: -max(cf for _, cf in decided[c].values()))[:12]:
