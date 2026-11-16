@@ -13,11 +13,21 @@ from ..answers import (
     BooleanAnswer,
     BoxAnswer,
     ChoiceAnswer,
+    DateAnswer,
+    EstimateAnswer,
+    NumberAnswer,
     Refusal,
     Response,
     ScoreAnswer,
+    TextAnswer,
 )
-from ..questions import Boolean, Choice, Questions, Score
+from ..questions import Choice, Estimate, Questions, Score
+
+# The answer each type of question takes.
+FITS: dict[str, type] = {
+    "boolean": BooleanAnswer, "choice": ChoiceAnswer, "score": ScoreAnswer, "box": BoxAnswer,
+    "text": TextAnswer, "number": NumberAnswer, "date": DateAnswer, "estimate": EstimateAnswer,
+}
 
 
 @contextmanager
@@ -63,26 +73,20 @@ def validate_response(response: object, questions: Questions, provider: str) -> 
 
 
 def _validate_answer(qid: str, question: Any, answer: Answer) -> None:
-    if isinstance(question, Boolean):
-        fits = isinstance(answer, BooleanAnswer)
-    elif isinstance(question, Choice):
-        fits = isinstance(answer, ChoiceAnswer)
-    elif isinstance(question, Score):
-        fits = isinstance(answer, ScoreAnswer)
-    else:
-        fits = isinstance(answer, BoxAnswer)
     if isinstance(answer, Refusal):
         return
-    if not fits:
+    if not isinstance(answer, FITS[question.type]):
         kind = getattr(answer, "type", type(answer).__name__)
         _fail(qid, f"answer type {kind!r} does not fit a {question.type} question")
 
     validate_answer_values(qid, answer, options=question.criteria.keys() if isinstance(question, Choice) else None,
-                           levels=len(question.criteria) if isinstance(question, Score) else None)
+                           levels=len(question.criteria) if isinstance(question, Score) else None,
+                           within=(question.min, question.max) if isinstance(question, Estimate) else None)
 
 
 def validate_answer_values(
     qid: str, answer: Answer, *, options: Iterable[str] | None = None, levels: int | None = None,
+    within: tuple[float, float] | None = None,
 ) -> None:
     """Validate numeric answer values and any option/level membership available to a reader. The answer types
     already hold the rest (a box's edges are in 0..1 and in order: `BoxEdges`)."""
@@ -109,6 +113,25 @@ def validate_answer_values(
     if isinstance(answer, BoxAnswer):
         _confidence(qid, answer.confidence)
         _confidence(qid, answer.agreement, name="agreement")
+        return
+    if isinstance(answer, (TextAnswer, NumberAnswer, DateAnswer)):
+        if isinstance(answer, NumberAnswer):
+            for name in ("value", "guess"):
+                if (x := getattr(answer, name)) is not None and not math.isfinite(x):
+                    _fail(qid, f"{name} must be finite, got {x!r}")
+        _confidence(qid, answer.p_null, name="p_null")
+        _confidence(qid, answer.confidence)
+        if answer.span is not None and not 0 <= answer.span[0] <= answer.span[1]:
+            _fail(qid, f"span {list(answer.span)} is not a start and an end in order")
+        return
+    if isinstance(answer, EstimateAnswer):
+        for name in ("value", "p10", "p90"):
+            if (x := getattr(answer, name)) is not None and not math.isfinite(x):
+                _fail(qid, f"{name} must be finite, got {x!r}")
+        if answer.p10 is not None and answer.p90 is not None and answer.p10 > answer.p90:
+            _fail(qid, f"p10 {answer.p10:g} is over p90 {answer.p90:g}")
+        if within is not None and not within[0] <= answer.value <= within[1]:
+            _fail(qid, f"estimate {answer.value:g} is outside {within[0]:g}..{within[1]:g}")
 
 
 def _distribution(qid: str, probabilities: dict[str, float] | None, options: Iterable[str] | None) -> None:

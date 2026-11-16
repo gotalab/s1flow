@@ -21,16 +21,17 @@ rescaled by the number of options). pydantic only: production imports it.
 """
 
 from dataclasses import dataclass
-from typing import Any, ClassVar, Protocol, Sequence, Union
+from typing import Any, ClassVar, Literal, Protocol, Sequence, Union
 
 from pydantic import BaseModel, ConfigDict, Field, SerializerFunctionWrapHandler, ValidationError, model_serializer
 
 from ..client.answers import Answer, BooleanAnswer, BoxAnswer, BoxEdges, ChoiceAnswer, ScoreAnswer
-from ..client.questions import Box, Choice, Question, QuestionType, Score
+from ..client.questions import FIELD_TYPES, Box, Choice, Question, Score
 from ..client.providers.contract import validate_answer_values
 from ..core.errors import ProviderError
 from .rule import DecisionRule, RuleField
 
+KindType = Literal["boolean", "choice", "score", "box"]  # the question types that have a kind
 SELECTIVE: frozenset[RuleField] = frozenset({"min_probability"})
 BINARY: frozenset[RuleField] = frozenset({"threshold", "min_probability"})
 Label = Union[bool, int, str, BoxEdges]  # a task's label: True / False (binary), an option's key, a level, a box
@@ -64,7 +65,7 @@ class Average:
 
 class Kind(Protocol):
     @property
-    def type(self) -> QuestionType: ...
+    def type(self) -> KindType: ...
     @property
     def adoptable(self) -> bool: ...
     @property
@@ -85,7 +86,7 @@ class Kind(Protocol):
 
 class _Kind(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
-    type: ClassVar[QuestionType]
+    type: ClassVar[KindType]
     adoptable: ClassVar[bool] = False
     sets: ClassVar[frozenset[RuleField]] = SELECTIVE
     answer: ClassVar[tuple[Any, ...]]  # the answer types it reads
@@ -167,7 +168,7 @@ class _Binary(_Kind):
 
 
 class BooleanKind(_Binary):
-    type: ClassVar[QuestionType] = "boolean"
+    type: ClassVar[KindType] = "boolean"
     answer: ClassVar[tuple[Any, ...]] = (BooleanAnswer,)
 
     def p_positive(self, a: Any) -> tuple[float, bool]:
@@ -177,7 +178,7 @@ class BooleanKind(_Binary):
 class PositiveChoiceKind(_Binary):
     """A choice scored as binary: P(positive) against a true / false label."""
 
-    type: ClassVar[QuestionType] = "choice"
+    type: ClassVar[KindType] = "choice"
     answer: ClassVar[tuple[Any, ...]] = (ChoiceAnswer,)
     keys: list[str]
     positive: str
@@ -202,7 +203,7 @@ class PositiveChoiceKind(_Binary):
 
 
 class ChoiceKind(_Kind):
-    type: ClassVar[QuestionType] = "choice"
+    type: ClassVar[KindType] = "choice"
     adoptable: ClassVar[bool] = True
     answer: ClassVar[tuple[Any, ...]] = (ChoiceAnswer,)
     keys: list[str]
@@ -242,7 +243,7 @@ class ChoiceKind(_Kind):
 class ScoreKind(_Kind):
     """Levels 0..L-1 in the order of the question's criteria. Evaluated, not adoptable: no policy holds a score."""
 
-    type: ClassVar[QuestionType] = "score"
+    type: ClassVar[KindType] = "score"
     answer: ClassVar[tuple[Any, ...]] = (ScoreAnswer,)
     levels: int
 
@@ -283,7 +284,7 @@ class BoxKind(_Kind):
     """A box, right at `iou` with the label box or more. The confidence (jev's, or the agreement of an LLM's
     samples) stands in for a probability."""
 
-    type: ClassVar[QuestionType] = "box"
+    type: ClassVar[KindType] = "box"
     answer: ClassVar[tuple[Any, ...]] = (BoxAnswer,)
     hit_iou: float = 0.5
 
@@ -326,6 +327,8 @@ class KindParams(BaseModel):
 
 def kind_of(question: Question, params: KindParams = KindParams()) -> Kind:
     """The kind of a question with what its type leaves open; a param its type does not take is a ValueError."""
+    if question.type in FIELD_TYPES:  # asked through the client; no label, reading or rule for one yet
+        raise ValueError(f"a {question.type} question is not evaluated or held by a policy yet: ask it with Client().responses.create")
     if params.positive is not None and not isinstance(question, Choice):
         raise ValueError(f"positive scores a choice question as binary; this one is {question.type}")
     if params.iou is not None and not isinstance(question, Box):

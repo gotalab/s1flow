@@ -149,6 +149,222 @@
    "title": "ChoiceAnswer",
    "type": "object"
   },
+  "DateAnswer": {
+   "additionalProperties": false,
+   "properties": {
+    "p_null": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "P Null"
+    },
+    "confidence": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Confidence"
+    },
+    "span": {
+     "anyOf": [
+      {
+       "maxItems": 2,
+       "minItems": 2,
+       "prefixItems": [
+        {
+         "type": "integer"
+        },
+        {
+         "type": "integer"
+        }
+       ],
+       "type": "array"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Span"
+    },
+    "type": {
+     "const": "date",
+     "default": "date",
+     "title": "Type",
+     "type": "string"
+    },
+    "value": {
+     "anyOf": [
+      {
+       "format": "date",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Value"
+    },
+    "guess": {
+     "anyOf": [
+      {
+       "format": "date",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Guess"
+    }
+   },
+   "required": [
+    "value"
+   ],
+   "title": "DateAnswer",
+   "type": "object"
+  },
+  "EstimateAnswer": {
+   "additionalProperties": false,
+   "properties": {
+    "type": {
+     "const": "estimate",
+     "default": "estimate",
+     "title": "Type",
+     "type": "string"
+    },
+    "value": {
+     "title": "Value",
+     "type": "number"
+    },
+    "p10": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "P10"
+    },
+    "p90": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "P90"
+    }
+   },
+   "required": [
+    "value"
+   ],
+   "title": "EstimateAnswer",
+   "type": "object"
+  },
+  "NumberAnswer": {
+   "additionalProperties": false,
+   "properties": {
+    "p_null": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "P Null"
+    },
+    "confidence": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Confidence"
+    },
+    "span": {
+     "anyOf": [
+      {
+       "maxItems": 2,
+       "minItems": 2,
+       "prefixItems": [
+        {
+         "type": "integer"
+        },
+        {
+         "type": "integer"
+        }
+       ],
+       "type": "array"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Span"
+    },
+    "type": {
+     "const": "number",
+     "default": "number",
+     "title": "Type",
+     "type": "string"
+    },
+    "value": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Value"
+    },
+    "guess": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Guess"
+    }
+   },
+   "required": [
+    "value"
+   ],
+   "title": "NumberAnswer",
+   "type": "object"
+  },
   "Refusal": {
    "additionalProperties": false,
    "description": "The model declined to answer this question (its limit, not a failed call).",
@@ -186,8 +402,12 @@
         "boolean": "#/$defs/BooleanAnswer",
         "box": "#/$defs/BoxAnswer",
         "choice": "#/$defs/ChoiceAnswer",
+        "date": "#/$defs/DateAnswer",
+        "estimate": "#/$defs/EstimateAnswer",
+        "number": "#/$defs/NumberAnswer",
         "refusal": "#/$defs/Refusal",
-        "score": "#/$defs/ScoreAnswer"
+        "score": "#/$defs/ScoreAnswer",
+        "text": "#/$defs/TextAnswer"
        },
        "propertyName": "type"
       },
@@ -203,6 +423,18 @@
        },
        {
         "$ref": "#/$defs/BoxAnswer"
+       },
+       {
+        "$ref": "#/$defs/TextAnswer"
+       },
+       {
+        "$ref": "#/$defs/NumberAnswer"
+       },
+       {
+        "$ref": "#/$defs/DateAnswer"
+       },
+       {
+        "$ref": "#/$defs/EstimateAnswer"
        },
        {
         "$ref": "#/$defs/Refusal"
@@ -287,6 +519,91 @@
     "score"
    ],
    "title": "ScoreAnswer",
+   "type": "object"
+  },
+  "TextAnswer": {
+   "additionalProperties": false,
+   "properties": {
+    "p_null": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "P Null"
+    },
+    "confidence": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Confidence"
+    },
+    "span": {
+     "anyOf": [
+      {
+       "maxItems": 2,
+       "minItems": 2,
+       "prefixItems": [
+        {
+         "type": "integer"
+        },
+        {
+         "type": "integer"
+        }
+       ],
+       "type": "array"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Span"
+    },
+    "type": {
+     "const": "text",
+     "default": "text",
+     "title": "Type",
+     "type": "string"
+    },
+    "value": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Value"
+    },
+    "guess": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Guess"
+    }
+   },
+   "required": [
+    "value"
+   ],
+   "title": "TextAnswer",
    "type": "object"
   },
   "Usage": {

@@ -131,7 +131,9 @@ task = Task(
   `optimize` reads it, the model never does. `criteria.md` is for the person's decision criteria, not the model.
 
 Supported question types: the direct `Client` takes boolean, choice, score and box where the provider does;
-evaluation compares all four; a policy holds one boolean or choice.
+evaluation compares all four; a policy holds one boolean or choice. The `Client` also asks `Text`, `Number`, `Date`
+(a value read from the state, `None` when absent) and `Estimate` (a number in a range) of an OpenRouter model that
+answers them; evaluation and policies do not take these yet.
 
 ## Check the cases
 
