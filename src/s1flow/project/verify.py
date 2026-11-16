@@ -56,7 +56,7 @@ from ..client.boxes import iou
 from ..client import providers
 from ..client.models import Capabilities, DecisionModel, ModelSpec, Price
 from ..client.providers.needs import where_to_get
-from ..client.questions import Boolean, Box, Choice, Date, Estimate, Number, Questions, Score, Text
+from ..client.questions import Boolean, Box, Choice, Date, RangeEstimate, Number, Questions, Score, Text
 from ..client.state import Image, Media, MediaKind, Part, State
 from ..core.errors import ProviderError, S1flowError
 from . import Project
@@ -150,7 +150,7 @@ ORDER: Questions = {
     "boxes": Number(instructions="How many boxes the order holds"),
     "shipped": Date(instructions="The day the order shipped"),
 }
-APPLE_COUNT: Questions = {"apples": Estimate(instructions="How many apples does Mia have?", min=0, max=10, step=1)}
+APPLE_COUNT: Questions = {"apples": RangeEstimate(instructions="How many apples does Mia have?", min=0, max=10, step=1)}
 
 
 def _png(im: "PILImage.Image") -> Image:

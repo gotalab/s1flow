@@ -17,14 +17,14 @@ from s1flow.client.providers.openrouter import EXTRACTIONS_URL, OpenRouterModel
 from s1flow.client.answers import Response
 from s1flow.core.errors import ProviderError, Unsupported
 from s1flow.policies.kinds import kind_of
-from s1flow.questions import Boolean, Date, Estimate, Number, Text
+from s1flow.questions import Boolean, Date, RangeEstimate, Number, Text
 
 STATE = "Invoice INV-2291 issued 2026-09-02, net 30. Total $1080."
 QS = {
     "invoice": Text(instructions="The invoice number"),
     "total": Number(instructions="The total", unit="USD"),
     "issued": Date(instructions="The issue date"),
-    "days": Estimate(instructions="Days until it is paid", min=0, max=120, step=1),
+    "days": RangeEstimate(instructions="Days until it is paid", min=0, max=120, step=1),
 }
 CLAIRIC = {
     "invoice": {"type": "text", "value": "INV-2291", "guess": "INV-2291", "span": [8, 16], "p_null": 0.00001, "confidence": 0.99998},
@@ -47,9 +47,9 @@ def test_a_field_question_is_sent_as_it_is_written():
 
 def test_an_estimate_needs_its_range_in_order():
     with pytest.raises(ValidationError, match="min is under its max"):
-        Estimate(instructions="?", min=5, max=5)
+        RangeEstimate(instructions="?", min=5, max=5)
     with pytest.raises(ValidationError):
-        Estimate(instructions="?", min=0, max=5, step=0)
+        RangeEstimate(instructions="?", min=0, max=5, step=0)
     with pytest.raises(ValidationError, match="Extra inputs"):
         Number(instructions="?", units="USD")
 
@@ -96,9 +96,41 @@ def test_openrouter_asks_fields_on_the_extractions_route():
     assert sent == {"model": "cloudflare/clairic", "state": STATE, "fields": extractions.fields(QS)}
     assert got.answered_by == "cloudflare/clairic-20261029" and got.usage.cost_usd == 0.0000543 and got.usage.cost_source == "billed"
     assert got.answers["invoice"].span == (8, 16) and got.answers["days"].p90 == 31.0
+    assert got.provider_metadata == {"provider": "Cloudflare"}
     # A JSON state is read as its text.
     Client().responses.create(model=FIELD_MODEL, state={"note": STATE}, questions=QS)
     assert json.loads(route.calls.last.request.content)["state"] == json.dumps({"note": STATE}, ensure_ascii=False, indent=1)
+
+
+@respx.mock
+def test_a_state_read_in_part_says_so():
+    respx.post(EXTRACTIONS_URL).mock(return_value=httpx.Response(200, json={
+        "model": "cloudflare/clairic", "provider": "Cloudflare", "truncated": True, "answers": {"invoice": {"type": "text", "value": None}}}))
+    got = Client().responses.create(model=FIELD_MODEL, state=STATE, questions={"invoice": QS["invoice"]})
+    assert got.provider_metadata == {"provider": "Cloudflare", "truncated": True}
+
+
+@pytest.mark.parametrize("provider", ["typesafe", "gateway", "gemini", "cloudflare", "openai-decisions"])
+@respx.mock
+def test_a_provider_without_these_questions_refuses_before_any_call(provider):
+    """Declared by mistake, or asked by `models --verify`, which asks every check: no request goes out."""
+    route = respx.route().mock(return_value=httpx.Response(500))
+    spec = ModelSpec(provider=provider, id="m", capabilities=FIELD_MODEL.capabilities)
+    with pytest.raises(Unsupported, match="text"):
+        Client().responses.create(model=spec, state=STATE, questions={"invoice": QS["invoice"]})
+    assert not route.called
+
+
+def test_an_llm_is_not_asked_a_field_as_a_box(monkeypatch):
+    import litellm
+
+    async def acompletion(**kwargs):
+        raise AssertionError("asked")
+
+    monkeypatch.setattr(litellm, "acompletion", acompletion)
+    spec = ModelSpec(provider="llm", id="openai/gpt-test", capabilities=FIELD_MODEL.capabilities)
+    with pytest.raises(Unsupported, match=r"the LLM baseline has no date, estimate, number, text questions: text \(invoice\)"):
+        Client().responses.create(model=spec, state=STATE, questions={"invoice": QS["invoice"]})
 
 
 def test_one_call_asks_one_route():
@@ -118,17 +150,17 @@ def test_one_call_asks_one_route():
     ("invoice", TextAnswer(value="x", span=(9, 3)), r"span \[9, 3\] is not a start and an end in order"),
     ("total", NumberAnswer(value=float("inf")), "value must be finite"),
     ("days", EstimateAnswer(value=30, p10=40, p90=20), "p10 40 is over p90 20"),
-    ("days", EstimateAnswer(value=121), r"estimate 121 is outside 0\.\.120"),
+    ("days", EstimateAnswer(value=121), r"estimate 121\.0 is outside 0\.\.120"),
 ])
 def test_the_contract_checks_a_field_answer_against_its_question(qid, answer, detail):
     with pytest.raises(ProviderError, match=detail):
         validate_response(Response(answers={qid: answer}, answered_by="m"), {qid: QS[qid]}, "m")
-    ok = Response(answers={"days": EstimateAnswer(value=30, p10=26, p90=31), "issued": DateAnswer(value=None)}, answered_by="m")
+    ok = Response(answers={"days": EstimateAnswer(value=120.00000000000001, p10=26, p90=31), "issued": DateAnswer(value=None)}, answered_by="m")
     assert validate_response(ok, {"days": QS["days"], "issued": QS["issued"]}, "m") is ok
 
 
 def test_a_field_question_has_no_kind_yet():
     """Asked through the client; nothing labels, reads or holds one until its kind exists."""
     for q in QS.values():
-        with pytest.raises(ValueError, match=f"a {q.type} question is not evaluated or held by a policy yet"):
+        with pytest.raises(ValueError, match=f"{q.type} questions are not evaluated or held by a policy yet"):
             kind_of(q)

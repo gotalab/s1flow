@@ -328,7 +328,7 @@ class KindParams(BaseModel):
 def kind_of(question: Question, params: KindParams = KindParams()) -> Kind:
     """The kind of a question with what its type leaves open; a param its type does not take is a ValueError."""
     if question.type in FIELD_TYPES:  # asked through the client; no label, reading or rule for one yet
-        raise ValueError(f"a {question.type} question is not evaluated or held by a policy yet: ask it with Client().responses.create")
+        raise ValueError(f"{question.type} questions are not evaluated or held by a policy yet: ask one with Client().responses.create")
     if params.positive is not None and not isinstance(question, Choice):
         raise ValueError(f"positive scores a choice question as binary; this one is {question.type}")
     if params.iou is not None and not isinstance(question, Box):

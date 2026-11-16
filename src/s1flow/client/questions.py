@@ -79,7 +79,7 @@ class Date(BaseModel):
     instructions: str
 
 
-class Estimate(BaseModel):
+class RangeEstimate(BaseModel):
     """A number between `min` and `max` the state does not state: the model's estimate, with the p10 - p90 interval
     of its distribution. `step` is the spacing of the values it may take (1 for a count)."""
 
@@ -92,13 +92,22 @@ class Estimate(BaseModel):
     unit: str | None = None
 
     @model_validator(mode="after")
-    def _ordered(self) -> "Estimate":
+    def _ordered(self) -> "RangeEstimate":
         if not self.min < self.max:
             raise ValueError(f"an estimate's min is under its max, got {self.min:g} and {self.max:g}")
         return self
 
 
-Question = Annotated[Union[Boolean, Choice, Score, Box, Text, Number, Date, Estimate], Field(discriminator="type")]
+def no_fields(questions: "Questions", who: str) -> None:
+    """Refuse the questions `who` has no way to ask, before any call: it would send a text question in a shape
+    the model reads as something else."""
+    from ..core.errors import Unsupported
+
+    if field := [f"{q.type} ({k})" for k, q in questions.items() if q.type in FIELD_TYPES]:
+        raise Unsupported(f"{who} has no {', '.join(sorted(FIELD_TYPES))} questions: {', '.join(field)}")
+
+
+Question = Annotated[Union[Boolean, Choice, Score, Box, Text, Number, Date, RangeEstimate], Field(discriminator="type")]
 Questions = dict[str, Question]
 
 

@@ -2,7 +2,7 @@
 no evaluation stack (pydantic and httpx; Pillow only for a state with images, LiteLLM only for an `llm` model).
 
     from s1flow import Client
-    from s1flow.questions import Boolean, Choice, Score, Box, Text, Number, Date, Estimate
+    from s1flow.questions import Boolean, Choice, Score, Box, Text, Number, Date, RangeEstimate
 
     d = Client(connections="connections.toml").responses.create(model="jev", state={...}, questions={"bug": Boolean(instructions="...")})
     d.answers["bug"].probability
@@ -17,12 +17,12 @@ from .answers import (
 )
 from .models import Capabilities, DecisionModel, ModelBuild, ModelSpec, Price, ProviderFactory
 from .providers.needs import Needs, declares
-from .questions import Boolean, Box, Choice, Date, Estimate, Number, Question, Questions, QuestionType, Score, Text
+from .questions import Boolean, Box, Choice, Date, RangeEstimate, Number, Question, Questions, QuestionType, Score, Text
 from .state import Image, Media, MediaRef, State
 
 __all__ = [
     "Answer", "AsyncClient", "Boolean", "BooleanAnswer", "Box", "BoxAnswer", "BoxEdges", "Capabilities", "Choice", "ChoiceAnswer",
-    "Date", "DateAnswer", "Estimate", "EstimateAnswer", "Number", "NumberAnswer", "Text", "TextAnswer",
+    "Date", "DateAnswer", "RangeEstimate", "EstimateAnswer", "Number", "NumberAnswer", "Text", "TextAnswer",
     "Client", "Response", "DecisionModel", "Given", "Image", "Media", "MediaRef", "ModelBuild", "ConnectionInfo", "ModelSpec", "Needs", "Price", "ProviderFactory",
     "Question", "QuestionType", "Questions", "Refusal", "Score", "ScoreAnswer", "State", "Usage", "declares",
 ]

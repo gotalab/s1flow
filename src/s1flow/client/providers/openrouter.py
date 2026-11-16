@@ -91,7 +91,8 @@ class OpenRouterModel:
                         raw=usage or None),
             latency_ms=posted.latency_ms,
             retries=posted.retries,
-            provider_metadata={"provider": data.get("provider")},
+            # truncated (Extractions): the provider read only a prefix of the state, so "nothing there" may be unread.
+            provider_metadata={"provider": data.get("provider")} | ({"truncated": True} if data.get("truncated") else {}),
         )
 
 

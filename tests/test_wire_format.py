@@ -24,7 +24,7 @@ from s1flow.client import BooleanAnswer, ChoiceAnswer, Client, Image
 from s1flow.client.state import Media
 from s1flow.client import identity
 from s1flow.client.models import Capabilities, ModelSpec
-from s1flow.client.questions import Boolean, Box, Choice, Date, Estimate, Number, Score, Text
+from s1flow.client.questions import Boolean, Box, Choice, Date, RangeEstimate, Number, Score, Text
 from s1flow.policies import DecisionRule
 from s1flow.policies.kinds import KindParams, kind_of
 
@@ -78,7 +78,7 @@ FIELDS = {
     "po": Text(instructions="Purchase order number"),
     "total": Number(instructions="The total", unit="USD"),
     "issued": Date(instructions="The issue date"),
-    "days": Estimate(instructions="Days until it is paid", min=0, max=120, step=1),
+    "days": RangeEstimate(instructions="Days until it is paid", min=0, max=120, step=1),
 }
 FIELD_REPLIES: dict[str, dict[str, Any]] = {
     "openrouter": {"model": "cloudflare/clairic-20261029", "answers": {

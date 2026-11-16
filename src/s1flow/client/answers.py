@@ -71,7 +71,8 @@ class BoxAnswer(_Answer):
 class _Read(_Answer):
     """A value read from the state. `value` is None when the model read nothing for it; `guess` is its most
     likely value even then. `p_null` is the probability that the state holds nothing for it, `confidence` the
-    model's confidence in `guess`, `span` where it was read: [start, end) in code points of the state's text.
+    model's confidence in `guess` (Clairic gives one near 1 beside a `p_null` near 1), `span` where it was read:
+    [start, end) in code points of the text sent (a JSON state: its keys sorted, dumped with an indent of 1).
     A model gives the ones it has (OpenRouter's Extractions route: Schematron gives the value alone)."""
 
     p_null: float | None = None

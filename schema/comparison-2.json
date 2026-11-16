@@ -100,7 +100,7 @@
     "case_latency_p90_ms": {
      "anyOf": [
       {
-       "$ref": "#/$defs/s1flow__eval__evaluation__Estimate"
+       "$ref": "#/$defs/Estimate"
       },
       {
        "type": "null"
@@ -403,7 +403,7 @@
     },
     "metrics": {
      "additionalProperties": {
-      "$ref": "#/$defs/s1flow__eval__evaluation__Estimate"
+      "$ref": "#/$defs/Estimate"
      },
      "title": "Metrics",
      "type": "object"
@@ -442,7 +442,7 @@
        "box": "#/$defs/Box",
        "choice": "#/$defs/Choice",
        "date": "#/$defs/Date",
-       "estimate": "#/$defs/s1flow__client__questions__Estimate",
+       "estimate": "#/$defs/RangeEstimate",
        "number": "#/$defs/Number",
        "score": "#/$defs/Score",
        "text": "#/$defs/Text"
@@ -472,7 +472,7 @@
        "$ref": "#/$defs/Date"
       },
       {
-       "$ref": "#/$defs/s1flow__client__questions__Estimate"
+       "$ref": "#/$defs/RangeEstimate"
       }
      ],
      "title": "Question"
@@ -637,6 +637,49 @@
     }
    },
    "title": "DecisionRule",
+   "type": "object"
+  },
+  "Estimate": {
+   "additionalProperties": false,
+   "properties": {
+    "value": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Value"
+    },
+    "interval": {
+     "anyOf": [
+      {
+       "maxItems": 2,
+       "minItems": 2,
+       "prefixItems": [
+        {
+         "type": "number"
+        },
+        {
+         "type": "number"
+        }
+       ],
+       "type": "array"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Interval"
+    }
+   },
+   "required": [
+    "value"
+   ],
+   "title": "Estimate",
    "type": "object"
   },
   "Failures": {
@@ -1061,6 +1104,62 @@
    "title": "ProbabilityBin",
    "type": "object"
   },
+  "RangeEstimate": {
+   "additionalProperties": false,
+   "description": "A number between `min` and `max` the state does not state: the model's estimate, with the p10 - p90 interval\nof its distribution. `step` is the spacing of the values it may take (1 for a count).",
+   "properties": {
+    "type": {
+     "const": "estimate",
+     "default": "estimate",
+     "title": "Type",
+     "type": "string"
+    },
+    "instructions": {
+     "title": "Instructions",
+     "type": "string"
+    },
+    "min": {
+     "title": "Min",
+     "type": "number"
+    },
+    "max": {
+     "title": "Max",
+     "type": "number"
+    },
+    "step": {
+     "anyOf": [
+      {
+       "exclusiveMinimum": 0,
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Step"
+    },
+    "unit": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Unit"
+    }
+   },
+   "required": [
+    "instructions",
+    "min",
+    "max"
+   ],
+   "title": "RangeEstimate",
+   "type": "object"
+  },
   "Score": {
    "additionalProperties": false,
    "description": "Levels 0..L-1, described in order by `criteria`.",
@@ -1261,105 +1360,6 @@
     "measured"
    ],
    "title": "Throughput",
-   "type": "object"
-  },
-  "s1flow__client__questions__Estimate": {
-   "additionalProperties": false,
-   "description": "A number between `min` and `max` the state does not state: the model's estimate, with the p10 - p90 interval\nof its distribution. `step` is the spacing of the values it may take (1 for a count).",
-   "properties": {
-    "type": {
-     "const": "estimate",
-     "default": "estimate",
-     "title": "Type",
-     "type": "string"
-    },
-    "instructions": {
-     "title": "Instructions",
-     "type": "string"
-    },
-    "min": {
-     "title": "Min",
-     "type": "number"
-    },
-    "max": {
-     "title": "Max",
-     "type": "number"
-    },
-    "step": {
-     "anyOf": [
-      {
-       "exclusiveMinimum": 0,
-       "type": "number"
-      },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "title": "Step"
-    },
-    "unit": {
-     "anyOf": [
-      {
-       "type": "string"
-      },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "title": "Unit"
-    }
-   },
-   "required": [
-    "instructions",
-    "min",
-    "max"
-   ],
-   "title": "Estimate",
-   "type": "object"
-  },
-  "s1flow__eval__evaluation__Estimate": {
-   "additionalProperties": false,
-   "properties": {
-    "value": {
-     "anyOf": [
-      {
-       "type": "number"
-      },
-      {
-       "type": "null"
-      }
-     ],
-     "title": "Value"
-    },
-    "interval": {
-     "anyOf": [
-      {
-       "maxItems": 2,
-       "minItems": 2,
-       "prefixItems": [
-        {
-         "type": "number"
-        },
-        {
-         "type": "number"
-        }
-       ],
-       "type": "array"
-      },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "title": "Interval"
-    }
-   },
-   "required": [
-    "value"
-   ],
-   "title": "Estimate",
    "type": "object"
   }
  },

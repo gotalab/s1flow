@@ -21,7 +21,7 @@ from ..answers import (
     ScoreAnswer,
     TextAnswer,
 )
-from ..questions import Choice, Estimate, Questions, Score
+from ..questions import Choice, RangeEstimate, Questions, Score
 
 # The answer each type of question takes.
 FITS: dict[str, type] = {
@@ -81,7 +81,7 @@ def _validate_answer(qid: str, question: Any, answer: Answer) -> None:
 
     validate_answer_values(qid, answer, options=question.criteria.keys() if isinstance(question, Choice) else None,
                            levels=len(question.criteria) if isinstance(question, Score) else None,
-                           within=(question.min, question.max) if isinstance(question, Estimate) else None)
+                           within=(question.min, question.max) if isinstance(question, RangeEstimate) else None)
 
 
 def validate_answer_values(
@@ -130,8 +130,9 @@ def validate_answer_values(
                 _fail(qid, f"{name} must be finite, got {x!r}")
         if answer.p10 is not None and answer.p90 is not None and answer.p10 > answer.p90:
             _fail(qid, f"p10 {answer.p10:g} is over p90 {answer.p90:g}")
-        if within is not None and not within[0] <= answer.value <= within[1]:
-            _fail(qid, f"estimate {answer.value:g} is outside {within[0]:g}..{within[1]:g}")
+        slack = 1e-9 * (within[1] - within[0]) if within is not None else 0.0  # a float a hair past an end is not a failure
+        if within is not None and not within[0] - slack <= answer.value <= within[1] + slack:
+            _fail(qid, f"estimate {answer.value!r} is outside {within[0]:g}..{within[1]:g}")
 
 
 def _distribution(qid: str, probabilities: dict[str, float] | None, options: Iterable[str] | None) -> None:
