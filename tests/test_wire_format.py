@@ -73,6 +73,8 @@ BOX_REPLIES: dict[str, dict[str, Any]] = {
     "cloudflare": {"result": {"model": "clef", "answers": {"where": BOX_ANSWER}}},
 }
 ALL = Capabilities(image=True, question_types=frozenset({"boolean", "choice", "score", "box"}))
+REPLIES["liquid"] = {"model": "d1.2", "answers": SYSTEM_ONE, "usage": {"input_tokens": 90, "output_tokens": 0, "cost": 0.0000018}}
+BOX_REPLIES["liquid"] = {"model": "d1.2", "answers": {"where": BOX_ANSWER | {"found": 0.9}}}
 REPLIES["gemini"] = {"model": "gemini-decision-1", "answers": SYSTEM_ONE, "usage": {"total_input_tokens": 90}}
 MEDIA_REPLIES = {p: REPLIES[p] for p in ("openrouter", "gemini")}  # the providers that send audio, video and PDFs
 EVERY = ALL.model_copy(update={"audio": True, "video": True, "pdf": True})
@@ -81,6 +83,7 @@ MODELS = {
     "gateway": ModelSpec(provider="gateway", id="typesafe-ai/jev", capabilities=ALL),
     "openrouter": ModelSpec(provider="openrouter", id="typesafe/jev", capabilities=EVERY),
     "gemini": ModelSpec(provider="gemini", id="gemini-decision-1", capabilities=EVERY.model_copy(update={"question_types": frozenset({"boolean", "choice", "score"})})),
+    "liquid": ModelSpec(provider="liquid", id="d1.2", capabilities=ALL),
     "cloudflare": ModelSpec(provider="cloudflare", id="clef", capabilities=ALL),
     "openai-decisions": ModelSpec(provider="openai-decisions", id="gpt-6-luna", capabilities=Capabilities(image=True)),
     "llm": ModelSpec(provider="llm", id="openai/gpt-test", options={"box_units": "k1000"}, capabilities=ALL),
@@ -153,7 +156,7 @@ def _decisions() -> dict[str, Any]:
 
 
 def test_what_is_sent_and_read_is_what_the_identity_formats_name(monkeypatch):
-    for env in ("TYPESAFE_API_KEY", "AI_GATEWAY_API_KEY", "OPENROUTER_API_KEY", "OPENAI_API_KEY", "GEMINI_API_KEY"):
+    for env in ("TYPESAFE_API_KEY", "AI_GATEWAY_API_KEY", "OPENROUTER_API_KEY", "OPENAI_API_KEY", "GEMINI_API_KEY", "LIQUID_API_KEY"):
         monkeypatch.delenv(env, raising=False)
     monkeypatch.setenv("CLEF_RELAY_URL", "https://relay.test")
     now = {

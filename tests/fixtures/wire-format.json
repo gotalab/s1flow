@@ -964,6 +964,185 @@
     }
    }
   },
+  "liquid": {
+   "text": {
+    "sent": {
+     "url": "https://api.liquid.ai/decisions/v1/systemone",
+     "headers": {},
+     "body": {
+      "model": "d1.2",
+      "state": {
+       "meta": {
+        "a": [
+         {
+          "b": 3,
+          "y": 2
+         }
+        ],
+        "z": 1
+       },
+       "title": "Crash on start"
+      },
+      "questions": {
+       "kind": {
+        "type": "choice",
+        "instructions": "What kind of issue?",
+        "criteria": {
+         "kind/bug": "it is broken",
+         "kind/question": null
+        }
+       },
+       "refund": {
+        "type": "noul",
+        "instructions": "Does it ask for a refund?"
+       },
+       "urgency": {
+        "type": "score",
+        "instructions": "How urgent?",
+        "criteria": [
+         "low",
+         "high"
+        ]
+       }
+      }
+     }
+    },
+    "read": {
+     "answered_by": "d1.2",
+     "answers": {
+      "kind": {
+       "type": "choice",
+       "choice": "kind/bug",
+       "probabilities": {
+        "kind/bug": 0.8,
+        "kind/question": 0.2
+       },
+       "confidence": 0.7
+      },
+      "refund": {
+       "type": "boolean",
+       "probability": 0.1
+      },
+      "urgency": {
+       "type": "score",
+       "score": 0.6,
+       "probabilities": {
+        "0": 0.4,
+        "1": 0.6
+       },
+       "confidence": null
+      }
+     }
+    }
+   },
+   "image": {
+    "sent": {
+     "url": "https://api.liquid.ai/decisions/v1/systemone",
+     "headers": {},
+     "body": {
+      "model": "d1.2",
+      "state": [
+       "The screen shows:",
+       {
+        "type": "image_url",
+        "image_url": {
+         "url": "data:image/png;base64,iVBORw0KGgo="
+        }
+       }
+      ],
+      "questions": {
+       "kind": {
+        "type": "choice",
+        "instructions": "What kind of issue?",
+        "criteria": {
+         "kind/bug": "it is broken",
+         "kind/question": null
+        }
+       },
+       "refund": {
+        "type": "noul",
+        "instructions": "Does it ask for a refund?"
+       },
+       "urgency": {
+        "type": "score",
+        "instructions": "How urgent?",
+        "criteria": [
+         "low",
+         "high"
+        ]
+       }
+      }
+     }
+    },
+    "read": {
+     "answered_by": "d1.2",
+     "answers": {
+      "kind": {
+       "type": "choice",
+       "choice": "kind/bug",
+       "probabilities": {
+        "kind/bug": 0.8,
+        "kind/question": 0.2
+       },
+       "confidence": 0.7
+      },
+      "refund": {
+       "type": "boolean",
+       "probability": 0.1
+      },
+      "urgency": {
+       "type": "score",
+       "score": 0.6,
+       "probabilities": {
+        "0": 0.4,
+        "1": 0.6
+       },
+       "confidence": null
+      }
+     }
+    }
+   },
+   "box": {
+    "sent": {
+     "url": "https://api.liquid.ai/decisions/v1/systemone",
+     "headers": {},
+     "body": {
+      "model": "d1.2",
+      "state": [
+       "The screen shows:",
+       {
+        "type": "image_url",
+        "image_url": {
+         "url": "data:image/png;base64,iVBORw0KGgo="
+        }
+       }
+      ],
+      "questions": {
+       "where": {
+        "type": "box",
+        "instructions": "Where is the error message?"
+       }
+      }
+     }
+    },
+    "read": {
+     "answered_by": "d1.2",
+     "answers": {
+      "where": {
+       "type": "box",
+       "box": {
+        "top": 0.1,
+        "bottom": 0.5,
+        "left": 0.2,
+        "right": 0.9
+       },
+       "confidence": 0.6,
+       "agreement": null
+      }
+     }
+    }
+   }
+  },
   "gemini": {
    "text": {
     "sent": {
