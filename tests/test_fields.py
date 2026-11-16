@@ -74,6 +74,16 @@ def test_each_answer_is_read_with_what_its_model_gave():
     assert extractions.answers({"q": {"type": "refusal", "refusal": "unsafe"}})["q"] == Refusal(reason="unsafe")
 
 
+def test_an_absent_value_survives_a_record_that_leaves_none_out():
+    """Runs are saved without their None fields (eval/records.py): nothing read must load as nothing read."""
+    from pydantic import TypeAdapter
+
+    from s1flow.client.answers import Answer
+
+    for a in (TextAnswer(value=None, guess="INV-1", p_null=0.99), NumberAnswer(value=None), DateAnswer(value=None)):
+        assert TypeAdapter(Answer).validate_python(a.model_dump(mode="json", exclude_none=True)) == a
+
+
 @pytest.mark.parametrize("answer", [
     {"type": "list", "value": ["a"]},  # a type s1flow has no question for
     {"type": "number"},  # no value

@@ -73,7 +73,8 @@ class _Read(_Answer):
     likely value even then. `p_null` is the probability that the state holds nothing for it, `confidence` the
     model's confidence in `guess` (Clairic gives one near 1 beside a `p_null` near 1), `span` where it was read:
     [start, end) in code points of the text sent (a JSON state: its keys sorted, dumped with an indent of 1).
-    A model gives the ones it has (OpenRouter's Extractions route: Schematron gives the value alone)."""
+    A model gives the ones it has (OpenRouter's Extractions route: Schematron gives the value alone).
+    Every field has a default: a saved record leaves out what is None, a value that was not read among them."""
 
     p_null: float | None = None
     confidence: float | None = None
@@ -82,19 +83,19 @@ class _Read(_Answer):
 
 class TextAnswer(_Read):
     type: Literal["text"] = "text"
-    value: str | None
+    value: str | None = None
     guess: str | None = None
 
 
 class NumberAnswer(_Read):
     type: Literal["number"] = "number"
-    value: float | None
+    value: float | None = None
     guess: float | None = None
 
 
 class DateAnswer(_Read):
     type: Literal["date"] = "date"
-    value: dt.date | None
+    value: dt.date | None = None
     guess: dt.date | None = None
 
 

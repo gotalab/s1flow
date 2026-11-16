@@ -214,6 +214,7 @@
        "type": "null"
       }
      ],
+     "default": null,
      "title": "Value"
     },
     "guess": {
@@ -230,9 +231,6 @@
      "title": "Guess"
     }
    },
-   "required": [
-    "value"
-   ],
    "title": "DateAnswer",
    "type": "object"
   },
@@ -344,6 +342,7 @@
        "type": "null"
       }
      ],
+     "default": null,
      "title": "Value"
     },
     "guess": {
@@ -359,9 +358,6 @@
      "title": "Guess"
     }
    },
-   "required": [
-    "value"
-   ],
    "title": "NumberAnswer",
    "type": "object"
   },
@@ -502,6 +498,7 @@
        "type": "null"
       }
      ],
+     "default": null,
      "title": "Value"
     },
     "guess": {
@@ -517,9 +514,6 @@
      "title": "Guess"
     }
    },
-   "required": [
-    "value"
-   ],
    "title": "TextAnswer",
    "type": "object"
   },
