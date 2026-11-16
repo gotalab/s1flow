@@ -187,16 +187,22 @@ def render(task: Task, variant: str, evs: list[Evaluation], preds: dict[str, met
     kind = task.kind
     own = kind.report[0]  # the kind's own number, beside its accuracy
     box = kind.type == "box"
+    read = kind.type in ("text", "number", "date")
     first = next((e for e in evs if e.n), None)
     labelled = [c for c in task.load_cases().labelled() if sf.assign.get(c.id) != "test"]
-    labels = Counter(str(c.label) for c in labelled) if not box else Counter()
+    labels = Counter(str(c.label) for c in labelled) if not (box or read or kind.type == "estimate") else Counter()
+    absent = sum(c.label is False for c in labelled)
+    about = (f" (right at IoU {kind.iou:g} or more)" if box
+             else f" ({len(labelled) - absent} with a value, {absent} with none)" if read
+             else f" (right within {getattr(kind, 'tolerance'):g} of the label)" if kind.type == "estimate"
+             else f" ({', '.join(f'{k} {v}' for k, v in labels.most_common(8))}" + (", more" if len(labels) > 8 else "") + ")")
     sel0 = first.selective[0] if first and first.selective else None
     scored, ranked = compared(task, evs)
     L: list[str] = [
         f"# {task.id}" + (f" · {variant}" if variant != "base" else ""),
         "",
         f"{dt.date.today()} · {len(labelled)} labelled dev cases"
-        + (f" (right at IoU {kind.iou:g} or more)" if box else f" ({', '.join(f'{k} {v}' for k, v in labels.most_common(8))}" + (", more" if len(labels) > 8 else "") + ")")
+        + about
         + f" · split: {first.split if first else '—'} · source: {task.source}",
         "",
         headline(task, evs, scored, ranked),
@@ -239,6 +245,12 @@ def render(task: Task, variant: str, evs: list[Evaluation], preds: dict[str, met
         L.append("※ a model that returns no distribution (one answer): its probability is 1 for every answer, so the coverage is all or nothing.")
     if box:
         L.append(f"Box: right at IoU {kind.iou:g} or more with the label's box. The probability is what jev returns; for an LLM, the agreement (IoU) of its repeated boxes. AUROC and ECE say how well that probability separates right from wrong.")
+    if read:
+        L.append("Value read: right when it equals the label, or when nothing was read from a case labelled as holding none. The probability is the "
+                 "model's: P(nothing there) for an answer of none, else P(something there) times its confidence in the value; 1 when it gives neither.")
+    if kind.type == "estimate":
+        L.append(f"Estimate: right within {getattr(kind, 'tolerance'):g} of the label. What stands in for a probability is how narrow the p10 - p90 "
+                 "interval is against the question's range (1: a point, 0: the whole range). AUROC and ECE say how well that separates right from wrong.")
     if any(e.failures.unsupported for e in evs):
         L.append("Refused: inputs the model did not take (question type, image, audio, video, PDF, length limits) and answers it declined to give. "
                  "The model's limit, not a failed call: the candidate is kept, and the case stays in every denominator.")

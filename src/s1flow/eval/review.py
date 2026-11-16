@@ -66,8 +66,8 @@ def _models(task: Task) -> list[str]:
 
 
 def review(task: Task, *, min_probability: float = 0.9, limit: int = 30, sample: int = 0, include_read: bool = False) -> Review:
-    if task.kind.type == "box":
-        raise Unsupported(f"{task.id}: review lists label disagreements; box tasks are not supported yet")
+    if task.kind.type not in ("boolean", "choice", "score"):
+        raise Unsupported(f"{task.id}: review lists label disagreements; {task.kind.type} tasks are not supported yet")
     fixes = task.load_cases().corrections()
     by_id = task.load_cases().by_id()
     sf = evalset.current(task)

@@ -21,8 +21,12 @@
   model finds nothing, with `p_null`, `confidence` and `span` where the model gives them), and `RangeEstimate` asks for
   a number between a `min` and a `max` with its p10 - p90 interval. The `openrouter` provider sends them to
   OpenRouter's Extractions route (Clairic, Schematron, Perplexity's Decider v1.3, ScaleDown Extract), a model
-  declares them in `capabilities.question_types`, and `s1flow models --verify` checks each. Evaluation and policies
-  do not take them yet.
+  declares them in `capabilities.question_types`, and `s1flow models --verify` checks each.
+- Evaluation compares those four types. A value read is right when it equals the label, or when nothing is read on
+  a case labelled `False` (no value there); reports add the accuracy on the cases with a value and on those with
+  none, and `Coverage` reads `p_null` and `confidence`. A `RangeEstimate` task defaults to the new `MeanError()`
+  objective, counts an answer as right within half a `step` (`KindParams(tolerance=...)`), and is sure where the
+  p10 - p90 interval is narrow. A policy does not hold these types yet, and `review` does not take them.
 
 ### Changed
 

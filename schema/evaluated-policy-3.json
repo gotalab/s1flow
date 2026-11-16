@@ -785,7 +785,7 @@
   "JsonValue": {},
   "KindParams": {
    "additionalProperties": false,
-   "description": "What a question's type leaves open, the same in a task (`Task.kind_params`) and a policy (`kind`):\n`positive` scores a choice as binary (P(positive) against a true / false label), `iou` is a box's bar\nfor a hit (0.5 when unset). An unset one is left out of the JSON.",
+   "description": "What a question's type leaves open, the same in a task (`Task.kind_params`) and a policy (`kind`):\n`positive` scores a choice as binary (P(positive) against a true / false label), `iou` is a box's bar\nfor a hit (0.5 when unset), `tolerance` how far from the label an estimate is still right (half a step when\nunset; a hundredth of the range for a question without a step). An unset one is left out of the JSON.",
    "properties": {
     "positive": {
      "anyOf": [
@@ -812,6 +812,19 @@
      ],
      "default": null,
      "title": "Iou"
+    },
+    "tolerance": {
+     "anyOf": [
+      {
+       "minimum": 0,
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Tolerance"
     }
    },
    "title": "KindParams",
