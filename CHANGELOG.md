@@ -4,6 +4,9 @@
 
 ### Added
 
+- A built-in `liquid` provider for Liquid's own API (`LIQUID_API_KEY`): d1.2 and d1.2-ultra without a gateway in
+  between, with text and images, for yes/no, choice, score and box questions. It reports the cost Liquid billed.
+  A box the model does not find counts as no answer for that case.
 - A built-in `gemini` provider for Google's own Decisions API on the Gemini API (`GEMINI_API_KEY`): Gemini
   Decision 1 without OpenRouter in between, with text, images, audio, video and PDFs. An input Google's safety
   filters block counts as refused for that case.
