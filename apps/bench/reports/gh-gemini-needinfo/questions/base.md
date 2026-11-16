@@ -1,8 +1,8 @@
 # gh-gemini-needinfo
 
-2026-11-15 · 210 labelled dev cases (False 165, True 45) · split: stratified k-fold (no test case among these: CV numbers only) · source: GitHub issues of google-gemini/gemini-cli (labels applied by the repository's Gemini triage bot; see gh-audit)
+2026-11-16 · 210 labelled dev cases (False 165, True 45) · split: stratified k-fold (no test case among these: CV numbers only) · source: GitHub issues of google-gemini/gemini-cli (labels applied by the repository's Gemini triage bot; see gh-audit)
 
-**decision-1@openrouter** has the highest recall at 5% false alarms or fewer, 27% [15, 40] (false alarms 4.8%) (API cost $0.21 per 10k, p99 359ms). Its interval overlaps with decider-flash@openrouter, clef@openrouter, joey@openrouter, span@openrouter, clef-flash@openrouter, gemini-decision@google, d1.1@openrouter, clef-omni@openrouter, reflex@openrouter, elephant@openrouter, d1-ultra@openrouter, d1@vercel, drex-max@openrouter, kev@openrouter, mammoth@openrouter, luna@decisions, jev:1.14, decider@openrouter: the objective cannot tell them apart; interval overlap does not establish equivalence. Ordered by task.py's tiebreak (accuracy (all)), **decider-flash@openrouter** comes first (API cost $0.06 per 10k, p99 203ms). The highest raw accuracy (dev) is joey@openrouter's, 80% [75, 85].
+decision-1@openrouter has the highest recall at 5% false alarms or fewer, 27% [15, 40] (false alarms 4.8%) (API cost $0.21 per 10k, p99 359ms). Its interval overlaps with decider-flash@openrouter, clef@openrouter, joey@openrouter, span@openrouter, d1.2, d1.2-ultra, clef-flash@openrouter, gemini-decision@google, d1.1@openrouter, clef-omni@openrouter, reflex@openrouter, elephant@openrouter, d1-ultra@openrouter, d1@vercel, drex-max@openrouter, kev@openrouter, mammoth@openrouter, luna@decisions, jev:1.14, decider@openrouter: the objective cannot tell them apart; interval overlap does not establish equivalence. Ordered by task.py's tiebreak (accuracy (all)), decider-flash@openrouter comes first (API cost $0.06 per 10k, p99 203ms). The highest raw accuracy (dev) is joey@openrouter's, 80% [75, 85].
 
 ## Comparison
 
@@ -13,6 +13,8 @@
 | clef@openrouter | 210 | 77.1% [72, 83] | 0.35 | 0.59 | 0.15 | 5% [2, 8] | 80.0% (49.3%) | 0.0% (0/210) | 0/210 |
 | d1-ultra@openrouter | 210 | 75.2% [70, 81] | 0.37 | 0.56 | 0.16 | 5% [2, 8] | 60.0% (30.4%) | 0.0% (0/210) | 0/210 |
 | d1.1@openrouter | 210 | 71.9% [66, 78] | 0.35 | 0.60 | 0.18 | 8% [4, 11] | 81.2% (58.3%) | 0.0% (0/210) | 0/210 |
+| d1.2 | 210 | 74.3% [68, 80] | 0.34 | 0.62 | 0.11 | 3% [1, 6] | 83.3% (41.8%) | 0.0% (0/210) | 0/210 |
+| d1.2-ultra | 210 | 75.7% [70, 82] | 0.37 | 0.58 | 0.16 | 5% [2, 8] | 100.0% (74.1%) | 0.0% (0/210) | 0/210 |
 | d1@vercel | 210 | 75.2% [70, 81] | 0.33 | 0.61 | 0.18 | 8% [4, 11] | 81.2% (58.3%) | 0.0% (0/210) | 0/210 |
 | decider-flash@openrouter | 210 | 78.6% [73, 84] | 0.35 | 0.62 | 0.14 | 4% [2, 7] | 66.7% (34.5%) | 0.0% (0/210) | 0/210 |
 | decider@openrouter | 210 | 77.6% [72, 83] | 0.39 | 0.60 | 0.18 | 12% [8, 17] | 92.3% (77.7%) | 0.0% (0/210) | 0/210 |
@@ -28,7 +30,7 @@
 | reflex@openrouter | 210 | 78.1% [73, 84] | 0.39 | 0.63 | 0.19 | 6% [3, 9] | 91.7% (66.1%) | 0.0% (0/210) | 0/210 |
 | span@openrouter | 210 | 76.7% [71, 83] | 0.38 | 0.63 | 0.17 | 5% [2, 9] | 72.7% (43.6%) | 0.0% (0/210) | 0/210 |
 
-Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef-omni@openrouter = cloudflare/clef-omni-20261009; clef@openrouter = cloudflare/clef; d1-ultra@openrouter = liquid/d1-ultra-20261015; d1.1@openrouter = liquid/d1.1-20261027; d1@vercel = liquid/d1; decider-flash@openrouter = perplexity/pplx-decider-flash-v1.2-20261016; decider@openrouter = perplexity/pplx-decider-v1.2-20261016; decision-1@openrouter = microsoft/microsoft-decision-1-20261009; drex-max@openrouter = nace-ai/drex-max-20261016; elephant@openrouter = baseten/elephant-1-20261021; gemini-decision@google = gemini-decision-1; jev:1.14 = jev-1.14.0; joey@openrouter = baseten/joey-1-20261029; kev@openrouter = jaredpalmer/kev-4b-20260924; luna@decisions = gpt-6-luna; mammoth@openrouter = baseten/mammoth-1-20261021; reflex@openrouter = morph/reflex-20261103; span@openrouter = respan/span-02-20261015. To compare versions, run each by name: `s1flow run <task> --models jev:1.14`.
+Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef-omni@openrouter = cloudflare/clef-omni-20261009; clef@openrouter = cloudflare/clef; d1-ultra@openrouter = liquid/d1-ultra-20261015; d1.1@openrouter = liquid/d1.1-20261027; d1.2 = d1.2; d1.2-ultra = d1.2-ultra; d1@vercel = liquid/d1; decider-flash@openrouter = perplexity/pplx-decider-flash-v1.2-20261016; decider@openrouter = perplexity/pplx-decider-v1.2-20261016; decision-1@openrouter = microsoft/microsoft-decision-1-20261009; drex-max@openrouter = nace-ai/drex-max-20261016; elephant@openrouter = baseten/elephant-1-20261021; gemini-decision@google = gemini-decision-1; jev:1.14 = jev-1.14.0; joey@openrouter = baseten/joey-1-20261029; kev@openrouter = jaredpalmer/kev-4b-20260924; luna@decisions = gpt-6-luna; mammoth@openrouter = baseten/mammoth-1-20261021; reflex@openrouter = morph/reflex-20261103; span@openrouter = respan/span-02-20261015. To compare versions, run each by name: `s1flow run <task> --models jev:1.14`.
 
 ## Objectives and constraints
 
@@ -39,6 +41,8 @@ Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef-omni@openrouter
 | clef@openrouter = | 24% [12, 38] (false alarms 4.2%) | 80% [76, 86] | 0.81 | met |
 | joey@openrouter = | 24% [12, 38] (false alarms 4.8%) | 80% [75, 85] | 0.50 | met |
 | span@openrouter = | 24% [13, 39] (false alarms 4.8%) | 80% [75, 86] | 0.92 | met |
+| d1.2 = | 22% [12, 35] (false alarms 4.2%) | 80% [74, 85] | 0.93 | met |
+| d1.2-ultra = | 22% [11, 36] (false alarms 4.2%) | 80% [74, 86] | 0.95 | met |
 | clef-flash@openrouter = | 22% [11, 35] (false alarms 4.8%) | 80% [74, 85] | 0.84 | met |
 | gemini-decision@google = | 22% [11, 36] (false alarms 4.8%) | 80% [74, 85] | 0.97 | met |
 | d1.1@openrouter = | 20% [9, 33] (false alarms 4.2%) | 80% [74, 85] | 0.97 | met |
@@ -65,6 +69,8 @@ Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef-omni@openrouter
 | clef@openrouter | 210 | 319 ms | 880 ms | 2452 ms | 5621 ms | 7.7 | 0 | 4 | $1.30 | billed |  |
 | d1-ultra@openrouter | 210 | 605 ms | 5635 ms | 6150 ms | 7202 ms | 10.2 | 15 | 4 | $0.22 | billed |  |
 | d1.1@openrouter | 210 | 207 ms | 348 ms | 445 ms | 468 ms | 2.1 | 0 | 4 | $0.10 | billed |  |
+| d1.2 | 210 | 117 ms | 178 ms | 637 ms | 700 ms | 5.4 | 1 | 4 | $0.10 | billed |  |
+| d1.2-ultra | 210 | 119 ms | 164 ms | 407 ms | 484 ms | 3.4 | 0 | 4 | $0.22 | billed |  |
 | d1@vercel | 210 | 604 ms | 4414 ms | 6230 ms | 6507 ms | 10.3 | 0 | 4 | $0.10 | billed |  |
 | decider-flash@openrouter | 210 | 134 ms | 151 ms | 203 ms | 457 ms | 1.5 | 0 | 4 | $0.06 | billed | ○ |
 | decider@openrouter | 210 | 218 ms | 297 ms | 800 ms | 1323 ms | 3.7 | 0 | 4 | $0.11 | billed |  |
@@ -82,7 +88,7 @@ Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef-omni@openrouter
 
 Measured on the calls, not the answers: never an objective, only the constraints and the order of candidates the objectives tie (the p90 of each case's slowest call, then API cost). Frontier ○: no other model beats it on all three of the primary objective, API cost per 10k and p99.
 Latency is the time from sending to receiving one call that answered (the round trip from here included), without retries or the wait before them. Many calls at once read slower, from the provider's load and this machine's connections: to compare models, measure every candidate again at the same concurrency (`s1flow run <task> --fresh --concurrency N`, the same N for all).
-Where the API costs come from: billed: clef-flash@openrouter, clef-omni@openrouter, clef@openrouter, d1-ultra@openrouter, d1.1@openrouter, d1@vercel, decider-flash@openrouter, decider@openrouter, decision-1@openrouter, drex-max@openrouter, elephant@openrouter, joey@openrouter, kev@openrouter, mammoth@openrouter, reflex@openrouter, span@openrouter; estimated (recorded tokens times a list price: s1flow.toml's where dated, else the LLM price table's; not a bill): gemini-decision@google (list price of 2026-11-12), jev:1.14 (list price of 2026-10-03), luna@decisions (list price of 2026-10-09). Billed and estimated API costs sit side by side, so their differences do not compare as they are.
+Where the API costs come from: billed: clef-flash@openrouter, clef-omni@openrouter, clef@openrouter, d1-ultra@openrouter, d1.1@openrouter, d1.2, d1.2-ultra, d1@vercel, decider-flash@openrouter, decider@openrouter, decision-1@openrouter, drex-max@openrouter, elephant@openrouter, joey@openrouter, kev@openrouter, mammoth@openrouter, reflex@openrouter, span@openrouter; estimated (recorded tokens times a list price: s1flow.toml's where dated, else the LLM price table's; not a bill): gemini-decision@google (list price of 2026-11-12), jev:1.14 (list price of 2026-10-03), luna@decisions (list price of 2026-10-09). Billed and estimated API costs sit side by side, so their differences do not compare as they are.
 
 ## API cost and time for these cases
 
@@ -93,6 +99,8 @@ Where the API costs come from: billed: clef-flash@openrouter, clef-omni@openrout
 | clef@openrouter | $0.03 | 25 s (estimated, 210 calls) | 20 min | 4 |
 | d1-ultra@openrouter | $0.0046 | 2 min (estimated, 210 calls) | 72 min | 4 |
 | d1.1@openrouter | $0.0022 | 12 s (estimated, 210 calls) | 10 min | 4 |
+| d1.2 | $0.0022 | 8 s (estimated, 210 calls) | 6 min | 4 |
+| d1.2-ultra | $0.0046 | 7 s (estimated, 210 calls) | 6 min | 4 |
 | d1@vercel | $0.0022 | 70 s (estimated, 210 calls) | 55 min | 4 |
 | decider-flash@openrouter | $0.0012 | 7 s (estimated, 210 calls) | 6 min | 4 |
 | decider@openrouter | $0.0023 | 13 s (estimated, 210 calls) | 10 min | 4 |
@@ -111,7 +119,7 @@ Where the API costs come from: billed: clef-flash@openrouter, clef-omni@openrout
 Measured: the wall time of a run that called every case. When every answer came from the cache, estimated as the calls' time summed and divided by the concurrency. The time depends more on the concurrency and the provider's rate limit than on the model.
 
 Coverage: answering the most probable first, the largest share whose sure accuracy keeps the target 95%. The cut is chosen on each CV fold's fit side and measured on its eval side. The lower bound is a one-sided 95% Clopper-Pearson; [ ] is a 95% bootstrap interval.
-Scored: every labelled dev case the model answered or refused; held-out test results require an explicit final check. Refused: the share of the scored cases the model refused or does not support, each counted as no answer (wrong, and never sure). Failed counts calls.
+Scored: every labelled dev case the model answered or refused; held-out test results come only when a candidate is adopted. Refused: the share of the scored cases the model refused or does not support, each counted as no answer (wrong, and never sure). Failed counts calls.
 
 ## Threshold
 
@@ -124,6 +132,8 @@ The threshold with the lowest total loss, chosen by CV, a miss (a positive read 
 | clef@openrouter | 77.1% | 79.5% | 38 | 5 | 0.85 | 0.85 |
 | d1-ultra@openrouter | 75.2% | 78.6% | 35 | 10 | 0.95 | 0.95 |
 | d1.1@openrouter | 71.9% | 79.5% | 33 | 10 | 0.95 | 0.95 |
+| d1.2 | 74.3% | 79.5% | 34 | 9 | 0.90 | 0.90 |
+| d1.2-ultra | 75.7% | 78.6% | 33 | 12 | 0.90 | 0.90 |
 | d1@vercel | 75.2% | 78.6% | 36 | 9 | 0.90 | 0.90 |
 | decider-flash@openrouter | 78.6% | 80.0% | 34 | 8 | 0.80 | 0.80 |
 | decider@openrouter | 77.6% | 79.5% | 32 | 11 | 0.90 | 0.90 |
@@ -212,6 +222,34 @@ The threshold with the lowest total loss, chosen by CV, a miss (a positive read 
 | 0.80 | 31 (69%) | 14 (8%) |
 | 0.90 | 32 (71%) | 14 (8%) |
 | 0.95 | 33 (73%) | 10 (6%) |
+
+## Misses and false alarms by threshold (d1.2)
+
+| threshold | misses | false alarms |
+|---|---|---|
+| 0.10 | 13 (29%) | 98 (59%) |
+| 0.20 | 18 (40%) | 61 (37%) |
+| 0.30 | 28 (62%) | 39 (24%) |
+| 0.40 | 30 (67%) | 27 (16%) |
+| 0.50 | 31 (69%) | 23 (14%) |
+| 0.60 | 32 (71%) | 19 (12%) |
+| 0.70 | 32 (71%) | 15 (9%) |
+| 0.80 | 32 (71%) | 13 (8%) |
+| 0.90 | 34 (76%) | 9 (5%) |
+
+## Misses and false alarms by threshold (d1.2-ultra)
+
+| threshold | misses | false alarms |
+|---|---|---|
+| 0.10 | 19 (42%) | 81 (49%) |
+| 0.20 | 24 (53%) | 57 (35%) |
+| 0.30 | 25 (56%) | 39 (24%) |
+| 0.40 | 29 (64%) | 27 (16%) |
+| 0.50 | 30 (67%) | 21 (13%) |
+| 0.60 | 30 (67%) | 19 (12%) |
+| 0.70 | 31 (69%) | 15 (9%) |
+| 0.80 | 32 (71%) | 14 (8%) |
+| 0.90 | 32 (71%) | 12 (7%) |
 
 ## Misses and false alarms by threshold (d1@vercel)
 
@@ -483,6 +521,32 @@ The threshold with the lowest total loss, chosen by CV, a miss (a positive read 
 | #29314 | True | False | 0.99 | bug(cli): ShellProcessor ignores abort signal, hung custom command bl… |
 | #29144 | True | False | 0.99 | sanitizeToolArgs redacts non-secret keys like max_tokens and author v… |
 
+**d1.2** (22)
+
+| id | label | answer | probability | case |
+|---|---|---|---|---|
+| #29144 | True | False | 0.98 | sanitizeToolArgs redacts non-secret keys like max_tokens and author v… |
+| #29100 | False | True | 0.98 | Gemini lolo |
+| #29146 | False | True | 0.98 | GeminiCLI.com Feedback: [ISSUE] |
+| #29147 | False | True | 0.97 | GeminiCLI.com Feedback: [ISSUE] |
+| #29316 | True | False | 0.97 | bug(sdk): AgentShellOptions env/timeoutSeconds silently ignored (shel… |
+| #28783 | False | True | 0.97 | cutealexamartha |
+| #29392 | False | True | 0.96 | GeminiCLI.com Feedback: [ISSUE] Generated files change automated exte… |
+| #29012 | True | False | 0.96 | Docs: six CLI flags missing from the reference table |
+
+**d1.2-ultra** (31)
+
+| id | label | answer | probability | case |
+|---|---|---|---|---|
+| #28846 | True | False | 0.99 | OAuth personal on 0.46.0 fails with UNSUPPORTED_CLIENT and Antigravit… |
+| #29204 | True | False | 0.99 | MCP prompt responses are submitted as JSON-encoded text |
+| #29144 | True | False | 0.99 | sanitizeToolArgs redacts non-secret keys like max_tokens and author v… |
+| #29012 | True | False | 0.99 | Docs: six CLI flags missing from the reference table |
+| #29046 | True | False | 0.99 | bug(cli): impure state updater in useInputHistoryStore schedules nest… |
+| #29316 | True | False | 0.98 | bug(sdk): AgentShellOptions env/timeoutSeconds silently ignored (shel… |
+| #29308 | True | False | 0.98 | bug(sdk): unguarded JSON.parse on tool-call args kills sendStream (se… |
+| #29290 | True | False | 0.98 | Nested .gitignore: patterns with only a trailing slash (e.g. build/) … |
+
 **d1@vercel** (33)
 
 | id | label | answer | probability | case |
@@ -658,19 +722,19 @@ The threshold with the lowest total loss, chosen by CV, a miss (a positive read 
 | #29305 | True | False | 1.00 | bug(core): client-initiated tool calls silently bypass ASK_USER confi… |
 
 
-## Cases the models disagree on (12 of 48)
+## Cases the models disagree on (12 of 49)
 
-| id | label | clef-flash@openrouter | clef-omni@openrouter | clef@openrouter | d1-ultra@openrouter | d1.1@openrouter | d1@vercel | decider-flash@openrouter | decider@openrouter | decision-1@openrouter | drex-max@openrouter | elephant@openrouter | gemini-decision@google | jev:1.14 | joey@openrouter | kev@openrouter | luna@decisions | mammoth@openrouter | reflex@openrouter | span@openrouter | case |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| #29442 | False | False (0.88) | False (0.87) | False (0.95) | False (0.94) | False (0.58) | False (0.97) | False (0.95) | False (0.94) | True (0.80) | False (0.84) | True (0.56) | False (0.91) | False (0.80) | False (0.74) | False (0.82) | False (1.00) | False (0.90) | False (0.98) | False (0.95) | Create a kitten illustration with a lion-shaped shadow |
-| #29221 | False | True (0.87) | True (0.79) | True (0.78) | True (0.91) | True (0.97) | True (0.89) | True (0.79) | True (0.96) | True (1.00) | True (0.98) | True (0.79) | True (0.97) | True (0.93) | False (0.56) | False (0.54) | True (1.00) | True (0.96) | True (0.98) | True (0.88) | Leeres.blaat_A4-DIN |
-| #28686 | False | False (0.88) | False (0.83) | False (0.94) | False (0.88) | True (0.63) | False (0.95) | False (0.96) | False (0.93) | False (0.68) | False (0.96) | False (0.58) | False (0.67) | False (0.80) | False (0.76) | False (0.85) | False (1.00) | False (0.88) | False (0.99) | False (0.83) | ## Code Review |
-| #29145 | True | True (0.88) | True (0.94) | True (0.94) | True (0.98) | True (1.00) | True (0.99) | True (0.94) | True (1.00) | True (1.00) | True (1.00) | True (0.97) | True (0.98) | True (0.97) | True (0.71) | False (0.52) | True (0.99) | True (0.95) | True (1.00) | True (0.99) | Recalibrate trick |
-| #29136 | True | True (0.88) | True (0.83) | True (0.89) | True (0.99) | True (0.99) | True (0.94) | True (0.92) | True (0.96) | True (1.00) | True (0.97) | True (0.93) | True (0.98) | True (0.98) | False (0.59) | True (0.52) | True (0.98) | True (0.95) | True (1.00) | True (0.99) | GeminiCLI.com Feedback: [ISSUE] |
-| #28783 | False | True (0.92) | True (0.95) | True (0.81) | True (0.99) | True (0.99) | True (1.00) | True (0.98) | True (0.98) | True (1.00) | True (0.99) | True (0.93) | True (0.98) | True (0.97) | False (0.56) | True (0.51) | True (0.97) | True (0.97) | True (0.99) | True (0.90) | cutealexamartha |
-| #28777 | True | True (0.79) | True (0.87) | True (0.88) | True (0.98) | True (0.96) | False (0.58) | False (0.66) | True (0.97) | True (1.00) | True (0.98) | True (0.89) | True (0.97) | True (0.95) | True (0.59) | False (0.56) | True (0.89) | True (0.91) | True (0.99) | True (0.92) | ticket IT support |
-| #29135 | True | True (0.85) | True (0.60) | False (0.52) | True (0.77) | True (0.97) | False (0.71) | True (0.94) | True (0.96) | True (1.00) | True (0.92) | True (0.78) | True (0.90) | True (0.90) | True (0.58) | False (0.51) | True (0.73) | True (0.95) | True (0.93) | False (0.59) | Features |
-| #28923 | True | True (0.91) | True (0.86) | True (0.90) | True (0.86) | True (0.96) | True (0.98) | True (0.71) | True (0.99) | True (1.00) | True (0.99) | True (0.91) | True (0.92) | True (0.96) | False (0.63) | True (0.71) | True (0.96) | True (0.96) | True (1.00) | True (0.95) | GeminiCLI.com Feedback: [ISSUE] |
-| #28717 | False | False (0.90) | False (0.97) | False (0.97) | False (0.90) | False (0.91) | False (0.97) | False (0.89) | False (0.92) | True (0.88) | False (0.91) | False (0.81) | False (0.69) | False (0.85) | False (0.83) | False (0.89) | False (0.91) | False (0.96) | False (1.00) | False (1.00) | [Bug]: Google AI Pro sign-in silently falls back to API key onboardin… |
-| #29390 | False | True (0.77) | True (0.59) | True (0.66) | True (0.98) | True (0.91) | True (0.96) | True (0.73) | True (0.98) | True (1.00) | True (1.00) | True (0.93) | True (0.91) | True (0.95) | False (0.59) | False (0.66) | True (0.88) | True (0.96) | True (1.00) | False (0.53) | GeminiCLI.com Feedback: [ISSUE] Post-analysis helper uses a stale imp… |
-| #29388 | False | True (0.77) | True (0.59) | True (0.66) | True (0.98) | True (0.95) | True (0.96) | True (0.73) | True (0.98) | True (1.00) | True (1.00) | True (0.93) | True (0.91) | True (0.95) | False (0.59) | False (0.66) | True (0.88) | True (0.96) | True (1.00) | False (0.53) | GeminiCLI.com Feedback: [ISSUE] Post-analysis helper uses a stale imp… |
+| id | label | clef-flash@openrouter | clef-omni@openrouter | clef@openrouter | d1-ultra@openrouter | d1.1@openrouter | d1.2 | d1.2-ultra | d1@vercel | decider-flash@openrouter | decider@openrouter | decision-1@openrouter | drex-max@openrouter | elephant@openrouter | gemini-decision@google | jev:1.14 | joey@openrouter | kev@openrouter | luna@decisions | mammoth@openrouter | reflex@openrouter | span@openrouter | case |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| #29442 | False | False (0.88) | False (0.87) | False (0.95) | False (0.94) | False (0.58) | False (0.79) | False (0.78) | False (0.97) | False (0.95) | False (0.94) | True (0.80) | False (0.84) | True (0.56) | False (0.91) | False (0.80) | False (0.74) | False (0.82) | False (1.00) | False (0.90) | False (0.98) | False (0.95) | Create a kitten illustration with a lion-shaped shadow |
+| #29221 | False | True (0.87) | True (0.79) | True (0.78) | True (0.91) | True (0.97) | True (0.94) | True (0.95) | True (0.89) | True (0.79) | True (0.96) | True (1.00) | True (0.98) | True (0.79) | True (0.97) | True (0.93) | False (0.56) | False (0.54) | True (1.00) | True (0.96) | True (0.98) | True (0.88) | Leeres.blaat_A4-DIN |
+| #28686 | False | False (0.88) | False (0.83) | False (0.94) | False (0.88) | True (0.63) | True (0.65) | False (0.77) | False (0.95) | False (0.96) | False (0.93) | False (0.68) | False (0.96) | False (0.58) | False (0.67) | False (0.80) | False (0.76) | False (0.85) | False (1.00) | False (0.88) | False (0.99) | False (0.83) | ## Code Review |
+| #29145 | True | True (0.88) | True (0.94) | True (0.94) | True (0.98) | True (1.00) | True (0.97) | True (0.95) | True (0.99) | True (0.94) | True (1.00) | True (1.00) | True (1.00) | True (0.97) | True (0.98) | True (0.97) | True (0.71) | False (0.52) | True (0.99) | True (0.95) | True (1.00) | True (0.99) | Recalibrate trick |
+| #29136 | True | True (0.88) | True (0.83) | True (0.89) | True (0.99) | True (0.99) | True (0.96) | True (0.96) | True (0.94) | True (0.92) | True (0.96) | True (1.00) | True (0.97) | True (0.93) | True (0.98) | True (0.98) | False (0.59) | True (0.52) | True (0.98) | True (0.95) | True (1.00) | True (0.99) | GeminiCLI.com Feedback: [ISSUE] |
+| #28783 | False | True (0.92) | True (0.95) | True (0.81) | True (0.99) | True (0.99) | True (0.97) | True (0.97) | True (1.00) | True (0.98) | True (0.98) | True (1.00) | True (0.99) | True (0.93) | True (0.98) | True (0.97) | False (0.56) | True (0.51) | True (0.97) | True (0.97) | True (0.99) | True (0.90) | cutealexamartha |
+| #28777 | True | True (0.79) | True (0.87) | True (0.88) | True (0.98) | True (0.96) | True (0.89) | True (0.95) | False (0.58) | False (0.66) | True (0.97) | True (1.00) | True (0.98) | True (0.89) | True (0.97) | True (0.95) | True (0.59) | False (0.56) | True (0.89) | True (0.91) | True (0.99) | True (0.92) | ticket IT support |
+| #29135 | True | True (0.85) | True (0.60) | False (0.52) | True (0.77) | True (0.97) | True (0.91) | True (0.95) | False (0.71) | True (0.94) | True (0.96) | True (1.00) | True (0.92) | True (0.78) | True (0.90) | True (0.90) | True (0.58) | False (0.51) | True (0.73) | True (0.95) | True (0.93) | False (0.59) | Features |
+| #28923 | True | True (0.91) | True (0.86) | True (0.90) | True (0.86) | True (0.96) | True (0.90) | True (0.98) | True (0.98) | True (0.71) | True (0.99) | True (1.00) | True (0.99) | True (0.91) | True (0.92) | True (0.96) | False (0.63) | True (0.71) | True (0.96) | True (0.96) | True (1.00) | True (0.95) | GeminiCLI.com Feedback: [ISSUE] |
+| #28717 | False | False (0.90) | False (0.97) | False (0.97) | False (0.90) | False (0.91) | False (0.81) | False (0.84) | False (0.97) | False (0.89) | False (0.92) | True (0.88) | False (0.91) | False (0.81) | False (0.69) | False (0.85) | False (0.83) | False (0.89) | False (0.91) | False (0.96) | False (1.00) | False (1.00) | [Bug]: Google AI Pro sign-in silently falls back to API key onboardin… |
+| #29390 | False | True (0.77) | True (0.59) | True (0.66) | True (0.98) | True (0.91) | True (0.86) | True (0.95) | True (0.96) | True (0.73) | True (0.98) | True (1.00) | True (1.00) | True (0.93) | True (0.91) | True (0.95) | False (0.59) | False (0.66) | True (0.88) | True (0.96) | True (1.00) | False (0.53) | GeminiCLI.com Feedback: [ISSUE] Post-analysis helper uses a stale imp… |
+| #29388 | False | True (0.77) | True (0.59) | True (0.66) | True (0.98) | True (0.95) | True (0.93) | True (0.95) | True (0.96) | True (0.73) | True (0.98) | True (1.00) | True (1.00) | True (0.93) | True (0.91) | True (0.95) | False (0.59) | False (0.66) | True (0.88) | True (0.96) | True (1.00) | False (0.53) | GeminiCLI.com Feedback: [ISSUE] Post-analysis helper uses a stale imp… |
