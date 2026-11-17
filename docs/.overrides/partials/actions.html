@@ -1,11 +1,18 @@
-{#- Mintlify-style page actions: copy this page's Markdown, open it, or hand it to an assistant. -#}
+{#- Mintlify-style page actions: copy this page's Markdown; the menu opens it, or hands it to an assistant. -#}
 {% if page.markdown_url and page.url %}
   {% set md = config.site_url ~ page.url ~ "index.md" %}
   {% set ask = "Read " ~ md ~ " so I can ask questions about s1flow." %}
   <div class="page-actions">
-    <button type="button" class="page-action" data-md-copy-url="{{ page.markdown_url | url }}">Copy page</button>
-    <a class="page-action" href="{{ page.markdown_url | url }}">View as Markdown</a>
-    <a class="page-action" href="https://claude.ai/new?q={{ ask | urlencode }}" target="_blank" rel="noopener">Open in Claude</a>
-    <a class="page-action" href="https://chatgpt.com/?q={{ ask | urlencode }}" target="_blank" rel="noopener">Open in ChatGPT</a>
+    <button type="button" class="page-copy" data-md-copy-url="{{ page.markdown_url | url }}">Copy page</button>
+    <details class="page-menu">
+      <summary aria-label="More ways to use this page"></summary>
+      <div class="page-menu__list">
+        <button type="button" data-md-copy-url="{{ page.markdown_url | url }}"><b>Copy page</b><span>Copy this page as Markdown for an LLM</span></button>
+        <a href="{{ page.markdown_url | url }}"><b>View as Markdown</b><span>Open this page as plain text</span></a>
+        <a href="https://claude.ai/new?q={{ ask | urlencode }}" target="_blank" rel="noopener"><b>Open in Claude</b><span>Ask questions about this page</span></a>
+        <a href="https://chatgpt.com/?q={{ ask | urlencode }}" target="_blank" rel="noopener"><b>Open in ChatGPT</b><span>Ask questions about this page</span></a>
+        <a href="{{ config.site_url }}llms.txt"><b>llms.txt</b><span>Every page, listed for agents</span></a>
+      </div>
+    </details>
   </div>
 {% endif %}

@@ -63,30 +63,74 @@
 }
 .md-typeset table:not([class]) td { border-top: 1px solid var(--rule); }
 
-/* Page actions, after Mintlify: copy the page as Markdown, open it, or hand it to an assistant. */
+/* Page actions, after Mintlify: a split button, Copy page plus a menu of the other ways to use the page. */
 .page-actions {
   float: right;
+  position: relative;
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.2rem 0.9rem;
-  margin: 0.35rem 0 0 1rem;
+  margin: 0.3rem 0 0 1rem;
   font-size: 0.65rem;
+  border-radius: 0.3rem;
+  background: var(--md-default-fg-color--lightest);
 }
-.md-typeset .page-action,
-.page-action {
-  padding: 0;
+.page-copy,
+.page-menu > summary {
+  padding: 0.35rem 0.7rem;
   border: 0;
   background: none;
   font: inherit;
-  color: var(--grey);
-  text-decoration: none;
+  font-weight: 600;
+  color: var(--md-default-fg-color);
   cursor: pointer;
 }
-.md-typeset .page-action:hover,
-.page-action:hover { color: var(--md-default-fg-color); }
-.page-action[aria-busy="true"] { opacity: 0.5; }
+.page-copy[aria-busy="true"] { opacity: 0.5; }
+.page-menu > summary {
+  list-style: none;
+  padding: 0.35rem 0.55rem;
+  border-left: 1px solid var(--md-default-bg-color);
+}
+.page-menu > summary::-webkit-details-marker { display: none; }
+.page-menu > summary::after {
+  content: "";
+  display: inline-block;
+  width: 0.35rem;
+  height: 0.35rem;
+  border: solid currentColor;
+  border-width: 0 1.5px 1.5px 0;
+  transform: translateY(-0.12rem) rotate(45deg);
+}
+.page-copy:hover,
+.page-menu > summary:hover { color: var(--grey); }
+.page-menu__list {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.3rem);
+  z-index: 3;
+  width: 15rem;
+  padding: 0.3rem;
+  border-radius: 0.4rem;
+  background: var(--md-default-bg-color);
+  box-shadow: 0 0.2rem 1.2rem #0000002e;
+}
+.page-menu__list > * {
+  display: block;
+  width: 100%;
+  padding: 0.45rem 0.6rem;
+  border: 0;
+  border-radius: 0.3rem;
+  background: none;
+  font: inherit;
+  text-align: left;
+  color: var(--md-default-fg-color);
+  cursor: pointer;
+}
+.md-typeset .page-menu__list a { color: var(--md-default-fg-color); text-decoration: none; }
+.page-menu__list > *:hover { background: var(--md-default-fg-color--lightest); }
+.page-menu__list b { display: block; font-weight: 600; }
+.page-menu__list span { display: block; color: var(--grey); }
 @media screen and (max-width: 59.984em) {
-  .page-actions { float: none; margin: 0 0 1rem; }
+  .page-actions { float: none; display: inline-flex; margin: 0 0 1rem; }
+  .page-menu__list { left: 0; right: auto; }
 }
 
 /* Home */
@@ -161,3 +205,46 @@
 }
 .md-typeset details.note > :not(summary) { margin-left: 1.1rem; }
 .md-typeset .bench table:not([class]) td:last-child { white-space: nowrap; }
+
+/* The menu is a <details> inside the page: undo the theme's collapsible-block styles on it. */
+.md-typeset details.page-menu {
+  display: block;
+  margin: 0;
+  padding: 0;
+  font-size: inherit;
+  background: none;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: visible;
+}
+.md-typeset details.page-menu > summary {
+  display: flex;
+  align-items: center;
+  min-height: 0;
+  margin: 0;
+  padding: 0.35rem 0.6rem;
+  background: none;
+  border-radius: 0;
+  font-weight: 600;
+  color: var(--md-default-fg-color);
+}
+.md-typeset details.page-menu > summary::before { display: none; }
+.md-typeset details.page-menu > summary::after {
+  position: static;
+  width: 0.35rem;
+  height: 0.35rem;
+  margin: 0;
+  background: none;
+  -webkit-mask-image: none;
+  mask-image: none;
+  border: solid currentColor;
+  border-width: 0 1.5px 1.5px 0;
+  transform: translateY(-0.12rem) rotate(45deg);
+  color: inherit;
+}
+.md-typeset details.page-menu > .page-menu__list { margin: 0; }
+[data-md-color-scheme="slate"] .page-menu__list { background: #2a3139; box-shadow: 0 0.2rem 1.2rem #00000066; }
+[data-md-color-scheme="slate"] .page-menu__list > *:hover { background: #343c45; }
+.page-actions { align-items: center; }
+.md-typeset details.page-menu > summary { height: 100%; line-height: 1; }
+.md-typeset details.page-menu > summary::after { transform: translateY(-0.08rem) rotate(45deg); }
