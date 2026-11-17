@@ -24,7 +24,9 @@
   model finds nothing, with `p_null`, `confidence` and `span` where the model gives them), and `RangeEstimate` asks for
   a number between a `min` and a `max` with its p10 - p90 interval. The `openrouter` provider sends them to
   OpenRouter's Extractions route (Clairic, Schematron, Perplexity's Decider v1.3, ScaleDown Extract), a model
-  declares them in `capabilities.question_types`, and `s1flow models --verify` checks each. Evaluation and policies
+  declares them in `capabilities.question_types`, and `s1flow models --verify` checks each. The `liquid` provider
+  asks them too (d1.2, d1.2-ultra), in the same call as other questions: `found` is read as 1 - `p_null`, and a
+  number in a range as the estimate with its interval. Evaluation and policies
   do not take them yet.
 
 ### Changed

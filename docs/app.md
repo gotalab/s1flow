@@ -184,10 +184,10 @@ The Client supports yes/no (`boolean`), choice, score and box questions, and sev
 the provider supports them. Evaluation compares all four. A policy holds one yes/no or choice question.
 
 It also asks for a value read from the state (`Text`, `Number`, `Date`) or a number the state does not state
-(`RangeEstimate`, between a `min` and a `max`), where a model answers them: through OpenRouter, Clairic takes all four,
+(`RangeEstimate`, between a `min` and a `max`), where a model answers them: Liquid's d1.2 and d1.2-ultra take all four on Liquid's own API, in the same call as other questions; through OpenRouter, Clairic takes all four,
 Schematron text, numbers and dates, Perplexity's Decider v1.3 and ScaleDown Extract text. A read answer's `value`
 is `None` when the model found nothing; `p_null`, `confidence` and `span` come with it when the model gives them. An
-estimate comes with `p10` and `p90`. A `span` counts characters in the text sent: for a JSON state, the state with its
+estimate comes with `p10` and `p90`. A `span` counts characters in the text sent (Liquid's is kept for a text state only): for a JSON state, the state with its
 keys sorted, dumped with an indent of 1. Some models read the question's name as well as its instructions, so name
 it for what it reads (`order_number`, not `q`). OpenRouter serves these on another route, so one request asks either
 these or the other four types. Evaluation and policies do not take them yet.

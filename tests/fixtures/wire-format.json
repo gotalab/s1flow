@@ -1226,6 +1226,98 @@
       }
      }
     }
+   },
+   "fields": {
+    "sent": {
+     "url": "https://api.liquid.ai/decisions/v1/systemone",
+     "headers": {},
+     "body": {
+      "model": "d1.2",
+      "state": {
+       "meta": {
+        "a": [
+         {
+          "b": 3,
+          "y": 2
+         }
+        ],
+        "z": 1
+       },
+       "title": "Crash on start"
+      },
+      "questions": {
+       "invoice": {
+        "type": "text",
+        "instructions": "The invoice number"
+       },
+       "po": {
+        "type": "text",
+        "instructions": "Purchase order number"
+       },
+       "total": {
+        "type": "number",
+        "instructions": "The total",
+        "unit": "USD"
+       },
+       "issued": {
+        "type": "date",
+        "instructions": "The issue date"
+       },
+       "days": {
+        "type": "number",
+        "range": [
+         0.0,
+         120.0
+        ],
+        "instructions": "Days until it is paid",
+        "step": 1.0
+       }
+      }
+     }
+    },
+    "read": {
+     "answered_by": "d1.2",
+     "answers": {
+      "invoice": {
+       "p_null": 0.0012999999999999678,
+       "confidence": null,
+       "span": null,
+       "type": "text",
+       "value": "INV-2291",
+       "guess": null
+      },
+      "po": {
+       "p_null": 0.9799,
+       "confidence": null,
+       "span": null,
+       "type": "text",
+       "value": null,
+       "guess": null
+      },
+      "total": {
+       "p_null": 0.01980000000000004,
+       "confidence": null,
+       "span": null,
+       "type": "number",
+       "value": 1080.0,
+       "guess": null
+      },
+      "issued": {
+       "p_null": 0.0,
+       "confidence": null,
+       "span": null,
+       "type": "date",
+       "value": "2026-09-02",
+       "guess": null
+      },
+      "days": {
+       "type": "estimate",
+       "value": 30.0,
+       "p10": 26.0,
+       "p90": 31.0
+      }
+     }
+    }
    }
   },
   "gemini": {
