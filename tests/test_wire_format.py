@@ -89,6 +89,14 @@ FIELD_REPLIES: dict[str, dict[str, Any]] = {
         "days": {"type": "estimate", "value": 30, "mean": 29.54, "median": 30, "p10": 26, "p90": 31, "p_below": 2e-8, "p_above": 4e-7},
     }, "truncated": False, "usage": {"input_tokens": 543, "output_tokens": 0, "passes": 3, "cost": 0.0000543}},
 }
+# The same questions on Liquid's own API, in `questions`, as d1.2 answered them (2026-11-17).
+FIELD_REPLIES["liquid"] = {"model": "d1.2", "answers": {
+    "invoice": {"type": "text", "text": "INV-2291", "span": [8, 16], "found": 0.9987},
+    "po": {"type": "text", "text": None, "span": None, "found": 0.0201},
+    "total": {"type": "number", "number": 1080, "unit": "USD", "text": "1,080", "span": [30, 35], "found": 0.9802},
+    "issued": {"type": "date", "date": "2026-09-02", "text": "2026-09-02", "span": [40, 50], "found": 1},
+    "days": {"type": "number", "number": 30, "interval": [26, 31], "unit": None},
+}, "usage": {"input_tokens": 161, "output_tokens": 0, "cost": 0.00000322}}
 ALL = Capabilities(image=True, question_types=frozenset({"boolean", "choice", "score", "box"}))
 REPLIES["liquid"] = {"model": "d1.2", "answers": SYSTEM_ONE, "usage": {"input_tokens": 90, "output_tokens": 0, "cost": 0.0000018}}
 BOX_REPLIES["liquid"] = {"model": "d1.2", "answers": {"where": BOX_ANSWER | {"found": 0.9}}}
@@ -101,7 +109,8 @@ MODELS = {
     "openrouter": ModelSpec(provider="openrouter", id="typesafe/jev", capabilities=EVERY.model_copy(
         update={"question_types": ALL.question_types | {"text", "number", "date", "estimate"}})),
     "gemini": ModelSpec(provider="gemini", id="gemini-decision-1", capabilities=EVERY.model_copy(update={"question_types": frozenset({"boolean", "choice", "score"})})),
-    "liquid": ModelSpec(provider="liquid", id="d1.2", capabilities=ALL),
+    "liquid": ModelSpec(provider="liquid", id="d1.2", capabilities=ALL.model_copy(
+        update={"question_types": ALL.question_types | {"text", "number", "date", "estimate"}})),
     "cloudflare": ModelSpec(provider="cloudflare", id="clef", capabilities=ALL),
     "openai-decisions": ModelSpec(provider="openai-decisions", id="gpt-6-luna", capabilities=Capabilities(image=True)),
     "llm": ModelSpec(provider="llm", id="openai/gpt-test", options={"box_units": "k1000"}, capabilities=ALL),

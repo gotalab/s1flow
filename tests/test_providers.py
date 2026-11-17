@@ -264,6 +264,36 @@ def test_liquid_sends_images_in_the_state_and_reads_the_billed_cost_and_a_box_no
         asyncio.run(LiquidModel("d1.2", capabilities=Capabilities(audio=True)).decide(["x", Media.model_validate(wav)], {"refund": QS["refund"]}))
 
 
+@respx.mock
+def test_liquid_reads_values_and_estimates_in_the_same_call_as_a_decision(monkeypatch):
+    from s1flow.client import EstimateAnswer, NumberAnswer, TextAnswer
+    from s1flow.client.providers.liquid import BASE_URL as LIQUID_URL, LiquidModel
+    from s1flow.questions import Number, RangeEstimate, Text
+
+    monkeypatch.setenv("LIQUID_API_KEY", "test")
+    qs = {"refund": QS["refund"], "order_number": Text(instructions="The order number"), "invoice_number": Text(instructions="The invoice number"),
+          "total": Number(instructions="The total", unit="USD"), "days": RangeEstimate(instructions="Days until it is paid", min=0, max=30, step=1)}
+    reply = {"model": "d1.2", "answers": {
+        "refund": {"type": "noul", "noul": 0.84},
+        "order_number": {"type": "text", "text": "A-17", "span": [6, 10], "found": 0.75},
+        "invoice_number": {"type": "text", "text": None, "span": None, "found": 0.02},
+        "total": {"type": "number", "number": 12, "unit": "USD", "text": "12", "span": [20, 22], "found": 1},
+        "days": {"type": "number", "number": 13, "interval": [3, 20], "unit": None}}}
+    route = respx.post(f"{LIQUID_URL}/systemone").mock(return_value=httpx.Response(200, json=reply))
+    caps = Capabilities(question_types={"boolean", "text", "number", "estimate"})
+    r = asyncio.run(LiquidModel("d1.2", capabilities=caps).decide("Order A-17, total 12 USD", qs))
+    sent = json.loads(route.calls[0].request.read())["questions"]
+    assert sent["refund"]["type"] == "noul" and sent["total"] == {"type": "number", "instructions": "The total", "unit": "USD"}
+    assert sent["days"] == {"type": "number", "range": [0, 30], "step": 1, "instructions": "Days until it is paid"}  # an estimate is a number in a range
+    assert r.answers["refund"].probability == 0.84
+    assert r.answers["order_number"] == TextAnswer(value="A-17", p_null=0.25, span=(6, 10))  # found is 1 - p_null
+    assert r.answers["invoice_number"] == TextAnswer(value=None, p_null=0.98)
+    assert r.answers["total"] == NumberAnswer(value=12, p_null=0, span=(20, 22))
+    assert r.answers["days"] == EstimateAnswer(value=13, p10=3, p90=20)
+    r = asyncio.run(LiquidModel("d1.2", capabilities=caps).decide({"order": "A-17"}, qs))
+    assert r.answers["order_number"].span is None  # in a JSON state Liquid counts in its own rendering
+
+
 def test_an_answer_outside_the_contract_is_a_named_provider_failure():
     from s1flow.client.providers.systemone import answers as parse_answers
     from s1flow.client.providers.openai_decisions import parse_decisions
