@@ -169,7 +169,9 @@ response = Client().responses.create(
 print(response.answers["bug"].probability)
 ```
 
-The `ModelSpec` here is written in your own code, so this example needs no connection file. If you refer to
+The `ModelSpec` here is written in your own code, so this example needs no connection file. From the shell, `s1flow decide --model
+liquid:d1.2 --state '"Crash on startup"' --boolean "Does this report describe a software defect?"` does the same
+with no project: `provider:id` names a built-in provider and the id it sends. If you refer to
 the model by an alias instead, pass the app's list of allowed models:
 
 ```python
@@ -181,7 +183,7 @@ response = Client(connections="connections.toml").responses.create(
 ```
 
 The Client supports yes/no (`boolean`), choice, score and box questions, and several questions in one request, as far as
-the provider supports them. Evaluation compares all four. A policy holds one yes/no or choice question.
+the provider supports them. Evaluation compares all four. A policy holds one question of any of these types.
 
 It also asks for a value read from the state (`Text`, `Number`, `Date`) or a number the state does not state
 (`RangeEstimate`, between a `min` and a `max`), where a model answers them: Liquid's d1.2 and d1.2-ultra take all four on Liquid's own API, in the same call as other questions; through OpenRouter, Clairic takes all four,

@@ -1,6 +1,5 @@
 """What s1flow knows about each type of question, in one place: what a label is, how the answers
-to one case become a `Reading`, which rules apply, and whether
-a policy ships it. Adding a type of question is adding a class here.
+to one case become a `Reading`, and which rules apply. Adding a type of question is adding a class here.
 
     kind = kind_of(question, KindParams())          # a task's or a policy's question, with what its type leaves open
     kind.read(answers, rule)                        # average the answers, then read the average
@@ -20,6 +19,7 @@ policy in production (policy.py) read a case alike: `average` then `reading`, he
 rescaled by the number of options). pydantic only: production imports it.
 """
 
+import json
 from dataclasses import dataclass
 from typing import Any, ClassVar, Literal, Protocol, Sequence, Union
 
@@ -67,8 +67,6 @@ class Kind(Protocol):
     @property
     def type(self) -> KindType: ...
     @property
-    def adoptable(self) -> bool: ...
-    @property
     def sets(self) -> frozenset[RuleField]: ...  # the rule fields it can choose
     @property
     def options(self) -> list[str]: ...  # a choice's keys, in order; empty for the others
@@ -87,7 +85,6 @@ class Kind(Protocol):
 class _Kind(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
     type: ClassVar[KindType]
-    adoptable: ClassVar[bool] = False
     sets: ClassVar[frozenset[RuleField]] = SELECTIVE
     answer: ClassVar[tuple[Any, ...]]  # the answer types it reads
 
@@ -147,7 +144,6 @@ def _below_min_probability(rule: DecisionRule, probability: float) -> bool | Non
 
 class _Binary(_Kind):
     sets: ClassVar[frozenset[RuleField]] = BINARY
-    adoptable: ClassVar[bool] = True
 
     def label_error(self, label: Any) -> str | None:
         return None if isinstance(label, bool) else f"a binary task's label is true or false, got {label!r}"
@@ -204,7 +200,6 @@ class PositiveChoiceKind(_Binary):
 
 class ChoiceKind(_Kind):
     type: ClassVar[KindType] = "choice"
-    adoptable: ClassVar[bool] = True
     answer: ClassVar[tuple[Any, ...]] = (ChoiceAnswer,)
     keys: list[str]
 
@@ -241,7 +236,7 @@ class ChoiceKind(_Kind):
 
 
 class ScoreKind(_Kind):
-    """Levels 0..L-1 in the order of the question's criteria. Evaluated, not adoptable: no policy holds a score."""
+    """Levels 0..L-1 in the order of the question's criteria."""
 
     type: ClassVar[KindType] = "score"
     answer: ClassVar[tuple[Any, ...]] = (ScoreAnswer,)
@@ -250,6 +245,10 @@ class ScoreKind(_Kind):
     def label_error(self, label: Any) -> str | None:
         ok = isinstance(label, int) and not isinstance(label, bool) and 0 <= label < self.levels
         return None if ok else f"a score label is a level, 0..{self.levels - 1}, got {label!r}"
+
+    def as_label(self, answer: Any) -> Any:
+        """A level typed as text (the CLI's `feedback record ... 2`) is that level."""
+        return int(answer) if isinstance(answer, str) and answer.strip().isdecimal() and answer.strip().isascii() else answer
 
     def one(self, a: ScoreAnswer) -> tuple[list[float], float, bool]:
         """One answer's distribution over the levels and its expected level (the score itself when it gave
@@ -298,6 +297,15 @@ class BoxKind(_Kind):
         except ValidationError:
             return f"a box label needs top, bottom, left, right in 0..1, got {label!r}"
         return None
+
+    def as_label(self, answer: Any) -> Any:
+        """A box typed as JSON text (the CLI's `feedback record ... '{"top": ...}'`) is that box."""
+        if isinstance(answer, str):
+            try:
+                return json.loads(answer)
+            except ValueError:
+                return answer
+        return answer
 
     def average(self, answers: Sequence[Answer]) -> Average:
         given: list[BoxAnswer] = self._given(answers)

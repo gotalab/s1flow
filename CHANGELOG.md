@@ -4,6 +4,20 @@
 
 ### Added
 
+- A policy holds a score or box question too, not only yes/no and choice: save it with `adopt --spec`, and its
+  answers are logged and take feedback like any other (`feedback record <task> <id> 2`, or a box as JSON). `adopt`
+  takes a score or box candidate from `report` like any other. `decide --policy` also prints the decision ID.
+- `report` names a model and question pair nobody ran under `not run:`, and counts them once there are more than
+  five, instead of listing each with "missing run evidence". `adopt --spec` outside a project says to save with
+  `--root`. The Skill and `init --task`'s task.py say how to write question variants, and that turning production
+  answers into cases needs a project with the task.
+- `s1flow decide --model provider:id` (`liquid:d1.2`, `openrouter:typesafe/jev-1.14`) calls a model that no
+  `s1flow.toml` names, with no project: try a model on an input before any task or evaluation. Only that
+  provider's key is needed. A name in the line-up still comes first, and an explicit `--connections` file still
+  lists every model allowed. The Skill starts with this step when the
+  person wants to see what a model answers.
+- The Skill walks through putting a yes/no or choice decision in production with no evaluation: one connection, a
+  hand-written policy saved unevaluated with `adopt --spec`, and a log whose answers become cases later.
 - A built-in `liquid` provider for Liquid's own API (`LIQUID_API_KEY`): d1.2 and d1.2-ultra without a gateway in
   between, with text and images, for yes/no, choice, score and box questions. It reports the cost Liquid billed.
   A box the model does not find counts as no answer for that case.
