@@ -123,6 +123,23 @@ provider = "openrouter"
 id = "liquid/d1.1"
 capabilities.image = true
 
+# Added 2026-11-16: Liquid's d1.2 family on Liquid's own API (https://www.liquid.ai/blog/d1-2). Liquid returns
+# what each call billed, so no list price.
+[models."d1.2"]
+provider = "liquid"
+id = "d1.2"
+capabilities.context_tokens = 65536
+capabilities.image = true
+capabilities.question_types = ["boolean", "choice", "score", "box"]
+note = "Also hears audio; s1flow does not send it to Liquid yet (the hosted request shape is not documented)."
+
+[models."d1.2-ultra"]
+provider = "liquid"
+id = "d1.2-ultra"
+capabilities.context_tokens = 65536
+capabilities.image = true
+capabilities.question_types = ["boolean", "choice", "score", "box"]
+
 [models."drex-max@openrouter"]
 provider = "openrouter"
 id = "nace-ai/drex-max"
