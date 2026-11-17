@@ -1,12 +1,12 @@
 ---
 name: s1flow
-description: Try, build, measure, ship and improve typed yes/no and one-of-N decisions with s1flow. Use to try a model on a few inputs, put a decision in production with or without an evaluation, collect and label cases, compare models and question variants, adopt a policy in a pull request, call a policy from an app or CI, and measure it in production. Not for reading code or judging whether work is complete.
+description: Try, build, measure, ship and improve typed decisions (yes/no, one-of-N, a level, a box) with s1flow. Use to try a model on a few inputs, put a decision in production with or without an evaluation, collect and label cases, compare models and question variants, adopt a policy in a pull request, call a policy from an app or CI, and measure it in production. Not for reading code or judging whether work is complete.
 ---
 
 # s1flow
 
-s1flow asks a model one typed question about an input (`state`): yes/no, or one of as many options as the model
-takes (often about 20); evaluation also compares score (a level) and box questions, which a policy cannot hold. A
+s1flow asks a model one typed question about an input (`state`): yes/no, one of as many options as the model
+takes (often about 20), a score (a level) or a box. A
 task holds the labelled cases and the question (`tasks/<id>/task.py`); a policy is the version an app runs
 (`policies/<task>/vN.json`). If the CLI is absent: `uv tool install "s1flow[eval]"`.
 
@@ -29,7 +29,7 @@ example "a false negative costs 3x a false positive") into `task.py`'s objective
 **No evaluation needed to start.** To see what a model answers, call it on the inputs the person gives:
 `s1flow decide --model liquid:d1.2 --state @input.json --boolean "Is this a bug report?"` (`--questions` for choice,
 score or box). `provider:id` needs no project, only that provider's key (`references/setup.md`); nothing is saved.
-To put a yes/no or choice decision in production without measuring it first, write it as a policy and save it
+To put a decision of any type in production without measuring it first, write it as a policy and save it
 unevaluated (`references/app.md`, "Ship without an evaluation"): its log keeps every answer, so cases can come later.
 
 Read the one reference for the stage at hand:

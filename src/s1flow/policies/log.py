@@ -62,7 +62,7 @@ DECIDE, FEEDBACK = 's1flow.decide', 's1flow.feedback'
 def span(rec: AnsweredLog | FailedLog | FeedbackLog, provider: str | None = None, requested: str | None = None) -> tuple[str, dict[str, Any]]:
     if isinstance(rec, FeedbackLog):
         return FEEDBACK, {'s1flow.policy': rec.policy, 's1flow.policy_digest': rec.policy_digest,
-                          's1flow.decision_id': rec.decision_id, 's1flow.label': json.dumps(rec.label)}
+                          's1flow.decision_id': rec.decision_id, 's1flow.label': json.dumps(rec.model_dump(mode='json')['label'])}
     if isinstance(rec, FailedLog):
         attrs: dict[str, Any] = {'s1flow.policy': rec.policy, 's1flow.policy_digest': rec.policy_digest, 's1flow.case_id': rec.case_id,
                  's1flow.state_sha256': rec.state_sha256, 'error.type': rec.error.partition(':')[0]}
@@ -74,6 +74,7 @@ def span(rec: AnsweredLog | FailedLog | FeedbackLog, provider: str | None = None
             's1flow.execution_digest': d.execution_digest, 's1flow.decision_id': d.decision_id, 's1flow.case_id': rec.case_id,
             's1flow.answer': json.dumps(d.model_dump(mode='json')['value']), 's1flow.probability': d.probability,
             's1flow.p_positive': d.p_positive, 's1flow.below_min_probability': d.below_min_probability,
+            's1flow.expected': d.expected, 's1flow.confidence': d.confidence,
             's1flow.latency_ms': d.latency_ms, 's1flow.state_sha256': rec.state_sha256,
         }
     return DECIDE, {k: v for k, v in attrs.items() if v is not None}
@@ -94,7 +95,8 @@ def from_span(name: str, at: str, attrs: dict[str, Any]) -> AnsweredLog | Failed
                          policy=a['s1flow.policy'], policy_digest=a['s1flow.policy_digest'], error=a['error.type'])
     return AnsweredLog(at=at, case_id=a.get('s1flow.case_id'), state_sha256=a['s1flow.state_sha256'], decision=Decision(
         value=json.loads(a['s1flow.answer']), probability=a.get('s1flow.probability'), p_positive=a.get('s1flow.p_positive'),
-        below_min_probability=a.get('s1flow.below_min_probability'), decision_id=a['s1flow.decision_id'],
+        below_min_probability=a.get('s1flow.below_min_probability'), expected=a.get('s1flow.expected'),
+        confidence=a.get('s1flow.confidence'), decision_id=a['s1flow.decision_id'],
         policy=a['s1flow.policy'], policy_digest=a['s1flow.policy_digest'], execution_digest=a['s1flow.execution_digest'],
         answered_by=a['gen_ai.response.model'], latency_ms=a['s1flow.latency_ms'],
     ))

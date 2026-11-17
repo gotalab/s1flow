@@ -130,8 +130,9 @@ task = Task(
 - How the team already decides (a triage policy, CONTRIBUTING, a bot's prompt) goes in `tasks/<id>/context.md`:
   `optimize` reads it, the model never does. `criteria.md` is for the person's decision criteria, not the model.
 
-Supported question types: the direct `Client` takes boolean, choice, score and box where the provider does;
-evaluation compares all four; a policy holds one boolean or choice.
+Supported question types: boolean, choice, score and box, where the provider takes them. Evaluation compares all
+four, and a policy holds one question of any of them. Choosing a score or box candidate from `report` with `adopt`
+is not supported yet: write its spec and save it with `adopt --spec` (`ship.md`).
 
 ## Check the cases
 
