@@ -4,6 +4,11 @@
 
 ### Added
 
+- `s1flow decide --model provider:id` (`liquid:d1.2`, `openrouter:typesafe/jev-1.14`) calls a model that no
+  `s1flow.toml` names, with no project: try a model on an input before any task or evaluation. Only that
+  provider's key is needed. A name in the line-up still comes first, and an explicit `--connections` file still
+  lists every model allowed. The Skill starts with this step when the
+  person wants to see what a model answers.
 - A built-in `liquid` provider for Liquid's own API (`LIQUID_API_KEY`): d1.2 and d1.2-ultra without a gateway in
   between, with text and images, for yes/no, choice, score and box questions. It reports the cost Liquid billed.
   A box the model does not find counts as no answer for that case.
