@@ -1,5 +1,6 @@
 """`s1flow decide`: call a model with questions given here (--model), or decide with a task's policy (--policy).
-The base install runs it."""
+The base install runs it. `--model provider:id` (`liquid:d1.2`) calls a model no s1flow.toml names: try a model
+on an input before any task or evaluation."""
 
 import argparse
 import json
@@ -11,7 +12,7 @@ from ..core.errors import ConfigError, S1flowError
 from .common import POLICY, client, command, json_arg, load_env, policy_client, policy_root, project_root
 
 if TYPE_CHECKING:
-    from ..client import Response
+    from ..client import Client, ModelSpec, Response
     from ..client.answers import Answer
     from ..client.state import State
 
@@ -29,14 +30,46 @@ def decide(a: argparse.Namespace) -> int:
     qs = _questions(a)
     if not qs:
         raise ConfigError('decide --model needs questions: --questions @qs.json ({"area": {"type": "choice", ...}}), or --boolean TEXT')
-    c = policy_client(a) if a.connections else client(a, root)
-    c.connections.resolved(a.model)  # a wrong name or version lists the right ones before a key is read
-    d = c.responses.create(model=a.model, state=state, questions=qs)
+    if a.connections:
+        c = policy_client(a)
+    elif root is not None:
+        c = client(a, root)
+    else:
+        from ..client import Client
+
+        c = Client()  # no project: only provider:id names a model
+    d = c.responses.create(model=_model(c, a.model, qs, trial=not a.connections), state=state, questions=qs)
     if a.json:
         print(d.model_dump_json(indent=1))
     else:
         _print_response(d)
     return 0
+
+
+def _model(c: "Client", name: str, questions: dict[str, Any], *, trial: bool) -> "str | ModelSpec":
+    """A name of the line-up (`jev`, `jev:1.14`) as it is, or, with `trial` and no such name in the line-up, `provider:id`
+    for a built-in provider (`liquid:d1.2`, `openrouter:typesafe/jev-1.14`). That model is declared to take what this
+    call asks, so nothing is checked before it: the model answers, refuses or fails. An explicit --connections file
+    lists every model allowed (no trial). A wrong name lists the right ones before a key is read."""
+    from ..client import Capabilities, ModelSpec
+    from ..client._client import validate_questions
+    from ..client.providers import BUILTIN
+    from ..core.errors import NotFound
+
+    configured = c.connections.path is not None
+    base, _, model_id = name.partition(":")
+    if configured and base in c.connections.names():
+        c.connections.resolved(name)
+        return name
+    if trial and base in BUILTIN and model_id:
+        asked = frozenset(q.type for q in validate_questions(questions).values())
+        return ModelSpec(provider=base, id=model_id, capabilities=Capabilities(question_types=asked, image=True, audio=True, video=True, pdf=True))
+    if not trial:
+        raise NotFound(f"unknown model {base!r}; --connections {c.connections.path} names: {', '.join(c.connections.names()) or 'none'}")
+    hint = f"or name a model as provider:id (liquid:d1.2); built-in providers: {', '.join(BUILTIN)}"
+    if not configured:
+        raise ConfigError(f"no s1flow.toml here to name {name!r}: use --project PATH or --connections PATH, {hint}")
+    raise NotFound(f"unknown model {base!r}; {c.connections.path} names: {', '.join(c.connections.names()) or 'none'}; {hint}")
 
 
 def _decide_policy(a: argparse.Namespace) -> int:
@@ -51,14 +84,18 @@ def _decide_policy(a: argparse.Namespace) -> int:
         raise ConfigError("--keep-state keeps the state in the log: give --log too")
     r = policies.load(a.policy, client=policy_client(a), path=a.path, root=policy_root(a), log=a.log, keep_state=a.keep_state).decide(_state(a), case_id=a.case_id)
     if a.github_output and out:
-        answer = r.value if isinstance(r.value, str) else json.dumps(r.value)  # a class key as is; true / false
+        value = r.model_dump(mode="json")["value"]
+        answer = value if isinstance(value, str) else json.dumps(value)  # a class key as is; true / false, a level, a box
         with open(out, "a") as f:
-            for k, v in {"answer": answer, "probability": f"{r.probability:.4f}", "below_min_probability": json.dumps(r.below_min_probability), "decision_id": r.decision_id, "policy": r.policy}.items():
+            for k, v in {"answer": answer, "probability": "" if r.probability is None else f"{r.probability:.4f}", "below_min_probability": json.dumps(r.below_min_probability), "decision_id": r.decision_id, "policy": r.policy}.items():
                 f.write(f"{k}={v}\n")
     if a.json:
         print(r.model_dump_json(indent=1))
     else:
-        print(f"{r.policy}: {json.dumps(r.value, ensure_ascii=False)} (probability {r.probability:.3f}" + (", below minimum probability" if r.below_min_probability else "") + f"; {r.answered_by})")
+        sure = f"probability {r.probability:.3f}" if r.probability is not None else f"confidence {r.confidence:.3f}" if r.confidence is not None else "no probability"
+        print(f"{r.policy}: {json.dumps(r.model_dump(mode='json')['value'], ensure_ascii=False)} ({sure}"
+              + (", below minimum probability" if r.below_min_probability else "") + f"; {r.answered_by})")
+        print(f"decision_id {r.decision_id}" + ("" if a.log else " (no --log: not written to a log)"))
     return 0
 
 
@@ -131,7 +168,8 @@ def add(sub: Any) -> None:
     d = command(sub, "decide", decide, context=("project", "connections"), help="call a model (--model) or decide with a policy (--policy)",
                 description="Call a model with the questions given here (--model), or decide with a task's policy (--policy).")
     which = d.add_argument_group("what answers")
-    which.add_argument("--model", help="a name in s1flow.toml (jev, or jev:1.14 for a version)")
+    which.add_argument("--model", help="a name in s1flow.toml (jev, or jev:1.14 for a version), or provider:id to try a model "
+                       "no s1flow.toml names (liquid:d1.2, openrouter:typesafe/jev-1.14)")
     which.add_argument("--policy", metavar=POLICY, help="decide with this policy (policies/<task>/; the current version when no @ is given)")
     d.add_argument("--state", help="the state as JSON, or @file.json")
     d.add_argument("--image", action="append", metavar="PATH", help="add an image to the state (needs s1flow[images]); repeatable")

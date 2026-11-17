@@ -115,6 +115,10 @@ def test_box_task_is_scored_by_iou(tmp_path):
     assert sel.coverage.value == pytest.approx(0.5, abs=0.1) and sel.errors == 0
     md = report.render(task, "base", [e], {"fakebox": pr})
     assert "mean IoU" in md and "right at IoU 0.5 or more" in md
+    from s1flow.eval import adopt as adopting
+
+    r = adopting.adopt(task, "fakebox", "me", "a box policy ships like any other")
+    assert r.spec.question.type == "box" and task.policies.read(task.id).digest == r.spec.digest
 
 
 def test_provider_boxes_are_clipped_and_ordered():

@@ -28,7 +28,7 @@ PLAIN = DecisionRule()
 def test_each_field_question_has_its_kind():
     t, n, d, e = kind_of(TEXT), kind_of(NUMBER), kind_of(DATE), kind_of(DAYS)
     assert [k.type for k in (t, n, d, e)] == ["text", "number", "date", "estimate"]
-    assert not any(k.adoptable or k.binary for k in (t, n, d, e)) and all(k.sets == {"min_probability"} for k in (t, n, d, e))
+    assert not any(k.binary for k in (t, n, d, e)) and all(k.sets == {"min_probability"} for k in (t, n, d, e))
     assert t.objectives == n.objectives == d.objectives == ("accuracy", "coverage", "auroc")
     assert t.report == ("value_accuracy", "absent_accuracy")
     assert e.objectives == ("mean_error", "accuracy", "coverage", "auroc") and e.report == ("mean_error",)
@@ -187,7 +187,7 @@ def test_a_text_task_runs_reports_and_compares(tmp_path):
     c = comparison.collect(task)
     row = next(r for r in c.candidates if r.model == "reader")
     assert c.question_type == "text" and {"value_accuracy", "absent_accuracy", "brier", "ece"} <= set(row.metrics)
-    assert row.adoption_blocked == ["text questions are comparable but cannot be adopted as runtime policies"]
+    assert row.adoption_blocked == []
     with pytest.raises(Unsupported, match="text tasks are not supported yet"):
         review.review(task)
 
@@ -206,7 +206,7 @@ def test_an_estimate_task_runs_reports_and_compares(tmp_path):
     assert "(right within 0.5 of the label)" in md and "| mean error |" in md and "Estimate: right within 0.5 of the label" in md
     row = next(r for r in comparison.collect(task).candidates if r.model == "reader")
     assert row.value == e.objective.value and {"mean_error", "brier"} <= set(row.metrics)
-    assert row.adoption_blocked == ["estimate questions are comparable but cannot be adopted as runtime policies"]
+    assert row.adoption_blocked == []
 
 
 def test_a_task_whose_cases_all_have_no_value_is_measured_as_absent():
@@ -243,12 +243,13 @@ TOPICS = MultiChoice(instructions="What does the customer complain about?", crit
 
 def test_a_multichoice_label_is_the_list_of_options_that_apply():
     kind = kind_of(TOPICS)
-    assert kind.type == "multichoice" and not kind.adoptable and kind.objectives[0] == "accuracy"
+    assert kind.type == "multichoice" and kind.objectives[0] == "accuracy"
     assert kind.label_error([]) is None and kind.label_error(["damage", "late"]) is None
     for bad in ("late", ["late", "late"], ["refund"], None, True):
         assert "list of the options that apply" in kind.label_error(bad)
     assert kind.as_label(["damage", "late"]) == ("late", "damage")  # in the question's order
-    for bad in ("late", ["late", "refund"]):  # never read letter by letter, nor with an unknown option dropped
+    assert kind.as_label("damage, late") == ("late", "damage") and kind.as_label("none") == () and kind.as_label("late") == ("late",)  # typed on the CLI
+    for bad in ("late,refund", ["late", "refund"], 3):  # never read with an unknown option dropped
         with pytest.raises(ValueError, match="list of the options that apply"):
             kind.as_label(bad)
     assert same_label(kind, ["damage", "late"], ("late", "damage")) and not same_label(kind, ["late"], ["late", "damage"])
@@ -318,7 +319,7 @@ def test_a_multichoice_task_runs_reports_and_compares(tmp_path):
     c = comparison.collect(task)
     row = next(r for r in c.candidates if r.model == "tagger")
     assert c.question_type == "multichoice" and {"option_f1", "option_precision", "option_recall", "brier"} <= set(row.metrics)
-    assert row.adoption_blocked == ["multichoice questions are comparable but cannot be adopted as runtime policies"]
+    assert row.adoption_blocked == []
     with pytest.raises(Unsupported, match="multichoice tasks are not supported yet"):
         review.review(task)
     assert not [w for w in data.check(task).warnings if "same state" in w]
@@ -330,10 +331,9 @@ def test_a_multichoice_task_runs_reports_and_compares(tmp_path):
 
 def test_a_multichoice_label_the_task_cannot_hold_stops_the_measurement(tmp_path):
     p = make_project(tmp_path, {"tagger": Tagger})
-    rows = [{"id": str(i), "n": i, "tags": ["late"] if i else "late"} for i in range(6)]  # case 0 wrote one option as text
+    rows = [{"id": str(i), "n": i, "tags": ["late"] if i else ["late", "refund"]} for i in range(6)]  # case 0 has an option the question lacks
     (tmp_path / "data.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
-    tags = lambda r: r["tags"] if isinstance(r["tags"], list) else [r["tags"]]  # noqa: E731
-    task = attach(Task(id="tags-bad", cases="data.jsonl", dir=tmp_path, state=lambda r: f"{r['n']}|{','.join(tags(r))}", question_id="complaints",
+    task = attach(Task(id="tags-bad", cases="data.jsonl", dir=tmp_path, state=lambda r: f"{r['n']}|late", question_id="complaints",
                        question=TOPICS, label=lambda r: r["tags"]), p)
     assert any(e.startswith("0: a multichoice label") for e in data.check(task).errors)
     asyncio.run(running.run_model(task, "tagger", limit=None, variant="base"))

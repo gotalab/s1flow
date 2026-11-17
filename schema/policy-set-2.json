@@ -9,7 +9,14 @@
      "discriminator": {
       "mapping": {
        "boolean": "#/$defs/Boolean",
-       "choice": "#/$defs/Choice"
+       "box": "#/$defs/Box",
+       "choice": "#/$defs/Choice",
+       "date": "#/$defs/Date",
+       "estimate": "#/$defs/RangeEstimate",
+       "multichoice": "#/$defs/MultiChoice",
+       "number": "#/$defs/Number",
+       "score": "#/$defs/Score",
+       "text": "#/$defs/Text"
       },
       "propertyName": "type"
      },
@@ -19,6 +26,27 @@
       },
       {
        "$ref": "#/$defs/Choice"
+      },
+      {
+       "$ref": "#/$defs/Score"
+      },
+      {
+       "$ref": "#/$defs/Box"
+      },
+      {
+       "$ref": "#/$defs/Text"
+      },
+      {
+       "$ref": "#/$defs/Number"
+      },
+      {
+       "$ref": "#/$defs/Date"
+      },
+      {
+       "$ref": "#/$defs/RangeEstimate"
+      },
+      {
+       "$ref": "#/$defs/MultiChoice"
       }
      ],
      "title": "Question"
@@ -73,6 +101,27 @@
    "title": "Boolean",
    "type": "object"
   },
+  "Box": {
+   "additionalProperties": false,
+   "description": "One bounding box of the target described in `instructions` (jev 1.14, 2026-10-15).\n\nA model that can say the target is not in the picture answers with no box (Liquid d1.2). The others always\ngive one (jev): ask them a Boolean alongside when the target may be absent.",
+   "properties": {
+    "type": {
+     "const": "box",
+     "default": "box",
+     "title": "Type",
+     "type": "string"
+    },
+    "instructions": {
+     "title": "Instructions",
+     "type": "string"
+    }
+   },
+   "required": [
+    "instructions"
+   ],
+   "title": "Box",
+   "type": "object"
+  },
   "Choice": {
    "additionalProperties": false,
    "properties": {
@@ -106,6 +155,27 @@
     "criteria"
    ],
    "title": "Choice",
+   "type": "object"
+  },
+  "Date": {
+   "additionalProperties": false,
+   "description": "A calendar date read from the state, None when the state holds none.",
+   "properties": {
+    "type": {
+     "const": "date",
+     "default": "date",
+     "title": "Type",
+     "type": "string"
+    },
+    "instructions": {
+     "title": "Instructions",
+     "type": "string"
+    }
+   },
+   "required": [
+    "instructions"
+   ],
+   "title": "Date",
    "type": "object"
   },
   "DecisionRule": {
@@ -215,6 +285,75 @@
    "title": "KindParams",
    "type": "object"
   },
+  "MultiChoice": {
+   "additionalProperties": false,
+   "description": "Every option that applies, possibly none: each option is its own yes or no (Liquid d1.2, 2026-11-17, where\nit is a `choice` with `multiple`).",
+   "properties": {
+    "type": {
+     "const": "multichoice",
+     "default": "multichoice",
+     "title": "Type",
+     "type": "string"
+    },
+    "instructions": {
+     "title": "Instructions",
+     "type": "string"
+    },
+    "criteria": {
+     "additionalProperties": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "title": "Criteria",
+     "type": "object"
+    }
+   },
+   "required": [
+    "instructions",
+    "criteria"
+   ],
+   "title": "MultiChoice",
+   "type": "object"
+  },
+  "Number": {
+   "additionalProperties": false,
+   "description": "A number read from the state, None when the state holds none. `unit` names what it is counted in (USD, kg).",
+   "properties": {
+    "type": {
+     "const": "number",
+     "default": "number",
+     "title": "Type",
+     "type": "string"
+    },
+    "instructions": {
+     "title": "Instructions",
+     "type": "string"
+    },
+    "unit": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Unit"
+    }
+   },
+   "required": [
+    "instructions"
+   ],
+   "title": "Number",
+   "type": "object"
+  },
   "PolicySpec": {
    "additionalProperties": false,
    "properties": {
@@ -281,6 +420,112 @@
     "questions"
    ],
    "title": "PolicySpec",
+   "type": "object"
+  },
+  "RangeEstimate": {
+   "additionalProperties": false,
+   "description": "A number between `min` and `max` the state does not state: the model's estimate, with the p10 - p90 interval\nof its distribution. `step` is the spacing of the values it may take (1 for a count).",
+   "properties": {
+    "type": {
+     "const": "estimate",
+     "default": "estimate",
+     "title": "Type",
+     "type": "string"
+    },
+    "instructions": {
+     "title": "Instructions",
+     "type": "string"
+    },
+    "min": {
+     "title": "Min",
+     "type": "number"
+    },
+    "max": {
+     "title": "Max",
+     "type": "number"
+    },
+    "step": {
+     "anyOf": [
+      {
+       "exclusiveMinimum": 0,
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Step"
+    },
+    "unit": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Unit"
+    }
+   },
+   "required": [
+    "instructions",
+    "min",
+    "max"
+   ],
+   "title": "RangeEstimate",
+   "type": "object"
+  },
+  "Score": {
+   "additionalProperties": false,
+   "description": "Levels 0..L-1, described in order by `criteria`.",
+   "properties": {
+    "type": {
+     "const": "score",
+     "default": "score",
+     "title": "Type",
+     "type": "string"
+    },
+    "instructions": {
+     "title": "Instructions",
+     "type": "string"
+    },
+    "criteria": {
+     "items": {
+      "type": "string"
+     },
+     "title": "Criteria",
+     "type": "array"
+    }
+   },
+   "required": [
+    "instructions",
+    "criteria"
+   ],
+   "title": "Score",
+   "type": "object"
+  },
+  "Text": {
+   "additionalProperties": false,
+   "description": "A passage read from the state as it is written (an invoice number, a name). The answer's value is None\nwhen the state holds nothing for it.",
+   "properties": {
+    "type": {
+     "const": "text",
+     "default": "text",
+     "title": "Type",
+     "type": "string"
+    },
+    "instructions": {
+     "title": "Instructions",
+     "type": "string"
+    }
+   },
+   "required": [
+    "instructions"
+   ],
+   "title": "Text",
    "type": "object"
   }
  },
