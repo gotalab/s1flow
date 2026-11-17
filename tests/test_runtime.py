@@ -309,8 +309,9 @@ def test_a_score_policy_decides_logs_and_takes_feedback(tmp_path: Path, monkeypa
     d = DecisionPolicy(spec, client=client, log=log, keep_state=True).decide({'text': 'data loss'})
     assert (d.value, d.probability, d.below_min_probability) == (2, pytest.approx(.8), False)
     record_feedback(spec, d.decision_id, '1', log=log)  # a level as the CLI types it
-    with pytest.raises(ConfigError, match='0..2'):
-        record_feedback(spec, d.decision_id, '3', log=log)
+    for wrong in ['3', '²', '1.0', 'mid']:
+        with pytest.raises(ConfigError, match='0..2'):
+            record_feedback(spec, d.decision_id, wrong, log=log)
     events = [json.loads(line) for line in log.read_text().splitlines()]
     assert [e['type'] for e in events] == ['answered', 'feedback']
     assert events[0]['decision']['value'] == 2 and events[0]['state'] == {'text': 'data loss'}
