@@ -84,7 +84,9 @@ class BoxKind(_Scoring, runtime.BoxKind):
     report: ClassVar[tuple[str, ...]] = ("mean_iou",)
 
     def correct(self, label: Any, r: Reading | None) -> bool:
-        return r is not None and isinstance(r.value, BoxEdges) and iou(r.value, BoxEdges.model_validate(label)) >= self.hit_iou
+        if r is None or label is ABSENT or r.value is None:
+            return r is not None and label is ABSENT and r.value is None  # no box, where there is no target
+        return isinstance(r.value, BoxEdges) and iou(r.value, BoxEdges.model_validate(label)) >= self.hit_iou
 
 
 class _ReadScoring(_Scoring):

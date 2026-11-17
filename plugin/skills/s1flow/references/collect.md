@@ -147,7 +147,8 @@ is right when it reads the same value, or nothing on a case with none. The defau
 the question for what it reads (`question_id="order_number"`): some models read the name as well. For a `MultiChoice`
 (every option that applies; Liquid's d1.2) the label is the list of option keys, `[]` for none; the default objective
 is `Accuracy()` (the exact set), `OptionF1()` counts option by option, and `Coverage` reads the probability of the
-whole set.
+whole set. For a box, label a picture without the target `False`: a model that can say "not there" (Liquid's d1.2) is
+right with no box, and one that always gives a box (jev) is wrong on those cases.
 
 ## Check the cases
 

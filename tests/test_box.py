@@ -135,3 +135,65 @@ def test_unprepared_images_are_a_data_error(tmp_path):
         asyncio.run(llm.decide(["x", {"type": "image", "path": "a.png"}], Q))
     with pytest.raises(DataError):
         asyncio.run(LINEUP.build("d1@vercel").decide({"shot": {"type": "image", "path": "a.png"}}, Q))
+
+
+def test_a_box_label_can_say_the_target_is_not_in_the_picture():
+    from s1flow.eval.kinds import kind_of
+    from s1flow.eval.objectives import measure
+    from s1flow.policies import ABSENT, DecisionRule
+
+    kind = kind_of(Q["disc"])
+    assert kind.label_error(ABSENT) is None and "or False when the target is not in the picture" in kind.label_error(True)
+    gone = kind.read([BoxAnswer(box=None, found=0.1)], DecisionRule(min_probability=0.95))
+    assert gone.value is None and gone.confidence == pytest.approx(0.9) and gone.below_min_probability is True
+    assert kind.average([BoxAnswer(box=None)]).distributed is False  # a model that says nothing of how sure: 1, and said so
+    there = kind.read([BoxAnswer(box=TRUTH, confidence=0.8, found=0.99)], DecisionRule())
+    assert there.value == TRUTH and there.confidence == 0.8  # a box found keeps its own confidence
+    answers = [BoxAnswer(box=TRUTH, confidence=0.9), BoxAnswer(box=None, found=0.2), BoxAnswer(box=None, found=0.05), BoxAnswer(box=MISS, confidence=0.6), None]
+    labels = [TRUTH.model_dump(), TRUTH.model_dump(), ABSENT, ABSENT, ABSENT]  # hit, missed it, right (none), a box where none is, no answer
+    p = measure.pairs(kind, labels, [None if a is None else kind.read([a], DecisionRule()) for a in answers])
+    assert list(p.correct) == [True, False, True, False, False]
+    assert measure.measure("mean_iou", p) == pytest.approx((1 + 0 + 1 + 0 + 0) / 5)
+    assert list(p.confidence) == pytest.approx([0.9, 0.8, 0.95, 0.6, 0.0])
+    assert [measure.shown(p, i) for i in range(4)] == [("box", "IoU 1.00"), ("box", "absent"), ("absent", "absent"), ("absent", "box")]
+    all_absent = measure.pairs(kind, [ABSENT, ABSENT], [kind.read([BoxAnswer(box=None, found=0.1)], DecisionRule()), kind.read([BoxAnswer(box=TRUTH)], DecisionRule())])
+    assert list(all_absent.correct) == [True, False] and all_absent.y[0] is ABSENT
+
+
+class FakeBoxOrNone:
+    """Says the disc is not there on every third case (right: those have none), unsure and wrong about it on every twelfth."""
+
+    def __init__(self, spec):
+        self.id, self.model_id, self.concurrency = "fake:boxornone", "fake-boxornone", 4
+        self.capabilities = Capabilities(image=True, question_types=frozenset({"box"}))
+
+    async def decide(self, state, questions, *, options=None):
+        n = int(state[0])
+        if n % 12 == 1:
+            a = BoxAnswer(box=None, found=0.4)  # there is one
+        elif n % 3 == 0:
+            a = BoxAnswer(box=None, found=0.02)
+        else:
+            a = BoxAnswer(box=TRUTH, confidence=0.97, found=0.99)
+        return Response(answers={"q": a}, answered_by=self.model_id)
+
+
+def test_a_box_task_with_pictures_that_have_no_target(tmp_path):
+    p = make_project(tmp_path, {"boxornone": FakeBoxOrNone})
+    buf = io.BytesIO()
+    PILImage.new("RGB", (400, 300), "white").save(buf, "PNG")
+    (tmp_path / "shot.png").write_bytes(buf.getvalue())
+    rows = [{"id": str(i), "n": i, "box": None if i % 3 == 0 else TRUTH.model_dump()} for i in range(60)]
+    (tmp_path / "data.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
+    task = attach(Task(
+        id="box-none-test", cases="data.jsonl", dir=tmp_path, state=lambda r: [str(r["n"]), {"type": "image", "path": "shot.png"}],
+        question=Box(instructions="the red disc"), label=lambda r: r["box"] if r["box"] is not None else False,
+    ), p)
+    asyncio.run(running.run_model(task, "boxornone", limit=None, variant="base"))
+    pr = metrics.load(task, "base", "boxornone")  # an answer of no box comes back from the saved run
+    e = metrics.evaluate(task, pr)
+    wrong = sum(int(cid) % 12 == 1 for cid in pr.ids)
+    assert e.accuracy and e.accuracy.value == pytest.approx(1 - wrong / len(pr.ids)) and e.measures["mean_iou"].value == pytest.approx(1 - wrong / len(pr.ids))
+    assert e.selective[0].accuracy == 1.0 and e.selective[0].errors == 0  # the unsure "not there" answers are left out
+    md = report.render(task, "base", [e], {"boxornone": pr})
+    assert "with no target)" in md and "right is an answer of no box" in md

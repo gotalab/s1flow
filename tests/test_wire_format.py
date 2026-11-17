@@ -105,6 +105,8 @@ MULTI_REPLIES: dict[str, dict[str, Any]] = {"liquid": {"model": "d1.2", "answers
 ALL = Capabilities(image=True, question_types=frozenset({"boolean", "choice", "score", "box"}))
 REPLIES["liquid"] = {"model": "d1.2", "answers": SYSTEM_ONE, "usage": {"input_tokens": 90, "output_tokens": 0, "cost": 0.0000018}}
 BOX_REPLIES["liquid"] = {"model": "d1.2", "answers": {"where": BOX_ANSWER | {"found": 0.9}}}
+# A target that is not in the picture, as d1.2 answered it (2026-11-17): a null box, and how sure it is of one.
+NO_BOX_REPLIES = {"liquid": {"model": "d1.2", "answers": {"where": {"type": "box", "box": None, "found": 0.0017, "confidence": 0}}}}
 REPLIES["gemini"] = {"model": "gemini-decision-1", "answers": SYSTEM_ONE, "usage": {"total_input_tokens": 90}}
 MEDIA_REPLIES = {p: REPLIES[p] for p in ("openrouter", "gemini")}  # the providers that send audio, video and PDFs
 EVERY = ALL.model_copy(update={"audio": True, "video": True, "pdf": True})
@@ -138,7 +140,7 @@ def _http(provider: str) -> dict[str, Any]:
     out = {}
     asks = [("text", TEXT, QUESTIONS, REPLIES), ("image", WITH_IMAGE, QUESTIONS, REPLIES), ("box", WITH_IMAGE, BOX, BOX_REPLIES),
             ("audio, video, pdf", OTHER_MEDIA, QUESTIONS, MEDIA_REPLIES), ("fields", TEXT, FIELDS, FIELD_REPLIES),
-            ("multichoice", TEXT, MULTI, MULTI_REPLIES)]
+            ("multichoice", TEXT, MULTI, MULTI_REPLIES), ("box not there", WITH_IMAGE, BOX, NO_BOX_REPLIES)]
     for name, state, questions, replies in asks:
         if provider not in replies:
             continue
@@ -193,7 +195,7 @@ def test_what_is_sent_and_read_is_what_the_identity_formats_name(monkeypatch):
         monkeypatch.delenv(env, raising=False)
     monkeypatch.setenv("CLEF_RELAY_URL", "https://relay.test")
     now = {
-        "request": identity.REQUEST, "execution": identity.EXECUTION,
+        "request": identity.REQUEST, "execution": identity.EXECUTION, "reading": identity.READING,
         "providers": {p: _http(p) for p in REPLIES} | {m: _llm(monkeypatch, m) for m in ("llm", "llm sampled")},
         "decisions": _decisions(),
     }
@@ -202,4 +204,5 @@ def test_what_is_sent_and_read_is_what_the_identity_formats_name(monkeypatch):
         FILE.write_text(text)
     assert text == FILE.read_text(), (
         "what a provider sends or reads, or what a policy decides, changed (diff tests/fixtures/wire-format.json): "
-        "bump identity.REQUEST or EXECUTION unless saved answers still stand, then rewrite it (see this file's docstring)")
+        "bump identity.REQUEST or EXECUTION (or identity.READING when one provider reads a reply differently) unless saved "
+        "answers still stand, then rewrite it (see this file's docstring)")

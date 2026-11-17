@@ -194,7 +194,7 @@ def render(task: Task, variant: str, evs: list[Evaluation], preds: dict[str, met
     labels = (Counter(k for c in labelled for k in c.label) if multi  # how many cases each option applies to
               else Counter(str(c.label) for c in labelled) if not (box or read or kind.type == "estimate") else Counter())
     absent = sum(c.label is False for c in labelled)
-    about = (f" (right at IoU {kind.iou:g} or more)" if box
+    about = (f" (right at IoU {kind.iou:g} or more" + (f"; {absent} with no target" if absent else "") + ")" if box
              else f" ({len(labelled) - absent} with a value, {absent} with none)" if read
              else f" (right within {getattr(kind, 'tolerance'):g} of the label)" if kind.type == "estimate"
              else f" ({', '.join(f'{k} {v}' for k, v in labels.most_common(8))}" + (", more" if len(labels) > 8 else "") + ")")
@@ -246,7 +246,8 @@ def render(task: Task, variant: str, evs: list[Evaluation], preds: dict[str, met
     if any(not e.probabilities for e in evs):
         L.append("※ a model that returns no distribution (one answer): its probability is 1 for every answer, so the coverage is all or nothing.")
     if box:
-        L.append(f"Box: right at IoU {kind.iou:g} or more with the label's box. The probability is what jev returns; for an LLM, the agreement (IoU) of its repeated boxes. AUROC and ECE say how well that probability separates right from wrong.")
+        L.append(f"Box: right at IoU {kind.iou:g} or more with the label's box. The probability is what jev returns; for an LLM, the agreement (IoU) of its repeated boxes. AUROC and ECE say how well that probability separates right from wrong."
+                 + (" Where the label says the target is not in the picture, right is an answer of no box, as sure as the model says nothing is there." if absent else ""))
     if read:
         L.append("Value read: right when it equals the label, or when nothing was read from a case labelled as holding none. The probability is the "
                  "model's: P(nothing there) for an answer of none, else P(something there) times its confidence in the value; 1 when it gives neither.")

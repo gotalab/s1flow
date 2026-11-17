@@ -122,6 +122,7 @@ def validate_answer_values(
         _confidence(qid, answer.confidence)
         return
     if isinstance(answer, BoxAnswer):
+        _confidence(qid, answer.found, name="found")
         _confidence(qid, answer.confidence)
         _confidence(qid, answer.agreement, name="agreement")
         return

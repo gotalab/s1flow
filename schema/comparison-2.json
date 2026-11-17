@@ -39,7 +39,7 @@
   },
   "Box": {
    "additionalProperties": false,
-   "description": "One bounding box of the target described in `instructions` (jev 1.14, 2026-10-15).\n\nThere is no \"not found\" answer: ask a Boolean alongside when the target may be absent.",
+   "description": "One bounding box of the target described in `instructions` (jev 1.14, 2026-10-15).\n\nA model that can say the target is not in the picture answers with no box (Liquid d1.2). The others always\ngive one (jev): ask them a Boolean alongside when the target may be absent.",
    "properties": {
     "type": {
      "const": "box",

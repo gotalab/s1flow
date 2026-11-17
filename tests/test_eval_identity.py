@@ -248,3 +248,11 @@ def test_a_capability_left_at_its_default_is_in_no_identity():
     spec = ModelSpec(provider='typesafe', id='jev-1.14.0')
     assert model_digest(spec) == model_digest(spec.model_copy(update={'capabilities': Capabilities(audio=False, context_tokens=32_000)}))
     assert model_digest(spec) != model_digest(spec.model_copy(update={'capabilities': Capabilities(image=True)}))
+
+
+def test_a_provider_reading_revision_changes_only_that_providers_identity(monkeypatch):
+    from s1flow.client import identity
+    liquid, typesafe = ModelSpec(provider='liquid', id='d1.2'), ModelSpec(provider='typesafe', id='v1')
+    before = model_digest(liquid), model_digest(typesafe)
+    monkeypatch.setattr(identity, 'READING', {})
+    assert model_digest(liquid) != before[0] and model_digest(typesafe) == before[1]
