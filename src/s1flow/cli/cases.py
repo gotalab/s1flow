@@ -42,6 +42,8 @@ def cases_correct(a: argparse.Namespace) -> int:
         raise ConfigError(f"verdict is one of {', '.join(VERDICTS)}, got {a.verdict!r}")
     value = None if a.label is None else label(a.label)
     task = load(project(a), a.task)
+    if isinstance(a.label, str) and task.kind.type == "multichoice":  # late,damage; none for no option
+        value = [] if a.label.strip().lower() in ("", "none") else [k.strip() for k in a.label.split(",")]
     if isinstance(value, str) and task.kind.type in ("number", "estimate"):
         try:
             value = float(value)
@@ -73,4 +75,4 @@ def add(sub: Any) -> None:
     p.add_argument("--verdict", required=True, help="relabel | keep | unclear | missing")
     p.add_argument("--reason", required=True, help="the criterion that decides it, or what the state lacks")
     p.add_argument("--by", help="who decided (default: git config user.name)")
-    p.add_argument("--label", help="relabel only: the new label (a class key, or true / false)")
+    p.add_argument("--label", help="relabel only: the new label (a class key, true / false, a number, or late,damage / none for a multichoice)")

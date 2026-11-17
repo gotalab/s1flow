@@ -9,7 +9,8 @@ model is priced; and a box answer carries `found`, with no `box` when the model 
 The questions that read a value or estimate one go in the same `questions` (checked by real calls, 2026-11-17):
 `text`, `number` and `date` answer the value with `found`, which is 1 - `p_null`, and a null value when nothing is
 there; a `RangeEstimate` is a `number` with a `range`, answered with its median and an `interval` (p10, p90).
-A `span` is kept for a text state only: for a JSON state Liquid counts in its own rendering of it.
+A `MultiChoice` is a `choice` with `multiple`, answered with the `choices` that apply and each option's own
+probability. A `span` is kept for a text state only: for a JSON state Liquid counts in its own rendering of it.
 
 s1flow's box has no "not found" answer (questions.Box), so a box the model did not find is read as the model
 declining that question (Refusal), which an evaluation counts as no answer.
@@ -17,10 +18,10 @@ declining that question (Refusal), which an evaluation counts as no answer.
 
 from typing import Any
 
-from ..answers import Answer, DateAnswer, EstimateAnswer, NumberAnswer, ReadAnswer, Response, TextAnswer, Usage
+from ..answers import Answer, DateAnswer, MultiChoiceAnswer, EstimateAnswer, NumberAnswer, ReadAnswer, Response, TextAnswer, Usage
 from ..media import chat_parts, images_only
 from ..models import Capabilities, ModelBuild, ModelSpec, check_supported
-from ..questions import FIELD_TYPES, Question, Questions, RangeEstimate
+from ..questions import FIELD_TYPES, MultiChoice, Question, Questions, RangeEstimate
 from ..state import State, has_image
 from .contract import outside_contract, refusal
 from .build import NoOptions, options, spec_options
@@ -42,7 +43,12 @@ def _not_found_as_refusal(raw: dict[str, Any]) -> dict[str, Any]:
 READ: dict[Any, type[TextAnswer] | type[NumberAnswer] | type[DateAnswer]] = {"text": TextAnswer, "number": NumberAnswer, "date": DateAnswer}
 
 
+OWN = FIELD_TYPES | {"multichoice"}  # asked in Liquid's own shape, not System One's
+
+
 def _field(q: Question) -> dict[str, Any]:
+    if isinstance(q, MultiChoice):
+        return {"type": "choice", "multiple": True, "instructions": q.instructions, "criteria": q.criteria}
     if isinstance(q, RangeEstimate):
         wire = q.model_dump(exclude_none=True, exclude={"type", "min", "max"})
         return {"type": "number", "range": [q.min, q.max]} | wire
@@ -50,6 +56,8 @@ def _field(q: Question) -> dict[str, Any]:
 
 
 def _read(q: Question, a: dict[str, Any], text_state: bool) -> Answer:
+    if isinstance(q, MultiChoice):
+        return MultiChoiceAnswer(choices=a["choices"], probabilities=a.get("probabilities") or None)
     if isinstance(q, RangeEstimate):
         low, high = a.get("interval") or (None, None)
         return EstimateAnswer(value=a["number"], p10=low, p90=high)
@@ -59,12 +67,12 @@ def _read(q: Question, a: dict[str, Any], text_state: bool) -> Answer:
 
 
 def _questions(questions: Questions) -> dict[str, Any]:
-    rest = {k: q for k, q in questions.items() if q.type not in FIELD_TYPES}
-    return {k: _field(q) if q.type in FIELD_TYPES else systemone.questions(rest)[k] for k, q in questions.items()}
+    rest = systemone.questions({k: q for k, q in questions.items() if q.type not in OWN})
+    return {k: _field(q) if q.type in OWN else rest[k] for k, q in questions.items()}
 
 
 def _answers(questions: Questions, state: State, raw: dict[str, Any]) -> dict[str, Answer]:
-    rest = systemone.answers(_not_found_as_refusal({k: a for k, a in raw.items() if k not in questions or questions[k].type not in FIELD_TYPES}))
+    rest = systemone.answers(_not_found_as_refusal({k: a for k, a in raw.items() if k not in questions or questions[k].type not in OWN}))
     out: dict[str, Answer] = {}
     for qid, a in raw.items():
         if qid in rest:

@@ -11,7 +11,7 @@ from typing import Annotated, Literal, Union
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-QuestionType = Literal["boolean", "choice", "score", "box", "text", "number", "date", "estimate"]
+QuestionType = Literal["boolean", "choice", "score", "box", "text", "number", "date", "estimate", "multichoice"]
 STRICT = ConfigDict(extra="forbid")  # a misspelt key in a question (and so in a policy's digest) is an error, not dropped
 TEXT_TYPES: frozenset[QuestionType] = frozenset({"boolean", "choice", "score"})
 # Read from the state or estimated, not decided: OpenRouter serves these on its Extractions route (extractions.py).
@@ -29,6 +29,16 @@ class Boolean(BaseModel):
 class Choice(BaseModel):
     model_config = STRICT
     type: Literal["choice"] = "choice"
+    instructions: str
+    criteria: dict[str, str | None]
+
+
+class MultiChoice(BaseModel):
+    """Every option that applies, possibly none: each option is its own yes or no (Liquid d1.2, 2026-11-17, where
+    it is a `choice` with `multiple`)."""
+
+    model_config = STRICT
+    type: Literal["multichoice"] = "multichoice"
     instructions: str
     criteria: dict[str, str | None]
 
@@ -105,9 +115,11 @@ def no_fields(questions: "Questions", who: str) -> None:
 
     if field := [f"{q.type} ({k})" for k, q in questions.items() if q.type in FIELD_TYPES]:
         raise Unsupported(f"{who} has no {', '.join(sorted(FIELD_TYPES))} questions: {', '.join(field)}")
+    if multi := [k for k, q in questions.items() if q.type == "multichoice"]:
+        raise Unsupported(f"{who} has no multichoice questions: {', '.join(multi)}")
 
 
-Question = Annotated[Union[Boolean, Choice, Score, Box, Text, Number, Date, RangeEstimate], Field(discriminator="type")]
+Question = Annotated[Union[Boolean, Choice, Score, Box, Text, Number, Date, RangeEstimate, MultiChoice], Field(discriminator="type")]
 Questions = dict[str, Question]
 
 

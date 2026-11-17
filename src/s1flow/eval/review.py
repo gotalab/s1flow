@@ -157,7 +157,8 @@ def correct(task: Task, case_id: str, verdict: Verdict, *, reason: str, by: str,
     if verdict == "relabel":
         if (wrong := task.kind.label_error(label)) is not None:
             raise DataError(f"{case_id}: {wrong}")
-        if label == was and isinstance(label, bool) == isinstance(was, bool):  # 0 is a number, False is no value
+        same = set(label) == set(was) if isinstance(label, list) and isinstance(was, list) else label == was  # a multichoice: any order
+        if same and isinstance(label, bool) == isinstance(was, bool):  # 0 is a number, False is no value
             raise DataError(f"{case_id}: the label is already {label!r}; record keep instead")
     try:
         fix = Correction(id=case_id, verdict=verdict, label=label if verdict == "relabel" else None, was=was, reason=reason.strip(),

@@ -56,6 +56,13 @@ class ChoiceKind(_Scoring, runtime.ChoiceKind):
         return sum((p - (1.0 if k == label else 0.0)) ** 2 for k, p in zip(self.keys, r.distribution)) / 2
 
 
+class MultiChoiceKind(_Scoring, runtime.MultiChoiceKind):
+    """Right when the options chosen are exactly the label's; option F1 counts each option of each case."""
+
+    objectives: ClassVar[tuple[str, ...]] = ("accuracy", "coverage", "auroc", "option_f1")
+    report: ClassVar[tuple[str, ...]] = ("option_f1", "option_precision", "option_recall")
+
+
 class ScoreKind(_Scoring, runtime.ScoreKind):
     """Right when the expected level, rounded, is the label; how far off is MAE, agreement over the levels QWK."""
 
@@ -135,6 +142,8 @@ def kind_of(question: Question, params: KindParams = KindParams()) -> Kind:
         return PositiveChoiceKind(**kind.model_dump())
     if isinstance(kind, runtime.ChoiceKind):
         return ChoiceKind(**kind.model_dump())
+    if isinstance(kind, runtime.MultiChoiceKind):
+        return MultiChoiceKind(**kind.model_dump())
     if isinstance(kind, runtime.ScoreKind):
         return ScoreKind(**kind.model_dump())
     if isinstance(kind, runtime.BoxKind):

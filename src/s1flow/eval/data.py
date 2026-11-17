@@ -65,7 +65,7 @@ def check(task: Task) -> DataCheck:
         if key in seen and seen[key].label != c.label:
             warnings.append(f"{seen[key].id} and {c.id} have the same state and different labels ({seen[key].label!r} / {c.label!r})")
         seen.setdefault(key, c)
-    labels = Counter(str(c.label) for c in labelled)
+    labels = Counter(", ".join(sorted(c.label)) or "none" if isinstance(c.label, list) else str(c.label) for c in labelled)
     if kind.binary and labelled:
         small = min(labels.get("True", 0), labels.get("False", 0)) / len(labelled)
         if small < MINORITY and task.primary.name == "accuracy":

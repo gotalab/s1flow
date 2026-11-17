@@ -15,18 +15,20 @@ from ..answers import (
     ChoiceAnswer,
     DateAnswer,
     EstimateAnswer,
+    MultiChoiceAnswer,
     NumberAnswer,
     Refusal,
     Response,
     ScoreAnswer,
     TextAnswer,
 )
-from ..questions import Choice, RangeEstimate, Questions, Score
+from ..questions import Choice, MultiChoice, RangeEstimate, Questions, Score
 
 # The answer each type of question takes.
 FITS: dict[str, type] = {
     "boolean": BooleanAnswer, "choice": ChoiceAnswer, "score": ScoreAnswer, "box": BoxAnswer,
     "text": TextAnswer, "number": NumberAnswer, "date": DateAnswer, "estimate": EstimateAnswer,
+    "multichoice": MultiChoiceAnswer,
 }
 
 
@@ -79,7 +81,7 @@ def _validate_answer(qid: str, question: Any, answer: Answer) -> None:
         kind = getattr(answer, "type", type(answer).__name__)
         _fail(qid, f"answer type {kind!r} does not fit a {question.type} question")
 
-    validate_answer_values(qid, answer, options=question.criteria.keys() if isinstance(question, Choice) else None,
+    validate_answer_values(qid, answer, options=question.criteria.keys() if isinstance(question, (Choice, MultiChoice)) else None,
                            levels=len(question.criteria) if isinstance(question, Score) else None,
                            within=(question.min, question.max) if isinstance(question, RangeEstimate) else None)
 
@@ -100,6 +102,15 @@ def validate_answer_values(
                 _fail(qid, f"choice {answer.choice!r} is not an option ({', '.join(allowed)})")
         _distribution(qid, answer.probabilities, options)
         _confidence(qid, answer.confidence)
+        return
+    if isinstance(answer, MultiChoiceAnswer):
+        among = None if options is None else tuple(options)
+        if among is not None and (unknown := [c for c in answer.choices if c not in among]):
+            _fail(qid, f"choices {', '.join(map(repr, unknown))} are not options ({', '.join(among)})")
+        if len(set(answer.choices)) < len(answer.choices):
+            _fail(qid, f"choices name an option twice: {answer.choices}")
+        for key, value in (answer.probabilities or {}).items():
+            _probability(qid, f"probability for {key!r}", value)
         return
     if isinstance(answer, ScoreAnswer):
         score = answer.score
