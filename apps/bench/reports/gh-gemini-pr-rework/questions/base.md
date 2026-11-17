@@ -1,8 +1,8 @@
 # gh-gemini-pr-rework
 
-2026-11-15 · 338 labelled dev cases (False 247, True 91) · split: stratified k-fold (no test case among these: CV numbers only) · source: Merged PRs of google-gemini/gemini-cli (review history via the GitHub API)
+2026-11-16 · 338 labelled dev cases (False 247, True 91) · split: stratified k-fold (no test case among these: CV numbers only) · source: Merged PRs of google-gemini/gemini-cli (review history via the GitHub API)
 
-**mammoth@openrouter** has the highest AUROC, 0.733 [0.671, 0.790] (API cost $0.61 per 10k, p99 488ms). Its interval overlaps with clef-omni@openrouter, reflex@openrouter, decider@openrouter, drex-max@openrouter, joey@openrouter, span@openrouter, decider-flash@openrouter, clef-flash@openrouter, kev@openrouter, d1-ultra@openrouter, elephant@openrouter, jev:1.14, gemini-decision@google, d1.1@openrouter, d1@vercel, clef@openrouter, luna@decisions, decision-1@openrouter: the objective cannot tell them apart; interval overlap does not establish equivalence. Ordered by task.py's tiebreak (loss per case (miss 1, false alarm 1)), **clef-omni@openrouter** comes first (API cost $0.95 per 10k, p99 346ms). The highest raw accuracy (dev) is clef-omni@openrouter's, 76% [72, 81].
+mammoth@openrouter has the highest AUROC, 0.733 [0.671, 0.790] (API cost $0.61 per 10k, p99 488ms). Its interval overlaps with clef-omni@openrouter, reflex@openrouter, decider@openrouter, drex-max@openrouter, joey@openrouter, span@openrouter, decider-flash@openrouter, clef-flash@openrouter, kev@openrouter, d1-ultra@openrouter, elephant@openrouter, d1.2-ultra, jev:1.14, gemini-decision@google, d1.1@openrouter, d1@vercel, clef@openrouter, d1.2, luna@decisions, decision-1@openrouter: the objective cannot tell them apart; interval overlap does not establish equivalence. Ordered by task.py's tiebreak (loss per case (miss 1, false alarm 1)), clef-omni@openrouter comes first (API cost $0.95 per 10k, p99 346ms). The highest raw accuracy (dev) is clef-omni@openrouter's, 76% [72, 81].
 
 ## Comparison
 
@@ -13,6 +13,8 @@
 | clef@openrouter | 338 | 69.5% [64, 75] | 0.44 | 0.71 | 0.07 | 7% [5, 10] | 87.5% (70.8%) | 0.0% (0/338) | 0/338 |
 | d1-ultra@openrouter | 338 | 72.8% [68, 78] | 0.47 | 0.71 | 0.08 | 14% [11, 17] | 93.6% (84.3%) | 0.0% (0/338) | 0/338 |
 | d1.1@openrouter | 338 | 70.7% [66, 76] | 0.44 | 0.71 | 0.11 | 8% [5, 11] | 92.3% (77.7%) | 0.0% (0/338) | 0/338 |
+| d1.2 | 338 | 69.2% [64, 74] | 0.40 | 0.70 | 0.07 | 3% [1, 4] | 77.8% (45.0%) | 0.0% (0/338) | 0/338 |
+| d1.2-ultra | 338 | 72.2% [67, 77] | 0.45 | 0.71 | 0.05 | 4% [2, 7] | 85.7% (61.5%) | 0.0% (0/338) | 0/338 |
 | d1@vercel | 338 | 70.7% [65, 75] | 0.39 | 0.69 | 0.15 | 6% [3, 9] | 90.0% (71.7%) | 0.0% (0/338) | 0/338 |
 | decider-flash@openrouter | 338 | 73.7% [69, 78] | 0.08 | 0.68 | 0.07 | 4% [2, 6] | 83.3% (56.2%) | 0.0% (0/338) | 0/338 |
 | decider@openrouter | 338 | 74.6% [70, 79] | 0.27 | 0.70 | 0.09 | 14% [10, 18] | 91.5% (81.6%) | 0.0% (0/338) | 0/338 |
@@ -28,7 +30,7 @@
 | reflex@openrouter | 338 | 74.9% [70, 80] | 0.37 | 0.73 | 0.14 | 4% [2, 7] | 85.7% (61.5%) | 0.0% (0/338) | 0/338 |
 | span@openrouter | 338 | 73.7% [69, 78] | 0.33 | 0.70 | 0.18 | 4% [2, 6] | 84.6% (59.0%) | 0.0% (0/338) | 0/338 |
 
-Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef-omni@openrouter = cloudflare/clef-omni-20261009; clef@openrouter = cloudflare/clef; d1-ultra@openrouter = liquid/d1-ultra-20261015; d1.1@openrouter = liquid/d1.1-20261027; d1@vercel = liquid/d1; decider-flash@openrouter = perplexity/pplx-decider-flash-v1.2-20261016; decider@openrouter = perplexity/pplx-decider-v1.2-20261016; decision-1@openrouter = microsoft/microsoft-decision-1-20261009; drex-max@openrouter = nace-ai/drex-max-20261016; elephant@openrouter = baseten/elephant-1-20261021; gemini-decision@google = gemini-decision-1; jev:1.14 = jev-1.14.0; joey@openrouter = baseten/joey-1-20261029; kev@openrouter = jaredpalmer/kev-4b-20260924; luna@decisions = gpt-6-luna; mammoth@openrouter = baseten/mammoth-1-20261021; reflex@openrouter = morph/reflex-20261103; span@openrouter = respan/span-02-20261015. To compare versions, run each by name: `s1flow run <task> --models jev:1.14`.
+Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef-omni@openrouter = cloudflare/clef-omni-20261009; clef@openrouter = cloudflare/clef; d1-ultra@openrouter = liquid/d1-ultra-20261015; d1.1@openrouter = liquid/d1.1-20261027; d1.2 = d1.2; d1.2-ultra = d1.2-ultra; d1@vercel = liquid/d1; decider-flash@openrouter = perplexity/pplx-decider-flash-v1.2-20261016; decider@openrouter = perplexity/pplx-decider-v1.2-20261016; decision-1@openrouter = microsoft/microsoft-decision-1-20261009; drex-max@openrouter = nace-ai/drex-max-20261016; elephant@openrouter = baseten/elephant-1-20261021; gemini-decision@google = gemini-decision-1; jev:1.14 = jev-1.14.0; joey@openrouter = baseten/joey-1-20261029; kev@openrouter = jaredpalmer/kev-4b-20260924; luna@decisions = gpt-6-luna; mammoth@openrouter = baseten/mammoth-1-20261021; reflex@openrouter = morph/reflex-20261103; span@openrouter = respan/span-02-20261015. To compare versions, run each by name: `s1flow run <task> --models jev:1.14`.
 
 ## Objectives and constraints
 
@@ -45,12 +47,14 @@ Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef-omni@openrouter
 | kev@openrouter = | 0.642 [0.573, 0.708] | 0.266 [0.219, 0.317] | — | met |
 | d1-ultra@openrouter = | 0.710 [0.651, 0.764] | 0.272 [0.225, 0.322] | — | met |
 | elephant@openrouter = | 0.685 [0.619, 0.745] | 0.275 [0.225, 0.322] | — | met |
+| d1.2-ultra = | 0.714 [0.648, 0.775] | 0.278 [0.228, 0.328] | — | met |
 | jev:1.14 = | 0.715 [0.655, 0.776] | 0.281 [0.237, 0.328] | — | met |
 | gemini-decision@google = | 0.681 [0.614, 0.744] | 0.284 [0.237, 0.331] | — | met |
 | d1.1@openrouter = | 0.710 [0.647, 0.769] | 0.293 [0.243, 0.340] | — | met |
 | d1@vercel = | 0.691 [0.625, 0.757] | 0.293 [0.245, 0.346] | — | met |
 | mammoth@openrouter = | 0.733 [0.671, 0.790] | 0.296 [0.248, 0.349] | — | met |
 | clef@openrouter = | 0.708 [0.643, 0.766] | 0.305 [0.254, 0.358] | — | met |
+| d1.2 = | 0.703 [0.639, 0.763] | 0.308 [0.257, 0.358] | — | met |
 | luna@decisions = | 0.702 [0.631, 0.765] | 0.308 [0.254, 0.361] | — | met |
 | decision-1@openrouter = | 0.692 [0.623, 0.756] | 0.376 [0.325, 0.429] | — | met |
 
@@ -65,9 +69,11 @@ Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef-omni@openrouter
 | clef@openrouter | 338 | 259 ms | 367 ms | 682 ms | 1064 ms | 2.6 | 0 | 4 | $1.39 | billed |  |
 | d1-ultra@openrouter | 338 | 522 ms | 5589 ms | 6151 ms | 8675 ms | 11.8 | 21 | 4 | $0.25 | billed |  |
 | d1.1@openrouter | 338 | 325 ms | 533 ms | 798 ms | 838 ms | 2.5 | 0 | 4 | $0.12 | billed | ○ |
+| d1.2 | 338 | 117 ms | 166 ms | 396 ms | 469 ms | 3.4 | 0 | 4 | $0.12 | billed | ○ |
+| d1.2-ultra | 338 | 126 ms | 191 ms | 408 ms | 555 ms | 3.2 | 1 | 4 | $0.25 | billed | ○ |
 | d1@vercel | 338 | 604 ms | 1553 ms | 5677 ms | 9350 ms | 9.4 | 0 | 4 | $0.12 | billed |  |
 | decider-flash@openrouter | 338 | 141 ms | 258 ms | 421 ms | 1852 ms | 3.0 | 0 | 4 | $0.06 | billed | ○ |
-| decider@openrouter | 338 | 226 ms | 331 ms | 773 ms | 1135 ms | 3.4 | 0 | 4 | $0.12 | billed | ○ |
+| decider@openrouter | 338 | 226 ms | 331 ms | 773 ms | 1135 ms | 3.4 | 0 | 4 | $0.12 | billed |  |
 | decision-1@openrouter | 338 | 251 ms | 316 ms | 450 ms | 2035 ms | 1.8 | 0 | 4 | $0.23 | billed |  |
 | drex-max@openrouter | 338 | 394 ms | 663 ms | 1149 ms | 1687 ms | 2.9 | 9 | 4 | $0.36 | billed |  |
 | elephant@openrouter | 338 | 174 ms | 199 ms | 275 ms | 600 ms | 1.6 | 0 | 4 | $0.21 | billed | ○ |
@@ -82,7 +88,7 @@ Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef-omni@openrouter
 
 Measured on the calls, not the answers: never an objective, only the constraints and the order of candidates the objectives tie (the p90 of each case's slowest call, then API cost). Frontier ○: no other model beats it on all three of the primary objective, API cost per 10k and p99.
 Latency is the time from sending to receiving one call that answered (the round trip from here included), without retries or the wait before them. Many calls at once read slower, from the provider's load and this machine's connections: to compare models, measure every candidate again at the same concurrency (`s1flow run <task> --fresh --concurrency N`, the same N for all).
-Where the API costs come from: billed: clef-flash@openrouter, clef-omni@openrouter, clef@openrouter, d1-ultra@openrouter, d1.1@openrouter, d1@vercel, decider-flash@openrouter, decider@openrouter, decision-1@openrouter, drex-max@openrouter, elephant@openrouter, joey@openrouter, kev@openrouter, mammoth@openrouter, reflex@openrouter, span@openrouter; estimated (recorded tokens times a list price: s1flow.toml's where dated, else the LLM price table's; not a bill): gemini-decision@google (list price of 2026-11-12), jev:1.14 (list price of 2026-10-03), luna@decisions (list price of 2026-10-09). Billed and estimated API costs sit side by side, so their differences do not compare as they are.
+Where the API costs come from: billed: clef-flash@openrouter, clef-omni@openrouter, clef@openrouter, d1-ultra@openrouter, d1.1@openrouter, d1.2, d1.2-ultra, d1@vercel, decider-flash@openrouter, decider@openrouter, decision-1@openrouter, drex-max@openrouter, elephant@openrouter, joey@openrouter, kev@openrouter, mammoth@openrouter, reflex@openrouter, span@openrouter; estimated (recorded tokens times a list price: s1flow.toml's where dated, else the LLM price table's; not a bill): gemini-decision@google (list price of 2026-11-12), jev:1.14 (list price of 2026-10-03), luna@decisions (list price of 2026-10-09). Billed and estimated API costs sit side by side, so their differences do not compare as they are.
 
 ## API cost and time for these cases
 
@@ -93,6 +99,8 @@ Where the API costs come from: billed: clef-flash@openrouter, clef-omni@openrout
 | clef@openrouter | $0.05 | 24 s (estimated, 338 calls) | 12 min | 4 |
 | d1-ultra@openrouter | $0.0083 | 2 min (estimated, 338 calls) | 67 min | 4 |
 | d1.1@openrouter | $0.0040 | 29 s (estimated, 338 calls) | 14 min | 4 |
+| d1.2 | $0.0040 | 11 s (estimated, 338 calls) | 6 min | 4 |
+| d1.2-ultra | $0.0083 | 12 s (estimated, 338 calls) | 6 min | 4 |
 | d1@vercel | $0.0040 | 77 s (estimated, 338 calls) | 38 min | 4 |
 | decider-flash@openrouter | $0.0020 | 15 s (estimated, 338 calls) | 8 min | 4 |
 | decider@openrouter | $0.0041 | 22 s (estimated, 338 calls) | 11 min | 4 |
@@ -111,7 +119,7 @@ Where the API costs come from: billed: clef-flash@openrouter, clef-omni@openrout
 Measured: the wall time of a run that called every case. When every answer came from the cache, estimated as the calls' time summed and divided by the concurrency. The time depends more on the concurrency and the provider's rate limit than on the model.
 
 Coverage: answering the most probable first, the largest share whose sure accuracy keeps the target 95%. The cut is chosen on each CV fold's fit side and measured on its eval side. The lower bound is a one-sided 95% Clopper-Pearson; [ ] is a 95% bootstrap interval.
-Scored: every labelled dev case the model answered or refused; held-out test results require an explicit final check. Refused: the share of the scored cases the model refused or does not support, each counted as no answer (wrong, and never sure). Failed counts calls.
+Scored: every labelled dev case the model answered or refused; held-out test results come only when a candidate is adopted. Refused: the share of the scored cases the model refused or does not support, each counted as no answer (wrong, and never sure). Failed counts calls.
 
 ## Threshold
 
@@ -124,6 +132,8 @@ The threshold with the lowest total loss, chosen by CV, a miss (a positive read 
 | clef@openrouter | 69.5% | 75.7% | 72 | 10 | 0.80 | 0.80 |
 | d1-ultra@openrouter | 72.8% | 75.1% | 73 | 11 | 0.85 | 0.85 |
 | d1.1@openrouter | 70.7% | 72.5% | 73 | 20 | 0.80 | 0.80 |
+| d1.2 | 69.2% | 72.8% | 78 | 14 | 0.80 | 0.80 |
+| d1.2-ultra | 72.2% | 75.7% | 73 | 9 | 0.70 | 0.70 |
 | d1@vercel | 70.7% | 74.9% | 71 | 14 | 0.75 | 0.75 |
 | decider-flash@openrouter | 73.7% | 72.5% | 84 | 9 | 0.55 | 0.55 |
 | decider@openrouter | 74.6% | 74.3% | 75 | 12 | 0.55 | 0.55 |
@@ -210,6 +220,34 @@ The threshold with the lowest total loss, chosen by CV, a miss (a positive read 
 | 0.70 | 64 (70%) | 30 (12%) |
 | 0.80 | 69 (76%) | 19 (8%) |
 | 0.90 | 78 (86%) | 13 (5%) |
+
+## Misses and false alarms by threshold (d1.2)
+
+| threshold | misses | false alarms |
+|---|---|---|
+| 0.10 | 1 (1%) | 241 (98%) |
+| 0.20 | 4 (4%) | 198 (80%) |
+| 0.30 | 16 (18%) | 120 (49%) |
+| 0.40 | 39 (43%) | 69 (28%) |
+| 0.50 | 57 (63%) | 47 (19%) |
+| 0.60 | 67 (74%) | 19 (8%) |
+| 0.70 | 75 (82%) | 13 (5%) |
+| 0.80 | 80 (88%) | 5 (2%) |
+| 0.90 | 89 (98%) | 2 (1%) |
+
+## Misses and false alarms by threshold (d1.2-ultra)
+
+| threshold | misses | false alarms |
+|---|---|---|
+| 0.10 | 0 (0%) | 246 (100%) |
+| 0.20 | 1 (1%) | 221 (89%) |
+| 0.30 | 13 (14%) | 160 (65%) |
+| 0.40 | 34 (37%) | 75 (30%) |
+| 0.50 | 53 (58%) | 41 (17%) |
+| 0.60 | 67 (74%) | 21 (9%) |
+| 0.70 | 73 (80%) | 9 (4%) |
+| 0.80 | 86 (95%) | 4 (2%) |
+| 0.90 | 91 (100%) | 0 (0%) |
 
 ## Misses and false alarms by threshold (d1@vercel)
 
@@ -481,6 +519,14 @@ The threshold with the lowest total loss, chosen by CV, a miss (a positive read 
 | #29450 | False | True | 0.95 | refactor(a2a-server): implement V1 to V2 settings migration logic |
 | #26949 | True | False | 0.95 | fix(ci): configure git remote with token for authentication |
 
+**d1.2** (3)
+
+| id | label | answer | probability | case |
+|---|---|---|---|---|
+| #28470 | False | True | 0.95 | fix(a2a-server): enforce workspace trust and task isolation to preven… |
+| #25822 | True | False | 0.92 | fix(cli): add missing response key to custom theme text schema |
+| #26073 | False | True | 0.91 | Fix bulk of remaining issues with generalist profile |
+
 **d1@vercel** (31)
 
 | id | label | answer | probability | case |
@@ -595,19 +641,19 @@ The threshold with the lowest total loss, chosen by CV, a miss (a positive read 
 | #27467 | True | False | 0.99 | fix(core): handle multi-line escaped quotes in stripShellWrapper |
 
 
-## Cases the models disagree on (12 of 189)
+## Cases the models disagree on (12 of 192)
 
-| id | label | clef-flash@openrouter | clef-omni@openrouter | clef@openrouter | d1-ultra@openrouter | d1.1@openrouter | d1@vercel | decider-flash@openrouter | decider@openrouter | decision-1@openrouter | drex-max@openrouter | elephant@openrouter | gemini-decision@google | jev:1.14 | joey@openrouter | kev@openrouter | luna@decisions | mammoth@openrouter | reflex@openrouter | span@openrouter | case |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| #26285 | False | False (0.95) | False (0.96) | False (0.91) | False (0.94) | False (0.97) | False (0.99) | False (0.91) | False (0.96) | True (0.50) | False (0.98) | False (0.86) | False (0.77) | False (0.74) | False (0.76) | False (0.85) | False (0.80) | False (0.85) | False (0.99) | False (1.00) | fix(cli): use resolved sandbox state for auto-update check |
-| #26446 | False | False (0.93) | False (0.97) | False (0.74) | False (0.84) | False (0.84) | False (0.94) | False (0.88) | False (0.94) | True (0.84) | False (0.83) | False (0.71) | False (0.71) | False (0.64) | False (0.67) | False (0.79) | False (0.75) | False (0.85) | False (0.99) | False (1.00) | refactor(UI): created constants file for ThemeDialog |
-| #26128 | False | False (0.96) | False (0.96) | False (0.87) | False (0.92) | False (0.98) | False (0.99) | False (0.86) | False (0.96) | True (0.50) | False (0.95) | False (0.80) | True (0.51) | False (0.69) | False (0.75) | False (0.83) | False (0.80) | False (0.84) | False (0.98) | False (1.00) | fix(ux): added error message for ENOTDIR |
-| #28038 | False | False (0.93) | False (0.95) | False (0.84) | False (0.85) | False (0.90) | False (0.82) | False (0.87) | False (0.94) | True (0.50) | False (0.89) | True (0.58) | False (0.60) | False (0.56) | False (0.72) | False (0.75) | False (0.68) | False (0.74) | False (0.96) | False (1.00) | fix(ci): append trailing slash to registry url in npmrc |
-| #26532 | False | False (0.95) | False (0.97) | False (0.87) | False (0.88) | False (0.92) | False (0.98) | False (0.83) | False (0.90) | True (0.50) | False (0.96) | False (0.85) | False (0.78) | False (0.70) | False (0.73) | False (0.79) | False (0.77) | False (0.76) | False (0.95) | False (0.99) | fix(core): reject numeric project IDs in GOOGLE_CLOUD_PROJECT (#24695) |
-| #27353 | False | False (0.96) | False (0.97) | False (0.86) | False (0.78) | False (0.94) | False (0.99) | False (0.89) | False (0.93) | True (0.68) | False (0.93) | False (0.79) | False (0.70) | False (0.66) | False (0.78) | False (0.81) | False (0.79) | False (0.80) | False (0.99) | False (0.99) | fix(ui): added volta to auto update check |
-| #28216 | True | False (0.94) | False (0.97) | False (0.84) | False (0.71) | False (0.82) | False (0.98) | False (0.88) | False (0.89) | True (0.53) | False (0.95) | False (0.77) | False (0.59) | False (0.65) | False (0.85) | False (0.86) | False (0.77) | False (0.74) | False (0.96) | False (0.99) | Refactor: exclude transient CI configuration files from workspace con… |
-| #28467 | False | False (0.92) | False (0.94) | False (0.85) | False (0.86) | False (0.89) | False (0.99) | False (0.85) | False (0.93) | True (0.68) | False (0.94) | False (0.72) | False (0.66) | False (0.66) | False (0.69) | False (0.80) | False (0.64) | False (0.70) | False (0.97) | False (0.96) | feat(caretaker): update Firestore schema with error, and pr_number fi… |
-| #26073 | False | True (0.72) | True (0.82) | True (0.91) | True (0.93) | True (0.96) | True (0.98) | True (0.69) | True (0.80) | True (0.99) | True (0.94) | True (0.91) | True (0.89) | True (0.76) | True (0.77) | False (0.56) | True (0.92) | True (0.84) | True (0.97) | True (0.95) | Fix bulk of remaining issues with generalist profile |
-| #27229 | False | False (0.93) | False (0.95) | False (0.87) | False (0.90) | False (0.93) | False (0.99) | False (0.87) | False (0.93) | True (0.78) | False (0.91) | False (0.64) | False (0.69) | False (0.56) | False (0.80) | False (0.83) | False (0.77) | False (0.72) | False (0.98) | False (0.99) | fix(core): add exception handling to migrateFromFileStorage |
-| #26289 | False | False (0.89) | False (0.94) | False (0.80) | False (0.72) | False (0.75) | False (0.87) | False (0.79) | False (0.89) | False (0.75) | False (0.92) | False (0.53) | False (0.61) | False (0.59) | False (0.80) | False (0.83) | True (0.52) | False (0.66) | False (0.96) | False (0.99) | fix(ci): checkout PR branch instead of main in bot workflow |
-| #26705 | False | False (0.94) | False (0.96) | False (0.94) | False (0.62) | False (0.88) | False (0.97) | False (0.78) | False (0.92) | True (0.75) | False (0.78) | False (0.85) | True (0.81) | False (0.58) | False (0.79) | False (0.70) | False (0.65) | False (0.79) | False (0.99) | False (0.98) | skip broken test |
+| id | label | clef-flash@openrouter | clef-omni@openrouter | clef@openrouter | d1-ultra@openrouter | d1.1@openrouter | d1.2 | d1.2-ultra | d1@vercel | decider-flash@openrouter | decider@openrouter | decision-1@openrouter | drex-max@openrouter | elephant@openrouter | gemini-decision@google | jev:1.14 | joey@openrouter | kev@openrouter | luna@decisions | mammoth@openrouter | reflex@openrouter | span@openrouter | case |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| #26285 | False | False (0.95) | False (0.96) | False (0.91) | False (0.94) | False (0.97) | False (0.80) | False (0.79) | False (0.99) | False (0.91) | False (0.96) | True (0.50) | False (0.98) | False (0.86) | False (0.77) | False (0.74) | False (0.76) | False (0.85) | False (0.80) | False (0.85) | False (0.99) | False (1.00) | fix(cli): use resolved sandbox state for auto-update check |
+| #26446 | False | False (0.93) | False (0.97) | False (0.74) | False (0.84) | False (0.84) | False (0.69) | False (0.68) | False (0.94) | False (0.88) | False (0.94) | True (0.84) | False (0.83) | False (0.71) | False (0.71) | False (0.64) | False (0.67) | False (0.79) | False (0.75) | False (0.85) | False (0.99) | False (1.00) | refactor(UI): created constants file for ThemeDialog |
+| #26128 | False | False (0.96) | False (0.96) | False (0.87) | False (0.92) | False (0.98) | False (0.80) | False (0.86) | False (0.99) | False (0.86) | False (0.96) | True (0.50) | False (0.95) | False (0.80) | True (0.51) | False (0.69) | False (0.75) | False (0.83) | False (0.80) | False (0.84) | False (0.98) | False (1.00) | fix(ux): added error message for ENOTDIR |
+| #28038 | False | False (0.93) | False (0.95) | False (0.84) | False (0.85) | False (0.90) | False (0.84) | False (0.70) | False (0.82) | False (0.87) | False (0.94) | True (0.50) | False (0.89) | True (0.58) | False (0.60) | False (0.56) | False (0.72) | False (0.75) | False (0.68) | False (0.74) | False (0.96) | False (1.00) | fix(ci): append trailing slash to registry url in npmrc |
+| #26532 | False | False (0.95) | False (0.97) | False (0.87) | False (0.88) | False (0.92) | False (0.75) | False (0.68) | False (0.98) | False (0.83) | False (0.90) | True (0.50) | False (0.96) | False (0.85) | False (0.78) | False (0.70) | False (0.73) | False (0.79) | False (0.77) | False (0.76) | False (0.95) | False (0.99) | fix(core): reject numeric project IDs in GOOGLE_CLOUD_PROJECT (#24695) |
+| #27353 | False | False (0.96) | False (0.97) | False (0.86) | False (0.78) | False (0.94) | False (0.72) | False (0.69) | False (0.99) | False (0.89) | False (0.93) | True (0.68) | False (0.93) | False (0.79) | False (0.70) | False (0.66) | False (0.78) | False (0.81) | False (0.79) | False (0.80) | False (0.99) | False (0.99) | fix(ui): added volta to auto update check |
+| #28216 | True | False (0.94) | False (0.97) | False (0.84) | False (0.71) | False (0.82) | False (0.70) | False (0.76) | False (0.98) | False (0.88) | False (0.89) | True (0.53) | False (0.95) | False (0.77) | False (0.59) | False (0.65) | False (0.85) | False (0.86) | False (0.77) | False (0.74) | False (0.96) | False (0.99) | Refactor: exclude transient CI configuration files from workspace con… |
+| #28467 | False | False (0.92) | False (0.94) | False (0.85) | False (0.86) | False (0.89) | False (0.66) | False (0.73) | False (0.99) | False (0.85) | False (0.93) | True (0.68) | False (0.94) | False (0.72) | False (0.66) | False (0.66) | False (0.69) | False (0.80) | False (0.64) | False (0.70) | False (0.97) | False (0.96) | feat(caretaker): update Firestore schema with error, and pr_number fi… |
+| #26073 | False | True (0.72) | True (0.82) | True (0.91) | True (0.93) | True (0.96) | True (0.91) | True (0.80) | True (0.98) | True (0.69) | True (0.80) | True (0.99) | True (0.94) | True (0.91) | True (0.89) | True (0.76) | True (0.77) | False (0.56) | True (0.92) | True (0.84) | True (0.97) | True (0.95) | Fix bulk of remaining issues with generalist profile |
+| #27229 | False | False (0.93) | False (0.95) | False (0.87) | False (0.90) | False (0.93) | False (0.66) | False (0.67) | False (0.99) | False (0.87) | False (0.93) | True (0.78) | False (0.91) | False (0.64) | False (0.69) | False (0.56) | False (0.80) | False (0.83) | False (0.77) | False (0.72) | False (0.98) | False (0.99) | fix(core): add exception handling to migrateFromFileStorage |
+| #26289 | False | False (0.89) | False (0.94) | False (0.80) | False (0.72) | False (0.75) | False (0.70) | False (0.74) | False (0.87) | False (0.79) | False (0.89) | False (0.75) | False (0.92) | False (0.53) | False (0.61) | False (0.59) | False (0.80) | False (0.83) | True (0.52) | False (0.66) | False (0.96) | False (0.99) | fix(ci): checkout PR branch instead of main in bot workflow |
+| #26705 | False | False (0.94) | False (0.96) | False (0.94) | False (0.62) | False (0.88) | False (0.81) | False (0.76) | False (0.97) | False (0.78) | False (0.92) | True (0.75) | False (0.78) | False (0.85) | True (0.81) | False (0.58) | False (0.79) | False (0.70) | False (0.65) | False (0.79) | False (0.99) | False (0.98) | skip broken test |
