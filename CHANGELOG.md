@@ -9,6 +9,8 @@
   provider's key is needed. A name in the line-up still comes first, and an explicit `--connections` file still
   lists every model allowed. The Skill starts with this step when the
   person wants to see what a model answers.
+- The Skill walks through putting a yes/no or choice decision in production with no evaluation: one connection, a
+  hand-written policy saved unevaluated with `adopt --spec`, and a log whose answers become cases later.
 - A built-in `liquid` provider for Liquid's own API (`LIQUID_API_KEY`): d1.2 and d1.2-ultra without a gateway in
   between, with text and images, for yes/no, choice, score and box questions. It reports the cost Liquid billed.
   A box the model does not find counts as no answer for that case.
