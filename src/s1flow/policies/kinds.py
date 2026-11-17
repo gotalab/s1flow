@@ -253,7 +253,7 @@ class ScoreKind(_Kind):
 
     def as_label(self, answer: Any) -> Any:
         """A level typed as text (the CLI's `feedback record ... 2`) is that level."""
-        return int(answer) if isinstance(answer, str) and answer.strip().isdigit() else answer
+        return int(answer) if isinstance(answer, str) and answer.strip().isdecimal() and answer.strip().isascii() else answer
 
     def one(self, a: ScoreAnswer) -> tuple[list[float], float, bool]:
         """One answer's distribution over the levels and its expected level (the score itself when it gave
