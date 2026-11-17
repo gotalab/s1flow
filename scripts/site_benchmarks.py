@@ -141,11 +141,11 @@ def metric_columns(data: dict[str, Any]) -> list[tuple[str, str, str, str]]:
     seen, out = {objective["label"]}, []
     for d in data["metric_definitions"]:
         key, label = d["key"], d["label"]
+        if key.startswith(("coverage:", "accepted_accuracy:")) and objective["name"] != "coverage":
+            continue  # as `s1flow report`: at a target the task never set, coverage reads as a requirement
         if key.startswith("coverage:"):
-            if objective["name"] == "coverage":
-                continue  # the objective itself
-            label = f"coverage at {float(key.split(':')[1]):.0%} accuracy"
-        elif key.startswith("accepted_accuracy:"):
+            continue  # the objective itself
+        if key.startswith("accepted_accuracy:"):
             label = "accepted accuracy"
         elif key == "objective:accuracy{}" and any(
                 c["metrics"][key]["value"] != c["metrics"]["accuracy"]["value"] for c in rows):
