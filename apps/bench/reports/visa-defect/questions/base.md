@@ -1,8 +1,8 @@
 # visa-defect
 
-2026-11-16 · 168 labelled dev cases (True 84, False 84) · split: stratified k-fold (no test case among these: CV numbers only) · source: VisA (Amazon, CC BY 4.0), test split: 10 defective and 10 good photos per item, 12 items
+2026-11-17 · 168 labelled dev cases (True 84, False 84) · split: stratified k-fold (no test case among these: CV numbers only) · source: VisA (Amazon, CC BY 4.0), test split: 10 defective and 10 good photos per item, 12 items
 
-gemini-decision@google has the highest recall at 10% false alarms or fewer, 69% [59, 79] (false alarms 9.5%) (API cost $1.25 per 10k, p99 1465ms). Its interval overlaps with joey@openrouter, span@openrouter, d1-ultra@openrouter, d1.2-ultra, elephant@openrouter, d1@vercel, d1.1@openrouter, reflex@openrouter, jev:1.14, clef@openrouter, d1.2, jev, decider-flash@openrouter, luna@decisions: the objective cannot tell them apart; interval overlap does not establish equivalence. The highest raw accuracy (dev) is gemini-decision@google's, 76% [69, 82].
+gemini-decision@google has the highest recall at 10% false alarms or fewer, 69% [59, 79] (false alarms 9.5%) (API cost $1.25 per 10k, p99 1465ms). Its interval overlaps with joey@openrouter, decision-1.1@openrouter, span@openrouter, d1-ultra@openrouter, d1.2-ultra, elephant@openrouter, d1@vercel, d1.1@openrouter, reflex@openrouter, jev:1.14, clef@openrouter, d1.2, jev, decider-flash@openrouter, luna@decisions: the objective cannot tell them apart; interval overlap does not establish equivalence. The highest raw accuracy (dev) is gemini-decision@google's, 76% [69, 82].
 
 ## Comparison
 
@@ -18,6 +18,7 @@ gemini-decision@google has the highest recall at 10% false alarms or fewer, 69% 
 | d1@vercel | 168 | 61.9% [55, 69] | 0.38 | 0.78 | 0.26 | 1% [0, 2] | 0.0% (0.0%) | 0.0% (0/168) | 0/168 |
 | decider-flash@openrouter | 168 | 57.1% [50, 64] | 0.25 | 0.81 | 0.26 | 12% [8, 18] | 85.7% (67.1%) | 0.0% (0/168) | 0/168 |
 | decider@openrouter | 168 | 59.5% [52, 67] | 0.32 | 0.78 | 0.20 | 12% [7, 17] | 95.0% (78.4%) | 0.0% (0/168) | 0/168 |
+| decision-1.1@openrouter | 168 | 62.5% [55, 70] | 0.42 | 0.82 | 0.13 | 1% [0, 2] | 0.0% (0.0%) | 0.0% (0/168) | 0/168 |
 | drex-max@openrouter | 168 | 63.1% [56, 70] | 0.47 | 0.76 | 0.19 | 4% [2, 7] | 85.7% (47.9%) | 0.0% (0/168) | 0/168 |
 | elephant@openrouter | 168 | 73.8% [68, 80] | 0.68 | 0.81 | 0.04 | 4% [1, 7] | 100.0% (65.2%) | 0.0% (0/168) | 0/168 |
 | gemini-decision@google | 168 | 75.6% [69, 82] | 0.68 | 0.82 | 0.09 | 8% [4, 12] | 84.6% (59.0%) | 0.0% (0/168) | 0/168 |
@@ -29,7 +30,7 @@ gemini-decision@google has the highest recall at 10% false alarms or fewer, 69% 
 | reflex@openrouter | 168 | 63.7% [57, 71] | 0.43 | 0.80 | 0.21 | 2% [1, 5] | 75.0% (24.9%) | 0.0% (0/168) | 0/168 |
 | span@openrouter | 168 | 61.9% [55, 69] | 0.42 | 0.83 | 0.28 | 7% [3, 11] | 81.8% (53.0%) | 0.0% (0/168) | 0/168 |
 
-Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef-omni@openrouter = cloudflare/clef-omni-20261009; clef@openrouter = cloudflare/clef; d1-ultra@openrouter = liquid/d1-ultra-20261015; d1.1@openrouter = liquid/d1.1-20261027; d1.2 = d1.2; d1.2-ultra = d1.2-ultra; d1@vercel = liquid/d1; decider-flash@openrouter = perplexity/pplx-decider-flash-v1.2-20261016; decider@openrouter = perplexity/pplx-decider-v1.2-20261016; drex-max@openrouter = nace-ai/drex-max-20261016; elephant@openrouter = baseten/elephant-1-20261021; gemini-decision@google = gemini-decision-1; jev = jev-1.14.0; jev:1.14 = jev-1.14.0; joey@openrouter = baseten/joey-1-20261029; luna@decisions = gpt-6-luna; mammoth@openrouter = baseten/mammoth-1-20261021; reflex@openrouter = morph/reflex-20261103; span@openrouter = respan/span-02-20261015. To compare versions, run each by name: `s1flow run <task> --models jev:1.14`.
+Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef-omni@openrouter = cloudflare/clef-omni-20261009; clef@openrouter = cloudflare/clef; d1-ultra@openrouter = liquid/d1-ultra-20261015; d1.1@openrouter = liquid/d1.1-20261027; d1.2 = d1.2; d1.2-ultra = d1.2-ultra; d1@vercel = liquid/d1; decider-flash@openrouter = perplexity/pplx-decider-flash-v1.2-20261016; decider@openrouter = perplexity/pplx-decider-v1.2-20261016; decision-1.1@openrouter = microsoft/microsoft-decision-1.1-20261117; drex-max@openrouter = nace-ai/drex-max-20261016; elephant@openrouter = baseten/elephant-1-20261021; gemini-decision@google = gemini-decision-1; jev = jev-1.14.0; jev:1.14 = jev-1.14.0; joey@openrouter = baseten/joey-1-20261029; luna@decisions = gpt-6-luna; mammoth@openrouter = baseten/mammoth-1-20261021; reflex@openrouter = morph/reflex-20261103; span@openrouter = respan/span-02-20261015. To compare versions, run each by name: `s1flow run <task> --models jev:1.14`.
 
 ## Objectives and constraints
 
@@ -37,6 +38,7 @@ Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef-omni@openrouter
 |---|---|---|---|---|
 | gemini-decision@google = | 69% [59, 79] (false alarms 9.5%) | 80% [74, 86] | 0.41 | met |
 | joey@openrouter = | 68% [58, 78] (false alarms 10.7%) | 79% [73, 84] | 0.24 | met |
+| decision-1.1@openrouter = | 64% [53, 74] (false alarms 9.5%) | 77% [71, 83] | 0.31 | met |
 | span@openrouter = | 64% [54, 73] (false alarms 9.5%) | 77% [71, 83] | 0.09 | met |
 | d1-ultra@openrouter = | 63% [53, 73] (false alarms 10.7%) | 76% [70, 83] | 0.33 | met |
 | d1.2-ultra = | 63% [52, 73] (false alarms 10.7%) | 76% [70, 82] | 0.32 | met |
@@ -72,6 +74,7 @@ Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef-omni@openrouter
 | d1@vercel | 168 | 397 ms | 558 ms | 942 ms | 951 ms | 2.4 | 0 | 4 | $0.15 | billed |  |
 | decider-flash@openrouter | 168 | 205 ms | 269 ms | 417 ms | 432 ms | 2.0 | 0 | 4 | $0.06 | billed | ○ |
 | decider@openrouter | 168 | 332 ms | 487 ms | 855 ms | 3986 ms | 2.6 | 0 | 4 | $0.12 | billed |  |
+| decision-1.1@openrouter | 168 | 399 ms | 458 ms | 901 ms | 981 ms | 2.3 | 0 | 4 | $0.15 | billed |  |
 | drex-max@openrouter | 168 | 439 ms | 764 ms | 1205 ms | 1889 ms | 2.7 | 0 | 4 | $0.35 | billed |  |
 | elephant@openrouter | 168 | 264 ms | 330 ms | 461 ms | 606 ms | 1.7 | 0 | 4 | $0.23 | billed |  |
 | gemini-decision@google | 168 | 653 ms | 961 ms | 1465 ms | 1917 ms | 2.2 | 0 | 4 | $1.25 | estimated | ○ |
@@ -85,7 +88,7 @@ Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef-omni@openrouter
 
 Measured on the calls, not the answers: never an objective, only the constraints and the order of candidates the objectives tie (the p90 of each case's slowest call, then API cost). Frontier ○: no other model beats it on all three of the primary objective, API cost per 10k and p99.
 Latency is the time from sending to receiving one call that answered (the round trip from here included), without retries or the wait before them. Many calls at once read slower, from the provider's load and this machine's connections: to compare models, measure every candidate again at the same concurrency (`s1flow run <task> --fresh --concurrency N`, the same N for all).
-Where the API costs come from: billed: clef-flash@openrouter, clef-omni@openrouter, clef@openrouter, d1-ultra@openrouter, d1.1@openrouter, d1.2, d1.2-ultra, d1@vercel, decider-flash@openrouter, decider@openrouter, drex-max@openrouter, elephant@openrouter, joey@openrouter, mammoth@openrouter, reflex@openrouter, span@openrouter; estimated (recorded tokens times a list price: s1flow.toml's where dated, else the LLM price table's; not a bill): gemini-decision@google (list price of 2026-11-12), jev (list price of 2026-10-03), jev:1.14 (list price of 2026-10-03), luna@decisions (list price of 2026-10-09). Billed and estimated API costs sit side by side, so their differences do not compare as they are.
+Where the API costs come from: billed: clef-flash@openrouter, clef-omni@openrouter, clef@openrouter, d1-ultra@openrouter, d1.1@openrouter, d1.2, d1.2-ultra, d1@vercel, decider-flash@openrouter, decider@openrouter, decision-1.1@openrouter, drex-max@openrouter, elephant@openrouter, joey@openrouter, mammoth@openrouter, reflex@openrouter, span@openrouter; estimated (recorded tokens times a list price: s1flow.toml's where dated, else the LLM price table's; not a bill): gemini-decision@google (list price of 2026-11-12), jev (list price of 2026-10-03), jev:1.14 (list price of 2026-10-03), luna@decisions (list price of 2026-10-09). Billed and estimated API costs sit side by side, so their differences do not compare as they are.
 
 ## API cost and time for these cases
 
@@ -101,6 +104,7 @@ Where the API costs come from: billed: clef-flash@openrouter, clef-omni@openrout
 | d1@vercel | $0.0026 | 18 s (estimated, 168 calls) | 18 min | 4 |
 | decider-flash@openrouter | $0.0010 | 9 s (estimated, 168 calls) | 9 min | 4 |
 | decider@openrouter | $0.0019 | 16 s (estimated, 168 calls) | 16 min | 4 |
+| decision-1.1@openrouter | $0.0025 | 17 s (estimated, 168 calls) | 17 min | 4 |
 | drex-max@openrouter | $0.0058 | 21 s (estimated, 168 calls) | 21 min | 4 |
 | elephant@openrouter | $0.0039 | 11 s (estimated, 168 calls) | 11 min | 4 |
 | gemini-decision@google | $0.02 | 30 s (estimated, 168 calls) | 29 min | 4 |
@@ -133,6 +137,7 @@ The threshold with the lowest total loss, chosen by CV, a miss (a positive read 
 | d1@vercel | 61.9% | 75.6% | 36 | 5 | 0.15 | 0.15 |
 | decider-flash@openrouter | 57.1% | 70.8% | 42 | 7 | 0.20 | 0.20 |
 | decider@openrouter | 59.5% | 70.2% | 16 | 34 | 0.15 | 0.15 |
+| decision-1.1@openrouter | 62.5% | 72.6% | 32 | 14 | 0.30 | 0.30 |
 | drex-max@openrouter | 63.1% | 73.2% | 34 | 11 | 0.25 | 0.25 |
 | elephant@openrouter | 73.8% | 78.0% | 27 | 10 | 0.35 | 0.35 |
 | gemini-decision@google | 75.6% | 80.4% | 32 | 1 | 0.45 | 0.45 |
@@ -288,6 +293,20 @@ The threshold with the lowest total loss, chosen by CV, a miss (a positive read 
 | 0.60 | 73 (87%) | 0 (0%) |
 | 0.70 | 79 (94%) | 0 (0%) |
 | 0.80 | 83 (99%) | 0 (0%) |
+| 0.90 | 84 (100%) | 0 (0%) |
+
+## Misses and false alarms by threshold (decision-1.1@openrouter)
+
+| threshold | misses | false alarms |
+|---|---|---|
+| 0.10 | 5 (6%) | 60 (71%) |
+| 0.20 | 19 (23%) | 26 (31%) |
+| 0.30 | 28 (33%) | 11 (13%) |
+| 0.40 | 43 (51%) | 2 (2%) |
+| 0.50 | 61 (73%) | 2 (2%) |
+| 0.60 | 73 (87%) | 0 (0%) |
+| 0.70 | 77 (92%) | 0 (0%) |
+| 0.80 | 81 (96%) | 0 (0%) |
 | 0.90 | 84 (100%) | 0 (0%) |
 
 ## Misses and false alarms by threshold (drex-max@openrouter)
@@ -541,6 +560,16 @@ The threshold with the lowest total loss, chosen by CV, a miss (a positive read 
 | macaroni1-anomaly-062 | True | False | 0.90 | macaroni1-anomaly-062 |
 | capsules-anomaly-092 | True | False | 0.90 | capsules-anomaly-092 |
 
+**decision-1.1@openrouter** (5)
+
+| id | label | answer | probability | case |
+|---|---|---|---|---|
+| capsules-anomaly-034 | True | False | 0.95 | capsules-anomaly-034 |
+| cashew-anomaly-086 | True | False | 0.94 | cashew-anomaly-086 |
+| chewinggum-anomaly-037 | True | False | 0.93 | chewinggum-anomaly-037 |
+| capsules-anomaly-075 | True | False | 0.90 | capsules-anomaly-075 |
+| pcb1-anomaly-046 | True | False | 0.90 | pcb1-anomaly-046 |
+
 **drex-max@openrouter** (16)
 
 | id | label | answer | probability | case |
@@ -623,17 +652,17 @@ The threshold with the lowest total loss, chosen by CV, a miss (a positive read 
 
 ## Cases the models disagree on (12 of 101)
 
-| id | label | clef-flash@openrouter | clef-omni@openrouter | clef@openrouter | d1-ultra@openrouter | d1.1@openrouter | d1.2 | d1.2-ultra | d1@vercel | decider-flash@openrouter | decider@openrouter | drex-max@openrouter | elephant@openrouter | gemini-decision@google | jev | jev:1.14 | joey@openrouter | luna@decisions | mammoth@openrouter | reflex@openrouter | span@openrouter | case |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| pcb1-anomaly-026 | True | False (0.94) | False (0.95) | False (0.90) | False (0.77) | False (0.93) | False (0.93) | False (0.83) | False (0.99) | False (0.91) | False (0.87) | False (0.93) | False (0.90) | True (0.60) | True (0.64) | True (0.58) | False (0.91) | False (0.89) | False (0.92) | False (0.96) | False (0.98) | pcb1-anomaly-026 |
-| fryum-anomaly-051 | True | True (0.62) | True (0.79) | True (0.88) | True (0.84) | True (0.58) | False (0.51) | True (0.86) | True (0.84) | True (0.70) | True (0.85) | True (0.96) | True (0.90) | True (0.92) | True (0.92) | True (0.92) | True (0.99) | True (0.91) | True (0.89) | True (0.93) | True (0.94) | fryum-anomaly-051 |
-| pcb4-normal-0629 | False | False (0.91) | False (0.91) | False (0.90) | False (0.84) | False (0.92) | False (0.85) | False (0.74) | False (0.99) | False (0.84) | False (0.87) | False (0.94) | False (0.86) | False (0.61) | True (0.57) | True (0.61) | False (0.88) | False (0.86) | False (0.89) | False (0.94) | False (0.93) | pcb4-normal-0629 |
-| pcb4-normal-0400 | False | False (0.91) | False (0.88) | False (0.90) | False (0.84) | False (0.93) | False (0.84) | False (0.72) | False (0.99) | False (0.84) | False (0.83) | False (0.94) | False (0.86) | False (0.63) | True (0.57) | True (0.52) | False (0.87) | False (0.92) | False (0.94) | False (0.92) | False (0.99) | pcb4-normal-0400 |
-| pcb1-normal-0730 | False | False (0.91) | False (0.92) | False (0.85) | False (0.87) | False (0.92) | False (0.92) | False (0.82) | False (0.95) | False (0.89) | False (0.90) | False (0.94) | False (0.87) | False (0.71) | True (0.56) | True (0.55) | False (0.86) | False (0.90) | False (0.94) | False (0.96) | False (0.99) | pcb1-normal-0730 |
-| pcb1-anomaly-061 | True | False (0.94) | False (0.95) | False (0.88) | False (0.83) | False (0.94) | False (0.90) | False (0.81) | False (0.99) | False (0.86) | False (0.91) | False (0.92) | False (0.88) | False (0.66) | True (0.66) | True (0.67) | False (0.89) | False (0.87) | False (0.92) | False (0.96) | False (0.94) | pcb1-anomaly-061 |
-| candle-normal-0552 | False | False (0.90) | False (0.92) | False (0.93) | False (0.86) | False (0.95) | False (0.91) | False (0.88) | False (0.95) | False (0.89) | False (0.90) | False (0.96) | False (0.79) | False (0.73) | True (0.53) | False (0.52) | False (0.88) | False (0.92) | False (0.86) | False (0.95) | False (0.98) | candle-normal-0552 |
-| candle-normal-0985 | False | False (0.91) | False (0.89) | False (0.93) | False (0.89) | False (0.98) | False (0.94) | False (0.92) | False (0.98) | False (0.91) | False (0.93) | False (0.97) | False (0.85) | False (0.79) | True (0.51) | True (0.50) | False (0.88) | False (0.89) | False (0.94) | False (0.96) | False (0.98) | candle-normal-0985 |
-| cashew-normal-384 | False | False (0.92) | False (0.91) | False (0.72) | False (0.87) | False (0.98) | False (0.96) | False (0.95) | False (0.98) | False (0.86) | False (0.93) | False (0.90) | False (0.83) | False (0.76) | True (0.65) | False (0.54) | False (0.89) | False (0.93) | False (0.91) | False (0.98) | False (0.97) | cashew-normal-384 |
-| pcb4-normal-0306 | False | False (0.92) | False (0.89) | False (0.92) | False (0.79) | False (0.97) | False (0.92) | False (0.75) | False (0.98) | False (0.84) | False (0.85) | False (0.94) | False (0.89) | False (0.62) | True (0.53) | True (0.56) | False (0.89) | False (0.90) | False (0.94) | False (0.97) | False (0.92) | pcb4-normal-0306 |
-| pcb4-normal-0174 | False | False (0.91) | False (0.89) | False (0.91) | False (0.74) | False (0.93) | False (0.88) | False (0.78) | False (0.98) | False (0.82) | False (0.86) | False (0.95) | False (0.81) | False (0.57) | True (0.55) | True (0.59) | False (0.87) | False (0.89) | False (0.93) | False (0.96) | False (0.93) | pcb4-normal-0174 |
-| macaroni2-anomaly-045 | True | True (0.51) | True (0.82) | True (0.71) | True (0.71) | False (0.82) | False (0.66) | True (0.65) | False (0.78) | False (0.82) | False (0.52) | True (0.58) | True (0.69) | False (0.69) | True (0.58) | True (0.57) | False (0.72) | True (0.98) | True (0.57) | False (0.72) | True (0.55) | macaroni2-anomaly-045 |
+| id | label | clef-flash@openrouter | clef-omni@openrouter | clef@openrouter | d1-ultra@openrouter | d1.1@openrouter | d1.2 | d1.2-ultra | d1@vercel | decider-flash@openrouter | decider@openrouter | decision-1.1@openrouter | drex-max@openrouter | elephant@openrouter | gemini-decision@google | jev | jev:1.14 | joey@openrouter | luna@decisions | mammoth@openrouter | reflex@openrouter | span@openrouter | case |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| pcb1-anomaly-026 | True | False (0.94) | False (0.95) | False (0.90) | False (0.77) | False (0.93) | False (0.93) | False (0.83) | False (0.99) | False (0.91) | False (0.87) | False (0.80) | False (0.93) | False (0.90) | True (0.60) | True (0.64) | True (0.58) | False (0.91) | False (0.89) | False (0.92) | False (0.96) | False (0.98) | pcb1-anomaly-026 |
+| fryum-anomaly-051 | True | True (0.62) | True (0.79) | True (0.88) | True (0.84) | True (0.58) | False (0.51) | True (0.86) | True (0.84) | True (0.70) | True (0.85) | True (0.88) | True (0.96) | True (0.90) | True (0.92) | True (0.92) | True (0.92) | True (0.99) | True (0.91) | True (0.89) | True (0.93) | True (0.94) | fryum-anomaly-051 |
+| pcb4-normal-0629 | False | False (0.91) | False (0.91) | False (0.90) | False (0.84) | False (0.92) | False (0.85) | False (0.74) | False (0.99) | False (0.84) | False (0.87) | False (0.65) | False (0.94) | False (0.86) | False (0.61) | True (0.57) | True (0.61) | False (0.88) | False (0.86) | False (0.89) | False (0.94) | False (0.93) | pcb4-normal-0629 |
+| pcb4-normal-0400 | False | False (0.91) | False (0.88) | False (0.90) | False (0.84) | False (0.93) | False (0.84) | False (0.72) | False (0.99) | False (0.84) | False (0.83) | False (0.77) | False (0.94) | False (0.86) | False (0.63) | True (0.57) | True (0.52) | False (0.87) | False (0.92) | False (0.94) | False (0.92) | False (0.99) | pcb4-normal-0400 |
+| pcb1-normal-0730 | False | False (0.91) | False (0.92) | False (0.85) | False (0.87) | False (0.92) | False (0.92) | False (0.82) | False (0.95) | False (0.89) | False (0.90) | False (0.91) | False (0.94) | False (0.87) | False (0.71) | True (0.56) | True (0.55) | False (0.86) | False (0.90) | False (0.94) | False (0.96) | False (0.99) | pcb1-normal-0730 |
+| pcb1-anomaly-061 | True | False (0.94) | False (0.95) | False (0.88) | False (0.83) | False (0.94) | False (0.90) | False (0.81) | False (0.99) | False (0.86) | False (0.91) | False (0.77) | False (0.92) | False (0.88) | False (0.66) | True (0.66) | True (0.67) | False (0.89) | False (0.87) | False (0.92) | False (0.96) | False (0.94) | pcb1-anomaly-061 |
+| candle-normal-0552 | False | False (0.90) | False (0.92) | False (0.93) | False (0.86) | False (0.95) | False (0.91) | False (0.88) | False (0.95) | False (0.89) | False (0.90) | False (0.92) | False (0.96) | False (0.79) | False (0.73) | True (0.53) | False (0.52) | False (0.88) | False (0.92) | False (0.86) | False (0.95) | False (0.98) | candle-normal-0552 |
+| candle-normal-0985 | False | False (0.91) | False (0.89) | False (0.93) | False (0.89) | False (0.98) | False (0.94) | False (0.92) | False (0.98) | False (0.91) | False (0.93) | False (0.91) | False (0.97) | False (0.85) | False (0.79) | True (0.51) | True (0.50) | False (0.88) | False (0.89) | False (0.94) | False (0.96) | False (0.98) | candle-normal-0985 |
+| cashew-normal-384 | False | False (0.92) | False (0.91) | False (0.72) | False (0.87) | False (0.98) | False (0.96) | False (0.95) | False (0.98) | False (0.86) | False (0.93) | False (0.92) | False (0.90) | False (0.83) | False (0.76) | True (0.65) | False (0.54) | False (0.89) | False (0.93) | False (0.91) | False (0.98) | False (0.97) | cashew-normal-384 |
+| pcb4-normal-0306 | False | False (0.92) | False (0.89) | False (0.92) | False (0.79) | False (0.97) | False (0.92) | False (0.75) | False (0.98) | False (0.84) | False (0.85) | False (0.69) | False (0.94) | False (0.89) | False (0.62) | True (0.53) | True (0.56) | False (0.89) | False (0.90) | False (0.94) | False (0.97) | False (0.92) | pcb4-normal-0306 |
+| pcb4-normal-0174 | False | False (0.91) | False (0.89) | False (0.91) | False (0.74) | False (0.93) | False (0.88) | False (0.78) | False (0.98) | False (0.82) | False (0.86) | False (0.72) | False (0.95) | False (0.81) | False (0.57) | True (0.55) | True (0.59) | False (0.87) | False (0.89) | False (0.93) | False (0.96) | False (0.93) | pcb4-normal-0174 |
+| macaroni2-anomaly-045 | True | True (0.51) | True (0.82) | True (0.71) | True (0.71) | False (0.82) | False (0.66) | True (0.65) | False (0.78) | False (0.82) | False (0.52) | False (0.78) | True (0.58) | True (0.69) | False (0.69) | True (0.58) | True (0.57) | False (0.72) | True (0.98) | True (0.57) | False (0.72) | True (0.55) | macaroni2-anomaly-045 |
