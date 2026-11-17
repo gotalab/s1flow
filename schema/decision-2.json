@@ -119,6 +119,49 @@
    "title": "BoxEdges",
    "type": "object"
   },
+  "BoxesAnswer": {
+   "additionalProperties": false,
+   "properties": {
+    "type": {
+     "const": "boxes",
+     "default": "boxes",
+     "title": "Type",
+     "type": "string"
+    },
+    "boxes": {
+     "items": {
+      "$ref": "#/$defs/FoundBox"
+     },
+     "title": "Boxes",
+     "type": "array"
+    },
+    "at_least": {
+     "default": false,
+     "title": "At Least",
+     "type": "boolean"
+    },
+    "presence": {
+     "anyOf": [
+      {
+       "items": {
+        "type": "number"
+       },
+       "type": "array"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Presence"
+    }
+   },
+   "required": [
+    "boxes"
+   ],
+   "title": "BoxesAnswer",
+   "type": "object"
+  },
   "ChoiceAnswer": {
    "additionalProperties": false,
    "properties": {
@@ -295,6 +338,44 @@
    "title": "EstimateAnswer",
    "type": "object"
   },
+  "FoundBox": {
+   "additionalProperties": false,
+   "description": "One instance among a `BoxesAnswer`'s.",
+   "properties": {
+    "box": {
+     "$ref": "#/$defs/BoxEdges"
+    },
+    "confidence": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Confidence"
+    },
+    "found": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Found"
+    }
+   },
+   "required": [
+    "box"
+   ],
+   "title": "FoundBox",
+   "type": "object"
+  },
   "MultiChoiceAnswer": {
    "additionalProperties": false,
    "properties": {
@@ -452,6 +533,7 @@
        "mapping": {
         "boolean": "#/$defs/BooleanAnswer",
         "box": "#/$defs/BoxAnswer",
+        "boxes": "#/$defs/BoxesAnswer",
         "choice": "#/$defs/ChoiceAnswer",
         "date": "#/$defs/DateAnswer",
         "estimate": "#/$defs/EstimateAnswer",
@@ -490,6 +572,9 @@
        },
        {
         "$ref": "#/$defs/MultiChoiceAnswer"
+       },
+       {
+        "$ref": "#/$defs/BoxesAnswer"
        },
        {
         "$ref": "#/$defs/Refusal"
@@ -741,6 +826,12 @@
     {
      "items": {
       "type": "string"
+     },
+     "type": "array"
+    },
+    {
+     "items": {
+      "$ref": "#/$defs/BoxEdges"
      },
      "type": "array"
     },

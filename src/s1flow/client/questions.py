@@ -11,7 +11,7 @@ from typing import Annotated, Literal, Union
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-QuestionType = Literal["boolean", "choice", "score", "box", "text", "number", "date", "estimate", "multichoice"]
+QuestionType = Literal["boolean", "choice", "score", "box", "text", "number", "date", "estimate", "multichoice", "boxes"]
 STRICT = ConfigDict(extra="forbid")  # a misspelt key in a question (and so in a policy's digest) is an error, not dropped
 TEXT_TYPES: frozenset[QuestionType] = frozenset({"boolean", "choice", "score"})
 # Read from the state or estimated, not decided: OpenRouter serves these on its Extractions route (extractions.py).
@@ -62,6 +62,16 @@ class Box(BaseModel):
     model_config = STRICT
     type: Literal["box"] = "box"
     instructions: str
+
+
+class Boxes(BaseModel):
+    """A bounding box for every instance of the target in the picture, none when there is none (Liquid d1.2,
+    2026-11-17). `max` caps how many a model returns (Liquid's own cap is 16 when it is left out)."""
+
+    model_config = STRICT
+    type: Literal["boxes"] = "boxes"
+    instructions: str
+    max: int | None = Field(default=None, ge=1)
 
 
 class Text(BaseModel):
@@ -116,11 +126,12 @@ def no_fields(questions: "Questions", who: str) -> None:
 
     if field := [f"{q.type} ({k})" for k, q in questions.items() if q.type in FIELD_TYPES]:
         raise Unsupported(f"{who} has no {', '.join(sorted(FIELD_TYPES))} questions: {', '.join(field)}")
-    if multi := [k for k, q in questions.items() if q.type == "multichoice"]:
-        raise Unsupported(f"{who} has no multichoice questions: {', '.join(multi)}")
+    for kind in ("multichoice", "boxes"):
+        if named := [k for k, q in questions.items() if q.type == kind]:
+            raise Unsupported(f"{who} has no {kind} questions: {', '.join(named)}")
 
 
-Question = Annotated[Union[Boolean, Choice, Score, Box, Text, Number, Date, RangeEstimate, MultiChoice], Field(discriminator="type")]
+Question = Annotated[Union[Boolean, Choice, Score, Box, Text, Number, Date, RangeEstimate, MultiChoice, Boxes], Field(discriminator="type")]
 Questions = dict[str, Question]
 
 

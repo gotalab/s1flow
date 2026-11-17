@@ -7,7 +7,7 @@ import math
 from typing import Any, ClassVar, Protocol
 
 from ..client.answers import BoxEdges
-from ..client.boxes import iou
+from ..client.boxes import iou, matched
 from ..client.questions import Question
 from ..policies import kinds as runtime
 from ..policies.kinds import ABSENT, KindParams, Reading
@@ -89,6 +89,18 @@ class BoxKind(_Scoring, runtime.BoxKind):
         return isinstance(r.value, BoxEdges) and iou(r.value, BoxEdges.model_validate(label)) >= self.hit_iou
 
 
+class BoxesKind(_Scoring, runtime.BoxesKind):
+    """Right when every label box is matched and no answer box is left over; box F1 counts box by box."""
+
+    objectives: ClassVar[tuple[str, ...]] = ("accuracy", "coverage", "auroc", "box_f1")
+    report: ClassVar[tuple[str, ...]] = ("box_f1", "box_precision", "box_recall", "count_error")
+
+    def correct(self, label: Any, r: Reading | None) -> bool:
+        if r is None or not isinstance(r.value, tuple):
+            return False
+        return len(r.value) == len(label) == matched(r.value, label, self.hit_iou)  # type: ignore[arg-type]
+
+
 class _ReadScoring(_Scoring):
     """Right when the value read is the label's, or nothing was read from a case labelled absent."""
 
@@ -148,6 +160,8 @@ def kind_of(question: Question, params: KindParams = KindParams()) -> Kind:
         return MultiChoiceKind(**kind.model_dump())
     if isinstance(kind, runtime.ScoreKind):
         return ScoreKind(**kind.model_dump())
+    if isinstance(kind, runtime.BoxesKind):
+        return BoxesKind(**kind.model_dump())
     if isinstance(kind, runtime.BoxKind):
         return BoxKind(**kind.model_dump())
     return BooleanKind()

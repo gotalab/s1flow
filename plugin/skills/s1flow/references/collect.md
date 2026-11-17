@@ -143,7 +143,9 @@ the question for what it reads (`question_id="order_number"`): some models read 
 (every option that applies; Liquid's d1.2) the label is the list of option keys, `[]` for none; the default objective
 is `Accuracy()` (the exact set), `OptionF1()` counts option by option, and `Coverage` reads the probability of the
 whole set. For a box, label a picture without the target `False`: a model that can say "not there" (Liquid's d1.2) is
-right with no box, and one that always gives a box (jev) is wrong on those cases.
+right with no box, and one that always gives a box (jev) is wrong on those cases. For `Boxes` (every instance;
+Liquid's d1.2) the label is the list of boxes, `[]` for none; `Accuracy()` wants every box matched and none left
+over, `BoxF1()` counts box by box.
 
 ## Check the cases
 

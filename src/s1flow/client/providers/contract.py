@@ -12,6 +12,7 @@ from ..answers import (
     Answer,
     BooleanAnswer,
     BoxAnswer,
+    BoxesAnswer,
     ChoiceAnswer,
     DateAnswer,
     EstimateAnswer,
@@ -28,7 +29,7 @@ from ..questions import Choice, MultiChoice, RangeEstimate, Questions, Score
 FITS: dict[str, type] = {
     "boolean": BooleanAnswer, "choice": ChoiceAnswer, "score": ScoreAnswer, "box": BoxAnswer,
     "text": TextAnswer, "number": NumberAnswer, "date": DateAnswer, "estimate": EstimateAnswer,
-    "multichoice": MultiChoiceAnswer,
+    "multichoice": MultiChoiceAnswer, "boxes": BoxesAnswer,
 }
 
 
@@ -120,6 +121,13 @@ def validate_answer_values(
             _fail(qid, f"score {score:g} is outside the levels 0..{levels - 1}")
         _distribution(qid, answer.probabilities, (str(i) for i in range(levels)) if levels is not None else None)
         _confidence(qid, answer.confidence)
+        return
+    if isinstance(answer, BoxesAnswer):
+        for b in answer.boxes:
+            _confidence(qid, b.found, name="found")
+            _confidence(qid, b.confidence)
+        for x in answer.presence or []:
+            _confidence(qid, x, name="presence")
         return
     if isinstance(answer, BoxAnswer):
         _confidence(qid, answer.found, name="found")

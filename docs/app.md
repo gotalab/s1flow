@@ -195,6 +195,10 @@ these or the other four types. Evaluation compares them too ([evaluate.md](evalu
 A box answer's `box` is `None` when the model says the target is not in the picture, with `found` (the probability
 that it is there) where the model gives one: Liquid's d1.2 does. A model that always gives a box (jev) cannot say so.
 
+`Boxes` asks for a box for every instance of the target, none when there is none: the answer's `boxes`, each with
+its `confidence` and `found`, `at_least` when the model stopped at the question's `max`, and the `presence` of each
+slot. Liquid's d1.2 and d1.2-ultra answer it; evaluation compares it, and a policy does not hold one yet.
+
 `MultiChoice` asks for every option that applies, possibly none: the answer's `choices`, with each option's own
 probability in `probabilities` (they do not sum to 1). Liquid's d1.2 and d1.2-ultra answer it; evaluation compares it,
 and a policy does not hold one yet.

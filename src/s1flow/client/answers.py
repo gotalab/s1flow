@@ -76,6 +76,22 @@ class BoxAnswer(_Answer):
     agreement: float | None = None  # a box from k samples: the mean IoU of the samples with the answer
 
 
+class FoundBox(_Answer):
+    """One instance among a `BoxesAnswer`'s."""
+
+    box: BoxEdges
+    confidence: float | None = None  # the model's confidence in this box's edges
+    found: float | None = None  # P(this is an instance of the target)
+
+
+class BoxesAnswer(_Answer):
+    type: Literal["boxes"] = "boxes"
+    boxes: list[FoundBox]  # every instance the model found, possibly none
+    at_least: bool = False  # True: it stopped at the question's `max`, and there may be more
+    # P(there is an instance) for each slot up to `max`, the most likely first: the slots at 0.5 or more are `boxes`
+    presence: list[float] | None = None
+
+
 class _Read(_Answer):
     """A value read from the state. `value` is None when the model read nothing for it; `guess` is its most
     likely value even then. `p_null` is the probability that the state holds nothing for it, `confidence` the
@@ -123,11 +139,11 @@ class Refusal(_Answer):
 
 ReadAnswer = TextAnswer | NumberAnswer | DateAnswer
 Answer = Annotated[
-    Union[BooleanAnswer, ChoiceAnswer, ScoreAnswer, BoxAnswer, TextAnswer, NumberAnswer, DateAnswer, EstimateAnswer, MultiChoiceAnswer, Refusal],
+    Union[BooleanAnswer, ChoiceAnswer, ScoreAnswer, BoxAnswer, TextAnswer, NumberAnswer, DateAnswer, EstimateAnswer, MultiChoiceAnswer, BoxesAnswer, Refusal],
     Field(discriminator="type"),
 ]
 # an answer that is not a refusal
-Given = BooleanAnswer | ChoiceAnswer | ScoreAnswer | BoxAnswer | TextAnswer | NumberAnswer | DateAnswer | EstimateAnswer | MultiChoiceAnswer
+Given = BooleanAnswer | ChoiceAnswer | ScoreAnswer | BoxAnswer | TextAnswer | NumberAnswer | DateAnswer | EstimateAnswer | MultiChoiceAnswer | BoxesAnswer
 
 
 CostSource = Literal["billed", "list"]

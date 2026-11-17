@@ -468,3 +468,27 @@ def test_liquid_asks_a_multichoice_and_the_others_refuse_it(monkeypatch):
         Client().responses.create(model=LiquidModel("d1.2", capabilities=caps), state="x", questions=qs)
     with pytest.raises(Unsupported, match=r"the System One format has no multichoice questions: topics"):
         Client().responses.create(model=OpenRouterModel("typesafe/jev", capabilities=caps), state="x", questions=qs)
+
+
+@respx.mock
+def test_liquid_asks_for_every_box_and_the_others_refuse_it(monkeypatch):
+    from s1flow.client import Boxes, BoxesAnswer, Client, FoundBox
+    from s1flow.client.providers.liquid import BASE_URL as LIQUID_URL, LiquidModel
+    from s1flow.client.providers.openrouter import OpenRouterModel
+
+    monkeypatch.setenv("LIQUID_API_KEY", "test")
+    img = Image(media_type="image/png", data="iVBORw0KGgo=", sha256="0" * 64, width=10, height=10)
+    qs = {"refund": QS["refund"], "stamps": Boxes(instructions="every stamp", max=4)}
+    box = {"top": 0.1, "bottom": 0.5, "left": 0.2, "right": 0.9}
+    reply = {"model": "d1.2", "answers": {"refund": {"type": "noul", "noul": 0.84}, "stamps": {
+        "type": "boxes", "boxes": [{"box": box, "found": 0.98, "confidence": 0.93}], "count": 1, "at_least": False, "presence": [0.98, 0.02, 0, 0]}}}
+    route = respx.post(f"{LIQUID_URL}/systemone").mock(return_value=httpx.Response(200, json=reply))
+    caps = Capabilities(image=True, question_types={"boolean", "boxes"})
+    r = Client().responses.create(model=LiquidModel("d1.2", capabilities=caps), state=["x", img], questions=qs)
+    assert json.loads(route.calls[0].request.read())["questions"]["stamps"] == {"type": "boxes", "instructions": "every stamp", "max": 4}
+    assert r.answers["stamps"] == BoxesAnswer(boxes=[FoundBox(box=box, found=0.98, confidence=0.93)], presence=[0.98, 0.02, 0, 0])
+    reply["answers"]["stamps"] = {"type": "boxes", "boxes": [], "count": 0, "at_least": False, "presence": [0, 0, 0, 0]}
+    route.mock(return_value=httpx.Response(200, json=reply))
+    assert Client().responses.create(model=LiquidModel("d1.2", capabilities=caps), state=["x", img], questions=qs).answers["stamps"].boxes == []
+    with pytest.raises(Unsupported, match=r"the System One format has no boxes questions: stamps"):
+        Client().responses.create(model=OpenRouterModel("typesafe/jev", capabilities=caps), state=["x", img], questions=qs)

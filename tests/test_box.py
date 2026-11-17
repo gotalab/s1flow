@@ -193,3 +193,104 @@ def test_a_box_task_with_pictures_that_have_no_target(tmp_path):
     assert e.selective[0].accuracy == 1.0 and e.selective[0].errors == 0  # the unsure "not there" answers are left out
     md = report.render(task, "base", [e], {"boxornone": pr})
     assert "with no target)" in md and "right is an answer of no box" in md
+
+
+# ---------- boxes: every instance ----------
+
+OTHER = BoxEdges(top=0.6, bottom=0.9, left=0.1, right=0.4)
+NEAR = BoxEdges(top=0.1, bottom=0.5, left=0.25, right=0.65)  # IoU 0.78 with TRUTH
+
+
+def test_boxes_are_matched_one_to_one_best_first():
+    from s1flow.client.boxes import matched
+
+    assert matched([TRUTH, OTHER], [OTHER, TRUTH], 0.5) == 2 and matched([NEAR], [TRUTH], 0.5) == 1 and matched([NEAR], [TRUTH], 0.8) == 0
+    assert matched([TRUTH, NEAR], [TRUTH], 0.5) == 1  # two answer boxes on one instance: one of them is its box
+    assert matched([], [TRUTH], 0.5) == 0 == matched([TRUTH], [], 0.5)
+
+
+def test_a_boxes_label_is_every_instance_and_the_answer_is_as_sure_as_the_whole_set():
+    from s1flow.client import Boxes, BoxesAnswer, FoundBox
+    from s1flow.core.errors import ProviderError
+    from s1flow.eval.kinds import kind_of
+    from s1flow.eval.objectives import measure
+    from s1flow.objectives import Accuracy, BoxF1
+    from s1flow.policies import DecisionRule, KindParams
+
+    kind = kind_of(Boxes(instructions="every red disc"))
+    assert kind.type == "boxes" and not kind.adoptable and kind.iou == 0.5 and kind_of(Boxes(instructions="x"), KindParams(iou=0.7)).iou == 0.7
+    assert kind.label_error([]) is None and kind.label_error([TRUTH.model_dump()]) is None
+    for bad in (TRUTH.model_dump(), [{"top": 2}], None, False):
+        assert "list of every instance's box" in kind.label_error(bad)
+    one = lambda b, found=0.9, conf=0.8: FoundBox(box=b, found=found, confidence=conf)
+    r = kind.read([BoxesAnswer(boxes=[one(TRUTH), one(OTHER)], presence=[0.9, 0.9, 0.2])], DecisionRule(min_probability=0.5))
+    assert r.value == (TRUTH, OTHER) and r.confidence == pytest.approx(0.9 * 0.9 * 0.8 * 0.8 * 0.8) and r.below_min_probability is True
+    assert kind.read([BoxesAnswer(boxes=[], presence=[0.1, 0.0])], DecisionRule()).confidence == pytest.approx(0.9)
+    assert kind.read([BoxesAnswer(boxes=[one(TRUTH)], at_least=True, presence=[0.99])], DecisionRule()).confidence == 0.0  # it says there are more
+    bare = kind.average([BoxesAnswer(boxes=[FoundBox(box=TRUTH)])])
+    assert bare.confidence == 1.0 and bare.distributed is False
+    with pytest.raises(ProviderError, match="found"):
+        kind.read([BoxesAnswer(boxes=[one(TRUTH, found=1.5)])], DecisionRule())
+    answers = [[TRUTH, OTHER], [NEAR], [], [TRUTH, MISS], [TRUTH], None]
+    labels = [[OTHER.model_dump(), TRUTH.model_dump()], [TRUTH.model_dump()], [], [TRUTH.model_dump()], [TRUTH.model_dump(), OTHER.model_dump()], [TRUTH.model_dump()]]
+    # both found, found (near enough), none and none, one too many, one missed, no answer
+    p = measure.pairs(kind, labels, [None if a is None else kind.read([BoxesAnswer(boxes=[one(b) for b in a])], DecisionRule()) for a in answers])
+    assert list(p.correct) == [True, True, True, False, False, False]
+    assert measure.bound(Accuracy(), kind).value(p) == 0.5
+    # answer boxes 2 + 1 + 0 + 2 + 1 = 6, of which 5 match; label boxes 2 + 1 + 0 + 1 + 2 + 1 = 7
+    assert measure.measure("box_precision", p) == pytest.approx(5 / 6) and measure.measure("box_recall", p) == pytest.approx(5 / 7)
+    assert measure.measure("box_f1", p) == pytest.approx(2 * 5 / (6 + 7)) == measure.bound(BoxF1(), kind).value(p)
+    assert measure.measure("count_error", p) == pytest.approx((0 + 0 + 0 + 1 + 1 + 1) / 6)
+    assert measure.shown(p, 3) == ("1 box", "2 boxes, 1 matched") and measure.shown(p, 2) == ("0 boxes", "0 boxes, 0 matched") and measure.shown(p, 5)[1] == "no answer"
+
+
+class FakeBoxes:
+    """Finds every disc, but one too few on every fifth case, where it is unsure of the last slot."""
+
+    def __init__(self, spec):
+        from s1flow.client import Capabilities as C
+        self.id, self.model_id, self.concurrency = "fake:boxes", "fake-boxes", 4
+        self.capabilities = C(image=True, question_types=frozenset({"boxes"}))
+
+    async def decide(self, state, questions, *, options=None):
+        from s1flow.client import BoxesAnswer, FoundBox
+
+        n = int(state[0])
+        truth = [TRUTH, OTHER, MISS][: n % 4]
+        short = n % 5 == 0 and bool(truth)
+        given = truth[:-1] if short else truth
+        presence = [0.98] * len(given) + ([0.45] if short else []) + [0.01]
+        return Response(answers={"q": BoxesAnswer(boxes=[FoundBox(box=b, found=0.98, confidence=0.97) for b in given], presence=presence)}, answered_by=self.model_id)
+
+
+def test_a_boxes_task_runs_reports_and_compares(tmp_path):
+    from s1flow.client import Boxes
+    from s1flow.core.errors import Unsupported as U
+    from s1flow.eval import comparison, review
+    from s1flow.objectives import BoxF1, Coverage
+
+    p = make_project(tmp_path, {"boxes": FakeBoxes})
+    buf = io.BytesIO()
+    PILImage.new("RGB", (400, 300), "white").save(buf, "PNG")
+    (tmp_path / "shot.png").write_bytes(buf.getvalue())
+    rows = [{"id": str(i), "n": i, "boxes": [b.model_dump() for b in [TRUTH, OTHER, MISS][: i % 4]]} for i in range(80)]
+    (tmp_path / "data.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
+    task = attach(Task(
+        id="boxes-test", cases="data.jsonl", dir=tmp_path, state=lambda r: [str(r["n"]), {"type": "image", "path": "shot.png"}],
+        question=Boxes(instructions="every disc"), label=lambda r: r["boxes"], objective=Coverage(target_accuracy=0.99), tiebreak=[BoxF1()],
+    ), p)
+    asyncio.run(running.run_model(task, "boxes", limit=None, variant="base"))
+    pr = metrics.load(task, "base", "boxes")
+    e = metrics.evaluate(task, pr)
+    short = sum(int(cid) % 5 == 0 and int(cid) % 4 != 0 for cid in pr.ids)
+    assert e.probabilities and e.accuracy and e.accuracy.value == pytest.approx(1 - short / len(pr.ids))
+    assert e.measures["box_precision"].value == 1.0 and e.measures["box_recall"].value < 1.0 and e.measures["count_error"].value == pytest.approx(short / len(pr.ids))
+    assert e.selective[0].accuracy == 1.0 and e.selective[0].errors == 0  # the cases it was unsure of are left out
+    md = report.render(task, "base", [e], {"boxes": pr})
+    assert "| box F1 |" in md and "Boxes: right when every box of the label has an answer box of its own" in md and "cases with none)" in md
+    c = comparison.collect(task)
+    row = next(r for r in c.candidates if r.model == "boxes")
+    assert c.question_type == "boxes" and {"box_f1", "box_precision", "box_recall", "count_error", "brier"} <= set(row.metrics)
+    assert row.adoption_blocked == ["boxes questions are comparable but cannot be adopted as runtime policies"]
+    with pytest.raises(U, match="boxes tasks are not supported yet"):
+        review.review(task)

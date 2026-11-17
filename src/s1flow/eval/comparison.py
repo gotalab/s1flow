@@ -228,6 +228,8 @@ def _plain_reading_basis(task: Task) -> str:
         return "plain choice reading: selected option with highest probability (default rule)"
     if kind.type == "box":
         return f"plain box reading: correct at IoU >= {kind.iou:g}"
+    if kind.type == "boxes":
+        return f"plain boxes reading: correct when every label box is matched at IoU >= {kind.iou:g} and no answer box is left over"
     if kind.type == "multichoice":
         return "plain multichoice reading: every option at P >= 0.5, correct when the set equals the label's"
     if kind.type == "estimate":
