@@ -64,7 +64,7 @@ def test_text_names_what_it_does_not_rank_and_pages_by_limit(ran):
     got = cli("report", "truth", "--limit", "1")
     assert got.exit_code == 0
     assert [x.split()[1] for x in got.output.splitlines()[2:3]] == ["good"] and "1 more: --offset 1" in got.output
-    assert "not ranked: late" in got.output  # a candidate without runs is named, not dropped
+    assert "not run: late" in got.output  # a candidate without runs is named, not dropped
     assert len(json.loads(cli("report", "truth", "--json", "--limit", "1").output)["ranking"]) == 1
 
 
@@ -91,7 +91,7 @@ def test_reading_saved_runs_builds_no_provider(ran, monkeypatch):
     config.write_text(config.read_text() + '\n[models.chat]\nprovider = "llm"\nid = "openai/gpt-x"\n')
     got = cli("report", "truth")
     assert got.exit_code == 0, got.err
-    assert got.output.splitlines()[2].split()[:2] == ["=", "good"] and "not ranked:" in got.output
+    assert got.output.splitlines()[2].split()[:2] == ["=", "good"] and "not run: chat" in got.output
 
 
 def test_a_variant_named_comparison_leaves_the_snapshot_alone(ran):
@@ -102,3 +102,14 @@ def test_a_variant_named_comparison_leaves_the_snapshot_alone(ran):
     assert cli("report", "truth", "--out", "out").exit_code == 0
     assert json.loads((ran.root / "out" / "comparison.json").read_text())["schema"] == "s1flow/comparison@2"
     assert (ran.root / "out" / "questions" / "comparison.md").is_file()
+
+
+def test_many_pairs_nobody_ran_are_counted_not_listed(ran):
+    task_py = ran.tasks_dir / "truth" / "task.py"
+    variants = ", ".join(f'"v{i}": Boolean(instructions="truth {i}?")' for i in range(3))
+    task_py.write_text(task_py.read_text().replace('question=Boolean(instructions="truth?"))',
+                                                   f'question=Boolean(instructions="truth?"), variants={{{variants}}})'))
+    got = cli("report", "truth")
+    assert got.exit_code == 0, got.err
+    line = next(x for x in got.output.splitlines() if x.startswith("not run: "))
+    assert "model and question pairs (--json lists them)" in line and "/v0" not in line
