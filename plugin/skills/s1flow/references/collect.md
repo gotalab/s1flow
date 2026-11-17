@@ -131,8 +131,8 @@ task = Task(
   `optimize` reads it, the model never does. `criteria.md` is for the person's decision criteria, not the model.
 
 Supported question types: boolean, choice, score and box, where the provider takes them. Evaluation compares all
-four, and a policy holds one question of any of them. Choosing a score or box candidate from `report` with `adopt`
-is not supported yet: write its spec and save it with `adopt --spec` (`ship.md`).
+four, and a policy holds one question of any of them: `adopt` takes a score or box candidate from `report` like any
+other.
 
 ## Check the cases
 
