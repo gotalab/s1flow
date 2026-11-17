@@ -15,7 +15,7 @@ s1flow feedback record <task>[@vN] <decision_id> <label> --log "$RUNNER_TEMP/s1f
 ```
 
 It calls no model, so it takes no `--connections`; `--path` reads a policy file or `policies.json` instead of `policies/`. The label is
-a class key, or `true` / `false`. `case_id` can repeat and is never a feedback key: a repeated case can have
+a class key, `true` / `false`, a score's level (`2`), or a box as JSON (`{"top": 0.1, "bottom": 0.3, "left": 0.2, "right": 0.6}`). `case_id` can repeat and is never a feedback key: a repeated case can have
 several decision ids. Keep the answered and feedback logs together.
 
 ## Measure production

@@ -9,7 +9,9 @@
      "discriminator": {
       "mapping": {
        "boolean": "#/$defs/Boolean",
-       "choice": "#/$defs/Choice"
+       "box": "#/$defs/Box",
+       "choice": "#/$defs/Choice",
+       "score": "#/$defs/Score"
       },
       "propertyName": "type"
      },
@@ -19,6 +21,12 @@
       },
       {
        "$ref": "#/$defs/Choice"
+      },
+      {
+       "$ref": "#/$defs/Score"
+      },
+      {
+       "$ref": "#/$defs/Box"
       }
      ],
      "title": "Question"
@@ -71,6 +79,27 @@
     "instructions"
    ],
    "title": "Boolean",
+   "type": "object"
+  },
+  "Box": {
+   "additionalProperties": false,
+   "description": "One bounding box of the target described in `instructions` (jev 1.14, 2026-10-15).\n\nThere is no \"not found\" answer: ask a Boolean alongside when the target may be absent.",
+   "properties": {
+    "type": {
+     "const": "box",
+     "default": "box",
+     "title": "Type",
+     "type": "string"
+    },
+    "instructions": {
+     "title": "Instructions",
+     "type": "string"
+    }
+   },
+   "required": [
+    "instructions"
+   ],
+   "title": "Box",
    "type": "object"
   },
   "Calls": {
@@ -1142,6 +1171,35 @@
     "source"
    ],
    "title": "Price",
+   "type": "object"
+  },
+  "Score": {
+   "additionalProperties": false,
+   "description": "Levels 0..L-1, described in order by `criteria`.",
+   "properties": {
+    "type": {
+     "const": "score",
+     "default": "score",
+     "title": "Type",
+     "type": "string"
+    },
+    "instructions": {
+     "title": "Instructions",
+     "type": "string"
+    },
+    "criteria": {
+     "items": {
+      "type": "string"
+     },
+     "title": "Criteria",
+     "type": "array"
+    }
+   },
+   "required": [
+    "instructions",
+    "criteria"
+   ],
+   "title": "Score",
    "type": "object"
   },
   "Selection": {

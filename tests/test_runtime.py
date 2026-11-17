@@ -62,7 +62,7 @@ def test_no_implicit_client() -> None:
 @pytest.mark.parametrize('changes', [
     {'candidate': {'model': 'trusted'}}, {'evidence': {}}, {'model': {'provider': 'evil:factory', 'id': 'x'}},
     {'connection': 'https://evil.invalid'}, {'task': '../escape'}, {'questions': {}},
-    {'questions': {'q': {'question': {'type': 'score', 'instructions': 'rate', 'criteria': ['low', 'high']}, 'rule': {}}}},
+    {'questions': {'q': {'question': {'type': 'score', 'instructions': 'rate', 'criteria': ['low', 'high']}, 'rule': {'threshold': .5}}}},
     {'schema': 's1flow/policy@1'},
 ])
 def test_spec_rejects_legacy_or_authority_fields(changes: dict[str, Any]) -> None:
@@ -269,17 +269,74 @@ def test_policy_schema_matches_runtime_question_scope() -> None:
     valid = runtime_spec().model_dump(mode='json', by_alias=True)
     assert list(validator.iter_errors(valid)) == []
     for question in [Score(instructions='rate', criteria=['a', 'b']), Box(instructions='find')]:
-        with pytest.raises(ValueError, match='boolean and choice'):
-            asked(question, DecisionRule())
-        invalid = {**valid, 'questions': {'q': {'question': question.model_dump(), 'rule': {}}}}
-        assert list(validator.iter_errors(invalid))
-        with pytest.raises(ValidationError):
-            PolicySpec.model_validate(invalid)
+        shipped = {**valid, 'questions': {'q': asked(question, DecisionRule()).model_dump(mode='json')}}
+        assert list(validator.iter_errors(shipped)) == []
+        PolicySpec.model_validate(shipped)
+    with pytest.raises(ValidationError, match='two levels'):
+        asked(Score(instructions='rate', criteria=['only']), DecisionRule())
     for questions in [{}, {'q1': valid['questions']['bug'], 'q2': valid['questions']['bug']}]:
         invalid = {**valid, 'questions': questions}
         assert list(validator.iter_errors(invalid))
         with pytest.raises(ValidationError):
             PolicySpec.model_validate(invalid)
+
+
+def _answering(monkeypatch: pytest.MonkeyPatch, answer: Any) -> Client:
+    """A Client whose `trusted` model gives `answer` to every question."""
+    from s1flow.client.questions import TEXT_TYPES
+
+    out = Client(connections=Lineup(default=[], models={'trusted': ModelSpec(provider='application:factory', id='fixed-v1')}))
+
+    class Model:
+        id, concurrency = 'fixed-v1', 1
+        capabilities = Capabilities(image=True, question_types=TEXT_TYPES | {'box'})
+
+        async def decide(self, state: Any, questions: Any, **kw: Any) -> Response:
+            return Response(answers={key: answer for key in questions}, answered_by=self.id)
+
+    monkeypatch.setattr(out.connections, 'build', lambda *a, **kw: Model())
+    return out
+
+
+def test_a_score_policy_decides_logs_and_takes_feedback(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from s1flow.client.answers import ScoreAnswer
+    from s1flow.policies.policy import record_feedback
+
+    spec = runtime_spec(task='severity', questions={'sev': asked(Score(instructions='How severe?', criteria=['low', 'mid', 'high']),
+                                                                 DecisionRule(min_probability=.6))})
+    client = _answering(monkeypatch, ScoreAnswer(score=1.8, probabilities={'0': .05, '1': .15, '2': .8}))
+    log = tmp_path / 'events.jsonl'
+    d = DecisionPolicy(spec, client=client, log=log, keep_state=True).decide({'text': 'data loss'})
+    assert (d.value, d.probability, d.below_min_probability) == (2, pytest.approx(.8), False)
+    record_feedback(spec, d.decision_id, '1', log=log)  # a level as the CLI types it
+    with pytest.raises(ConfigError, match='0..2'):
+        record_feedback(spec, d.decision_id, '3', log=log)
+    events = [json.loads(line) for line in log.read_text().splitlines()]
+    assert [e['type'] for e in events] == ['answered', 'feedback']
+    assert events[0]['decision']['value'] == 2 and events[0]['state'] == {'text': 'data loss'}
+    assert events[1]['label'] == 1
+
+
+def test_a_box_policy_decides_logs_and_takes_feedback(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from s1flow.client.answers import BoxAnswer, BoxEdges
+    from s1flow.policies.log import AnsweredLog, from_span, span
+    from s1flow.policies.policy import record_feedback
+    from s1flow.questions import Box
+
+    spec = runtime_spec(task='find-button', questions={'button': asked(Box(instructions='The submit button'), DecisionRule(min_probability=.5))})
+    box = BoxEdges(top=.1, bottom=.3, left=.2, right=.6)
+    client = _answering(monkeypatch, BoxAnswer(box=box, confidence=.4))
+    log = tmp_path / 'events.jsonl'
+    d = DecisionPolicy(spec, client=client, log=log).decide({'screen': Image(media_type='image/png', data='YWJj', sha256='x', width=1, height=1)})
+    assert (d.value, d.probability, d.confidence, d.below_min_probability) == (box, None, .4, True)
+    record_feedback(spec, d.decision_id, '{"top": 0.1, "bottom": 0.3, "left": 0.2, "right": 0.5}', log=log)
+    with pytest.raises(ConfigError, match='top, bottom, left, right'):
+        record_feedback(spec, d.decision_id, 'nowhere', log=log)
+    events = [json.loads(line) for line in log.read_text().splitlines()]
+    assert events[0]['decision']['value'] == box.model_dump() and events[1]['label']['right'] == .5
+    answered = AnsweredLog.model_validate(events[0])
+    back = from_span(*span(answered)[:1], answered.at, span(answered)[1])
+    assert isinstance(back, AnsweredLog) and back.decision.value == box and back.decision.confidence == .4
 
 
 def test_timeout_cancels_the_call_and_logs_it_failed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

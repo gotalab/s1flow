@@ -20,6 +20,7 @@ policy in production (policy.py) read a case alike: `average` then `reading`, he
 rescaled by the number of options). pydantic only: production imports it.
 """
 
+import json
 from dataclasses import dataclass
 from typing import Any, ClassVar, Protocol, Sequence, Union
 
@@ -240,7 +241,7 @@ class ChoiceKind(_Kind):
 
 
 class ScoreKind(_Kind):
-    """Levels 0..L-1 in the order of the question's criteria. Evaluated, not adoptable: no policy holds a score."""
+    """Levels 0..L-1 in the order of the question's criteria."""
 
     type: ClassVar[QuestionType] = "score"
     answer: ClassVar[tuple[Any, ...]] = (ScoreAnswer,)
@@ -249,6 +250,10 @@ class ScoreKind(_Kind):
     def label_error(self, label: Any) -> str | None:
         ok = isinstance(label, int) and not isinstance(label, bool) and 0 <= label < self.levels
         return None if ok else f"a score label is a level, 0..{self.levels - 1}, got {label!r}"
+
+    def as_label(self, answer: Any) -> Any:
+        """A level typed as text (the CLI's `feedback record ... 2`) is that level."""
+        return int(answer) if isinstance(answer, str) and answer.strip().isdigit() else answer
 
     def one(self, a: ScoreAnswer) -> tuple[list[float], float, bool]:
         """One answer's distribution over the levels and its expected level (the score itself when it gave
@@ -297,6 +302,15 @@ class BoxKind(_Kind):
         except ValidationError:
             return f"a box label needs top, bottom, left, right in 0..1, got {label!r}"
         return None
+
+    def as_label(self, answer: Any) -> Any:
+        """A box typed as JSON text (the CLI's `feedback record ... '{"top": ...}'`) is that box."""
+        if isinstance(answer, str):
+            try:
+                return json.loads(answer)
+            except ValueError:
+                return answer
+        return answer
 
     def average(self, answers: Sequence[Answer]) -> Average:
         given: list[BoxAnswer] = self._given(answers)

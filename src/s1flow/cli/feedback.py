@@ -41,7 +41,7 @@ def add(sub: Any) -> None:
                             "It calls no model, so it takes no connections.")
     f.add_argument("policy", metavar=POLICY, help="the policy that decided it (its id in the log, or the task: the current version)")
     f.add_argument("decision_id", help="the exact decision_id returned by decide")
-    f.add_argument("label", help="the right answer: a class key, or true / false")
+    f.add_argument("label", help="the right answer: a class key, true / false, a level (2), or a box as JSON")
     f.add_argument("--log", required=True, help="the log to append to (JSONL)")
     f.add_argument("--path", help="a policy file, or a policy set from `s1flow export` (policies.json), instead of policies/ (as decide --path)")
     m = command(group, "measure", feedback_measure, context=("project", "connections"), help="measure each policy in production from the feedback in its logs (needs s1flow[eval])",

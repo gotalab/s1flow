@@ -84,14 +84,18 @@ def _decide_policy(a: argparse.Namespace) -> int:
         raise ConfigError("--keep-state keeps the state in the log: give --log too")
     r = policies.load(a.policy, client=policy_client(a), path=a.path, root=policy_root(a), log=a.log, keep_state=a.keep_state).decide(_state(a), case_id=a.case_id)
     if a.github_output and out:
-        answer = r.value if isinstance(r.value, str) else json.dumps(r.value)  # a class key as is; true / false
+        value = r.model_dump(mode="json")["value"]
+        answer = value if isinstance(value, str) else json.dumps(value)  # a class key as is; true / false, a level, a box
         with open(out, "a") as f:
-            for k, v in {"answer": answer, "probability": f"{r.probability:.4f}", "below_min_probability": json.dumps(r.below_min_probability), "decision_id": r.decision_id, "policy": r.policy}.items():
+            for k, v in {"answer": answer, "probability": "" if r.probability is None else f"{r.probability:.4f}", "below_min_probability": json.dumps(r.below_min_probability), "decision_id": r.decision_id, "policy": r.policy}.items():
                 f.write(f"{k}={v}\n")
     if a.json:
         print(r.model_dump_json(indent=1))
     else:
-        print(f"{r.policy}: {json.dumps(r.value, ensure_ascii=False)} (probability {r.probability:.3f}" + (", below minimum probability" if r.below_min_probability else "") + f"; {r.answered_by})")
+        sure = f"probability {r.probability:.3f}" if r.probability is not None else f"confidence {r.confidence:.3f}" if r.confidence is not None else "no probability"
+        print(f"{r.policy}: {json.dumps(r.model_dump(mode='json')['value'], ensure_ascii=False)} ({sure}"
+              + (", below minimum probability" if r.below_min_probability else "") + f"; {r.answered_by})")
+        print(f"decision_id {r.decision_id}" + ("" if a.log else " (no --log: not written to a log)"))
     return 0
 
 

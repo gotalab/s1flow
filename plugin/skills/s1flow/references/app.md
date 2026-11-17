@@ -9,9 +9,8 @@ provider, import code, or find a connection beside itself. The SDK never discove
 
 ## Ship without an evaluation
 
-The person wants a decision in production now and may measure it later. Score, box and other types: call the model
-with `Client` (below); nothing is logged. Yes/no or choice: save it as a policy, so every answer is logged and can
-become a case.
+The person wants a decision in production now and may measure it later. Save it as a policy, whatever its type
+(yes/no, choice, score, box), so every answer is logged and can become a case.
 
 1. The connection: in the app's own file (`connections.toml`), one entry for the model (the provider and its key:
    `references/setup.md`):
@@ -31,7 +30,11 @@ become a case.
                           "rule": {"threshold": 0.5}}}}
    ```
 
-   With no measurement, any threshold is a guess: say so and use the person's number, or 0.5. If they want unsure
+   A choice, score or box question goes in `question` the same way (`{"type": "score", "instructions": "...",
+   "criteria": ["low", "mid", "high"]}`, levels in order), with no `threshold`. A box also needs
+   `capabilities.image = true` and `capabilities.question_types = ["boolean", "choice", "score", "box"]` on the
+   connection. With no measurement, any threshold
+   is a guess: say so and use the person's number, or 0.5. If they want unsure
    answers to go to a person, `"min_probability"` in the rule marks them (`below_min_probability`), and what the app
    does with them is theirs to decide.
 3. Validate, then save (outside an s1flow project, `--root policies`):
@@ -66,8 +69,9 @@ policy.feedback(decision.decision_id, True)   # when the right label is known: t
 - `Client(connections=...)` / `AsyncClient(connections=...)` for a string alias; a direct `ModelSpec` or
   `DecisionModel` needs no file. Relative paths are fixed when the object is built. Provider cache settings go only
   in `Client(cache_dir=...)`. `client.connections.build()` / `.check()` run the connection checks.
-- The direct `Client` asks boolean, choice, score and box questions where the provider supports them; a policy
-  holds one boolean or choice.
+- The direct `Client` asks boolean, choice, score and box questions where the provider supports them, several in one
+  request; a policy holds one question of any of these types. A score's value is the level, a box's value its edges,
+  with `confidence` in place of `probability`.
 - Store `decision_id` when a label may arrive later. `case_id` is log context only and may repeat.
 - `decide(..., timeout=SECONDS)` caps the whole call, retries included (without it, retries can take minutes). Past
   it the call is cancelled and `TimedOut` (a `ProviderError`) is raised and logged as failed. Where the app sends
