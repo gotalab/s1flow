@@ -106,6 +106,10 @@ task = Task(
 )
 ```
 
+- Other wordings of the question to compare: `variants={"strict": Boolean(instructions="...")}`, each of the
+  question's type and labels. `s1flow run <id> --models jev/strict` asks one, and `report` shows each as its own
+  candidate `model/variant` beside the base question; `optimize` adds variants the same way. A threshold is chosen per
+  candidate by the objective, so changing the wording and the cut are compared together.
 - A boolean question with a choice-like label uses `Boolean(...)`; a choice scored as one option against the rest
   sets `kind_params=KindParams(positive="bug")`.
 - Uneven costs: `ExpectedLoss(fn=, fp=)`, or `Loss(default=1, losses={"server": {"formatter": 3}})` (right answer
