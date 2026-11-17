@@ -11,14 +11,14 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Annotated, Literal
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
 from ..client.identity import SDK_VERSION, digest
 from ..client.lineup import NAME
 from ..client.models import VERSION as VERSION_NAME
-from ..client.questions import Boolean, Choice, Question
+from ..client.questions import Question, Score
 from ..core import clock, place
 from ..core.errors import ConfigError, NotFound, invalid
 from . import history
@@ -75,12 +75,9 @@ class Ref:
         return policy_id(self.task, self.version) if self.version is not None else self.task
 
 
-PolicyQuestion = Annotated[Boolean | Choice, Field(discriminator='type')]
-
-
 class Asked(BaseModel):
     model_config = ConfigDict(extra='forbid', frozen=True)
-    question: PolicyQuestion
+    question: Question
     kind: KindParams = KindParams()
     rule: DecisionRule
 
@@ -89,6 +86,8 @@ class Asked(BaseModel):
         kind = self.of()
         if self.question.type == 'choice' and not kind.options:
             raise ValueError('a choice question requires at least one option')
+        if isinstance(self.question, Score) and len(self.question.criteria) < 2:
+            raise ValueError('a score question requires at least two levels')
         if self.rule.threshold is not None and not kind.binary:
             raise ValueError('threshold applies only to a boolean or a choice with a positive option')
         return self
@@ -98,8 +97,6 @@ class Asked(BaseModel):
 
 
 def asked(question: Question, rule: DecisionRule, params: KindParams = KindParams()) -> Asked:
-    if not isinstance(question, (Boolean, Choice)):
-        raise ValueError('a policy supports boolean and choice questions only; use Client directly for score and box')
     return Asked(question=question, kind=params, rule=rule)
 
 

@@ -116,6 +116,10 @@ def test_box_task_is_scored_by_iou(tmp_path):
     assert sel.coverage.value == pytest.approx(0.5, abs=0.1) and sel.errors == 0
     md = report.render(task, "base", [e], {"fakebox": pr})
     assert "mean IoU" in md and "right at IoU 0.5 or more" in md
+    from s1flow.eval import adopt as adopting
+
+    r = adopting.adopt(task, "fakebox", "me", "a box policy ships like any other")
+    assert r.spec.question.type == "box" and task.policies.read(task.id).digest == r.spec.digest
 
 
 def test_provider_boxes_are_clipped_and_ordered():
@@ -223,7 +227,7 @@ def test_a_boxes_label_is_every_instance_and_the_answer_is_as_sure_as_the_whole_
     from s1flow.policies import DecisionRule, KindParams
 
     kind = kind_of(Boxes(instructions="every red disc"))
-    assert kind.type == "boxes" and not kind.adoptable and kind.iou == 0.5 and kind_of(Boxes(instructions="x"), KindParams(iou=0.7)).iou == 0.7
+    assert kind.type == "boxes" and kind.iou == 0.5 and kind_of(Boxes(instructions="x"), KindParams(iou=0.7)).iou == 0.7
     assert kind.label_error([]) is None and kind.label_error([TRUTH.model_dump()]) is None
     for bad in (TRUTH.model_dump(), [{"top": 2}], None, False):
         assert "list of every instance's box" in kind.label_error(bad)
@@ -299,7 +303,7 @@ def test_a_boxes_task_runs_reports_and_compares(tmp_path):
     c = comparison.collect(task)
     row = next(r for r in c.candidates if r.model == "boxes")
     assert c.question_type == "boxes" and {"box_f1", "box_precision", "box_recall", "count_error", "brier"} <= set(row.metrics)
-    assert row.adoption_blocked == ["boxes questions are comparable but cannot be adopted as runtime policies"]
+    assert row.adoption_blocked == []
     with pytest.raises(U, match="boxes tasks are not supported yet"):
         review.review(task)
     assert not [w for w in data.check(task).warnings if "same state" in w]
