@@ -7,7 +7,7 @@ means success, 1 means a gate failed or something was found, and 2 means usage, 
 
 ## The Agent Skill
 
-Install the Skill as step 2 of [Get started](get-started.md) shows. The plugin also carries a Cursor
+Install the Skill as [Get started](get-started.md#add-the-skill-to-your-coding-agent) shows. The plugin also carries a Cursor
 manifest and follows the Agent Plugins format, for teams that import it into a Cursor team marketplace. `SKILL.md`
 says which of its six references (collect, measure, ship, app, learn, setup) to read at each stage. It lives in
 `plugin/skills/s1flow/`, which the plugin and the package both carry. The Skill drives collecting cases, comparing,

@@ -134,7 +134,7 @@
 
 .md-typeset table:not([class]) th,
 .md-typeset table:not([class]) td { padding: 0.55em 1em 0.55em 0; }
-.md-typeset table:not([class]) td:first-child { white-space: nowrap; }
+.md-typeset .bench table:not([class]) td:first-child { white-space: nowrap; }
 
 /* Folded detail: a plain toggle, no coloured box. */
 .md-typeset details.note {
@@ -160,4 +160,4 @@
   background-color: var(--grey);
 }
 .md-typeset details.note > :not(summary) { margin-left: 1.1rem; }
-.md-typeset table:not([class]) td:last-child { white-space: nowrap; }
+.md-typeset .bench table:not([class]) td:last-child { white-space: nowrap; }

@@ -33,7 +33,6 @@ custom_dir = "docs/.overrides"
 features = [
   "content.action.copy",
   "content.code.copy",
-  "content.tabs.link",
   "navigation.footer",
   "navigation.indexes",
   "navigation.instant",
@@ -72,7 +71,7 @@ markdown_description = "s1flow measures Decision Models on your own labeled case
 [project.plugins.llmstxt.sections]
 "Start here" = ["index.md", "get-started.md", "concepts.md"]
 "Guides" = ["evaluate.md", "policies.md", "app.md", "feedback.md", "connections.md", "cli-and-ci.md", "development.md"]
-"Benchmarks" = ["benchmarks/*.md"]
+"Benchmarks" = ["benchmarks/index.md", "benchmarks/[!i]*.md"]
 
 [project.markdown_extensions]
 admonition = {}
@@ -82,5 +81,4 @@ toc.permalink = true
 pymdownx.highlight.anchor_linenums = true
 pymdownx.inlinehilite = {}
 pymdownx.superfences = {}
-pymdownx.tabbed.alternate_style = true
 pymdownx.details = {}

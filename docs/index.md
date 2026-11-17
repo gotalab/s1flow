@@ -9,8 +9,8 @@ hide:
 
 Automation is full of small branch points: should the agent act or ask, which team gets this ticket, does this
 message need a reply. A Decision Model answers one typed question like these fast, with a probability. s1flow
-measures on your own cases how much of the judgment a model can take over at the accuracy you need. The answers it
-is sure of are acted on, the rest go to a person, and the person's answers become new cases.
+measures on your own cases how much of the judgment a model can take over at the accuracy you need. Your app acts on
+the answers the model is sure of and sends the rest to a person, and the person's answers become new cases.
 { .hero-lead }
 
 [Get started](get-started.md){ .md-button .md-button--primary } [How it works](concepts.md){ .md-button }

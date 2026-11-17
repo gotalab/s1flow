@@ -28,7 +28,7 @@ hide:
 
 # Benchmarks
 
-s1flow's own bench: every Decision Model in its line-up, asked the same labeled cases on ten public tasks. Each
+s1flow's own bench: the Decision Models in its line-up, asked the same labeled cases on ten public tasks. Each
 task is measured by the objective its use calls for, so there is no score across tasks: a model is chosen for one
 decision, by what that decision needs.
 
@@ -37,7 +37,8 @@ on one task and poorly on another, which is why you measure on your own cases.
 
 - **A snapshot.** Measured {measured}. Models and their versions change; so would these numbers.
 - **Development cases only.** The held-out test share of each task is not scored here.
-- **Intervals.** Every value has a 95% confidence interval. Candidates whose intervals overlap are not told apart.
+- **Intervals.** Each value comes with a 95% confidence interval. Candidates whose interval reaches the best one's
+  are marked `=` on the task page: the objective cannot tell them apart.
 - **Latency** is the time for one request, sent from US East (Ashburn, Virginia), four requests at a time. Yours
   depends on where you call from.
 - **API cost** is per 10,000 decisions: billed by the provider, or marked ~ when estimated from a list price.
@@ -58,7 +59,7 @@ def task_uses() -> dict[str, dict[str, str]]:
 
 def fmt(value: float | None, unit: str) -> str:
     if value is None:
-        return "—"
+        return "not reached"
     return f"{value:.0%}" if unit == "share" else f"{value:.3f}"
 
 
@@ -82,10 +83,39 @@ def latency(calls: dict[str, Any]) -> str:
 
 
 def scored(data: dict[str, Any]) -> list[dict[str, Any]]:
-    """Candidates asked every case. A row the model could not reach the objective on stays, with no value."""
+    """Candidates asked every case, best first; a candidate that reaches no value on the objective comes last."""
     rows = [c for c in data["candidates"] if c["n"] and not c["excluded"]]
     sign = -1 if data["objective"]["direction"] == "max" else 1
     return sorted(rows, key=lambda c: (c["value"] is None, sign * (c["value"] or 0), c["candidate"]))
+
+
+def tied_with_best(data: dict[str, Any], rows: list[dict[str, Any]]) -> set[str]:
+    """The candidates `s1flow report` marks `=`: their interval reaches the best one's (s1flow.eval.select._overlaps)."""
+    if not rows or rows[0]["value"] is None:
+        return set()
+    best, maximize = rows[0], data["objective"]["direction"] == "max"
+
+    def overlaps(c: dict[str, Any]) -> bool:
+        if c["value"] is None:
+            return False
+        if not best["interval"] or not c["interval"]:
+            return c["value"] == best["value"]
+        return c["interval"][1] >= best["interval"][0] if maximize else c["interval"][0] <= best["interval"][1]
+
+    return {c["candidate"] for c in rows if overlaps(c)}
+
+
+def false_alarms(task: str) -> dict[str, float]:
+    """For a Recall objective: each candidate's false-alarm share at its chosen threshold, out of fold, from the
+    report's per-variant JSON (it can pass the cap a little)."""
+    out = {}
+    for path in (REPORTS / task / "questions").glob("*.json"):
+        for e in json.loads(path.read_text(encoding="utf-8"))["evaluations"]:
+            name = e["candidate"]["model"] + ("" if e["candidate"]["variant"] == "base" else "/" + e["candidate"]["variant"])
+            constraint = (e.get("objective") or {}).get("constraint")
+            if constraint is not None:
+                out[name] = constraint
+    return out
 
 
 def question_block(data: dict[str, Any]) -> str:
@@ -101,13 +131,27 @@ def task_page(data: dict[str, Any], use: dict[str, str]) -> str:
     task, objective = data["task"], data["objective"]
     unit = objective["unit"]
     rows = scored(data)
-    table = [f"| Candidate | {objective['label']} | accuracy (all) | p50 latency | API cost / 10k |",
-             "|---|---|---|---|---|"]
+    tied = tied_with_best(data, rows)
+    rows = [c for c in rows if c["candidate"] in tied] + [c for c in rows if c["candidate"] not in tied]
+    alarms = false_alarms(task) if objective["name"] == "recall" else {}
+    extra = " false alarms |" if alarms else ""
+    table = [f"| Candidate | {objective['label']} |{extra} accuracy (all) | p50 latency | API cost / 10k |",
+             "|---|---|---|---|---|" + ("---|" if alarms else "")]
     for c in rows:
         acc = c["metrics"].get("accuracy", {})
-        table.append(f"| {c['candidate']} | {fmt(c['value'], unit)} {fmt_interval(c['interval'], unit)} | "
-                     f"{fmt(acc.get('value'), 'share')} | {latency(c['calls'])} | {cost(c['calls'])} |")
+        mark = " =" if c["candidate"] in tied else ""
+        alarm = f" {alarms[c['candidate']]:.1%} |" if c["candidate"] in alarms else (" |" if alarms else "")
+        table.append(f"| {c['candidate']}{mark} | {fmt(c['value'], unit)} {fmt_interval(c['interval'], unit)}".rstrip()
+                     + f" |{alarm} {fmt(acc.get('value'), 'share')} | {latency(c['calls'])} | {cost(c['calls'])} |")
     unreached = any(c["value"] is None for c in rows)
+    notes = ["`=` marks the candidates whose interval reaches the best one's: the objective cannot tell them apart, "
+             "so they are not ranked against each other."]
+    if alarms:
+        notes.append("False alarms are measured out of fold at each candidate's threshold, so they can pass the cap "
+                     "a little.")
+    if unreached:
+        notes.append("Not reached: no threshold meets the objective's target on these cases.")
+    notes.append("Accuracy (all) reads every answer at its most likely option, without the objective's threshold.")
     return "\n".join([
         "---", "hide:", "  - toc", "description: " + json.dumps(f"{task}: the answer is used to {use['use']}; measured by {use['objective']}."), "---",
         "",
@@ -115,8 +159,8 @@ def task_page(data: dict[str, Any], use: dict[str, str]) -> str:
         f"The answer is used to **{use['use']}**. Objective: **{use['objective']}**, because {use['why']}.", "",
         f"Measured {data['at'][:10]} on {data['n']} labeled development cases. Source: {data['source']}.", "",
         question_block(data),
-        "\n".join(table), "",
-        *(["— : no threshold reaches the objective's target on these cases.", ""] if unreached else []),
+        '<div class="bench" markdown>', "", "\n".join(table), "", "</div>", "",
+        " ".join(notes), "",
         f"[Open the full comparison]({task}/comparison.html){{ .md-button }} with every metric, the probability curves "
         f"and a trade-off chart, or download [comparison.json]({task}/comparison.json).", "",
     ])
@@ -127,14 +171,17 @@ def index_page(tasks: list[tuple[dict[str, Any], dict[str, str]]]) -> str:
              "|---|---|---|---|---|"]
     for data, use in tasks:
         unit = data["objective"]["unit"]
-        values = [c["value"] for c in scored(data) if c["value"] is not None]
+        rows = scored(data)
+        values = [c["value"] for c in rows if c["value"] is not None]
         best, worst = (max, min) if data["objective"]["direction"] == "max" else (min, max)
-        spread = " · ".join(fmt(f(values), unit) for f in (best, median, worst))
+        spread = " · ".join(fmt(f(values), unit) for f in (best, median))
+        spread += " · " + ("not reached" if len(values) < len(rows) else fmt(worst(values), unit))
         table.append(f"| [{data['task']}]({data['task']}.md) | {use['use']} | {use['objective']} | {data['n']} | "
                      f"{spread} |")
     dates = sorted({data["at"][:10] for data, _ in tasks})
     measured = f"on {dates[0]}" if len(dates) == 1 else f"between {dates[0]} and {dates[-1]}; each task page has its date"
-    return PREFACE.replace("{measured}", measured) + "\n".join(table) + "\n"
+    bench = '<div class="bench" markdown>\n\n' + "\n".join(table) + "\n\n</div>\n"
+    return PREFACE.replace("{measured}", measured) + bench
 
 
 def load_charts():

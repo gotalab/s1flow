@@ -53,9 +53,12 @@ against it and never picks one for you.
 
 ## Confidence thresholds
 
-A Decision Model's probability is what lets you hand off only part of a judgment. For each candidate, s1flow finds
-the **threshold** that meets the objective on your cases: answers above it are sure enough to act on, and the rest
-go to a person. When you adopt a candidate, the held-out cases check its threshold on inputs it was never fit on.
+A Decision Model's probability is what lets you hand off only part of a judgment. When the objective sets a rule,
+s1flow fits it to your cases for each candidate. With coverage it is a **minimum probability**: answers at or above
+it are sure enough to act on, and the rest go to a person. With recall or expected loss it is a **threshold** on the
+probability of the positive answer, chosen to keep false alarms under the cap or to make the errors cost least. AUROC and MAE judge
+the probabilities and scores as they are and set no rule. When you adopt a candidate, the held-out cases check it on
+inputs it was never fit on.
 
 Every result comes with a confidence interval. When the intervals of two candidates overlap, s1flow shows them as
 not told apart rather than pretending one is better. A comparison is something to choose from, not a ranking.
