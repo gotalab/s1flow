@@ -195,7 +195,7 @@ def test_what_is_sent_and_read_is_what_the_identity_formats_name(monkeypatch):
         monkeypatch.delenv(env, raising=False)
     monkeypatch.setenv("CLEF_RELAY_URL", "https://relay.test")
     now = {
-        "request": identity.REQUEST, "execution": identity.EXECUTION,
+        "request": identity.REQUEST, "execution": identity.EXECUTION, "reading": identity.READING,
         "providers": {p: _http(p) for p in REPLIES} | {m: _llm(monkeypatch, m) for m in ("llm", "llm sampled")},
         "decisions": _decisions(),
     }
@@ -204,4 +204,5 @@ def test_what_is_sent_and_read_is_what_the_identity_formats_name(monkeypatch):
         FILE.write_text(text)
     assert text == FILE.read_text(), (
         "what a provider sends or reads, or what a policy decides, changed (diff tests/fixtures/wire-format.json): "
-        "bump identity.REQUEST or EXECUTION unless saved answers still stand, then rewrite it (see this file's docstring)")
+        "bump identity.REQUEST or EXECUTION (or identity.READING when one provider reads a reply differently) unless saved "
+        "answers still stand, then rewrite it (see this file's docstring)")
