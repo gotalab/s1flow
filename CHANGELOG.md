@@ -4,6 +4,10 @@
 
 ### Added
 
+- `s1flow feedback import TASK labels.csv --log decisions.jsonl` records many right answers at once, such as labels
+  a person corrected: a CSV with `decision_id` and `label` columns, or JSON Lines. Every row is checked first, and
+  one wrong row writes nothing. A policy without `log=` (and with no OpenTelemetry tracer provider) now warns on its
+  first decide that nothing is recorded, and its `feedback` raises instead of dropping the label.
 - A policy holds a score or box question too, not only yes/no and choice: save it with `adopt --spec`, and its
   answers are logged and take feedback like any other (`feedback record <task> <id> 2`, or a box as JSON). `adopt`
   takes a score or box candidate from `report` like any other. `decide --policy` also prints the decision ID.
