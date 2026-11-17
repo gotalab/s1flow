@@ -4,6 +4,9 @@ A task writes media as a top-level item of a list state, by path (relative to th
 
     state = ["A voicemail:", {"type": "audio", "path": row["call"]}]
 
+A state kept in a decision log holds them prepared (bytes inline); production cases made from it keep that form,
+and it is read back as it is.
+
 That is the only placement every media-taking provider can express (OpenRouter's parts in the
 state array, TypeSafe `assets`, OpenAI `input_image`, Google's content blocks, Workers AI's own arrays), so media elsewhere
 in a state are a task error.
@@ -79,9 +82,27 @@ def _is_ref(x: Any) -> bool:
     return isinstance(x, (Image, Media, MediaRef)) or is_media_dict(x)
 
 
+def _prepared(item: dict[str, Any]) -> Image | Media:
+    """A prepared image or medium read back from JSON (a kept state in a decision log, and the production cases made
+    from it): the bytes the model received, used as they are. Preparing them again could change them (a JPEG)."""
+    try:
+        x: Image | Media = (Image if item.get("type") == "image" else Media).model_validate(item)
+    except ValidationError as e:
+        raise DataError(f"bad prepared {item.get('type')}: {e.errors()[0]['msg']}") from e
+    try:
+        raw = base64.b64decode(x.data, validate=True)
+    except ValueError as e:
+        raise DataError(f"prepared {x.type} is not base64: {e}") from e
+    if hashlib.sha256(raw).hexdigest() != x.sha256:
+        raise DataError(f"prepared {x.type} does not match its sha256 {x.sha256}")
+    return x
+
+
 def _load(item: Any, base_dir: Path) -> Image | Media:
     if isinstance(item, (Image, Media)):
         return item
+    if isinstance(item, dict) and "data" in item:
+        return _prepared(item)
     try:
         ref = item if isinstance(item, MediaRef) else MediaRef.model_validate(item)
     except ValidationError as e:

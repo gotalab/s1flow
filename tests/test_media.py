@@ -154,6 +154,24 @@ def test_a_mistyped_image_reference_is_still_an_error(tmp_path):
         media.materialize(["x", {"type": "image", "file": "a.png"}], tmp_path)
 
 
+def test_prepared_media_read_back_from_json_are_used_as_they_are(tmp_path):
+    """A kept state in a decision log, and the production cases made from it, hold media prepared, bytes inline."""
+    from PIL import Image as PIL
+
+    buf = io.BytesIO()
+    PIL.new("RGB", (300, 300), "red").save(buf, "PNG")
+    image = media.prepare("image", buf.getvalue())
+    for x in (WAV, image):
+        state = ["x", json.loads(x.model_dump_json())]
+        assert media.materialize(state, tmp_path) == ["x", x]
+        assert state_digest(media.materialize(state, tmp_path)) == state_digest(["x", x])
+    tampered = {**json.loads(WAV.model_dump_json()), "sha256": "0" * 64}
+    with pytest.raises(DataError, match="does not match its sha256"):
+        media.materialize(["x", tampered], tmp_path)
+    with pytest.raises(DataError, match="bad prepared image"):
+        media.materialize(["x", {"type": "image", "data": "aGk=", "sha256": "x"}], tmp_path)
+
+
 def test_a_policy_shape_names_each_kind():
     shape = schema_of([["text", WAV]])
     assert mismatch(shape, ["text", WAV]) == []
