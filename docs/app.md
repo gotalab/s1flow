@@ -192,6 +192,9 @@ keys sorted, dumped with an indent of 1. Some models read the question's name as
 it for what it reads (`order_number`, not `q`). OpenRouter serves these on another route, so one request asks either
 these or the other four types. Evaluation compares them too ([evaluate.md](evaluate.md)); a policy does not hold one yet.
 
+A box answer's `box` is `None` when the model says the target is not in the picture, with `found` (the probability
+that it is there) where the model gives one: Liquid's d1.2 does. A model that always gives a box (jev) cannot say so.
+
 `MultiChoice` asks for every option that applies, possibly none: the answer's `choices`, with each option's own
 probability in `probabilities` (they do not sum to 1). Liquid's d1.2 and d1.2-ultra answer it; evaluation compares it,
 and a policy does not hold one yet.

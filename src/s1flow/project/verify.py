@@ -311,6 +311,8 @@ class _Probe:
 
     async def _box(self) -> tuple[bool, str]:
         a = _as(BoxAnswer, (await self.ask(["A picture:", box_image()], BOX_Q)).answers["disc"])
+        if a.box is None:
+            return False, "said the disc is not in the picture"
         score = iou(a.box, BOX_TRUTH)
         conf = f", confidence {a.confidence:.2f}" if a.confidence is not None else ""
         return score >= BOX_PASS, f"IoU {score:.2f}{conf}"

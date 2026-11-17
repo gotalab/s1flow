@@ -182,6 +182,7 @@
         "left": 0.2,
         "right": 0.9
        },
+       "found": null,
        "confidence": 0.6,
        "agreement": null
       }
@@ -361,6 +362,7 @@
         "left": 0.2,
         "right": 0.9
        },
+       "found": null,
        "confidence": 0.6,
        "agreement": null
       }
@@ -540,6 +542,7 @@
         "left": 0.2,
         "right": 0.9
        },
+       "found": null,
        "confidence": 0.6,
        "agreement": null
       }
@@ -880,6 +883,7 @@
         "left": 0.2,
         "right": 0.9
        },
+       "found": null,
        "confidence": 0.6,
        "agreement": null
       }
@@ -1221,6 +1225,7 @@
         "left": 0.2,
         "right": 0.9
        },
+       "found": 0.9,
        "confidence": 0.6,
        "agreement": null
       }
@@ -1365,6 +1370,42 @@
         "damage": 0.9692,
         "price": 0.0
        }
+      }
+     }
+    }
+   },
+   "box not there": {
+    "sent": {
+     "url": "https://api.liquid.ai/decisions/v1/systemone",
+     "headers": {},
+     "body": {
+      "model": "d1.2",
+      "state": [
+       "The screen shows:",
+       {
+        "type": "image_url",
+        "image_url": {
+         "url": "data:image/png;base64,iVBORw0KGgo="
+        }
+       }
+      ],
+      "questions": {
+       "where": {
+        "type": "box",
+        "instructions": "Where is the error message?"
+       }
+      }
+     }
+    },
+    "read": {
+     "answered_by": "d1.2",
+     "answers": {
+      "where": {
+       "type": "box",
+       "box": null,
+       "found": 0.0017,
+       "confidence": null,
+       "agreement": null
       }
      }
     }
@@ -1815,6 +1856,7 @@
         "left": 0.2,
         "right": 0.9
        },
+       "found": null,
        "confidence": null,
        "agreement": null
       }
@@ -2295,6 +2337,7 @@
         "left": 0.19,
         "right": 0.89
        },
+       "found": null,
        "confidence": null,
        "agreement": 0.9250601581299416
       }

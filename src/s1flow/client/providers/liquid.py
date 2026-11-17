@@ -4,16 +4,14 @@ in between.
 The System One wire format (systemone.py, yes/no is `noul`), with three differences
 (https://docs.liquid.ai/api/reference/decision-models/make-decisions, 2026-11-16): images are `image_url` parts in
 the state array, as OpenRouter takes them, and not TypeSafe's `assets`; usage carries the billed cost when the
-model is priced; and a box answer carries `found`, with no `box` when the model does not find the target.
+model is priced; and a box answer carries `found`, with a null `box` when the target is not in the picture
+(systemone.py reads both).
 
 The questions that read a value or estimate one go in the same `questions` (checked by real calls, 2026-11-17):
 `text`, `number` and `date` answer the value with `found`, which is 1 - `p_null`, and a null value when nothing is
 there; a `RangeEstimate` is a `number` with a `range`, answered with its median and an `interval` (p10, p90).
 A `MultiChoice` is a `choice` with `multiple`, answered with the `choices` that apply and each option's own
 probability. A `span` is kept for a text state only: for a JSON state Liquid counts in its own rendering of it.
-
-s1flow's box has no "not found" answer (questions.Box), so a box the model did not find is read as the model
-declining that question (Refusal), which an evaluation counts as no answer.
 """
 
 from typing import Any
@@ -30,14 +28,6 @@ from .needs import Needs, declares, origin
 from . import systemone
 
 BASE_URL = "https://api.liquid.ai/decisions/v1"
-
-
-def _not_found_as_refusal(raw: dict[str, Any]) -> dict[str, Any]:
-    return {
-        qid: {"type": "refusal", "reason": f"box not found (found {a.get('found')})"}
-        if isinstance(a, dict) and a.get("type") == "box" and a.get("box") is None else a
-        for qid, a in raw.items()
-    }
 
 
 READ: dict[Any, type[TextAnswer] | type[NumberAnswer] | type[DateAnswer]] = {"text": TextAnswer, "number": NumberAnswer, "date": DateAnswer}
@@ -72,7 +62,7 @@ def _questions(questions: Questions) -> dict[str, Any]:
 
 
 def _answers(questions: Questions, state: State, raw: dict[str, Any]) -> dict[str, Answer]:
-    rest = systemone.answers(_not_found_as_refusal({k: a for k, a in raw.items() if k not in questions or questions[k].type not in OWN}))
+    rest = systemone.answers({k: a for k, a in raw.items() if k not in questions or questions[k].type not in OWN})
     out: dict[str, Answer] = {}
     for qid, a in raw.items():
         if qid in rest:

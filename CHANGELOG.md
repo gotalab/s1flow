@@ -31,6 +31,9 @@
   provider asks it (d1.2, d1.2-ultra), `s1flow models --verify` checks it, and evaluation compares it: the label is
   the list of options, an answer is right when its set is exactly the label's, `Coverage` reads the probability of
   the whole set, and the new `OptionF1()` objective counts every option of every case.
+- A box question can be answered with "not in the picture": `BoxAnswer.box` is `None`, with `found` where the model
+  gives it (Liquid's d1.2). A box task labels such a case `False`; an answer of no box is right there, and how sure
+  it is comes from `found`.
 - Evaluation compares those four types. A value read is right when it equals the label, or when nothing is read on
   a case labelled `False` (no value there); reports add the accuracy on the cases with a value and on those with
   none, and `Coverage` reads `p_null` and `confidence`. A `RangeEstimate` task defaults to the new `MeanError()`
@@ -39,6 +42,9 @@
   types yet, and `cases review` does not take them.
 
 ### Changed
+
+- The `liquid` provider reads a box the model did not find as an answer of no box, not as a refusal: in an
+  evaluation it is a wrong answer the model was sure of, where it was no answer before.
 
 - The comparison page (`charts.py`) orders its columns by what a choice weighs: the task's objective first, then
   latency, then API cost, then the other metrics. The column the table is sorted by carries a mark.
