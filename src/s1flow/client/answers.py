@@ -54,6 +54,12 @@ class ChoiceAnswer(_Answer):
     confidence: float | None = None  # the vendor's own number (TypeSafe's is rescaled by the number of options)
 
 
+class MultiChoiceAnswer(_Answer):
+    type: Literal["multichoice"] = "multichoice"
+    choices: list[str]  # the options that apply, possibly none
+    probabilities: dict[str, float] | None = None  # P(it applies) of each option, each on its own: they do not sum to 1
+
+
 class ScoreAnswer(_Answer):
     type: Literal["score"] = "score"
     score: float  # the level, or the expected level when the model gives a distribution
@@ -115,11 +121,11 @@ class Refusal(_Answer):
 
 ReadAnswer = TextAnswer | NumberAnswer | DateAnswer
 Answer = Annotated[
-    Union[BooleanAnswer, ChoiceAnswer, ScoreAnswer, BoxAnswer, TextAnswer, NumberAnswer, DateAnswer, EstimateAnswer, Refusal],
+    Union[BooleanAnswer, ChoiceAnswer, ScoreAnswer, BoxAnswer, TextAnswer, NumberAnswer, DateAnswer, EstimateAnswer, MultiChoiceAnswer, Refusal],
     Field(discriminator="type"),
 ]
 # an answer that is not a refusal
-Given = BooleanAnswer | ChoiceAnswer | ScoreAnswer | BoxAnswer | TextAnswer | NumberAnswer | DateAnswer | EstimateAnswer
+Given = BooleanAnswer | ChoiceAnswer | ScoreAnswer | BoxAnswer | TextAnswer | NumberAnswer | DateAnswer | EstimateAnswer | MultiChoiceAnswer
 
 
 CostSource = Literal["billed", "list"]

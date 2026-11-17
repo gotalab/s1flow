@@ -128,10 +128,13 @@ def _state(a: argparse.Namespace) -> "State":
 
 
 def _line(qid: str, x: "Answer") -> str:
-    from ..client.answers import BooleanAnswer, BoxAnswer, ChoiceAnswer, DateAnswer, EstimateAnswer, NumberAnswer, ScoreAnswer, TextAnswer
+    from ..client.answers import BooleanAnswer, BoxAnswer, ChoiceAnswer, DateAnswer, EstimateAnswer, MultiChoiceAnswer, NumberAnswer, ScoreAnswer, TextAnswer
 
     if isinstance(x, BooleanAnswer):
         return f"{qid}: P(true) {x.probability:.3f}"
+    if isinstance(x, MultiChoiceAnswer):
+        each = " · ".join(f"{k} {p:.3f}" for k, p in sorted((x.probabilities or {}).items(), key=lambda kv: -kv[1]))
+        return f"{qid}: {', '.join(x.choices) or 'none'}" + (f"  ({each})" if each else "")
     if isinstance(x, ChoiceAnswer):
         probs = sorted((x.probabilities or {}).items(), key=lambda kv: -kv[1])
         dist = " · ".join(f"{k} {p:.3f}" for k, p in probs) if probs else x.choice

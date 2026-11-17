@@ -308,6 +308,12 @@
        "$ref": "#/$defs/BoxEdges"
       },
       {
+       "items": {
+        "type": "string"
+       },
+       "type": "array"
+      },
+      {
        "type": "null"
       }
      ],
@@ -587,6 +593,12 @@
       },
       {
        "$ref": "#/$defs/BoxEdges"
+      },
+      {
+       "items": {
+        "type": "string"
+       },
+       "type": "array"
       }
      ],
      "title": "Label"
@@ -600,6 +612,44 @@
     "label"
    ],
    "title": "FeedbackLog",
+   "type": "object"
+  },
+  "MultiChoiceAnswer": {
+   "additionalProperties": false,
+   "properties": {
+    "type": {
+     "const": "multichoice",
+     "default": "multichoice",
+     "title": "Type",
+     "type": "string"
+    },
+    "choices": {
+     "items": {
+      "type": "string"
+     },
+     "title": "Choices",
+     "type": "array"
+    },
+    "probabilities": {
+     "anyOf": [
+      {
+       "additionalProperties": {
+        "type": "number"
+       },
+       "type": "object"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Probabilities"
+    }
+   },
+   "required": [
+    "choices"
+   ],
+   "title": "MultiChoiceAnswer",
    "type": "object"
   },
   "NumberAnswer": {
@@ -724,6 +774,7 @@
         "choice": "#/$defs/ChoiceAnswer",
         "date": "#/$defs/DateAnswer",
         "estimate": "#/$defs/EstimateAnswer",
+        "multichoice": "#/$defs/MultiChoiceAnswer",
         "number": "#/$defs/NumberAnswer",
         "refusal": "#/$defs/Refusal",
         "score": "#/$defs/ScoreAnswer",
@@ -755,6 +806,9 @@
        },
        {
         "$ref": "#/$defs/EstimateAnswer"
+       },
+       {
+        "$ref": "#/$defs/MultiChoiceAnswer"
        },
        {
         "$ref": "#/$defs/Refusal"

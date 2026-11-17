@@ -101,11 +101,13 @@ def pairs(kind: Kind, labels: Sequence[Any], readings: Sequence[Reading | None])
     # labels once for both metric truth values and correctness.
     normalized = [kind.as_label(label) for label in labels]
     y = np.empty(n, dtype=object)
-    y[:] = normalized
+    for i, v in enumerate(normalized):  # one at a time: a label that is a tuple stays one value
+        y[i] = v
     if n and kind.type not in READ and all(isinstance(v, bool) for v in normalized):  # a value read keeps ABSENT as it is
         y = y.astype(bool)
     value = np.empty(n, dtype=object)
-    value[:] = [None if r is None else r.value for r in readings]
+    for i, r in enumerate(readings):
+        value[i] = None if r is None else r.value
     width = len(options) or levels
     flat = [1 / width] * width if width else []
     has_dist = any(r is not None and r.distribution is not None for r in readings)
@@ -393,6 +395,27 @@ def _absent_accuracy(p: Pairs, _: Params) -> float | None:
     return float(p.correct[~there].mean()) if (~there).any() else None
 
 
+def _options(p: Pairs) -> tuple[int, int, int]:
+    """A multichoice, option by option over the cases: chosen and in the label, chosen, in the label. No answer chose nothing."""
+    chosen = [set(v) if ok else set() for v, ok in zip(p.value, p.ok)]
+    return sum(len(c & set(y)) for c, y in zip(chosen, p.y)), sum(map(len, chosen)), sum(len(y) for y in p.y)
+
+
+def _option_precision(p: Pairs, _: Params) -> float | None:
+    hit, chosen, _labelled = _options(p)
+    return hit / chosen if chosen else None
+
+
+def _option_recall(p: Pairs, _: Params) -> float | None:
+    hit, _chosen, labelled = _options(p)
+    return hit / labelled if labelled else None
+
+
+def _option_f1(p: Pairs, _: Params) -> float | None:
+    hit, chosen, labelled = _options(p)
+    return 2 * hit / (chosen + labelled) if chosen + labelled else None
+
+
 def _mean_error(p: Pairs, _: Params) -> float | None:
     """An estimate's mean distance from its label; a failed call is as far off as its label can be in the range."""
     if not len(p):
@@ -537,6 +560,14 @@ MEASURES: dict[tuple[str, str], Measure] = {
     ("auroc", "estimate"): Measure(_auroc_hit, basis="narrowness of the p10 - p90 interval; hit-ranking AUROC over labelled dev cases"),
     ("brier", "estimate"): Measure(_brier_hit, basis="narrowness of the p10 - p90 interval; Brier score of hit correctness over labelled dev cases"),
     ("ece", "estimate"): Measure(_ece, basis="narrowness of the p10 - p90 interval; calibration of hit correctness over labelled dev cases"),
+    ("accuracy", "multichoice"): _ACCURACY,
+    ("coverage", "multichoice"): _COVERAGE,
+    ("auroc", "multichoice"): Measure(_auroc_hit, basis="probability of the whole set chosen; hit-ranking AUROC over labelled dev cases"),
+    ("brier", "multichoice"): Measure(_brier_hit, basis="probability of the whole set chosen; Brier score of answer correctness over labelled dev cases"),
+    ("ece", "multichoice"): Measure(_ece, basis="probability of the whole set chosen; calibration of answer correctness over labelled dev cases"),
+    ("option_f1", "multichoice"): Measure(_option_f1, basis="{reading}; F1 over every option of every labelled dev case (micro)"),
+    ("option_precision", "multichoice"): Measure(_option_precision, basis="{reading}; options chosen that the label has / options chosen"),
+    ("option_recall", "multichoice"): Measure(_option_recall, basis="{reading}; options chosen that the label has / options the labels have"),
     **{(name, read): m for read in ("text", "number", "date") for name, m in {
         "accuracy": _ACCURACY,
         "coverage": _COVERAGE,
@@ -598,6 +629,8 @@ def shown(p: Pairs, i: int) -> tuple[bool | str, bool | str]:
     """One case's label and reading, as a list of errors writes them."""
     if p.measured == "box":
         return "box", f"IoU {_ious(p[np.array([i])])[0]:.2f}"
+    if p.measured == "multichoice":
+        return written(p, p.y[i]), written(p, p.value[i])
     if p.measured in READ:
         return "absent" if p.y[i] is ABSENT else str(p.y[i]), "absent" if p.value[i] is None else str(p.value[i])
     return plain(p.y[i]), plain(p.value[i])
@@ -605,6 +638,8 @@ def shown(p: Pairs, i: int) -> tuple[bool | str, bool | str]:
 
 def written(p: Pairs, v: Any) -> Any:
     """A label or a reading as a report writes it: a value read that is not there is `absent`."""
+    if p.measured == "multichoice" and isinstance(v, (tuple, list)):
+        return ", ".join(v) or "none"
     return "absent" if p.measured in READ and (v is ABSENT or v is None) else plain(v)
 
 

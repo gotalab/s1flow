@@ -16,6 +16,7 @@ answer is plain, and checks every claim a `Capabilities` can make:
 | `number`  | how many boxes an order holds, on two orders                  | the count, twice                     |
 | `date`    | the day an order shipped, on two orders                       | the day, twice                       |
 | `estimate`| how many apples (0-10), on three apples, then seven           | nearer its own count, twice          |
+| `multichoice` | what a car has (a dent, a roof rack, a flat tyre), on two cars | exactly what each has, twice      |
 | `audio`   | the colour a voice says, "red", then "blue" (MP3)             | the colour, with p >= PASS, twice    |
 | `video`   | the colour at the end, red then blue, then blue then red      | the last colour, with p >= PASS, twice |
 | `pdf`     | is the invoice paid, on a paid one, then an unpaid one        | P(true) >= PASS, then <= 1 - PASS    |
@@ -50,13 +51,13 @@ from pydantic import BaseModel, ConfigDict, Field
 from ..client import AsyncClient, images, media
 from ..core import clock
 from ..client.answers import (
-    Answer, BooleanAnswer, BoxAnswer, BoxEdges, ChoiceAnswer, DateAnswer, EstimateAnswer, NumberAnswer, Response, ScoreAnswer, TextAnswer,
+    Answer, BooleanAnswer, BoxAnswer, BoxEdges, ChoiceAnswer, DateAnswer, EstimateAnswer, MultiChoiceAnswer, NumberAnswer, Response, ScoreAnswer, TextAnswer,
 )
 from ..client.boxes import iou
 from ..client import providers
 from ..client.models import Capabilities, DecisionModel, ModelSpec, Price
 from ..client.providers.needs import where_to_get
-from ..client.questions import Boolean, Box, Choice, Date, RangeEstimate, Number, Questions, Score, Text
+from ..client.questions import Boolean, Box, Choice, Date, MultiChoice, RangeEstimate, Number, Questions, Score, Text
 from ..client.state import Image, Media, MediaKind, Part, State
 from ..core.errors import ProviderError, S1flowError
 from . import Project
@@ -66,10 +67,10 @@ if TYPE_CHECKING:
 
 PASS = 0.6
 BOX_PASS = 0.5
-CheckName = Literal["boolean", "choice", "score", "image", "images", "box", "audio", "video", "pdf", "text", "number", "date", "estimate"]
+CheckName = Literal["boolean", "choice", "score", "image", "images", "box", "audio", "video", "pdf", "text", "number", "date", "estimate", "multichoice"]
 READS: tuple[Literal["text", "number", "date", "estimate"], ...] = ("text", "number", "date", "estimate")  # each a question type alone
 EVERYTHING = Capabilities(image=True, audio=True, video=True, pdf=True,
-                          question_types=frozenset({"boolean", "choice", "score", "box", *READS}))
+                          question_types=frozenset({"boolean", "choice", "score", "box", "multichoice", *READS}))
 
 
 class Check(BaseModel):
@@ -100,6 +101,7 @@ def claims(caps: Capabilities) -> dict[CheckName, bool]:
         "video": caps.video,
         "pdf": caps.pdf,
         **{c: c in caps.question_types for c in READS},
+        "multichoice": "multichoice" in caps.question_types,
     }
 
 
@@ -150,6 +152,8 @@ ORDER: Questions = {
     "boxes": Number(instructions="How many boxes the order holds"),
     "shipped": Date(instructions="The day the order shipped"),
 }
+CAR_HAS: Questions = {"has": MultiChoice(instructions="What does the car have?", criteria={
+    "dent": "a dent", "rack": "a roof rack", "flat": "a flat tyre"})}
 APPLE_COUNT: Questions = {"apples": RangeEstimate(instructions="How many apples does Mia have?", min=0, max=10, step=1)}
 
 
@@ -226,7 +230,7 @@ def _media(kind: MediaKind, raw: bytes) -> Media:
 # ---------- reading the answers ----------
 
 
-A = TypeVar("A", BooleanAnswer, ChoiceAnswer, ScoreAnswer, BoxAnswer, TextAnswer, NumberAnswer, DateAnswer, EstimateAnswer)
+A = TypeVar("A", BooleanAnswer, ChoiceAnswer, ScoreAnswer, BoxAnswer, TextAnswer, NumberAnswer, DateAnswer, EstimateAnswer, MultiChoiceAnswer)
 
 
 R = TypeVar("R", TextAnswer, NumberAnswer, DateAnswer)
@@ -271,6 +275,7 @@ class _Probe:
             "image": self._image, "images": self._images, "box": self._box,
             "audio": self._audio, "video": self._video, "pdf": self._pdf,
             "text": self._text, "number": self._number, "date": self._date, "estimate": self._estimate,
+            "multichoice": self._multichoice,
         }
         try:
             ok, detail = await asks[name]()
@@ -337,6 +342,11 @@ class _Probe:
     async def _date(self) -> tuple[bool, str]:
         return await self._read(DateAnswer, "shipped")
 
+    async def _multichoice(self) -> tuple[bool, str]:
+        two = _as(MultiChoiceAnswer, (await self.ask("Ken's car has a dent in the door and a roof rack. Its tyres are fine.", CAR_HAS)).answers["has"]).choices
+        one = _as(MultiChoiceAnswer, (await self.ask("Ken's car has a flat tyre. Its body is clean and nothing is on the roof.", CAR_HAS)).answers["has"]).choices
+        return set(two) == {"dent", "rack"} and set(one) == {"flat"}, f"{', '.join(two) or 'none'} / {', '.join(one) or 'none'}"
+
     async def _estimate(self) -> tuple[bool, str]:
         three = _as(EstimateAnswer, (await self.ask("Mia picked three apples from the tree.", APPLE_COUNT)).answers["apples"]).value
         seven = _as(EstimateAnswer, (await self.ask("Mia picked seven apples from the tree.", APPLE_COUNT)).answers["apples"]).value
@@ -352,7 +362,7 @@ async def probe(client: AsyncClient, name: str) -> Verification:
     model = client.connections.build(name)  # its own object: the declared capabilities are set aside for the probe
     model.capabilities = EVERYTHING.model_copy(update={"max_options": model.capabilities.max_options})
     p = _Probe(client, model)
-    first: tuple[CheckName, ...] = ("boolean", "choice", "score", "image", "audio", "video", "pdf", *READS)
+    first: tuple[CheckName, ...] = ("boolean", "choice", "score", "image", "audio", "video", "pdf", *READS, "multichoice")
     checks: dict[CheckName, Check] = dict(zip(first, await asyncio.gather(*(p.check(c) for c in first))))
     if checks["image"].ok:
         checks["images"], checks["box"] = await asyncio.gather(p.check("images"), p.check("box"))
@@ -516,7 +526,7 @@ def lineup(project: Project) -> list[dict[str, str]]:
             "image": _cell(said, v, "image", "images"), "box": _cell(said, v, "box"),
             "audio": _cell(said, v, "audio"), "video": _cell(said, v, "video"), "pdf": _cell(said, v, "pdf"),
             "text": _cell(said, v, "text"), "number": _cell(said, v, "number"), "date": _cell(said, v, "date"),
-            "estimate": _cell(said, v, "estimate"),
+            "estimate": _cell(said, v, "estimate"), "multichoice": _cell(said, v, "multichoice"),
             "distribution": caps.distribution, "context": f"{caps.context_tokens // 1000}k",
             "limits": ", ".join(f"{k} {x}" for k, x in [("options", caps.max_options), ("instr", caps.max_instructions_chars), ("desc", caps.max_description_chars)] if x) or "-",
             "concurrency": str(m.concurrency), "checked": v.at[:10] if v else "-",

@@ -437,3 +437,33 @@ def test_an_llm_fetching_its_price_list_does_not_hold_the_event_loop(monkeypatch
         return time.perf_counter() - started
 
     assert asyncio.run(within_limit()) < 0.8  # asyncio.run itself then waits for the abandoned fetch to end
+
+
+@respx.mock
+def test_liquid_asks_a_multichoice_and_the_others_refuse_it(monkeypatch):
+    from s1flow.client import Client, MultiChoiceAnswer
+    from s1flow.client.providers.liquid import BASE_URL as LIQUID_URL, LiquidModel
+    from s1flow.client.providers.openrouter import OpenRouterModel
+    from s1flow.core.errors import ProviderError
+    from s1flow.questions import MultiChoice
+
+    monkeypatch.setenv("LIQUID_API_KEY", "test")
+    topics = MultiChoice(instructions="What does the customer complain about?", criteria={"late": "late", "damage": None})
+    qs = {"refund": QS["refund"], "topics": topics}
+    reply = {"model": "d1.2", "answers": {"refund": {"type": "noul", "noul": 0.84},
+                                          "topics": {"type": "choice", "choices": ["late"], "probabilities": {"late": 0.97, "damage": 0.001}}}}
+    route = respx.post(f"{LIQUID_URL}/systemone").mock(return_value=httpx.Response(200, json=reply))
+    caps = Capabilities(question_types={"boolean", "multichoice"})
+    r = Client().responses.create(model=LiquidModel("d1.2", capabilities=caps), state="It came late.", questions=qs)
+    sent = json.loads(route.calls[0].request.read())["questions"]
+    assert sent["topics"] == {"type": "choice", "multiple": True, "instructions": topics.instructions, "criteria": {"late": "late", "damage": None}}
+    assert r.answers["topics"] == MultiChoiceAnswer(choices=["late"], probabilities={"late": 0.97, "damage": 0.001})
+    reply["answers"]["topics"] = {"type": "choice", "choices": [], "probabilities": {"late": 0.01, "damage": 0.0}}
+    route.mock(return_value=httpx.Response(200, json=reply))
+    assert Client().responses.create(model=LiquidModel("d1.2", capabilities=caps), state="Thanks.", questions=qs).answers["topics"].choices == []
+    reply["answers"]["topics"] = {"type": "choice", "choices": ["refund"], "probabilities": {}}
+    route.mock(return_value=httpx.Response(200, json=reply))
+    with pytest.raises(ProviderError, match="choices 'refund' are not options"):
+        Client().responses.create(model=LiquidModel("d1.2", capabilities=caps), state="x", questions=qs)
+    with pytest.raises(Unsupported, match=r"the System One format has no multichoice questions: topics"):
+        Client().responses.create(model=OpenRouterModel("typesafe/jev", capabilities=caps), state="x", questions=qs)
