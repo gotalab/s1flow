@@ -11,13 +11,13 @@ from conftest import attach, make_project
 
 from s1flow.client import Capabilities, DateAnswer, EstimateAnswer, MultiChoiceAnswer, NumberAnswer, Response, TextAnswer
 from s1flow.core.errors import ConfigError, DataError, ProviderError, Unsupported
-from s1flow.eval import Task, comparison, metrics, report, review
+from s1flow.eval import Task, comparison, data, metrics, report, review
 from s1flow.eval import run as running
 from s1flow.eval.kinds import kind_of
 from s1flow.eval.objectives import measure
 from s1flow.objectives import Accuracy, Coverage, MAE, MeanError, OptionF1
 from s1flow.policies import DecisionRule
-from s1flow.policies.kinds import ABSENT, KindParams
+from s1flow.policies.kinds import ABSENT, KindParams, same_label
 from s1flow.questions import Boolean, Date, MultiChoice, Number, RangeEstimate, Text
 
 TEXT, NUMBER, DATE = Text(instructions="The order number"), Number(instructions="The total"), Date(instructions="The day it shipped")
@@ -248,6 +248,11 @@ def test_a_multichoice_label_is_the_list_of_options_that_apply():
     for bad in ("late", ["late", "late"], ["refund"], None, True):
         assert "list of the options that apply" in kind.label_error(bad)
     assert kind.as_label(["damage", "late"]) == ("late", "damage")  # in the question's order
+    for bad in ("late", ["late", "refund"]):  # never read letter by letter, nor with an unknown option dropped
+        with pytest.raises(ValueError, match="list of the options that apply"):
+            kind.as_label(bad)
+    assert same_label(kind, ["damage", "late"], ("late", "damage")) and not same_label(kind, ["late"], ["late", "damage"])
+    assert not same_label(kind_of(Number(instructions="How many?")), 0, ABSENT)  # 0 is a number, False no value
     with pytest.raises(ValueError, match="positive scores a choice question"):
         kind_of(TOPICS, KindParams(positive="late"))
 
@@ -316,7 +321,21 @@ def test_a_multichoice_task_runs_reports_and_compares(tmp_path):
     assert row.adoption_blocked == ["multichoice questions are comparable but cannot be adopted as runtime policies"]
     with pytest.raises(Unsupported, match="multichoice tasks are not supported yet"):
         review.review(task)
+    assert not [w for w in data.check(task).warnings if "same state" in w]
     fix = review.correct(task, "1", "relabel", reason="also damaged", by="tester", label=["damage", "late"])
     assert fix.was == ["late"] and fix.label == ["damage", "late"]
     with pytest.raises(DataError, match="already"):
         review.correct(task, "3", "relabel", reason="same set", by="tester", label=["damage", "late"])
+
+
+def test_a_multichoice_label_the_task_cannot_hold_stops_the_measurement(tmp_path):
+    p = make_project(tmp_path, {"tagger": Tagger})
+    rows = [{"id": str(i), "n": i, "tags": ["late"] if i else "late"} for i in range(6)]  # case 0 wrote one option as text
+    (tmp_path / "data.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
+    tags = lambda r: r["tags"] if isinstance(r["tags"], list) else [r["tags"]]  # noqa: E731
+    task = attach(Task(id="tags-bad", cases="data.jsonl", dir=tmp_path, state=lambda r: f"{r['n']}|{','.join(tags(r))}", question_id="complaints",
+                       question=TOPICS, label=lambda r: r["tags"]), p)
+    assert any(e.startswith("0: a multichoice label") for e in data.check(task).errors)
+    asyncio.run(running.run_model(task, "tagger", limit=None, variant="base"))
+    with pytest.raises(DataError, match="^0: a multichoice label .* `s1flow cases check`"):
+        metrics.load(task, "base", "tagger")

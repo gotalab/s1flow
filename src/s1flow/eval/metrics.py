@@ -25,7 +25,7 @@ from ..client import cost
 from ..client.answers import CostSource
 from ..client.identity import request_digests, require_provider_revision, model_digest
 from ..client.models import ModelSpec, Price
-from ..core.errors import NotFound
+from ..core.errors import DataError, NotFound
 from ..policies.kinds import Reading
 from ..policies.rule import DecisionRule
 from .candidate import Candidate
@@ -189,6 +189,10 @@ def load(task: Task, variant: str, model: str, *, include_test: bool = False) ->
         if label is None:
             pr.unlabeled += 1
             continue
+        try:
+            kind.as_label(label)
+        except (TypeError, ValueError) as e:  # a label the task cannot hold is never scored as something else
+            raise DataError(f"{cid}: {kind.label_error(label) or e}; `s1flow cases check` lists every such case") from None
         if (a := r.given) is None:
             if r.outcome == "failed":
                 pr.failed_cases.append(cid)
