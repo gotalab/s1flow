@@ -14,7 +14,8 @@ from conftest import PROJECT, attach, make_project
 from s1flow.client.boxes import iou
 from s1flow.core.errors import DataError, Unsupported
 from s1flow.client import Box, BoxAnswer, BoxEdges, Capabilities, Response, Image
-from s1flow.eval import Task, metrics, report
+from s1flow.eval import Task, data, metrics, report
+from s1flow.policies.kinds import same_label
 from s1flow.eval import run as running
 from s1flow.project import Project
 from s1flow.client.providers.llm import box_answer, to_answers, user_content
@@ -207,6 +208,10 @@ def test_boxes_are_matched_one_to_one_best_first():
     assert matched([TRUTH, OTHER], [OTHER, TRUTH], 0.5) == 2 and matched([NEAR], [TRUTH], 0.5) == 1 and matched([NEAR], [TRUTH], 0.8) == 0
     assert matched([TRUTH, NEAR], [TRUTH], 0.5) == 1  # two answer boxes on one instance: one of them is its box
     assert matched([], [TRUTH], 0.5) == 0 == matched([TRUTH], [], 0.5)
+    # best first would give g1 to t1 (IoU 0.78) and leave g2 without a box; g2 to t1 (0.75) and g1 to t2 (0.45) are two
+    strip = lambda left, right: BoxEdges(top=0, bottom=1, left=left, right=right)  # noqa: E731
+    t1, t2, g1, g2 = strip(0, 0.4), strip(0.2, 0.6), strip(0.05, 0.45), strip(0, 0.3)
+    assert matched([g1, g2], [t1, t2], 0.4) == 2 == matched([g2, g1], [t2, t1], 0.4)
 
 
 def test_a_boxes_label_is_every_instance_and_the_answer_is_as_sure_as_the_whole_set():
@@ -222,6 +227,9 @@ def test_a_boxes_label_is_every_instance_and_the_answer_is_as_sure_as_the_whole_
     assert kind.label_error([]) is None and kind.label_error([TRUTH.model_dump()]) is None
     for bad in (TRUTH.model_dump(), [{"top": 2}], None, False):
         assert "list of every instance's box" in kind.label_error(bad)
+        with pytest.raises(ValueError, match="list of every instance's box"):
+            kind.as_label(bad)
+    assert same_label(kind, [TRUTH.model_dump(), OTHER.model_dump()], [OTHER, TRUTH]) and not same_label(kind, [TRUTH.model_dump()], [])
     one = lambda b, found=0.9, conf=0.8: FoundBox(box=b, found=found, confidence=conf)
     r = kind.read([BoxesAnswer(boxes=[one(TRUTH), one(OTHER)], presence=[0.9, 0.9, 0.2])], DecisionRule(min_probability=0.5))
     assert r.value == (TRUTH, OTHER) and r.confidence == pytest.approx(0.9 * 0.9 * 0.8 * 0.8 * 0.8) and r.below_min_probability is True
@@ -294,3 +302,19 @@ def test_a_boxes_task_runs_reports_and_compares(tmp_path):
     assert row.adoption_blocked == ["boxes questions are comparable but cannot be adopted as runtime policies"]
     with pytest.raises(U, match="boxes tasks are not supported yet"):
         review.review(task)
+    assert not [w for w in data.check(task).warnings if "same state" in w]
+    with pytest.raises(DataError, match="already"):  # the same boxes in another order
+        review.correct(task, "2", "relabel", reason="same boxes", by="tester", label=[OTHER.model_dump(), TRUTH.model_dump()])
+    fix = review.correct(task, "2", "relabel", reason="a third disc", by="tester", label=[b.model_dump() for b in (TRUTH, OTHER, MISS)])
+    assert len(fix.was) == 2 and len(fix.label) == 3
+
+
+def test_a_boxes_answer_has_no_more_boxes_than_the_question_allows():
+    from s1flow.client import Boxes, BoxesAnswer, FoundBox
+    from s1flow.client.providers.contract import validate_response
+    from s1flow.core.errors import ProviderError
+
+    two = Response(answers={"q": BoxesAnswer(boxes=[FoundBox(box=TRUTH), FoundBox(box=OTHER)])}, answered_by="m")
+    assert validate_response(two, {"q": Boxes(instructions="every disc", max=2)}, "p") is two
+    with pytest.raises(ProviderError, match="2 boxes, more than the question's max of 1"):
+        validate_response(two, {"q": Boxes(instructions="every disc", max=1)}, "p")

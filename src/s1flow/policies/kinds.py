@@ -15,6 +15,7 @@ a policy ships it. Adding a type of question is adding a class here.
 | multichoice        | the options that apply, []   | each option whose P >= 0.5 (P from its probability, else 1 / 0 from its choices) | of the whole set | min_probability |
 | score              | a level, 0..L-1              | the expected level, rounded (.5 up)     | of that level        | min_probability            |
 | box                | {top, bottom, left, right}   | the first answer's box                  | none (`confidence`)  | min_probability            |
+| boxes              | every instance's box, []     | the first answer's boxes                | none (`confidence`: presence or found per slot, times each box's) | min_probability |
 | text, number, date | the value, or False (absent) | the value read, None when absent        | of the value         | min_probability            |
 | estimate           | a number in min..max         | the estimate                            | none (`confidence`)  | min_probability            |
 
@@ -384,8 +385,8 @@ class BoxKind(_Kind):
 
 
 class BoxesKind(_Kind):
-    """A box for every instance. Right when each label box has its own answer box at `iou` or more and no answer box
-    is left over. What stands in for a probability is that of the whole set: each slot's presence, or its absence,
+    """A box for every instance, the first answer's. Right when each label box has its own answer box at `iou` or more
+    and no answer box is left over. What stands in for a probability is that of the whole set: each slot's presence, or its absence,
     and the model's confidence in each box's edges, multiplied (0 when the model says there are more than it gave). Evaluated, not adoptable."""
 
     type: ClassVar[QuestionType] = "boxes"
@@ -406,7 +407,11 @@ class BoxesKind(_Kind):
         return None
 
     def as_label(self, answer: Any) -> Any:
-        return tuple(BoxEdges.model_validate(b) for b in answer) if isinstance(answer, (list, tuple)) else answer
+        """The boxes in one order (top, then left), so two labels with the same boxes are equal; ValueError for
+        anything that is not a list of boxes."""
+        if (wrong := self.label_error(answer)) is not None:
+            raise ValueError(wrong)
+        return tuple(sorted((BoxEdges.model_validate(b) for b in answer), key=lambda b: (b.top, b.left, b.bottom, b.right)))
 
     def average(self, answers: Sequence[Answer]) -> Average:
         a: BoxesAnswer = self._given(answers)[0]

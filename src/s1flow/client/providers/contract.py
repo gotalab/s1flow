@@ -23,7 +23,7 @@ from ..answers import (
     ScoreAnswer,
     TextAnswer,
 )
-from ..questions import Choice, MultiChoice, RangeEstimate, Questions, Score
+from ..questions import Boxes, Choice, MultiChoice, RangeEstimate, Questions, Score
 
 # The answer each type of question takes.
 FITS: dict[str, type] = {
@@ -81,6 +81,8 @@ def _validate_answer(qid: str, question: Any, answer: Answer) -> None:
     if not isinstance(answer, FITS[question.type]):
         kind = getattr(answer, "type", type(answer).__name__)
         _fail(qid, f"answer type {kind!r} does not fit a {question.type} question")
+    if isinstance(question, Boxes) and isinstance(answer, BoxesAnswer) and question.max is not None and len(answer.boxes) > question.max:
+        _fail(qid, f"{len(answer.boxes)} boxes, more than the question's max of {question.max}")
 
     validate_answer_values(qid, answer, options=question.criteria.keys() if isinstance(question, (Choice, MultiChoice)) else None,
                            levels=len(question.criteria) if isinstance(question, Score) else None,
