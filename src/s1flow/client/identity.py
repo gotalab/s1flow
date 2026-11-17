@@ -68,6 +68,11 @@ except PackageNotFoundError:
     SDK_VERSION = "source"
 
 
+# Bump a built-in provider's entry when it reads the same reply into a different answer and only its saved answers
+# go stale: REQUEST would make every provider's answers look unasked. A provider not named here hashes no entry.
+# liquid 2: a box it did not find is a box answer with no box (until then a refusal).
+READING = {"liquid": "2"}
+
 _UNDECLARED = Capabilities().model_dump(mode="json")
 _SINCE_0_1_0A5 = ("audio", "video", "pdf")  # capabilities the releases in _RELEASED did not have
 
@@ -82,6 +87,7 @@ def model_digest(spec: ModelSpec, *, released: bool = False) -> str:
         "endpoint": _public(cloudflare_relay()) if s.provider == "cloudflare" else None,
         "provider": s.provider,
         "provider_revision": s.provider_revision,
+        **({"reading": READING[s.provider]} if s.provider in READING else {}),
         "id": s.id,
         "options": _public(s.options),
         "capabilities": ({k: v for k, v in declared.items() if k not in _SINCE_0_1_0A5} if released

@@ -12,6 +12,7 @@ from pydantic import BaseModel
 
 from ..core.errors import DataError
 from ..client.state import has_unprepared_media
+from ..policies.kinds import same_label
 from . import evalset
 from .cases import Case
 from .shown import pct
@@ -33,7 +34,7 @@ class DataCheck(BaseModel):
 
 def _label(label: Any) -> str:
     """A label as the count of labels names it: a multichoice's options in one order, a boxes label by how many."""
-    if isinstance(label, list):
+    if isinstance(label, (list, tuple)):
         if all(isinstance(k, str) for k in label):
             return ", ".join(sorted(label)) or "none"
         return "1 box" if len(label) == 1 else f"{len(label)} boxes"
@@ -48,17 +49,17 @@ def check(task: Task) -> DataCheck:
         return DataCheck(cases=0, labelled=0, labels={}, errors=[str(e)])
     errors: list[str] = []
     warnings: list[str] = []
+    kind = task.kind
     collected = {c.id: c.label for c in task.load_cases().collected()}
     for f in fixes.values():
         if f.id not in collected:
             errors.append(f"{f.id}: corrected in corrections.jsonl, but no case has this id")
-        elif collected[f.id] != f.was:
+        elif not same_label(kind, collected[f.id], f.was):
             warnings.append(f"{f.id}: corrected from {f.was!r}, but the collected label is now {collected[f.id]!r}; read it again")
     for id_, n in Counter(c.id for c in cases).items():
         if n > 1:
             errors.append(f"{id_}: {n} cases share this id")
     labelled = [c for c in cases if c.label is not None]
-    kind = task.kind
     for c in labelled:
         if (wrong := kind.label_error(c.label)) is not None:
             errors.append(f"{c.id}: {wrong}")
@@ -72,7 +73,7 @@ def check(task: Task) -> DataCheck:
     seen: dict[str, Case] = {}
     for c in labelled:
         key = json.dumps(c.state, sort_keys=True, ensure_ascii=False, default=str)
-        if key in seen and seen[key].label != c.label:
+        if key in seen and not same_label(kind, seen[key].label, c.label):
             warnings.append(f"{seen[key].id} and {c.id} have the same state and different labels ({seen[key].label!r} / {c.label!r})")
         seen.setdefault(key, c)
     labels = Counter(_label(c.label) for c in labelled)

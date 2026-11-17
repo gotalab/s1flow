@@ -48,7 +48,8 @@
 ### Changed
 
 - The `liquid` provider reads a box the model did not find as an answer of no box, not as a refusal: in an
-  evaluation it is a wrong answer the model was sure of, where it was no answer before.
+  evaluation it is a wrong answer the model was sure of, where it was no answer before. `run` asks Liquid's models
+  again once instead of reusing the answers saved before; other providers' saved answers stand.
 
 - The comparison page (`charts.py`) orders its columns by what a choice weighs: the task's objective first, then
   latency, then API cost, then the other metrics. The column the table is sorted by carries a mark.

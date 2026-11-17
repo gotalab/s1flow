@@ -1,6 +1,9 @@
 {
  "request": "s1flow/request@3",
  "execution": "s1flow/execution@3",
+ "reading": {
+  "liquid": "2"
+ },
  "providers": {
   "typesafe": {
    "text": {
