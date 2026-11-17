@@ -1,5 +1,5 @@
 {#- Mintlify-style page actions: copy this page's Markdown; the menu opens it, or hands it to an assistant. -#}
-{% if page.markdown_url and page.url %}
+{% if page.markdown_url %}
   {% set md = config.site_url ~ page.url ~ "index.md" %}
   {% set ask = "Read " ~ md ~ " so I can ask questions about s1flow." %}
   <div class="page-actions">

@@ -294,3 +294,7 @@
   color: var(--md-default-fg-color);
 }
 .bench-filter input:focus { outline: 2px solid var(--md-accent-fg-color); outline-offset: 1px; border-color: transparent; }
+@media screen and (max-width: 44.984em) {
+  /* A phone is too narrow to hold the candidate column still: the whole table scrolls. */
+  .md-typeset .bench table:not([class]) tr > :first-child { position: static; box-shadow: none; }
+}

@@ -1,14 +1,20 @@
 // Bench tables: select a column heading to sort by it, and filter long tables by candidate.
-// The Markdown stays a plain table; this reads the numbers back out of the cells.
+// The Markdown stays a plain table; this reads the numbers back out of the cells. The generator marks, on the
+// table's wrapper, which columns are lower-is-better (data-lower) and which sort as text (data-text).
 (() => {
-  const LOWER_IS_BETTER = /latency|cost|ece|brier|mae|loss|false alarms|refused/i;
-
   function number(cell) {
     const match = cell.textContent.replace(/,/g, "").match(/-?\d+(\.\d+)?/);
     return match ? parseFloat(match[0]) : null;
   }
 
+  function columns(wrapper, name) {
+    return new Set((wrapper.dataset[name] || "").split(" ").filter(Boolean).map(Number));
+  }
+
   function sortable(table) {
+    const wrapper = table.closest(".bench");
+    const lower = columns(wrapper, "lower");
+    const texts = columns(wrapper, "text");
     const body = table.tBodies[0];
     const heads = [...table.tHead.rows[0].cells];
     heads.forEach((th, index) => {
@@ -18,8 +24,8 @@
       button.append(...th.childNodes);
       th.append(button);
       button.addEventListener("click", () => {
-        const text = index === 0;
-        const ascendingFirst = text || LOWER_IS_BETTER.test(button.textContent);
+        const text = texts.has(index);
+        const ascendingFirst = text || lower.has(index);
         const current = th.getAttribute("aria-sort");
         const first = ascendingFirst ? "ascending" : "descending";
         const next = current === first ? (first === "ascending" ? "descending" : "ascending") : first;

@@ -133,9 +133,11 @@ def question_block(data: dict[str, Any]) -> str:
     return "\n".join(lines).rstrip() + "\n"
 
 
-def metric_columns(data: dict[str, Any]) -> list[tuple[str, str, str]]:
-    """Every metric the comparison holds besides the objective, once each: (key, column label, unit)."""
+def metric_columns(data: dict[str, Any]) -> list[tuple[str, str, str, str]]:
+    """Every metric the comparison holds besides the objective, once each: (key, column label, unit, direction).
+    Accuracy under the task's threshold rule is kept beside plain accuracy when they differ, as the HTML page does."""
     objective = data["objective"]
+    rows = [c for c in data["candidates"] if c["n"] and not c["excluded"]]
     seen, out = {objective["label"]}, []
     for d in data["metric_definitions"]:
         key, label = d["key"], d["label"]
@@ -145,11 +147,20 @@ def metric_columns(data: dict[str, Any]) -> list[tuple[str, str, str]]:
             label = f"coverage at {float(key.split(':')[1]):.0%} accuracy"
         elif key.startswith("accepted_accuracy:"):
             label = "accepted accuracy"
+        elif key == "objective:accuracy{}" and any(
+                c["metrics"][key]["value"] != c["metrics"]["accuracy"]["value"] for c in rows):
+            label = "accuracy (task rule)"
         if label in seen:
             continue
         seen.add(label)
-        out.append((key, label, d["unit"]))
+        out.append((key, label, d["unit"], d["direction"]))
     return out
+
+
+def bench_div(table: list[str], lower: list[int], text: list[int]) -> str:
+    """A table the site's script can sort: which columns are lower-is-better, and which sort as text."""
+    attrs = f' data-lower="{" ".join(map(str, lower))}" data-text="{" ".join(map(str, text))}"'
+    return f'<div class="bench" markdown{attrs}>\n\n' + "\n".join(table) + "\n\n</div>\n"
 
 
 def task_page(data: dict[str, Any], use: dict[str, str]) -> str:
@@ -161,15 +172,18 @@ def task_page(data: dict[str, Any], use: dict[str, str]) -> str:
     alarms = false_alarms(task) if objective["name"] == "recall" else {}
     metrics = metric_columns(data)
     refused = any(c["failures"]["refused_cases"] for c in rows)
-    head = ["Candidate", objective["label"]] + (["false alarms"] if alarms else []) + [label for _, label, _ in metrics]
+    head = ["Candidate", objective["label"]] + (["false alarms"] if alarms else []) + [label for _, label, _, _ in metrics]
     head += ["p50 latency", "p90 latency", "API cost / 10k"] + (["refused"] if refused else [])
+    lower = ([1] if objective["direction"] == "min" else []) + ([2] if alarms else [])
+    lower += [2 + bool(alarms) + i for i, (*_, direction) in enumerate(metrics) if direction == "min"]
+    lower += list(range(len(head) - 3 - refused, len(head)))
     table = ["| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
     for c in rows:
         cells = [c["candidate"] + (" =" if c["candidate"] in tied else ""),
                  f"{fmt(c['value'], unit)} {fmt_interval(c['interval'], unit)}".rstrip()]
         if alarms:
             cells.append(f"{alarms[c['candidate']]:.1%}" if c["candidate"] in alarms else "")
-        cells += [fmt(c["metrics"][key]["value"], u) if c["metrics"][key]["value"] is not None else "" for key, _, u in metrics]
+        cells += [fmt(c["metrics"][key]["value"], u) if c["metrics"][key]["value"] is not None else "" for key, _, u, _ in metrics]
         p90 = (c["calls"].get("latency") or {}).get("p90_ms")
         cells += [latency(c["calls"]), "unknown" if p90 is None else f"{p90:,.0f} ms", cost(c["calls"])]
         if refused:
@@ -184,8 +198,9 @@ def task_page(data: dict[str, Any], use: dict[str, str]) -> str:
                      "a little.")
     if unreached:
         notes.append("Not reached: no threshold meets the objective's target on these cases.")
-    notes.append("Accuracy (all) reads every answer at its most likely option, without the objective's threshold. "
-                 "Accepted accuracy is the accuracy of the answers above the coverage threshold. Lower is better for "
+    notes.append("Accuracy (all) reads every answer at its most likely option, without the objective's threshold; "
+                 "accuracy (task rule) reads them with the objective's threshold. Accepted accuracy is the accuracy of the "
+                 "answers above the coverage threshold. Lower is better for "
                  "latency, cost, ECE, Brier score, MAE, loss, false alarms and refusals.")
     return "\n".join([
         "---", "hide:", "  - toc", "description: " + json.dumps(f"{task}: the answer is used to {use['use']}; measured by {use['objective']}."), "---",
@@ -194,7 +209,7 @@ def task_page(data: dict[str, Any], use: dict[str, str]) -> str:
         f"The answer is used to **{use['use']}**. Objective: **{use['objective']}**, because {use['why']}.", "",
         f"Measured {data['at'][:10]} on {data['n']} labeled development cases. Source: {data['source']}.", "",
         question_block(data),
-        '<div class="bench" markdown>', "", "\n".join(table), "", "</div>", "",
+        bench_div(table, lower, [0]),
         " ".join(notes), "",
         f"[Open the full comparison]({task}/comparison.html){{ .md-button }} with the probability curves "
         f"and a trade-off chart, or download [comparison.json]({task}/comparison.json).", "",
@@ -218,7 +233,8 @@ def matrix(tasks: list[tuple[dict[str, Any], dict[str, str]]]) -> str:
     for name in order:
         table.append(f"| {name} | {best[name]} of {len(cells[name])} | "
                      + " | ".join(cells[name].get(t, "") for t in names) + " |")
-    return '<div class="bench" markdown>\n\n' + "\n".join(table) + "\n\n</div>\n"
+    lower = [i + 2 for i, (data, _) in enumerate(tasks) if data["objective"]["direction"] == "min"]
+    return bench_div(table, lower, [0])
 
 
 def index_page(tasks: list[tuple[dict[str, Any], dict[str, str]]]) -> str:
@@ -235,7 +251,7 @@ def index_page(tasks: list[tuple[dict[str, Any], dict[str, str]]]) -> str:
                      f"{spread} |")
     dates = sorted({data["at"][:10] for data, _ in tasks})
     measured = f"on {dates[0]}" if len(dates) == 1 else f"between {dates[0]} and {dates[-1]}; each task page has its date"
-    bench = '<div class="bench" markdown>\n\n' + "\n".join(table) + "\n\n</div>\n"
+    bench = bench_div(table, [], [0, 1, 2])
     by_model = ("\n## By model\n\nEach candidate's value on each task's own objective. `=` marks a value among the "
                 "best on that task, and *Among the best* counts those tasks. The units differ by task, so read a column, "
                 "not a row; the task pages have every other metric.\n\n" + matrix(tasks))
