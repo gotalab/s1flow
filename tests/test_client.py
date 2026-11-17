@@ -451,6 +451,9 @@ def test_feedback_import_records_every_label_in_a_file_or_none(tmp_path):
     spread.write_text(f'decision_id,label,note\n{ids[0]},formater,"a\nb\nc"\n,,\n')
     done = s1flow("feedback", "import", "gh-ruff-area", str(spread), "--log", str(log), cwd=tmp_path)
     assert done.returncode == 2 and "line 2: gh-ruff-area@v1: label 'formater'" in done.stderr and "line 5" not in done.stderr
+    spread.write_text(f'decision_id,label,note\n{ids[0]},linter,"unclosed\n{ids[1]},formatter,x\n')  # would swallow the next row
+    done = s1flow("feedback", "import", "gh-ruff-area", str(spread), "--log", str(log), cwd=tmp_path)
+    assert done.returncode == 2 and "the row from line 2 is not valid CSV" in done.stderr
     changed = lines()[0]
     changed["decision"]["decision_id"], changed["decision"]["policy_digest"] = "other-file", "0" * 64
     log.write_text(log.read_text() + json.dumps(changed) + "\n")

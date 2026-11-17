@@ -73,15 +73,18 @@ def _label_rows(path: Path) -> list[tuple[int, str, Any]]:
     except UnicodeDecodeError:
         raise DataError(f"{path}: not UTF-8 text; save it as UTF-8 (CSV UTF-8 in a spreadsheet)") from None
     if path.suffix.lower() == ".csv":
-        reader = csv.DictReader(io.StringIO(text, newline=""))
+        reader = csv.DictReader(io.StringIO(text, newline=""), strict=True)  # an unclosed quote must not swallow rows
         if not {"decision_id", "label"} <= set(reader.fieldnames or ()):
             raise DataError(f"{path}: the header needs the columns decision_id and label, got {', '.join(reader.fieldnames or ()) or 'none'}")
         rows = []
         start = reader.line_num + 1
-        for r in reader:  # a row's line is the one it starts on (a quoted cell may span lines)
-            if any((v or "").strip() for k, v in r.items() if k is not None):  # a spreadsheet's trailing `,,` rows are blank
-                rows.append((start, (r["decision_id"] or "").strip(), label((r["label"] or "").strip())))
-            start = reader.line_num + 1
+        try:
+            for r in reader:  # a row's line is the one it starts on (a quoted cell may span lines)
+                if any((v or "").strip() for k, v in r.items() if k is not None):  # a spreadsheet's trailing `,,` rows are blank
+                    rows.append((start, (r["decision_id"] or "").strip(), label((r["label"] or "").strip())))
+                start = reader.line_num + 1
+        except csv.Error as e:
+            raise DataError(f"{path}: the row from line {start} is not valid CSV ({e}); nothing recorded") from None
         return rows
     if path.suffix.lower() != ".jsonl":
         raise ConfigError(f"{path}: give a .csv (columns decision_id, label) or a .jsonl file")
