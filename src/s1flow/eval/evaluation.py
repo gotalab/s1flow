@@ -21,7 +21,7 @@ from .objectives.declare import Objective
 
 # What min_probability reads: a probability of the answer given, or what stands in for one.
 SelectionBasis = Literal["selected-answer probability", "box confidence", "estimate interval"]
-SELECTION_BASIS: dict[str, SelectionBasis] = {"box": "box confidence", "estimate": "estimate interval"}  # the other types: the probability
+SELECTION_BASIS: dict[str, SelectionBasis] = {"box": "box confidence", "boxes": "box confidence", "estimate": "estimate interval"}  # the other types: the probability
 
 Interval = tuple[float, float]
 DistributionEvidence = Literal['native', 'sampled', 'none', 'mixed', 'unknown']

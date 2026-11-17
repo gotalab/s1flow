@@ -128,7 +128,7 @@ def _state(a: argparse.Namespace) -> "State":
 
 
 def _line(qid: str, x: "Answer") -> str:
-    from ..client.answers import BooleanAnswer, BoxAnswer, ChoiceAnswer, DateAnswer, EstimateAnswer, MultiChoiceAnswer, NumberAnswer, ScoreAnswer, TextAnswer
+    from ..client.answers import BooleanAnswer, BoxAnswer, BoxesAnswer, ChoiceAnswer, DateAnswer, EstimateAnswer, MultiChoiceAnswer, NumberAnswer, ScoreAnswer, TextAnswer
 
     if isinstance(x, BooleanAnswer):
         return f"{qid}: P(true) {x.probability:.3f}"
@@ -142,6 +142,9 @@ def _line(qid: str, x: "Answer") -> str:
     if isinstance(x, ScoreAnswer):
         dist = " · ".join(f"{k}: {p:.3f}" for k, p in sorted((x.probabilities or {}).items(), key=lambda kv: int(kv[0])))
         return f"{qid}: {x.score:.2f}" + (f"  ({dist})" if dist else "")
+    if isinstance(x, BoxesAnswer):
+        each = "; ".join(f"top {b.box.top:.3f} bottom {b.box.bottom:.3f} left {b.box.left:.3f} right {b.box.right:.3f}" for b in x.boxes)
+        return f"{qid}: {len(x.boxes)}{' or more' if x.at_least else ''} " + ("box" if len(x.boxes) == 1 else "boxes") + (f"  ({each})" if each else "")
     if isinstance(x, BoxAnswer):
         b = x.box
         if b is None:

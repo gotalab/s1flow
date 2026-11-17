@@ -58,6 +58,40 @@
    "title": "Box",
    "type": "object"
   },
+  "Boxes": {
+   "additionalProperties": false,
+   "description": "A bounding box for every instance of the target in the picture, none when there is none (Liquid d1.2,\n2026-11-17). `max` caps how many a model returns (Liquid's own cap is 16 when it is left out).",
+   "properties": {
+    "type": {
+     "const": "boxes",
+     "default": "boxes",
+     "title": "Type",
+     "type": "string"
+    },
+    "instructions": {
+     "title": "Instructions",
+     "type": "string"
+    },
+    "max": {
+     "anyOf": [
+      {
+       "minimum": 1,
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Max"
+    }
+   },
+   "required": [
+    "instructions"
+   ],
+   "title": "Boxes",
+   "type": "object"
+  },
   "CalibrationPoint": {
    "additionalProperties": false,
    "properties": {
@@ -441,6 +475,7 @@
       "mapping": {
        "boolean": "#/$defs/Boolean",
        "box": "#/$defs/Box",
+       "boxes": "#/$defs/Boxes",
        "choice": "#/$defs/Choice",
        "date": "#/$defs/Date",
        "estimate": "#/$defs/RangeEstimate",
@@ -478,6 +513,9 @@
       },
       {
        "$ref": "#/$defs/MultiChoice"
+      },
+      {
+       "$ref": "#/$defs/Boxes"
       }
      ],
      "title": "Question"
@@ -1458,7 +1496,8 @@
     "number",
     "date",
     "estimate",
-    "multichoice"
+    "multichoice",
+    "boxes"
    ],
    "title": "Question Type",
    "type": "string"

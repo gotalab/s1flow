@@ -11,15 +11,16 @@ The questions that read a value or estimate one go in the same `questions` (chec
 `text`, `number` and `date` answer the value with `found`, which is 1 - `p_null`, and a null value when nothing is
 there; a `RangeEstimate` is a `number` with a `range`, answered with its median and an `interval` (p10, p90).
 A `MultiChoice` is a `choice` with `multiple`, answered with the `choices` that apply and each option's own
-probability. A `span` is kept for a text state only: for a JSON state Liquid counts in its own rendering of it.
+probability. `Boxes` is `boxes`, answered with a box per instance, whether it stopped at `max` (`at_least`) and the
+`presence` of each slot. A `span` is kept for a text state only: for a JSON state Liquid counts in its own rendering of it.
 """
 
 from typing import Any
 
-from ..answers import Answer, DateAnswer, MultiChoiceAnswer, EstimateAnswer, NumberAnswer, ReadAnswer, Response, TextAnswer, Usage
+from ..answers import Answer, BoxEdges, BoxesAnswer, DateAnswer, FoundBox, MultiChoiceAnswer, EstimateAnswer, NumberAnswer, ReadAnswer, Response, TextAnswer, Usage
 from ..media import chat_parts, images_only
 from ..models import Capabilities, ModelBuild, ModelSpec, check_supported
-from ..questions import FIELD_TYPES, MultiChoice, Question, Questions, RangeEstimate
+from ..questions import FIELD_TYPES, Boxes, MultiChoice, Question, Questions, RangeEstimate
 from ..state import State, has_image
 from .contract import outside_contract, refusal
 from .build import NoOptions, options, spec_options
@@ -33,12 +34,14 @@ BASE_URL = "https://api.liquid.ai/decisions/v1"
 READ: dict[Any, type[TextAnswer] | type[NumberAnswer] | type[DateAnswer]] = {"text": TextAnswer, "number": NumberAnswer, "date": DateAnswer}
 
 
-OWN = FIELD_TYPES | {"multichoice"}  # asked in Liquid's own shape, not System One's
+OWN = FIELD_TYPES | {"multichoice", "boxes"}  # asked in Liquid's own shape, not System One's
 
 
 def _field(q: Question) -> dict[str, Any]:
     if isinstance(q, MultiChoice):
         return {"type": "choice", "multiple": True, "instructions": q.instructions, "criteria": q.criteria}
+    if isinstance(q, Boxes):
+        return q.model_dump(exclude_none=True)
     if isinstance(q, RangeEstimate):
         wire = q.model_dump(exclude_none=True, exclude={"type", "min", "max"})
         return {"type": "number", "range": [q.min, q.max]} | wire
@@ -48,6 +51,10 @@ def _field(q: Question) -> dict[str, Any]:
 def _read(q: Question, a: dict[str, Any], text_state: bool) -> Answer:
     if isinstance(q, MultiChoice):
         return MultiChoiceAnswer(choices=a["choices"], probabilities=a.get("probabilities") or None)
+    if isinstance(q, Boxes):
+        each = [FoundBox(box=BoxEdges.clipped(b["box"]["top"], b["box"]["bottom"], b["box"]["left"], b["box"]["right"]),
+                          confidence=b.get("confidence"), found=b.get("found")) for b in a["boxes"]]
+        return BoxesAnswer(boxes=each, at_least=bool(a.get("at_least")), presence=a.get("presence"))
     if isinstance(q, RangeEstimate):
         low, high = a.get("interval") or (None, None)
         return EstimateAnswer(value=a["number"], p10=low, p90=high)

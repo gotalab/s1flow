@@ -5,6 +5,7 @@ this is the one place that says whether the result is usable.
 """
 
 import json
+from typing import Any
 from collections import Counter
 
 from pydantic import BaseModel
@@ -29,6 +30,15 @@ class DataCheck(BaseModel):
     test: int | None = None  # cases held out in the evaluation set, when it exists
     unassigned: int = 0  # labelled after split.json was written: placed by their ID's hash when it is read
     corrected: dict[str, int] = {}  # corrections.jsonl: verdict -> cases
+
+
+def _label(label: Any) -> str:
+    """A label as the count of labels names it: a multichoice's options in one order, a boxes label by how many."""
+    if isinstance(label, (list, tuple)):
+        if all(isinstance(k, str) for k in label):
+            return ", ".join(sorted(label)) or "none"
+        return "1 box" if len(label) == 1 else f"{len(label)} boxes"
+    return str(label)
 
 
 def check(task: Task) -> DataCheck:
@@ -66,7 +76,7 @@ def check(task: Task) -> DataCheck:
         if key in seen and not same_label(kind, seen[key].label, c.label):
             warnings.append(f"{seen[key].id} and {c.id} have the same state and different labels ({seen[key].label!r} / {c.label!r})")
         seen.setdefault(key, c)
-    labels = Counter(", ".join(sorted(c.label)) or "none" if isinstance(c.label, (list, tuple)) else str(c.label) for c in labelled)
+    labels = Counter(_label(c.label) for c in labelled)
     if kind.binary and labelled:
         small = min(labels.get("True", 0), labels.get("False", 0)) / len(labelled)
         if small < MINORITY and task.primary.name == "accuracy":

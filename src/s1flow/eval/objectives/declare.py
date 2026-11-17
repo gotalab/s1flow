@@ -117,6 +117,10 @@ METRICS: dict[str, Metric] = {
     "recall": Metric("recall", "share", "max"),
     "f1": Metric("F1", "number", "max"),
     "macro_f1": Metric("macro-F1", "number", "max"),
+    "box_f1": Metric("box F1", "number", "max"),
+    "box_precision": Metric("box precision", "share", "max"),
+    "box_recall": Metric("box recall", "share", "max"),
+    "count_error": Metric("count error", "number", "min"),
     "option_f1": Metric("option F1", "number", "max"),
     "option_precision": Metric("option precision", "share", "max"),
     "option_recall": Metric("option recall", "share", "max"),
@@ -166,6 +170,11 @@ def OptionF1() -> Objective:
     return _plain("option_f1")
 
 
+def BoxF1() -> Objective:
+    """A boxes task's F1 over every box of every case: label boxes found against answer boxes that match none."""
+    return _plain("box_f1")
+
+
 def MeanError() -> Objective:
     """The mean distance of an estimate from its label, in the question's own unit (a failed call is as far off as
     its label can be within the range)."""
@@ -196,7 +205,7 @@ def Loss(default: float = 1.0, losses: dict[str, dict[str, float]] | None = None
 
 BUILT_IN: dict[str, Callable[..., Objective]] = {
     "coverage": Coverage, "recall": Recall, "expected_loss": ExpectedLoss, "auroc": AUROC, "accuracy": Accuracy, "f1": F1, "macro_f1": MacroF1,
-    "mae": MAE, "mean_error": MeanError, "option_f1": OptionF1, "qwk": QWK, "loss": Loss,
+    "mae": MAE, "mean_error": MeanError, "option_f1": OptionF1, "box_f1": BoxF1, "qwk": QWK, "loss": Loss,
 }
 
 

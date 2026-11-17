@@ -1,6 +1,7 @@
 """`s1flow cases check | review | correct`: a task's cases, and their labels reviewed and corrected."""
 
 import argparse
+import json
 from typing import Any, cast
 
 from ..core.errors import ConfigError
@@ -44,6 +45,11 @@ def cases_correct(a: argparse.Namespace) -> int:
     task = load(project(a), a.task)
     if isinstance(a.label, str) and task.kind.type == "multichoice":  # late,damage; none for no option
         value = [] if a.label.strip().lower() in ("", "none") else [k.strip() for k in a.label.split(",")]
+    if isinstance(a.label, str) and task.kind.type == "boxes":  # a JSON list of boxes; none for no instance
+        try:
+            value = [] if a.label.strip().lower() in ("", "none") else json.loads(a.label)
+        except json.JSONDecodeError:
+            pass  # the kind names what a boxes label is
     if isinstance(value, str) and task.kind.type in ("number", "estimate"):
         try:
             value = float(value)
@@ -75,4 +81,4 @@ def add(sub: Any) -> None:
     p.add_argument("--verdict", required=True, help="relabel | keep | unclear | missing")
     p.add_argument("--reason", required=True, help="the criterion that decides it, or what the state lacks")
     p.add_argument("--by", help="who decided (default: git config user.name)")
-    p.add_argument("--label", help="relabel only: the new label (a class key, true / false, a number, or late,damage / none for a multichoice)")
+    p.add_argument("--label", help="relabel only: the new label (a class key, true / false, a number, or late,damage / none for a multichoice, a JSON list of {top, bottom, left, right} / none for boxes)")
