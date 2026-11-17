@@ -37,8 +37,8 @@ The first `s1flow run` on a task holds out its test share and writes `tasks/<tas
 command writes it. Cases added later are placed by a hash of their ID, so the file never moves. With too few
 labelled cases to hold out a test share, `run` still asks the models and writes the file on a later run.
 
-`s1flow init` creates an `s1flow/` project and nothing else. With `--skill` it also writes the Agent Skill (or install it as a plugin, as step 2 of the
-[quick start](../README.md#quick-start) shows). The project's line-up compares four decision models that all work with a single key, `OPENROUTER_API_KEY`
+`s1flow init` creates an `s1flow/` project and nothing else. With `--skill` it also writes the Agent Skill (or install it as a plugin, as step 2 of
+[Get started](get-started.md) shows). The project's line-up compares four decision models that all work with a single key, `OPENROUTER_API_KEY`
 ($0.01 to $0.05 per 1,000 calls on issue-sized inputs). Cases can come from GitHub issues, app logs or labels you
 already have. Fetching cases from GitHub (the Skill's `scripts/github.py`) needs the `gh` CLI, installed and signed in.
 

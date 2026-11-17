@@ -1,0 +1,163 @@
+/* s1flow brand: white surfaces in ink and grey only; the dark scheme is dark grey with a lime accent. */
+[data-md-color-scheme="default"] {
+  --ink: #14181d;
+  --grey: #5b6470;
+  --rule: #e4e7eb;
+  --md-default-fg-color: var(--ink);
+  --md-default-fg-color--light: var(--grey);
+  --md-default-fg-color--lighter: #8a929c;
+  --md-default-fg-color--lightest: #eef0f2;
+  --md-default-bg-color: #ffffff;
+  --md-primary-fg-color: var(--ink);
+  --md-primary-fg-color--light: var(--grey);
+  --md-primary-fg-color--dark: var(--ink);
+  --md-primary-bg-color: #ffffff;
+  --md-accent-fg-color: var(--ink);
+  --md-accent-fg-color--transparent: #f1f3f5;
+  --md-typeset-a-color: var(--ink);
+  --md-code-bg-color: #f5f6f8;
+  --link-line: #b9bfc7;
+}
+
+[data-md-color-scheme="slate"] {
+  --ink: #e8ebee;
+  --grey: #959da7;
+  --rule: #3a424c;
+  --lime: #b5d65a;
+  --md-hue: 210;
+  --md-default-bg-color: #1c2127;
+  --md-default-bg-color--light: #1c2127e6;
+  --md-default-fg-color: var(--ink);
+  --md-default-fg-color--light: var(--grey);
+  --md-default-fg-color--lighter: #6b7480;
+  --md-default-fg-color--lightest: #2a3139;
+  --md-primary-fg-color: var(--lime);
+  --md-primary-fg-color--light: var(--lime);
+  --md-primary-fg-color--dark: var(--lime);
+  --md-primary-bg-color: #1c2127;
+  --md-accent-fg-color: var(--lime);
+  --md-accent-fg-color--transparent: #b5d65a1a;
+  --md-typeset-a-color: var(--lime);
+  --md-code-bg-color: #232a31;
+  --link-line: #b5d65a66;
+}
+
+.md-typeset a {
+  text-decoration-color: var(--link-line);
+  text-underline-offset: 0.2em;
+}
+.md-typeset a:hover { text-decoration-color: currentColor; }
+.md-nav__link--active { font-weight: 600; }
+
+/* Tables read as data: rules between rows, no boxes. */
+.md-typeset table:not([class]) {
+  border: 0;
+  border-radius: 0;
+  font-size: 0.75rem;
+}
+.md-typeset table:not([class]) th {
+  background: none;
+  color: var(--grey);
+  font-weight: 500;
+  border-bottom: 1px solid var(--rule);
+}
+.md-typeset table:not([class]) td { border-top: 1px solid var(--rule); }
+
+/* Page actions, after Mintlify: copy the page as Markdown, open it, or hand it to an assistant. */
+.page-actions {
+  float: right;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.9rem;
+  margin: 0.35rem 0 0 1rem;
+  font-size: 0.65rem;
+}
+.md-typeset .page-action,
+.page-action {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: var(--grey);
+  text-decoration: none;
+  cursor: pointer;
+}
+.md-typeset .page-action:hover,
+.page-action:hover { color: var(--md-default-fg-color); }
+.page-action[aria-busy="true"] { opacity: 0.5; }
+@media screen and (max-width: 59.984em) {
+  .page-actions { float: none; margin: 0 0 1rem; }
+}
+
+/* Home */
+.md-typeset .hero-title {
+  max-width: 24em;
+  margin: 1.6rem 0 1rem;
+  font-size: 1.9rem;
+  font-weight: 750;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+.md-typeset .hero-lead {
+  max-width: 42em;
+  font-size: 0.9rem;
+  line-height: 1.65;
+  color: var(--grey);
+}
+.md-typeset .md-button {
+  border-radius: 0.3rem;
+  padding: 0.55em 1.4em;
+}
+.md-typeset .flow { margin: 2.4rem 0 2.8rem; }
+.md-typeset .flow img { width: 100%; max-width: 880px; }
+.md-typeset .entries > ul {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 1.6rem 2.4rem;
+  margin: 0 0 2rem;
+  padding: 0;
+  list-style: none;
+}
+.md-typeset .entries > ul > li {
+  margin: 0;
+  color: var(--grey);
+  font-size: 0.75rem;
+  line-height: 1.55;
+}
+.md-typeset .entries > ul > li > a:first-child {
+  display: block;
+  margin-bottom: 0.2rem;
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+.md-typeset .entries > ul > li > a:first-child::after { content: " →"; }
+
+.md-typeset table:not([class]) th,
+.md-typeset table:not([class]) td { padding: 0.55em 1em 0.55em 0; }
+.md-typeset table:not([class]) td:first-child { white-space: nowrap; }
+
+/* Folded detail: a plain toggle, no coloured box. */
+.md-typeset details.note {
+  padding: 0;
+  margin: 1em 0;
+  background: none;
+  border-radius: 0;
+  font-size: 0.75rem;
+  color: var(--md-default-fg-color);
+}
+.md-typeset details.note > summary {
+  margin: 0;
+  padding: 0 0 0 1.1rem;
+  font-weight: 600;
+  color: var(--grey);
+}
+.md-typeset details.note > summary::before { display: none; }
+.md-typeset details.note > summary::after {
+  left: 0;
+  right: auto;
+  top: 0.1em;
+  color: var(--grey);
+  background-color: var(--grey);
+}
+.md-typeset details.note > :not(summary) { margin-left: 1.1rem; }
+.md-typeset table:not([class]) td:last-child { white-space: nowrap; }

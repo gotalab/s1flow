@@ -23,7 +23,7 @@
       .zc { fill: #ddf4ff; } .cc { fill: #0969da; } .tc { fill: #0969da; }
       .ok { fill: #1a7f37; } .ask { fill: #6e7781; }
       @media all {
-        .bg { fill: #0d1117; }
+        .bg { fill: none; }
         .lbl { fill: #e6edf3; }
         .cap, .loop { fill: #9198a1; }
         .za { fill: #271a3d; } .ta { fill: #bc8cff; }

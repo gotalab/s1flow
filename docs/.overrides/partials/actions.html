@@ -1,0 +1,11 @@
+{#- Mintlify-style page actions: copy this page's Markdown, open it, or hand it to an assistant. -#}
+{% if page.markdown_url and page.url %}
+  {% set md = config.site_url ~ page.url ~ "index.md" %}
+  {% set ask = "Read " ~ md ~ " so I can ask questions about s1flow." %}
+  <div class="page-actions">
+    <button type="button" class="page-action" data-md-copy-url="{{ page.markdown_url | url }}">Copy page</button>
+    <a class="page-action" href="{{ page.markdown_url | url }}">View as Markdown</a>
+    <a class="page-action" href="https://claude.ai/new?q={{ ask | urlencode }}" target="_blank" rel="noopener">Open in Claude</a>
+    <a class="page-action" href="https://chatgpt.com/?q={{ ask | urlencode }}" target="_blank" rel="noopener">Open in ChatGPT</a>
+  </div>
+{% endif %}

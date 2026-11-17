@@ -7,7 +7,7 @@ means success, 1 means a gate failed or something was found, and 2 means usage, 
 
 ## The Agent Skill
 
-Install the Skill as step 2 of the [quick start](../README.md#quick-start) shows. The plugin also carries a Cursor
+Install the Skill as step 2 of [Get started](get-started.md) shows. The plugin also carries a Cursor
 manifest and follows the Agent Plugins format, for teams that import it into a Cursor team marketplace. `SKILL.md`
 says which of its six references (collect, measure, ship, app, learn, setup) to read at each stage. It lives in
 `plugin/skills/s1flow/`, which the plugin and the package both carry. The Skill drives collecting cases, comparing,
@@ -25,5 +25,5 @@ candidate on the held-out test cases where you run it, and the pull request carr
 
 Input is passed through files and environment variables, never pasted into shell commands. The workflow installs
 the package you choose up front; loading a policy at runtime never installs anything. In production workflows,
-pin the Action to a release tag or commit SHA, and the package to a version. See [examples/](../examples) for
+pin the Action to a release tag or commit SHA, and the package to a version. See [examples/](https://github.com/gotalab/s1flow/tree/main/examples) for
 workflows that call the decide Action.
