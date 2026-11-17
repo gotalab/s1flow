@@ -5,12 +5,14 @@ a policy ships it. Adding a type of question is adding a class here.
     kind = kind_of(question, KindParams())          # a task's or a policy's question, with what its type leaves open
     kind.read(answers, rule)                        # average the answers, then read the average
     kind.label_error(label)                            # cases check and feedback
+    same_label(kind, a, b)                             # two labels that say the same (review, cases check)
 
 | kind               | label                        | value                                   | probability          | rule sets               |
 |--------------------|------------------------------|-----------------------------------------|----------------------|----------------------------|
 | boolean            | true / false                 | P(true) >= threshold                    | of the value         | threshold, min_probability |
 | choice             | an option's key              | the most probable option, on average    | of that option       | min_probability            |
 | choice + positive  | true / false                 | P(positive) >= threshold                | of the value         | threshold, min_probability |
+| multichoice        | the options that apply, []   | each option whose P >= 0.5 (P from its probability, else 1 / 0 from its choices) | of the whole set | min_probability |
 | score              | a level, 0..L-1              | the expected level, rounded (.5 up)     | of that level        | min_probability            |
 | box                | {top, bottom, left, right}   | the first answer's box                  | none (`confidence`)  | min_probability            |
 | text, number, date | the value, or False (absent) | the value read, None when absent        | of the value         | min_probability            |
@@ -151,6 +153,16 @@ class _Kind(BaseModel):
         return list(answers)
 
 
+def same_label(kind: Kind, a: Any, b: Any) -> bool:
+    """Whether two labels of a task say the same: compared as the kind reads them, so a multichoice's options
+    in any order are one label, and 0 is not False (no value)."""
+    try:
+        a, b = kind.as_label(a), kind.as_label(b)
+    except (TypeError, ValueError):  # a label the task cannot hold: compared as written
+        pass
+    return bool(a == b) and isinstance(a, bool) == isinstance(b, bool)
+
+
 def _mean(xs: Sequence[float]) -> float:
     """Added in order, as numpy adds a few values: Python's own sum() of floats is compensated (3.12+),
     and an average one bit apart can move a chosen threshold."""
@@ -273,7 +285,10 @@ class MultiChoiceKind(_Kind):
         return None if ok else f"a multichoice label is the list of the options that apply ({', '.join(self.keys)}), [] for none; got {label!r}"
 
     def as_label(self, answer: Any) -> Any:
-        return tuple(k for k in self.keys if k in answer) if isinstance(answer, (list, tuple)) else answer
+        """The options in the question's order; ValueError for anything that is not a list of its options."""
+        if (wrong := self.label_error(answer)) is not None:
+            raise ValueError(wrong)
+        return tuple(k for k in self.keys if k in answer)
 
     def one(self, a: MultiChoiceAnswer) -> tuple[list[float], bool]:
         """One answer's P(it applies) per option; 1 or 0 from its choices where it gave no probability."""
