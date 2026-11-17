@@ -623,6 +623,12 @@ def test_an_unrecorded_decision_is_said_once_and_feedback_with_nowhere_to_go_is_
         "t@v1: decisions are not recorded: no log= and no OpenTelemetry tracer provider, so no right answer can be "
         "joined to them and production can't be measured; pass log=PATH (decide --log FILE)"]
     assert told[0].filename == __file__  # at the app's line, not inside s1flow
+    async def both(p):
+        return await asyncio.gather(p.adecide(STATE), p.adecide(STATE))
+    with warnings.catch_warnings(record=True) as told:
+        warnings.simplefilter("always")
+        asyncio.run(both(policies.DecisionPolicy(policy().spec, client=policy_client())))
+    assert len(told) == 1 and told[0].filename == __file__  # under gather too
     with pytest.raises(ConfigError, match="feedback has nowhere to be recorded"):
         d.feedback("c1", "kind/bug")
     log = tmp_path / "log.jsonl"

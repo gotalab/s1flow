@@ -40,8 +40,11 @@ def feedback_import(a: argparse.Namespace) -> int:
             wrong.append(f"line {line}: {e}")
             continue
         by = decided.get(decision_id)
-        if by is not None and by != (spec.ref, spec.digest):
+        if by is not None and by[0] != spec.ref:
             wrong.append(f"line {line}: decision {decision_id} was made by {by[0]}, not {spec.ref}: import its labels under that policy")
+        elif by is not None and by[1] != spec.digest:
+            wrong.append(f"line {line}: decision {decision_id} was made by another {spec.ref} than this one (its digest differs): "
+                         "name the policy file the app decided with (--path)")
         elif (first := seen.get(decision_id)) is not None:
             if first.label != event.label:
                 wrong.append(f"line {line}: decision {decision_id} already has the label {first.label!r} in this file")
@@ -52,7 +55,7 @@ def feedback_import(a: argparse.Namespace) -> int:
         more = f"; and {len(wrong) - 20} more" if len(wrong) > 20 else ""
         raise DataError(f"{a.file}: nothing recorded; fix these rows: " + "; ".join(wrong[:20]) + more)
     unknown = [e.decision_id for e in events if e.decision_id not in decided]
-    if decided and unknown:
+    if unknown:
         warnings.warn(f"{len(unknown)} of the {len(events)} decision ids are not in {a.log} (first: {unknown[0]}): "
                       "`feedback measure` counts them as unknown unless their decisions are in a log it reads")
     write_feedback(events, log=a.log)
@@ -73,7 +76,13 @@ def _label_rows(path: Path) -> list[tuple[int, str, Any]]:
         reader = csv.DictReader(io.StringIO(text, newline=""))
         if not {"decision_id", "label"} <= set(reader.fieldnames or ()):
             raise DataError(f"{path}: the header needs the columns decision_id and label, got {', '.join(reader.fieldnames or ()) or 'none'}")
-        return [(reader.line_num, (r["decision_id"] or "").strip(), label((r["label"] or "").strip())) for r in reader]
+        rows = []
+        start = reader.line_num + 1
+        for r in reader:  # a row's line is the one it starts on (a quoted cell may span lines)
+            if any((v or "").strip() for k, v in r.items() if k is not None):  # a spreadsheet's trailing `,,` rows are blank
+                rows.append((start, (r["decision_id"] or "").strip(), label((r["label"] or "").strip())))
+            start = reader.line_num + 1
+        return rows
     if path.suffix.lower() != ".jsonl":
         raise ConfigError(f"{path}: give a .csv (columns decision_id, label) or a .jsonl file")
     out = []

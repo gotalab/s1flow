@@ -447,6 +447,20 @@ def test_feedback_import_records_every_label_in_a_file_or_none(tmp_path):
     jsonl.write_text(json.dumps({"decision_id": "by-v2", "label": "server"}) + "\n")
     done = s1flow("feedback", "import", "gh-ruff-area", str(jsonl), "--log", str(log), cwd=tmp_path)
     assert done.returncode == 2 and "decision by-v2 was made by gh-ruff-area@v2, not gh-ruff-area@v1" in done.stderr
+    spread = tmp_path / "spread.csv"  # a quoted note over three lines, and a spreadsheet's trailing empty row
+    spread.write_text(f'decision_id,label,note\n{ids[0]},formater,"a\nb\nc"\n,,\n')
+    done = s1flow("feedback", "import", "gh-ruff-area", str(spread), "--log", str(log), cwd=tmp_path)
+    assert done.returncode == 2 and "line 2: gh-ruff-area@v1: label 'formater'" in done.stderr and "line 5" not in done.stderr
+    changed = lines()[0]
+    changed["decision"]["decision_id"], changed["decision"]["policy_digest"] = "other-file", "0" * 64
+    log.write_text(log.read_text() + json.dumps(changed) + "\n")
+    jsonl.write_text(json.dumps({"decision_id": "other-file", "label": "server"}) + "\n")
+    done = s1flow("feedback", "import", "gh-ruff-area", str(jsonl), "--log", str(log), cwd=tmp_path)
+    assert done.returncode == 2 and "was made by another gh-ruff-area@v1 than this one (its digest differs)" in done.stderr
+    elsewhere = tmp_path / "labels-only.jsonl"  # labels sent to a log with no decisions in it: say they can't join yet
+    jsonl.write_text(json.dumps({"decision_id": ids[0], "label": "server"}) + "\n")
+    done = s1flow("feedback", "import", "gh-ruff-area", str(jsonl), "--log", str(elsewhere), cwd=tmp_path)
+    assert done.returncode == 0 and "notice: 1 of the 1 decision ids are not in" in done.stderr
     no_header = tmp_path / "plain.csv"
     no_header.write_text(f"{ids[0]},linter\n")
     done = s1flow("feedback", "import", "gh-ruff-area", str(no_header), "--log", str(log), cwd=tmp_path)

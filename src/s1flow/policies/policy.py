@@ -4,7 +4,7 @@ import json
 import math
 import time
 import warnings
-from collections.abc import Iterable
+from collections.abc import Coroutine, Iterable
 from pathlib import Path
 from typing import Any
 from uuid import uuid4
@@ -74,9 +74,9 @@ class DecisionPolicy:
         self._warn_if_unrecorded()
         return loop.run(self._decide(state, case_id, timeout))
 
-    async def adecide(self, state: State, case_id: str | None = None, *, timeout: float | None = None) -> Decision:
-        self._warn_if_unrecorded()
-        return await self._decide(state, case_id, timeout)
+    def adecide(self, state: State, case_id: str | None = None, *, timeout: float | None = None) -> Coroutine[Any, Any, Decision]:
+        self._warn_if_unrecorded()  # here, not in the coroutine: under gather the caller's line is gone by then
+        return self._decide(state, case_id, timeout)
 
     def _warn_if_unrecorded(self) -> None:
         """Once per policy, at the caller's line: a decision nothing records can never take a right answer."""
