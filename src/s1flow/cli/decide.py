@@ -6,7 +6,7 @@ import argparse
 import json
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, cast, get_args
+from typing import TYPE_CHECKING, Any, cast
 
 from ..core.errors import ConfigError, S1flowError
 from .common import POLICY, client, command, json_arg, load_env, policy_client, policy_root, project_root
@@ -38,7 +38,7 @@ def decide(a: argparse.Namespace) -> int:
         from ..client import Client
 
         c = Client()  # no project: only provider:id names a model
-    d = c.responses.create(model=_model(c, a.model), state=state, questions=qs)
+    d = c.responses.create(model=_model(c, a.model, qs, trial=not a.connections), state=state, questions=qs)
     if a.json:
         print(d.model_dump_json(indent=1))
     else:
@@ -46,13 +46,14 @@ def decide(a: argparse.Namespace) -> int:
     return 0
 
 
-def _model(c: "Client", name: str) -> "str | ModelSpec":
-    """A name of the line-up (`jev`, `jev:1.14`) as it is, or, when the line-up has no such name, `provider:id` for a
-    built-in provider (`liquid:d1.2`, `openrouter:typesafe/jev-1.14`). Nothing is declared for that model, so nothing is
-    checked before the call: the model answers, refuses or fails. A wrong name lists the right ones before a key is read."""
+def _model(c: "Client", name: str, questions: dict[str, Any], *, trial: bool) -> "str | ModelSpec":
+    """A name of the line-up (`jev`, `jev:1.14`) as it is, or, with `trial` and no such name in the line-up, `provider:id`
+    for a built-in provider (`liquid:d1.2`, `openrouter:typesafe/jev-1.14`). That model is declared to take what this
+    call asks, so nothing is checked before it: the model answers, refuses or fails. An explicit --connections file
+    lists every model allowed (no trial). A wrong name lists the right ones before a key is read."""
     from ..client import Capabilities, ModelSpec
+    from ..client._client import validate_questions
     from ..client.providers import BUILTIN
-    from ..client.questions import QuestionType
     from ..core.errors import NotFound
 
     configured = c.connections.path is not None
@@ -60,9 +61,11 @@ def _model(c: "Client", name: str) -> "str | ModelSpec":
     if configured and base in c.connections.names():
         c.connections.resolved(name)
         return name
-    if base in BUILTIN and model_id:
-        anything = Capabilities(question_types=frozenset(get_args(QuestionType)), image=True, audio=True, video=True, pdf=True)
-        return ModelSpec(provider=base, id=model_id, capabilities=anything)
+    if trial and base in BUILTIN and model_id:
+        asked = frozenset(q.type for q in validate_questions(questions).values())
+        return ModelSpec(provider=base, id=model_id, capabilities=Capabilities(question_types=asked, image=True, audio=True, video=True, pdf=True))
+    if not trial:
+        raise NotFound(f"unknown model {base!r}; --connections {c.connections.path} names: {', '.join(c.connections.names()) or 'none'}")
     hint = f"or name a model as provider:id (liquid:d1.2); built-in providers: {', '.join(BUILTIN)}"
     if not configured:
         raise ConfigError(f"no s1flow.toml here to name {name!r}: use --project PATH or --connections PATH, {hint}")

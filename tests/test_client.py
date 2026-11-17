@@ -259,6 +259,8 @@ def test_decide_tries_a_model_no_s1flow_toml_names(tmp_path, toml):
     assert done.returncode == 2 and "no s1flow.toml here" in done.stderr and "provider:id (liquid:d1.2)" in done.stderr
     done = s1flow("decide", "--model", "nope:1", "--state", '"x"', "--boolean", "?", cwd=toml.parent)
     assert done.returncode != 0 and "names: toy, later" in done.stderr and "provider:id" in done.stderr
+    done = s1flow("decide", "--model", "liquid:d1.2", "--state", '"x"', "--boolean", "?", "--connections", str(toml), cwd=bare)
+    assert done.returncode != 0 and "--connections" in done.stderr and len(route.calls) == 2  # the file lists every model allowed
 
 
 def test_the_client_loads_no_evaluation_stack(toml):

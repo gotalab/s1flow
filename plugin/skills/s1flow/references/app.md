@@ -53,7 +53,8 @@ s1flow decide --model liquid:d1.2 --boolean "Is this a bug report?" --state @sta
 ```
 
 `--model provider:id` calls a built-in provider's model that no `s1flow.toml` names (a name in the line-up comes
-first). Nothing is declared for it, so nothing is checked before the call: the model answers, refuses or fails.
+first; with `--connections`, only the models that file lists). Nothing is checked before the call: the model
+answers, refuses or fails.
 
 `--policy` always needs explicit `--connections`. `--json` prints the `Decision` (with `decision_id` and
 `below_min_probability`, `null` / `true` / `false`); `--github-output` writes `answer`, `probability`,
