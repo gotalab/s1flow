@@ -1,6 +1,6 @@
 ---
 name: s1flow
-description: Try, build, measure, ship and improve typed yes/no and one-of-N decisions with s1flow. Use to try a model on a few inputs before any evaluation, collect and label cases, compare models and question variants, adopt a policy in a pull request, call a policy from an app or CI, and measure it in production. Not for reading code or judging whether work is complete.
+description: Try, build, measure, ship and improve typed yes/no and one-of-N decisions with s1flow. Use to try a model on a few inputs, put a decision in production with or without an evaluation, collect and label cases, compare models and question variants, adopt a policy in a pull request, call a policy from an app or CI, and measure it in production. Not for reading code or judging whether work is complete.
 ---
 
 # s1flow
@@ -26,11 +26,11 @@ decision criteria. Follow it when it covers the decision; otherwise ask the pers
 example "a false negative costs 3x a false positive") into `task.py`'s objective, because the CLI reads only
 `task.py`. Never invent weights, cutoffs or a pick, and never adopt or merge on your own.
 
-**Try a model first.** When the person wants to see what a model answers before any cases or evaluation, call it
-on the inputs they give: `s1flow decide --model liquid:d1.2 --state @input.json --boolean "Is this a bug report?"`
-(`--questions` for choice, score or box). `provider:id` needs no project, only that provider's key
-(`references/setup.md`); nothing is measured or saved. Show the answers as they are. Inputs worth keeping become
-the first cases when the person wants to measure (`references/collect.md`).
+**No evaluation needed to start.** To see what a model answers, call it on the inputs the person gives:
+`s1flow decide --model liquid:d1.2 --state @input.json --boolean "Is this a bug report?"` (`--questions` for choice,
+score or box). `provider:id` needs no project, only that provider's key (`references/setup.md`); nothing is saved.
+To put a yes/no or choice decision in production without measuring it first, write it as a policy and save it
+unevaluated (`references/app.md`, "Ship without an evaluation"): its log keeps every answer, so cases can come later.
 
 Read the one reference for the stage at hand:
 

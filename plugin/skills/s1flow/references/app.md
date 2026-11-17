@@ -7,6 +7,42 @@ for that call: every connection in it is granted. Keep a dedicated file for the 
 provider, import code, or find a connection beside itself. The SDK never discovers a project, never reads
 `.env`, and never installs packages from a policy or input.
 
+## Ship without an evaluation
+
+The person wants a decision in production now and may measure it later. Score, box and other types: call the model
+with `Client` (below); nothing is logged. Yes/no or choice: save it as a policy, so every answer is logged and can
+become a case.
+
+1. The connection: in the app's own file (`connections.toml`), one entry for the model (the provider and its key:
+   `references/setup.md`):
+
+   ```toml
+   default = ["d1"]
+   [models.d1]
+   provider = "liquid"
+   id = "d1.2"
+   ```
+
+2. The spec, `spec.json`. Its `connection` is that entry's name and `model_id` its exact `id`:
+
+   ```json
+   {"schema": "s1flow/policy@2", "task": "ticket-bug", "version": 1, "connection": "d1", "model_id": "d1.2",
+    "questions": {"bug": {"question": {"type": "boolean", "instructions": "Does this report describe a software defect?"},
+                          "rule": {"threshold": 0.5}}}}
+   ```
+
+   With no measurement, any threshold is a guess: say so and use the person's number, or 0.5. If they want unsure
+   answers to go to a person, `"min_probability"` in the rule marks them (`below_min_probability`), and what the app
+   does with them is theirs to decide.
+3. Validate, then save (outside an s1flow project, `--root policies`):
+   `s1flow adopt --spec spec.json --connections connections.toml --validate`, then the same with `--reason "..."`
+   instead of `--validate`. It is saved as `v1`, marked as never evaluated.
+4. Try it once: `s1flow decide --policy ticket-bug --state @input.json --connections connections.toml` (outside a
+   project, add `--path policies/ticket-bug/v1.json`).
+5. Call it from the app as below, with `log=` and `keep_state=True`. Later, right answers go in with
+   `feedback record` or `policy.feedback`, and `feedback measure --add` turns logged inputs into cases
+   (`references/learn.md`). Measuring and adopting a better version then follow the usual flow.
+
 ## Python
 
 Anchor paths to the file, so starting the app from another directory changes nothing:
