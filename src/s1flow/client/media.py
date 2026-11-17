@@ -95,7 +95,13 @@ def _prepared(item: dict[str, Any]) -> Image | Media:
         raise DataError(f"prepared {x.type} is not base64: {e}") from e
     if hashlib.sha256(raw).hexdigest() != x.sha256:
         raise DataError(f"prepared {x.type} does not match its sha256 {x.sha256}")
+    is_ = _IMAGE_MAGIC[x.media_type](raw) if isinstance(x, Image) else _sniff(x.type, raw) == x.media_type
+    if not is_:
+        raise DataError(f"prepared {x.type} is not {x.media_type}")
     return x
+
+
+_IMAGE_MAGIC = {"image/png": lambda raw: raw[:8] == b"\x89PNG\r\n\x1a\n", "image/jpeg": lambda raw: raw[:3] == b"\xff\xd8\xff"}
 
 
 def _load(item: Any, base_dir: Path) -> Image | Media:

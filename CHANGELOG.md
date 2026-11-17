@@ -76,7 +76,7 @@
 - A production decision on an image (or audio, video, PDF) now becomes a usable case: `feedback measure --add` wrote
   the kept state with its prepared media inline, and every later read of those cases (`cases check`, `run`)
   refused them as a bad media reference. Prepared media are now read back as they are, so the case holds the
-  exact bytes the model saw, checked against their sha256.
+  exact bytes the model saw, checked against their sha256 and format.
 
 ## 0.1.0a5 (2026-11-12)
 

@@ -3,6 +3,7 @@
 import argparse
 import asyncio
 import base64
+import hashlib
 import io
 import json
 import math
@@ -168,6 +169,13 @@ def test_prepared_media_read_back_from_json_are_used_as_they_are(tmp_path):
     tampered = {**json.loads(WAV.model_dump_json()), "sha256": "0" * 64}
     with pytest.raises(DataError, match="does not match its sha256"):
         media.materialize(["x", tampered], tmp_path)
+    def forged(kind, media_type, data):
+        return {"type": kind, "media_type": media_type, "data": base64.b64encode(data).decode(), "sha256": hashlib.sha256(data).hexdigest()}
+
+    for wrong in (forged("pdf", "audio/wav", raw(WAV)), forged("pdf", "application/pdf", b"not a pdf"),
+                  {**forged("image", "image/png", b"not an image"), "width": 1, "height": 1}):
+        with pytest.raises(DataError, match="is not"):
+            media.materialize(["x", wrong], tmp_path)
     with pytest.raises(DataError, match="bad prepared image"):
         media.materialize(["x", {"type": "image", "data": "aGk=", "sha256": "x"}], tmp_path)
 
