@@ -40,8 +40,14 @@
   OpenRouter's Extractions route (Clairic, Schematron, Perplexity's Decider v1.3, ScaleDown Extract), a model
   declares them in `capabilities.question_types`, and `s1flow models --verify` checks each. The `liquid` provider
   asks them too (d1.2, d1.2-ultra), in the same call as other questions: `found` is read as 1 - `p_null`, and a
-  number in a range as the estimate with its interval. Evaluation and policies
-  do not take them yet.
+  number in a range as the estimate with its interval.
+- Evaluation compares those four types. A value read is right when it equals the label, or when nothing is read on
+  a case labelled `False` (no value there); reports add the accuracy on the cases with a value and on those with
+  none, and `Coverage` reads `p_null` and `confidence`. A `RangeEstimate` task defaults to the new `MeanError()`
+  objective, counts an answer as right within half a `step`, or 1% of the range without one
+  (`KindParams(tolerance=...)`), and is sure where the p10 - p90 interval is narrow. A policy holds them like any
+  other type (`feedback record` takes a number typed as text, and `false` for a case with no value); `cases review`
+  does not take them yet.
 
 ### Changed
 

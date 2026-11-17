@@ -87,7 +87,12 @@ table, a trade-off chart plots any two measures. The candidates not compared and
 everything was measured are folded away. Charts export as SVG or PNG with their source and sample size.
 
 Score questions (levels 0 to L-1) are read by their expected level: MAE (the default objective) and QWK, beside the
-shared metrics. Box questions get the shared metrics and a confidence selection curve. Yes/no questions add
+shared metrics. Box questions get the shared metrics and a confidence selection curve. A value read from the state
+(`Text`, `Number`, `Date`) is right when it equals the label, or when nothing is read on a case labelled `False`
+(no value there): the report shows the accuracy on the cases with a value and on those with none apart, and how sure
+an answer is comes from the model's `p_null` and `confidence`. A `RangeEstimate` is read by its mean error (the
+default objective, `MeanError()`), counts as right within half a `step` of the label (1% of the range when it has no step), and is as sure as its
+p10 - p90 interval is narrow. A policy holds these four like any other type. Yes/no questions add
 precision/recall and calibration charts. Choice questions get a curve of the selected answer's probability when the
 model returns a real distribution. A provider's own confidence score is treated as a separate signal, and no
 probability curve is drawn when the signal it needs isn't available.

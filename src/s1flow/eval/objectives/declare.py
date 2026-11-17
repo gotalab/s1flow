@@ -119,6 +119,9 @@ METRICS: dict[str, Metric] = {
     "macro_f1": Metric("macro-F1", "number", "max"),
     "mean_iou": Metric("mean IoU", "number", "max"),
     "mae": Metric("MAE (levels)", "number", "min"),
+    "mean_error": Metric("mean error", "number", "min"),
+    "value_accuracy": Metric("accuracy (value there)", "share", "max"),
+    "absent_accuracy": Metric("accuracy (nothing there)", "share", "max"),
     "qwk": Metric("QWK", "number", "max"),
     "auroc": Metric("AUROC", "number", "max"),
     "brier": Metric("Brier score", "number", "min"),
@@ -154,6 +157,12 @@ def MAE() -> Objective:
     return _plain("mae")
 
 
+def MeanError() -> Objective:
+    """The mean distance of an estimate from its label, in the question's own unit (a failed call is as far off as
+    its label can be within the range)."""
+    return _plain("mean_error")
+
+
 def QWK() -> Objective:
     """Quadratic weighted kappa of a score question's level (the expected level, rounded) against its label: 1 agrees, 0 is chance."""
     return _plain("qwk")
@@ -178,7 +187,7 @@ def Loss(default: float = 1.0, losses: dict[str, dict[str, float]] | None = None
 
 BUILT_IN: dict[str, Callable[..., Objective]] = {
     "coverage": Coverage, "recall": Recall, "expected_loss": ExpectedLoss, "auroc": AUROC, "accuracy": Accuracy, "f1": F1, "macro_f1": MacroF1,
-    "mae": MAE, "qwk": QWK, "loss": Loss,
+    "mae": MAE, "mean_error": MeanError, "qwk": QWK, "loss": Loss,
 }
 
 

@@ -16,7 +16,6 @@ from s1flow.client.providers.contract import validate_response
 from s1flow.client.providers.openrouter import EXTRACTIONS_URL, OpenRouterModel
 from s1flow.client.answers import Response
 from s1flow.core.errors import ProviderError, Unsupported
-from s1flow.policies.kinds import kind_of
 from s1flow.questions import Boolean, Date, RangeEstimate, Number, Text
 
 STATE = "Invoice INV-2291 issued 2026-09-02, net 30. Total $1080."
@@ -167,10 +166,3 @@ def test_the_contract_checks_a_field_answer_against_its_question(qid, answer, de
         validate_response(Response(answers={qid: answer}, answered_by="m"), {qid: QS[qid]}, "m")
     ok = Response(answers={"days": EstimateAnswer(value=120.00000000000001, p10=26, p90=31), "issued": DateAnswer(value=None)}, answered_by="m")
     assert validate_response(ok, {"days": QS["days"], "issued": QS["issued"]}, "m") is ok
-
-
-def test_a_field_question_has_no_kind_yet():
-    """Asked through the client; nothing labels, reads or holds one until its kind exists."""
-    for q in QS.values():
-        with pytest.raises(ValueError, match=f"{q.type} questions are not evaluated or held by a policy yet"):
-            kind_of(q)

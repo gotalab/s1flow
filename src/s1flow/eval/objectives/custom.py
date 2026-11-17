@@ -58,7 +58,8 @@ def readings(p: Pairs) -> list[Reading | None]:
             value=bool(v) if isinstance(v, (bool, np.bool_)) else v, probability=float(p.probability[i]), below_min_probability=bool(p.unsure[i]) if p.min_probability_set[i] else None,
             p_positive=float(p.p_positive[i]) if binary else None,
             distribution=[float(x) for x in p.distribution[i]] if choice and p.distribution is not None else None,
-            expected=None, confidence=float(p.confidence[i]) if p.measured == "box" else None,
+            expected=float(p.expected[i]) if p.measured == "estimate" else None,
+            confidence=float(p.confidence[i]) if p.measured in ("box", "estimate") else None,
         ))
     return out
 
