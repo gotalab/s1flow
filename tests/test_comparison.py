@@ -172,7 +172,7 @@ def test_selection_sweep_has_exact_dev_counts_and_basis(tmp_path, question, mode
     row = comparison.collect(task, include_charts=True).candidates[0]
     assert row.charts is not None and row.charts.selection_basis == basis
     if question.type == "box":
-        assert row.adoption_blocked
+        assert row.adoption_blocked == []
         assert row.metrics["mean_iou"].value == pytest.approx(1.0)
     assert row.charts.selection_unavailable is None
     selected = next(point for point in row.charts.selection_sweep if point.min_probability == 0.8)

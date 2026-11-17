@@ -106,6 +106,10 @@ task = Task(
 )
 ```
 
+- Other wordings of the question to compare: `variants={"strict": Boolean(instructions="...")}`, each of the
+  question's type and labels. `s1flow run <id> --models jev/strict` asks one, and `report` shows each as its own
+  candidate `model/variant` beside the base question; `optimize` adds variants the same way. A threshold is chosen per
+  candidate by the objective, so changing the wording and the cut are compared together.
 - A boolean question with a choice-like label uses `Boolean(...)`; a choice scored as one option against the rest
   sets `kind_params=KindParams(positive="bug")`.
 - Uneven costs: `ExpectedLoss(fn=, fp=)`, or `Loss(default=1, losses={"server": {"formatter": 3}})` (right answer
@@ -130,10 +134,12 @@ task = Task(
 - How the team already decides (a triage policy, CONTRIBUTING, a bot's prompt) goes in `tasks/<id>/context.md`:
   `optimize` reads it, the model never does. `criteria.md` is for the person's decision criteria, not the model.
 
-Supported question types: the direct `Client` takes boolean, choice, score and box where the provider does;
-evaluation compares all four; a policy holds one boolean or choice. The `Client` also asks `Text`, `Number`, `Date`
-(a value read from the state, `None` when absent) and `RangeEstimate` (a number in a range) of an OpenRouter model that
-answers them; evaluation and policies do not take these yet.
+Supported question types: boolean, choice, score and box, where the provider takes them. Evaluation compares all
+four, and a policy holds one question of any of them: `adopt` takes a score or box candidate from `report` like any
+other.
+The `Client` also asks `Text`, `Number`, `Date` (a value read from the state, `None` when absent) and
+`RangeEstimate` (a number in a range) of an OpenRouter model that answers them; evaluation and policies do not take
+these yet.
 
 ## Check the cases
 
