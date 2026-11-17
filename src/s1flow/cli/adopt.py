@@ -77,7 +77,10 @@ def _adopt_spec(a: argparse.Namespace) -> int:
         raise S1flowError("adopt --spec FILE takes no TASK, candidate or --force: the spec names its task and version, and nothing is measured")
     spec = read_file(a.spec)
     # --validate with --connections alone, outside a project: the binding only
-    found = None if a.root else project_root(a, required=not (a.validate and a.connections))
+    found = None if a.root else project_root(a)
+    if found is None and not a.root and not (a.validate and a.connections):
+        raise ConfigError(f"no s1flow project in {Path.cwd()}: in an app's repository, save with --root policies "
+                          "--connections FILE; or --project PATH, or s1flow init")
     proj = project(a) if found else None
     DecisionPolicy(spec, client=proj.client() if proj else policy_client(a))  # it binds to an allowed model
     where = place.absolute(a.root, "policy root") if a.root else proj.policies_dir if proj else None

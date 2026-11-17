@@ -7,6 +7,10 @@
 - A policy holds a score or box question too, not only yes/no and choice: save it with `adopt --spec`, and its
   answers are logged and take feedback like any other (`feedback record <task> <id> 2`, or a box as JSON). `adopt`
   takes a score or box candidate from `report` like any other. `decide --policy` also prints the decision ID.
+- `report` names a model and question pair nobody ran under `not run:`, and counts them once there are more than
+  five, instead of listing each with "missing run evidence". `adopt --spec` outside a project says to save with
+  `--root`. The Skill and `init --task`'s task.py say how to write question variants, and that turning production
+  answers into cases needs a project with the task.
 - `s1flow decide --model provider:id` (`liquid:d1.2`, `openrouter:typesafe/jev-1.14`) calls a model that no
   `s1flow.toml` names, with no project: try a model on an input before any task or evaluation. Only that
   provider's key is needed. A name in the line-up still comes first, and an explicit `--connections` file still
