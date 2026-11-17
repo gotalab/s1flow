@@ -15,7 +15,7 @@ s1flow feedback record <task>[@vN] <decision_id> <label> --log "$RUNNER_TEMP/s1f
 ```
 
 It calls no model, so it takes no `--connections`; `--path` reads a policy file or `policies.json` instead of `policies/`. The label is
-a class key, or `true` / `false`. `case_id` can repeat and is never a feedback key: a repeated case can have
+a class key, `true` / `false`, a score's level (`2`), or a box as JSON (`{"top": 0.1, "bottom": 0.3, "left": 0.2, "right": 0.6}`). `case_id` can repeat and is never a feedback key: a repeated case can have
 several decision ids. Keep the answered and feedback logs together.
 
 ## Measure production
@@ -25,7 +25,8 @@ s1flow feedback measure <task> logs/*.jsonl          # measure only; adds nothin
 s1flow feedback measure <task> logs/*.jsonl --add    # also add cases to tasks/<task>/feedback.jsonl
 ```
 
-It reads decision and feedback logs (or OpenTelemetry JSON exports) and measures each policy version on the
+It needs an s1flow project with the task (`s1flow init --task <task>`; a policy saved outside one with `--root`
+has none yet). It reads decision and feedback logs (or OpenTelemetry JSON exports) and measures each policy version on the
 decisions that got a label. Exit 1 when production is shown below. Any other line stops it with the file and line.
 
 `--add` adds only decisions whose state was kept (`keep_state=True`, `decide --keep-state`, the Action's

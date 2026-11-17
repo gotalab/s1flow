@@ -7,6 +7,46 @@ for that call: every connection in it is granted. Keep a dedicated file for the 
 provider, import code, or find a connection beside itself. The SDK never discovers a project, never reads
 `.env`, and never installs packages from a policy or input.
 
+## Ship without an evaluation
+
+The person wants a decision in production now and may measure it later. Save it as a policy, whatever its type
+(yes/no, choice, score, box), so every answer is logged and can become a case.
+
+1. The connection: in the app's own file (`connections.toml`), one entry for the model (the provider and its key:
+   `references/setup.md`):
+
+   ```toml
+   default = ["d1"]
+   [models.d1]
+   provider = "liquid"
+   id = "d1.2"
+   ```
+
+2. The spec, `spec.json`. Its `connection` is that entry's name and `model_id` its exact `id`:
+
+   ```json
+   {"schema": "s1flow/policy@2", "task": "ticket-bug", "version": 1, "connection": "d1", "model_id": "d1.2",
+    "questions": {"bug": {"question": {"type": "boolean", "instructions": "Does this report describe a software defect?"},
+                          "rule": {"threshold": 0.5}}}}
+   ```
+
+   A choice, score or box question goes in `question` the same way (`{"type": "score", "instructions": "...",
+   "criteria": ["low", "mid", "high"]}`, levels in order), with no `threshold`. A box also needs
+   `capabilities.image = true` and `capabilities.question_types = ["boolean", "choice", "score", "box"]` on the
+   connection. With no measurement, any threshold
+   is a guess: say so and use the person's number, or 0.5. If they want unsure
+   answers to go to a person, `"min_probability"` in the rule marks them (`below_min_probability`), and what the app
+   does with them is theirs to decide.
+3. Validate, then save (outside an s1flow project, `--root policies`):
+   `s1flow adopt --spec spec.json --connections connections.toml --validate`, then the same with `--reason "..."`
+   instead of `--validate`. It is saved as `v1`, marked as never evaluated.
+4. Try it once: `s1flow decide --policy ticket-bug --state @input.json --connections connections.toml` (outside a
+   project, add `--path policies/ticket-bug/v1.json`).
+5. Call it from the app as below, with `log=` and `keep_state=True`. Later, right answers go in with
+   `feedback record` or `policy.feedback`, and `feedback measure --add` turns logged inputs into cases
+   (`references/learn.md`). That step needs an s1flow project with a task of the same id: `s1flow init --task
+   <task>` (beside the app, or in a separate repository), with the task's question written as the policy's. Measuring and adopting a better version then follow the usual flow.
+
 ## Python
 
 Anchor paths to the file, so starting the app from another directory changes nothing:
@@ -30,8 +70,9 @@ policy.feedback(decision.decision_id, True)   # when the right label is known: t
 - `Client(connections=...)` / `AsyncClient(connections=...)` for a string alias; a direct `ModelSpec` or
   `DecisionModel` needs no file. Relative paths are fixed when the object is built. Provider cache settings go only
   in `Client(cache_dir=...)`. `client.connections.build()` / `.check()` run the connection checks.
-- The direct `Client` asks boolean, choice, score and box questions where the provider supports them; a policy
-  holds one boolean or choice.
+- The direct `Client` asks boolean, choice, score and box questions where the provider supports them, several in one
+  request; a policy holds one question of any of these types. A score's value is the level, a box's value its edges,
+  with `confidence` in place of `probability`.
 - Store `decision_id` when a label may arrive later. `case_id` is log context only and may repeat.
 - `decide(..., timeout=SECONDS)` caps the whole call, retries included (without it, retries can take minutes). Past
   it the call is cancelled and `TimedOut` (a `ProviderError`) is raised and logged as failed. Where the app sends
@@ -49,7 +90,12 @@ nothing) is the app's decision: ask the person, or follow `criteria.md`, and do 
 s1flow decide --policy ticket-kind --state @state.json \
   --connections s1flow.toml --log "$RUNNER_TEMP/s1flow-log.jsonl" --json
 s1flow decide --model jev --boolean "Is this a bug report?" --state @state.json   # a model, no policy
+s1flow decide --model liquid:d1.2 --boolean "Is this a bug report?" --state @state.json   # no s1flow.toml needed
 ```
+
+`--model provider:id` calls a built-in provider's model that no `s1flow.toml` names (a name in the line-up comes
+first; with `--connections`, only the models that file lists). Nothing is checked before the call: the model
+answers, refuses or fails.
 
 `--policy` always needs explicit `--connections`. `--json` prints the `Decision` (with `decision_id` and
 `below_min_probability`, `null` / `true` / `false`); `--github-output` writes `answer`, `probability`,

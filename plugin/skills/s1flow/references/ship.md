@@ -21,7 +21,7 @@ s1flow adopt --spec spec.json --validate          # validate only; save nothing
   test shows it below (its constraint or floors broken, or worse than its train + val interval), nothing is written, exit 1, and `history.jsonl` gets a `refused` line.
   `--force` writes it anyway, marked `forced`; the reason must say why. Stale evidence is refused.
 - `--spec` needs only the base install. `--spec` takes a `PolicySpec` (task/version, a trusted
-  `connection` and exact `model_id`, one boolean or choice question, a rule, an optional input shape). It has no
+  `connection` and exact `model_id`, one question of any type, a rule, an optional input shape). It has no
   evaluation evidence. It always checks the binding: against the project's `s1flow.toml`, or `--connections FILE`.
 - Outside an s1flow project (an app's repository), add `--root policies`, and `--connections FILE` with `--spec`.
 - A saved `vN.json` is never overwritten. `channels.json` names the one `current` version.

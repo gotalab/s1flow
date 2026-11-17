@@ -49,7 +49,9 @@ validation and decision rules; metrics and optimization belong to evaluation alo
 
 ## Compare candidates
 
-`s1flow report` shows every model and question variant side by side, using only the development cases. The
+`s1flow report` shows every model and question variant side by side, using only the development cases. A
+variant is another wording of the question, written in task.py as `variants={"strict": Boolean(instructions="...")}`
+and run as `model/strict`; `s1flow optimize` adds them the same way. The
 terminal shows the candidates ordered by the task's objective, with the ones it cannot tell apart at the top marked
 `=` (ordered by `tiebreak` in task.py, or by name without one); it marks no pick. `--json` adds every
 metric of each candidate with the same candidate IDs and numbers, so a person, or an agent acting for them, can
@@ -93,7 +95,7 @@ default objective, `MeanError()`), counts as right within half a `step` of the l
 p10 - p90 interval is narrow. A `MultiChoice` is labelled with the list of
 the options that apply (`[]` for none) and is right when the options chosen are exactly those; its probability is that
 of the whole set, each option's own yes or no multiplied. `OptionF1()` is the objective that counts every option of
-every case, where accuracy counts a case with one option off as wrong. These five are compared, not adopted: a policy holds a yes/no or a choice. Yes/no questions add
+every case, where accuracy counts a case with one option off as wrong. A policy holds these five like any other type. Yes/no questions add
 precision/recall and calibration charts. Choice questions get a curve of the selected answer's probability when the
 model returns a real distribution. A provider's own confidence score is treated as a separate signal, and no
 probability curve is drawn when the signal it needs isn't available.
