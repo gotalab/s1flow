@@ -61,6 +61,13 @@ provider = "openrouter"
 id = "microsoft/microsoft-decision-1"
 capabilities.context_tokens = 32768
 
+[models."decision-1.1@openrouter"]
+provider = "openrouter"
+id = "microsoft/microsoft-decision-1.1"
+capabilities.context_tokens = 32768
+capabilities.image = true
+note = "Successor of decision-1 (GA 2026-11-17). Images must be at least 280 px on each side."
+
 [models."decider@openrouter"]
 provider = "openrouter"
 id = "perplexity/pplx-decider-v1.2"

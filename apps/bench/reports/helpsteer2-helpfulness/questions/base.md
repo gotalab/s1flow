@@ -1,8 +1,8 @@
 # helpsteer2-helpfulness
 
-2026-11-16 · 210 labelled dev cases (2 42, 4 42, 1 42, 3 42, 0 42) · split: stratified k-fold (no test case among these: CV numbers only) · source: NVIDIA HelpSteer2 (CC BY 4.0), validation split: 60 responses per helpfulness level, under 4,000 characters
+2026-11-17 · 210 labelled dev cases (2 42, 4 42, 1 42, 3 42, 0 42) · split: stratified k-fold (no test case among these: CV numbers only) · source: NVIDIA HelpSteer2 (CC BY 4.0), validation split: 60 responses per helpfulness level, under 4,000 characters
 
-drex-max@openrouter has the lowest MAE (levels), 0.754 [0.679, 0.835] (API cost $0.36 per 10k, p99 1202ms). Its interval overlaps with decision-1@openrouter, reflex@openrouter, decider@openrouter, mammoth@openrouter, d1.2-ultra, gemini-decision@google, d1-ultra@openrouter, jev:1.14, elephant@openrouter, d1.2, luna@decisions: the objective cannot tell them apart; interval overlap does not establish equivalence. The highest raw accuracy (dev) is reflex@openrouter's, 47% [40, 54].
+drex-max@openrouter has the lowest MAE (levels), 0.754 [0.679, 0.835] (API cost $0.36 per 10k, p99 1202ms). Its interval overlaps with decision-1.1@openrouter, decision-1@openrouter, reflex@openrouter, decider@openrouter, mammoth@openrouter, d1.2-ultra, gemini-decision@google, d1-ultra@openrouter, jev:1.14, elephant@openrouter, d1.2, luna@decisions: the objective cannot tell them apart; interval overlap does not establish equivalence. The highest raw accuracy (dev) is reflex@openrouter's, 47% [40, 54].
 
 ## Comparison
 
@@ -18,6 +18,7 @@ drex-max@openrouter has the lowest MAE (levels), 0.754 [0.679, 0.835] (API cost 
 | d1@vercel | 210 | 33.3% [26, 40] | 0.99 | 0.85 | 0.11 | 2% [0, 4] | 100.0% (47.3%) | 0.0% (0/210) | 0/210 |
 | decider-flash@openrouter | 210 | 25.7% [20, 32] | 1.04 | 0.81 | 0.11 | 0% [0, 0] | — (0.0%) | 0.0% (0/210) | 0/210 |
 | decider@openrouter | 210 | 36.2% [30, 42] | 0.81 | 0.87 | 0.09 | 2% [0, 4] | 75.0% (24.9%) | 0.0% (0/210) | 0/210 |
+| decision-1.1@openrouter | 210 | 41.0% [34, 47] | 0.79 | 0.86 | 0.12 | 3% [1, 6] | 85.7% (47.9%) | 0.0% (0/210) | 0/210 |
 | decision-1@openrouter | 210 | 38.1% [31, 44] | 0.81 | 0.86 | 0.13 | 3% [1, 6] | 85.7% (47.9%) | 0.0% (0/210) | 0/210 |
 | drex-max@openrouter | 210 | 39.5% [33, 46] | 0.75 | 0.88 | 0.05 | 5% [2, 8] | 80.0% (49.3%) | 0.0% (0/210) | 0/210 |
 | elephant@openrouter | 210 | 33.3% [27, 40] | 0.91 | 0.85 | 0.07 | 2% [0, 5] | 80.0% (34.3%) | 0.0% (0/210) | 0/210 |
@@ -30,13 +31,14 @@ drex-max@openrouter has the lowest MAE (levels), 0.754 [0.679, 0.835] (API cost 
 | reflex@openrouter | 210 | 46.7% [40, 54] | 0.79 | 0.84 | 0.10 | 3% [1, 5] | 83.3% (41.8%) | 0.0% (0/210) | 0/210 |
 | span@openrouter | 210 | 32.4% [26, 40] | 1.16 | 0.80 | 0.33 | 0% [0, 0] | — (0.0%) | 0.0% (0/210) | 0/210 |
 
-Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef-omni@openrouter = cloudflare/clef-omni-20261009; clef@openrouter = cloudflare/clef; d1-ultra@openrouter = liquid/d1-ultra-20261015; d1.1@openrouter = liquid/d1.1-20261027; d1.2 = d1.2; d1.2-ultra = d1.2-ultra; d1@vercel = liquid/d1; decider-flash@openrouter = perplexity/pplx-decider-flash-v1.2-20261016; decider@openrouter = perplexity/pplx-decider-v1.2-20261016; decision-1@openrouter = microsoft/microsoft-decision-1-20261009; drex-max@openrouter = nace-ai/drex-max-20261016; elephant@openrouter = baseten/elephant-1-20261021; gemini-decision@google = gemini-decision-1; jev:1.14 = jev-1.14.0; joey@openrouter = baseten/joey-1-20261029; kev@openrouter = jaredpalmer/kev-4b-20260924; luna@decisions = gpt-6-luna; mammoth@openrouter = baseten/mammoth-1-20261021; reflex@openrouter = morph/reflex-20261103; span@openrouter = respan/span-02-20261015. To compare versions, run each by name: `s1flow run <task> --models jev:1.14`.
+Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef-omni@openrouter = cloudflare/clef-omni-20261009; clef@openrouter = cloudflare/clef; d1-ultra@openrouter = liquid/d1-ultra-20261015; d1.1@openrouter = liquid/d1.1-20261027; d1.2 = d1.2; d1.2-ultra = d1.2-ultra; d1@vercel = liquid/d1; decider-flash@openrouter = perplexity/pplx-decider-flash-v1.2-20261016; decider@openrouter = perplexity/pplx-decider-v1.2-20261016; decision-1.1@openrouter = microsoft/microsoft-decision-1.1-20261117; decision-1@openrouter = microsoft/microsoft-decision-1-20261009; drex-max@openrouter = nace-ai/drex-max-20261016; elephant@openrouter = baseten/elephant-1-20261021; gemini-decision@google = gemini-decision-1; jev:1.14 = jev-1.14.0; joey@openrouter = baseten/joey-1-20261029; kev@openrouter = jaredpalmer/kev-4b-20260924; luna@decisions = gpt-6-luna; mammoth@openrouter = baseten/mammoth-1-20261021; reflex@openrouter = morph/reflex-20261103; span@openrouter = respan/span-02-20261015. To compare versions, run each by name: `s1flow run <task> --models jev:1.14`.
 
 ## Objectives and constraints
 
 | model | MAE (levels) | QWK | accuracy (all) | rule | constraints |
 |---|---|---|---|---|---|
 | drex-max@openrouter = | 0.754 [0.679, 0.835] | 0.688 [0.618, 0.748] | 40% [33, 46] | — | met |
+| decision-1.1@openrouter = | 0.793 [0.704, 0.886] | 0.678 [0.594, 0.750] | 41% [34, 47] | — | met |
 | decision-1@openrouter = | 0.806 [0.727, 0.891] | 0.671 [0.600, 0.731] | 38% [31, 44] | — | met |
 | reflex@openrouter = | 0.789 [0.693, 0.888] | 0.656 [0.568, 0.731] | 47% [40, 54] | — | met |
 | decider@openrouter = | 0.811 [0.734, 0.891] | 0.641 [0.571, 0.711] | 36% [30, 42] | — | met |
@@ -74,6 +76,7 @@ Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef-omni@openrouter
 | d1@vercel | 210 | 529 ms | 818 ms | 5051 ms | 5858 ms | 9.5 | 1 | 4 | $0.11 | billed |  |
 | decider-flash@openrouter | 210 | 138 ms | 243 ms | 284 ms | 418 ms | 2.1 | 0 | 4 | $0.06 | billed | ○ |
 | decider@openrouter | 210 | 223 ms | 341 ms | 746 ms | 1027 ms | 3.3 | 0 | 4 | $0.12 | billed | ○ |
+| decision-1.1@openrouter | 210 | 227 ms | 284 ms | 625 ms | 820 ms | 2.8 | 0 | 4 | $0.24 | billed | ○ |
 | decision-1@openrouter | 210 | 245 ms | 324 ms | 417 ms | 2467 ms | 1.7 | 0 | 4 | $0.23 | billed | ○ |
 | drex-max@openrouter | 210 | 456 ms | 731 ms | 1202 ms | 1608 ms | 2.6 | 2 | 4 | $0.36 | billed | ○ |
 | elephant@openrouter | 210 | 173 ms | 205 ms | 290 ms | 442 ms | 1.7 | 0 | 4 | $0.22 | billed | ○ |
@@ -88,7 +91,7 @@ Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef-omni@openrouter
 
 Measured on the calls, not the answers: never an objective, only the constraints and the order of candidates the objectives tie (the p90 of each case's slowest call, then API cost). Frontier ○: no other model beats it on all three of the primary objective, API cost per 10k and p99.
 Latency is the time from sending to receiving one call that answered (the round trip from here included), without retries or the wait before them. Many calls at once read slower, from the provider's load and this machine's connections: to compare models, measure every candidate again at the same concurrency (`s1flow run <task> --fresh --concurrency N`, the same N for all).
-Where the API costs come from: billed: clef-flash@openrouter, clef-omni@openrouter, clef@openrouter, d1-ultra@openrouter, d1.1@openrouter, d1.2, d1.2-ultra, d1@vercel, decider-flash@openrouter, decider@openrouter, decision-1@openrouter, drex-max@openrouter, elephant@openrouter, joey@openrouter, kev@openrouter, mammoth@openrouter, reflex@openrouter, span@openrouter; estimated (recorded tokens times a list price: s1flow.toml's where dated, else the LLM price table's; not a bill): gemini-decision@google (list price of 2026-11-12), jev:1.14 (list price of 2026-10-03), luna@decisions (list price of 2026-10-09). Billed and estimated API costs sit side by side, so their differences do not compare as they are.
+Where the API costs come from: billed: clef-flash@openrouter, clef-omni@openrouter, clef@openrouter, d1-ultra@openrouter, d1.1@openrouter, d1.2, d1.2-ultra, d1@vercel, decider-flash@openrouter, decider@openrouter, decision-1.1@openrouter, decision-1@openrouter, drex-max@openrouter, elephant@openrouter, joey@openrouter, kev@openrouter, mammoth@openrouter, reflex@openrouter, span@openrouter; estimated (recorded tokens times a list price: s1flow.toml's where dated, else the LLM price table's; not a bill): gemini-decision@google (list price of 2026-11-12), jev:1.14 (list price of 2026-10-03), luna@decisions (list price of 2026-10-09). Billed and estimated API costs sit side by side, so their differences do not compare as they are.
 
 ## API cost and time for these cases
 
@@ -104,6 +107,7 @@ Where the API costs come from: billed: clef-flash@openrouter, clef-omni@openrout
 | d1@vercel | $0.0024 | 35 s (estimated, 210 calls) | 28 min | 4 |
 | decider-flash@openrouter | $0.0013 | 8 s (estimated, 210 calls) | 7 min | 4 |
 | decider@openrouter | $0.0025 | 14 s (estimated, 210 calls) | 11 min | 4 |
+| decision-1.1@openrouter | $0.0050 | 13 s (estimated, 210 calls) | 10 min | 4 |
 | decision-1@openrouter | $0.0047 | 14 s (estimated, 210 calls) | 11 min | 4 |
 | drex-max@openrouter | $0.0076 | 25 s (estimated, 210 calls) | 20 min | 4 |
 | elephant@openrouter | $0.0047 | 9 s (estimated, 210 calls) | 7 min | 4 |
@@ -129,6 +133,13 @@ Refused: inputs the model did not take (question type, image, audio, video, PDF,
 | id | label | answer | probability | case |
 |---|---|---|---|---|
 | val-65 | 0 | 4 | 0.91 | User: Can you tell me how to make a Trident cocktail? |
+
+**decision-1.1@openrouter** (2)
+
+| id | label | answer | probability | case |
+|---|---|---|---|---|
+| val-777 | 3 | 4 | 0.97 | User: Using the information from the reference text, find the percent… |
+| val-606 | 2 | 0 | 0.90 | User: What neighborhoods outside Greenville SC, but within 20 mile ra… |
 
 **decision-1@openrouter** (1)
 
@@ -177,17 +188,17 @@ Refused: inputs the model did not take (question type, image, audio, video, PDF,
 
 ## Cases the models disagree on (12 of 210)
 
-| id | label | clef-flash@openrouter | clef-omni@openrouter | clef@openrouter | d1-ultra@openrouter | d1.1@openrouter | d1.2 | d1.2-ultra | d1@vercel | decider-flash@openrouter | decider@openrouter | decision-1@openrouter | drex-max@openrouter | elephant@openrouter | gemini-decision@google | jev:1.14 | joey@openrouter | kev@openrouter | luna@decisions | mammoth@openrouter | reflex@openrouter | span@openrouter | case |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| val-272 | 1 | 1 (0.17) | 1 (0.17) | 0 (0.74) | 0 (0.71) | 1 (0.21) | 0 (0.69) | 0 (0.70) | 0 (0.77) | 1 (0.26) | 0 (0.75) | 0 (0.82) | 0 (0.86) | 1 (0.24) | 0 (0.62) | 0 (0.95) | 0 (0.76) | 1 (0.19) | 0 (1.00) | 0 (0.86) | 0 (0.95) | 0 (0.80) | User: I want to make a cell of excel  Calculate the number of Link wo… |
-| val-466 | 0 | 1 (0.13) | 1 (0.16) | 1 (0.21) | 1 (0.23) | 0 (0.85) | 0 (0.88) | 0 (0.87) | 0 (0.94) | 0 (0.84) | 0 (0.88) | 0 (0.98) | 0 (0.88) | 0 (0.89) | 1 (0.33) | 0 (0.98) | 0 (0.75) | 2 (0.23) | 0 (1.00) | 0 (0.89) | 0 (0.91) | 0 (0.89) | User: rewrite as a sales flyer:  27 Notch Shopping Center Dr Branson … |
-| val-957 | 0 | 1 (0.22) | 0 (0.85) | 0 (0.82) | 0 (0.71) | 1 (0.20) | 1 (0.18) | 1 (0.18) | 0 (0.91) | 1 (0.16) | 0 (0.86) | 0 (0.93) | 0 (0.85) | 1 (0.14) | 1 (0.30) | 0 (0.81) | 0 (0.75) | 1 (0.17) | 0 (1.00) | 0 (0.85) | 0 (0.92) | 0 (0.80) | User: do you know the english word drama  Assistant: Yes, I know the … |
-| val-888 | 0 | 0 (0.81) | 0 (0.77) | 0 (0.93) | 0 (0.92) | 0 (0.92) | 0 (0.93) | 0 (0.91) | 0 (0.97) | 1 (0.15) | 0 (0.94) | 0 (1.00) | 0 (0.96) | 0 (0.90) | 0 (0.80) | 0 (0.96) | 1 (0.17) | 1 (0.21) | 0 (0.99) | 0 (0.98) | 0 (1.00) | 0 (0.93) | User: I want to get a shop selling merch based on my artwork online. … |
-| val-777 | 3 | 4 (0.77) | 4 (0.76) | 4 (0.78) | 4 (0.77) | 3 (0.36) | 3 (0.31) | 4 (0.73) | 4 (0.82) | 4 (0.73) | 4 (0.88) | 4 (0.88) | 4 (0.82) | 4 (0.85) | 4 (0.73) | 3 (0.37) | 4 (0.71) | 3 (0.23) | 4 (0.94) | 4 (0.88) | 4 (0.85) | 4 (0.99) | User: Using the information from the reference text, find the percent… |
-| val-24 | 1 | 3 (0.27) | 1 (0.21) | 1 (0.26) | 1 (0.35) | 1 (0.29) | 1 (0.23) | 1 (0.24) | 1 (0.36) | 2 (0.23) | 1 (0.30) | 0 (0.75) | 1 (0.21) | 1 (0.18) | 1 (0.29) | 0 (0.77) | 2 (0.20) | 2 (0.25) | 0 (0.99) | 1 (0.22) | 1 (0.21) | 1 (0.15) | User: Please provide the equation to calculate the moment of inertia … |
-| val-287 | 1 | 2 (0.27) | 2 (0.23) | 1 (0.27) | 1 (0.32) | 1 (0.32) | 1 (0.31) | 1 (0.26) | 0 (0.71) | 2 (0.25) | 1 (0.31) | 0 (0.84) | 1 (0.27) | 1 (0.25) | 1 (0.45) | 1 (0.50) | 1 (0.20) | 2 (0.18) | 0 (0.99) | 1 (0.27) | 1 (0.37) | 0 (0.92) | User: Give me 10 different, unique and convincing value propositions … |
-| val-323 | 0 | 1 (0.13) | 1 (0.13) | 0 (0.78) | 0 (0.89) | 0 (0.88) | 0 (0.89) | 0 (0.82) | 0 (0.90) | 1 (0.15) | 0 (0.92) | 0 (0.94) | 0 (0.93) | 0 (0.88) | 0 (0.74) | 0 (0.97) | 0 (0.89) | 1 (0.12) | 0 (0.99) | 0 (0.94) | 0 (0.98) | 0 (0.93) | User: A heated rap battle between Eminem and 2pac. Both artists rap a… |
-| val-328 | 2 | 2 (0.21) | 2 (0.25) | 1 (0.31) | 2 (0.32) | 2 (0.32) | 2 (0.26) | 2 (0.27) | 2 (0.29) | 2 (0.24) | 2 (0.36) | 1 (0.35) | 2 (0.33) | 2 (0.31) | 1 (0.41) | 1 (0.55) | 2 (0.25) | 2 (0.21) | 0 (0.99) | 2 (0.26) | 2 (0.40) | 1 (0.17) | User: I have a model which is trained with input shape of (5,20) and … |
-| val-663 | 0 | 3 (0.21) | 1 (0.16) | 1 (0.22) | 1 (0.24) | 1 (0.25) | 0 (0.73) | 0 (0.72) | 0 (0.78) | 1 (0.20) | 0 (0.74) | 0 (0.90) | 0 (0.76) | 0 (0.83) | 1 (0.33) | 0 (0.86) | 2 (0.17) | 2 (0.23) | 0 (0.99) | 0 (0.85) | 0 (0.88) | 1 (0.17) | User: which soldier was awarded the param vir chakra after he was mar… |
-| val-611 | 2 | 4 (0.75) | 4 (0.85) | 3 (0.54) | 3 (0.38) | 4 (0.63) | 4 (0.64) | 4 (0.64) | 4 (0.71) | 3 (0.34) | 4 (0.65) | 3 (0.56) | 4 (0.66) | 4 (0.67) | 3 (0.36) | 3 (0.63) | 3 (0.32) | 3 (0.31) | 3 (0.47) | 3 (0.33) | 4 (0.65) | 4 (0.99) | User: Does the human body regenerate itself? |
-| val-759 | 0 | 1 (0.17) | 1 (0.08) | 1 (0.17) | 1 (0.16) | 1 (0.18) | 1 (0.15) | 0 (0.83) | 1 (0.09) | 1 (0.23) | 0 (0.94) | 0 (0.95) | 0 (0.92) | 0 (0.75) | 1 (0.26) | 1 (0.30) | 0 (0.83) | 1 (0.15) | 0 (0.92) | 0 (0.83) | 0 (0.98) | 4 (0.82) | User: Adesewa is a 22-year-old lawyer who has 4 schools on her list o… |
+| id | label | clef-flash@openrouter | clef-omni@openrouter | clef@openrouter | d1-ultra@openrouter | d1.1@openrouter | d1.2 | d1.2-ultra | d1@vercel | decider-flash@openrouter | decider@openrouter | decision-1.1@openrouter | decision-1@openrouter | drex-max@openrouter | elephant@openrouter | gemini-decision@google | jev:1.14 | joey@openrouter | kev@openrouter | luna@decisions | mammoth@openrouter | reflex@openrouter | span@openrouter | case |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| val-272 | 1 | 1 (0.17) | 1 (0.17) | 0 (0.74) | 0 (0.71) | 1 (0.21) | 0 (0.69) | 0 (0.70) | 0 (0.77) | 1 (0.26) | 0 (0.75) | 0 (0.87) | 0 (0.82) | 0 (0.86) | 1 (0.24) | 0 (0.62) | 0 (0.95) | 0 (0.76) | 1 (0.19) | 0 (1.00) | 0 (0.86) | 0 (0.95) | 0 (0.80) | User: I want to make a cell of excel  Calculate the number of Link wo… |
+| val-466 | 0 | 1 (0.13) | 1 (0.16) | 1 (0.21) | 1 (0.23) | 0 (0.85) | 0 (0.88) | 0 (0.87) | 0 (0.94) | 0 (0.84) | 0 (0.88) | 0 (0.95) | 0 (0.98) | 0 (0.88) | 0 (0.89) | 1 (0.33) | 0 (0.98) | 0 (0.75) | 2 (0.23) | 0 (1.00) | 0 (0.89) | 0 (0.91) | 0 (0.89) | User: rewrite as a sales flyer:  27 Notch Shopping Center Dr Branson … |
+| val-957 | 0 | 1 (0.22) | 0 (0.85) | 0 (0.82) | 0 (0.71) | 1 (0.20) | 1 (0.18) | 1 (0.18) | 0 (0.91) | 1 (0.16) | 0 (0.86) | 0 (0.96) | 0 (0.93) | 0 (0.85) | 1 (0.14) | 1 (0.30) | 0 (0.81) | 0 (0.75) | 1 (0.17) | 0 (1.00) | 0 (0.85) | 0 (0.92) | 0 (0.80) | User: do you know the english word drama  Assistant: Yes, I know the … |
+| val-888 | 0 | 0 (0.81) | 0 (0.77) | 0 (0.93) | 0 (0.92) | 0 (0.92) | 0 (0.93) | 0 (0.91) | 0 (0.97) | 1 (0.15) | 0 (0.94) | 0 (1.00) | 0 (1.00) | 0 (0.96) | 0 (0.90) | 0 (0.80) | 0 (0.96) | 1 (0.17) | 1 (0.21) | 0 (0.99) | 0 (0.98) | 0 (1.00) | 0 (0.93) | User: I want to get a shop selling merch based on my artwork online. … |
+| val-777 | 3 | 4 (0.77) | 4 (0.76) | 4 (0.78) | 4 (0.77) | 3 (0.36) | 3 (0.31) | 4 (0.73) | 4 (0.82) | 4 (0.73) | 4 (0.88) | 4 (0.97) | 4 (0.88) | 4 (0.82) | 4 (0.85) | 4 (0.73) | 3 (0.37) | 4 (0.71) | 3 (0.23) | 4 (0.94) | 4 (0.88) | 4 (0.85) | 4 (0.99) | User: Using the information from the reference text, find the percent… |
+| val-729 | 0 | 2 (0.41) | 0 (0.82) | 1 (0.10) | 1 (0.23) | 1 (0.18) | 1 (0.16) | 1 (0.16) | 1 (0.10) | 2 (0.42) | 1 (0.20) | 0 (0.99) | 0 (0.80) | 0 (0.75) | 1 (0.08) | 1 (0.22) | 1 (0.09) | 3 (0.23) | 3 (0.22) | 0 (0.92) | 1 (0.09) | 0 (0.91) | 0 (0.92) | User: The paper should serve any one, or any combination, of the foll… |
+| val-24 | 1 | 3 (0.27) | 1 (0.21) | 1 (0.26) | 1 (0.35) | 1 (0.29) | 1 (0.23) | 1 (0.24) | 1 (0.36) | 2 (0.23) | 1 (0.30) | 0 (0.90) | 0 (0.75) | 1 (0.21) | 1 (0.18) | 1 (0.29) | 0 (0.77) | 2 (0.20) | 2 (0.25) | 0 (0.99) | 1 (0.22) | 1 (0.21) | 1 (0.15) | User: Please provide the equation to calculate the moment of inertia … |
+| val-287 | 1 | 2 (0.27) | 2 (0.23) | 1 (0.27) | 1 (0.32) | 1 (0.32) | 1 (0.31) | 1 (0.26) | 0 (0.71) | 2 (0.25) | 1 (0.31) | 0 (0.86) | 0 (0.84) | 1 (0.27) | 1 (0.25) | 1 (0.45) | 1 (0.50) | 1 (0.20) | 2 (0.18) | 0 (0.99) | 1 (0.27) | 1 (0.37) | 0 (0.92) | User: Give me 10 different, unique and convincing value propositions … |
+| val-323 | 0 | 1 (0.13) | 1 (0.13) | 0 (0.78) | 0 (0.89) | 0 (0.88) | 0 (0.89) | 0 (0.82) | 0 (0.90) | 1 (0.15) | 0 (0.92) | 0 (0.99) | 0 (0.94) | 0 (0.93) | 0 (0.88) | 0 (0.74) | 0 (0.97) | 0 (0.89) | 1 (0.12) | 0 (0.99) | 0 (0.94) | 0 (0.98) | 0 (0.93) | User: A heated rap battle between Eminem and 2pac. Both artists rap a… |
+| val-328 | 2 | 2 (0.21) | 2 (0.25) | 1 (0.31) | 2 (0.32) | 2 (0.32) | 2 (0.26) | 2 (0.27) | 2 (0.29) | 2 (0.24) | 2 (0.36) | 1 (0.33) | 1 (0.35) | 2 (0.33) | 2 (0.31) | 1 (0.41) | 1 (0.55) | 2 (0.25) | 2 (0.21) | 0 (0.99) | 2 (0.26) | 2 (0.40) | 1 (0.17) | User: I have a model which is trained with input shape of (5,20) and … |
+| val-663 | 0 | 3 (0.21) | 1 (0.16) | 1 (0.22) | 1 (0.24) | 1 (0.25) | 0 (0.73) | 0 (0.72) | 0 (0.78) | 1 (0.20) | 0 (0.74) | 0 (0.86) | 0 (0.90) | 0 (0.76) | 0 (0.83) | 1 (0.33) | 0 (0.86) | 2 (0.17) | 2 (0.23) | 0 (0.99) | 0 (0.85) | 0 (0.88) | 1 (0.17) | User: which soldier was awarded the param vir chakra after he was mar… |
+| val-611 | 2 | 4 (0.75) | 4 (0.85) | 3 (0.54) | 3 (0.38) | 4 (0.63) | 4 (0.64) | 4 (0.64) | 4 (0.71) | 3 (0.34) | 4 (0.65) | 3 (0.52) | 3 (0.56) | 4 (0.66) | 4 (0.67) | 3 (0.36) | 3 (0.63) | 3 (0.32) | 3 (0.31) | 3 (0.47) | 3 (0.33) | 4 (0.65) | 4 (0.99) | User: Does the human body regenerate itself? |
