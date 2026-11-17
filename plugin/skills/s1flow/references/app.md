@@ -49,7 +49,11 @@ nothing) is the app's decision: ask the person, or follow `criteria.md`, and do 
 s1flow decide --policy ticket-kind --state @state.json \
   --connections s1flow.toml --log "$RUNNER_TEMP/s1flow-log.jsonl" --json
 s1flow decide --model jev --boolean "Is this a bug report?" --state @state.json   # a model, no policy
+s1flow decide --model liquid:d1.2 --boolean "Is this a bug report?" --state @state.json   # no s1flow.toml needed
 ```
+
+`--model provider:id` calls a built-in provider's model that no `s1flow.toml` names (a name in the line-up comes
+first). Nothing is declared for it, so nothing is checked before the call: the model answers, refuses or fails.
 
 `--policy` always needs explicit `--connections`. `--json` prints the `Decision` (with `decision_id` and
 `below_min_probability`, `null` / `true` / `false`); `--github-output` writes `answer`, `probability`,

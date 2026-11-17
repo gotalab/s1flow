@@ -169,7 +169,9 @@ response = Client().responses.create(
 print(response.answers["bug"].probability)
 ```
 
-The `ModelSpec` here is written in your own code, so this example needs no connection file. If you refer to
+The `ModelSpec` here is written in your own code, so this example needs no connection file. From the shell, `s1flow decide --model
+liquid:d1.2 --state '"Crash on startup"' --boolean "Does this report describe a software defect?"` does the same
+with no project: `provider:id` names a built-in provider and the id it sends. If you refer to
 the model by an alias instead, pass the app's list of allowed models:
 
 ```python

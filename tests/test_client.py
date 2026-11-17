@@ -7,7 +7,9 @@ import subprocess
 import sys
 from pathlib import Path
 
+import httpx
 import pytest
+import respx
 from conftest import PROJECT, s1flow, ship
 
 from s1flow import AsyncClient, Client
@@ -234,6 +236,29 @@ def test_decide_with_a_model(toml):
     done = s1flow("decide", "--model", "toy", "--state", '"x"', "--choice", "Which?", cwd=cwd)  # one spelling: --questions
     assert done.returncode == 2 and "unrecognized arguments: --choice" in done.stderr
     assert s1flow("decide", "--state", "{}", "--boolean", "?", cwd=cwd).returncode == 2  # neither --model nor --policy
+
+
+@respx.mock
+def test_decide_tries_a_model_no_s1flow_toml_names(tmp_path, toml):
+    """`--model provider:id` calls a built-in provider's model with no project, and beside a line-up that lacks it.
+    Nothing is declared for it, so a box question goes to the model unchecked."""
+    from s1flow.client.providers.liquid import BASE_URL
+
+    reply = {"model": "d1.2", "usage": {"input_tokens": 9, "output_tokens": 0, "cost": 0.000001}, "answers": {
+        "q": {"type": "noul", "noul": 0.9}, "where": {"type": "box", "box": {"top": 0.1, "bottom": 0.5, "left": 0.2, "right": 0.6}}}}
+    route = respx.post(f"{BASE_URL}/systemone").mock(return_value=httpx.Response(200, json=reply))
+    qs = json.dumps({"q": {"type": "boolean", "instructions": "A bug?"}, "where": {"type": "box", "instructions": "the dialog"}})
+    bare = tmp_path / "bare"
+    bare.mkdir()
+    for cwd in (bare, toml.parent):  # no project; a project whose line-up has no liquid
+        done = s1flow("decide", "--model", "liquid:d1.2", "--state", '"a crash"', "--questions", qs, cwd=cwd, env={"LIQUID_API_KEY": "k"})
+        assert done.returncode == 0, done.stderr
+        assert done.stdout.splitlines()[0] == "q: P(true) 0.900"
+        assert json.loads(route.calls[-1].request.read())["model"] == "d1.2"
+    done = s1flow("decide", "--model", "nope", "--state", '"x"', "--boolean", "?", cwd=bare)
+    assert done.returncode == 2 and "no s1flow.toml here" in done.stderr and "provider:id (liquid:d1.2)" in done.stderr
+    done = s1flow("decide", "--model", "nope:1", "--state", '"x"', "--boolean", "?", cwd=toml.parent)
+    assert done.returncode != 0 and "names: toy, later" in done.stderr and "provider:id" in done.stderr
 
 
 def test_the_client_loads_no_evaluation_stack(toml):
