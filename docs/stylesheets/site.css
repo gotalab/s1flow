@@ -248,3 +248,49 @@
 .page-actions { align-items: center; }
 .md-typeset details.page-menu > summary { height: 100%; line-height: 1; }
 .md-typeset details.page-menu > summary::after { transform: translateY(-0.08rem) rotate(45deg); }
+
+/* Bench tables: sortable headings, a filter, and the candidate column kept in view while the table scrolls. */
+/* The theme scrolls the table itself; let its wrapper scroll instead so the sticky column has something to stick to. */
+.md-typeset .bench table:not([class]) { overflow: visible; font-variant-numeric: tabular-nums; }
+.md-typeset .bench table:not([class]) td { white-space: nowrap; }
+.md-typeset .bench table:not([class]) th { vertical-align: bottom; }
+.md-typeset .bench table:not([class]) tr > :first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--md-default-bg-color);
+  box-shadow: inset -1px 0 0 var(--rule);
+}
+.bench-sort {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.bench-sort:hover { color: var(--md-default-fg-color); }
+.bench-sort::after { content: " ↕"; opacity: 0.35; }
+[aria-sort] > .bench-sort { color: var(--md-default-fg-color); }
+[aria-sort="ascending"] > .bench-sort::after { content: " ↑"; opacity: 1; }
+[aria-sort="descending"] > .bench-sort::after { content: " ↓"; opacity: 1; }
+.bench-filter {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 1rem 0 0.4rem;
+  font-size: 0.7rem;
+  color: var(--grey);
+}
+.bench-filter input {
+  width: 14rem;
+  max-width: 100%;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--rule);
+  border-radius: 0.3rem;
+  background: var(--md-default-bg-color);
+  font: inherit;
+  color: var(--md-default-fg-color);
+}
+.bench-filter input:focus { outline: 2px solid var(--md-accent-fg-color); outline-offset: 1px; border-color: transparent; }

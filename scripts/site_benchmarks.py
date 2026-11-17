@@ -83,10 +83,16 @@ def latency(calls: dict[str, Any]) -> str:
 
 
 def scored(data: dict[str, Any]) -> list[dict[str, Any]]:
-    """Candidates asked every case, best first; a candidate that reaches no value on the objective comes last."""
+    """Candidates asked every case, best first, then faster, then cheaper; one that reaches no value comes last."""
     rows = [c for c in data["candidates"] if c["n"] and not c["excluded"]]
     sign = -1 if data["objective"]["direction"] == "max" else 1
-    return sorted(rows, key=lambda c: (c["value"] is None, sign * (c["value"] or 0), c["candidate"]))
+
+    def key(c: dict[str, Any]) -> tuple:
+        p50 = (c["calls"].get("latency") or {}).get("p50_ms")
+        usd = c["calls"].get("cost_per_10k_usd")
+        return (c["value"] is None, sign * (c["value"] or 0), p50 is None, p50 or 0, usd is None, usd or 0, c["candidate"])
+
+    return sorted(rows, key=key)
 
 
 def tied_with_best(data: dict[str, Any], rows: list[dict[str, Any]]) -> set[str]:
@@ -127,6 +133,25 @@ def question_block(data: dict[str, Any]) -> str:
     return "\n".join(lines).rstrip() + "\n"
 
 
+def metric_columns(data: dict[str, Any]) -> list[tuple[str, str, str]]:
+    """Every metric the comparison holds besides the objective, once each: (key, column label, unit)."""
+    objective = data["objective"]
+    seen, out = {objective["label"]}, []
+    for d in data["metric_definitions"]:
+        key, label = d["key"], d["label"]
+        if key.startswith("coverage:"):
+            if objective["name"] == "coverage":
+                continue  # the objective itself
+            label = f"coverage at {float(key.split(':')[1]):.0%} accuracy"
+        elif key.startswith("accepted_accuracy:"):
+            label = "accepted accuracy"
+        if label in seen:
+            continue
+        seen.add(label)
+        out.append((key, label, d["unit"]))
+    return out
+
+
 def task_page(data: dict[str, Any], use: dict[str, str]) -> str:
     task, objective = data["task"], data["objective"]
     unit = objective["unit"]
@@ -134,24 +159,34 @@ def task_page(data: dict[str, Any], use: dict[str, str]) -> str:
     tied = tied_with_best(data, rows)
     rows = [c for c in rows if c["candidate"] in tied] + [c for c in rows if c["candidate"] not in tied]
     alarms = false_alarms(task) if objective["name"] == "recall" else {}
-    extra = " false alarms |" if alarms else ""
-    table = [f"| Candidate | {objective['label']} |{extra} accuracy (all) | p50 latency | API cost / 10k |",
-             "|---|---|---|---|---|" + ("---|" if alarms else "")]
+    metrics = metric_columns(data)
+    refused = any(c["failures"]["refused_cases"] for c in rows)
+    head = ["Candidate", objective["label"]] + (["false alarms"] if alarms else []) + [label for _, label, _ in metrics]
+    head += ["p50 latency", "p90 latency", "API cost / 10k"] + (["refused"] if refused else [])
+    table = ["| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
     for c in rows:
-        acc = c["metrics"].get("accuracy", {})
-        mark = " =" if c["candidate"] in tied else ""
-        alarm = f" {alarms[c['candidate']]:.1%} |" if c["candidate"] in alarms else (" |" if alarms else "")
-        table.append(f"| {c['candidate']}{mark} | {fmt(c['value'], unit)} {fmt_interval(c['interval'], unit)}".rstrip()
-                     + f" |{alarm} {fmt(acc.get('value'), 'share')} | {latency(c['calls'])} | {cost(c['calls'])} |")
+        cells = [c["candidate"] + (" =" if c["candidate"] in tied else ""),
+                 f"{fmt(c['value'], unit)} {fmt_interval(c['interval'], unit)}".rstrip()]
+        if alarms:
+            cells.append(f"{alarms[c['candidate']]:.1%}" if c["candidate"] in alarms else "")
+        cells += [fmt(c["metrics"][key]["value"], u) if c["metrics"][key]["value"] is not None else "" for key, _, u in metrics]
+        p90 = (c["calls"].get("latency") or {}).get("p90_ms")
+        cells += [latency(c["calls"]), "unknown" if p90 is None else f"{p90:,.0f} ms", cost(c["calls"])]
+        if refused:
+            cells.append(f"{c['failures']['refused_cases'] / c['n']:.0%}")
+        table.append("| " + " | ".join(cells) + " |")
     unreached = any(c["value"] is None for c in rows)
     notes = ["`=` marks the candidates whose interval reaches the best one's: the objective cannot tell them apart, "
-             "so they are not ranked against each other."]
+             "so they are not ranked against each other. Rows start best first, then faster, then cheaper; select a "
+             "column heading to sort by it."]
     if alarms:
         notes.append("False alarms are measured out of fold at each candidate's threshold, so they can pass the cap "
                      "a little.")
     if unreached:
         notes.append("Not reached: no threshold meets the objective's target on these cases.")
-    notes.append("Accuracy (all) reads every answer at its most likely option, without the objective's threshold.")
+    notes.append("Accuracy (all) reads every answer at its most likely option, without the objective's threshold. "
+                 "Accepted accuracy is the accuracy of the answers above the coverage threshold. Lower is better for "
+                 "latency, cost, ECE, Brier score, MAE, loss, false alarms and refusals.")
     return "\n".join([
         "---", "hide:", "  - toc", "description: " + json.dumps(f"{task}: the answer is used to {use['use']}; measured by {use['objective']}."), "---",
         "",
@@ -161,9 +196,29 @@ def task_page(data: dict[str, Any], use: dict[str, str]) -> str:
         question_block(data),
         '<div class="bench" markdown>', "", "\n".join(table), "", "</div>", "",
         " ".join(notes), "",
-        f"[Open the full comparison]({task}/comparison.html){{ .md-button }} with every metric, the probability curves "
+        f"[Open the full comparison]({task}/comparison.html){{ .md-button }} with the probability curves "
         f"and a trade-off chart, or download [comparison.json]({task}/comparison.json).", "",
     ])
+
+
+def matrix(tasks: list[tuple[dict[str, Any], dict[str, str]]]) -> str:
+    """Each candidate's objective value on each task, `=` where it is among the best, as the bench overview shows."""
+    cells: dict[str, dict[str, str]] = {}
+    for data, _ in tasks:
+        rows = scored(data)
+        tied = tied_with_best(data, rows)
+        for c in rows:
+            cells.setdefault(c["candidate"], {})[data["task"]] = (
+                fmt(c["value"], data["objective"]["unit"]) + (" =" if c["candidate"] in tied else ""))
+    best = {name: sum(v.endswith(" =") for v in row.values()) for name, row in cells.items()}
+    order = sorted(cells, key=lambda name: (-best[name], name))
+    names = [data["task"] for data, _ in tasks]
+    table = ["| Candidate | Among the best | " + " | ".join(names) + " |",
+             "|" + "---|" * (len(names) + 2)]
+    for name in order:
+        table.append(f"| {name} | {best[name]} of {len(cells[name])} | "
+                     + " | ".join(cells[name].get(t, "") for t in names) + " |")
+    return '<div class="bench" markdown>\n\n' + "\n".join(table) + "\n\n</div>\n"
 
 
 def index_page(tasks: list[tuple[dict[str, Any], dict[str, str]]]) -> str:
@@ -181,7 +236,10 @@ def index_page(tasks: list[tuple[dict[str, Any], dict[str, str]]]) -> str:
     dates = sorted({data["at"][:10] for data, _ in tasks})
     measured = f"on {dates[0]}" if len(dates) == 1 else f"between {dates[0]} and {dates[-1]}; each task page has its date"
     bench = '<div class="bench" markdown>\n\n' + "\n".join(table) + "\n\n</div>\n"
-    return PREFACE.replace("{measured}", measured) + bench
+    by_model = ("\n## By model\n\nEach candidate's value on each task's own objective. `=` marks a value among the "
+                "best on that task, and *Among the best* counts those tasks. The units differ by task, so read a column, "
+                "not a row; the task pages have every other metric.\n\n" + matrix(tasks))
+    return PREFACE.replace("{measured}", measured) + "## By task\n\n" + bench + by_model
 
 
 def load_charts():
