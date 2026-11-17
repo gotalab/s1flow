@@ -17,7 +17,6 @@ BOX = BoxEdges(top=0.1, bottom=0.5, left=0.2, right=0.6)
 def test_each_question_has_its_kind():
     b, c, p, s, x = kind_of(Boolean(instructions="?")), kind_of(YES_NO), kind_of(YES_NO, KindParams(positive="yes")), kind_of(LEVELS), kind_of(Box(instructions="?"), KindParams(iou=0.7))
     assert [k.type for k in (b, c, p, s, x)] == ["boolean", "choice", "choice", "score", "box"]
-    assert [k.adoptable for k in (b, c, p, s, x)] == [True, True, True, False, False]
     assert b.binary and p.binary and not c.binary and not s.binary and not x.binary
     assert b.sets == p.sets == {"threshold", "min_probability"} and c.sets == s.sets == x.sets == {"min_probability"}
     assert [k.objectives[0] if k.objectives else None for k in (b, c, p, s, x)] == ["accuracy", "accuracy", "accuracy", "mae", "accuracy"]

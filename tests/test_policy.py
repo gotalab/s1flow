@@ -450,8 +450,7 @@ def test_a_question_keeps_what_its_type_leaves_open_in_a_task_and_a_policy():
                     label=lambda row: row, kind_params=params)
     assert json.loads(params.model_dump_json()) == {"iou": 0.7}
     assert box_task.kind.iou == 0.7
-    with pytest.raises(ValueError, match="boolean and choice"):
-        asked(Box(instructions="?"), DecisionRule(), params)
+    assert asked(Box(instructions="?"), DecisionRule(), params).of().iou == 0.7
     assert json.loads(asked(Boolean(instructions="?"), DecisionRule()).model_dump_json())["kind"] == {}  # unset, left out: digests stay
     with pytest.raises(ConfigError, match="kind_params: positive 'c' is not an option"):
         Task(id="t", cases="x", state=lambda r: r, question=Choice(instructions="?", criteria={"a": None, "b": None}),

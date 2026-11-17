@@ -28,7 +28,7 @@ PLAIN = DecisionRule()
 def test_each_field_question_has_its_kind():
     t, n, d, e = kind_of(TEXT), kind_of(NUMBER), kind_of(DATE), kind_of(DAYS)
     assert [k.type for k in (t, n, d, e)] == ["text", "number", "date", "estimate"]
-    assert not any(k.adoptable or k.binary for k in (t, n, d, e)) and all(k.sets == {"min_probability"} for k in (t, n, d, e))
+    assert not any(k.binary for k in (t, n, d, e)) and all(k.sets == {"min_probability"} for k in (t, n, d, e))
     assert t.objectives == n.objectives == d.objectives == ("accuracy", "coverage", "auroc")
     assert t.report == ("value_accuracy", "absent_accuracy")
     assert e.objectives == ("mean_error", "accuracy", "coverage", "auroc") and e.report == ("mean_error",)
@@ -187,7 +187,7 @@ def test_a_text_task_runs_reports_and_compares(tmp_path):
     c = comparison.collect(task)
     row = next(r for r in c.candidates if r.model == "reader")
     assert c.question_type == "text" and {"value_accuracy", "absent_accuracy", "brier", "ece"} <= set(row.metrics)
-    assert row.adoption_blocked == ["text questions are comparable but cannot be adopted as runtime policies"]
+    assert row.adoption_blocked == []
     with pytest.raises(Unsupported, match="text tasks are not supported yet"):
         review.review(task)
 
@@ -206,7 +206,7 @@ def test_an_estimate_task_runs_reports_and_compares(tmp_path):
     assert "(right within 0.5 of the label)" in md and "| mean error |" in md and "Estimate: right within 0.5 of the label" in md
     row = next(r for r in comparison.collect(task).candidates if r.model == "reader")
     assert row.value == e.objective.value and {"mean_error", "brier"} <= set(row.metrics)
-    assert row.adoption_blocked == ["estimate questions are comparable but cannot be adopted as runtime policies"]
+    assert row.adoption_blocked == []
 
 
 def test_a_task_whose_cases_all_have_no_value_is_measured_as_absent():

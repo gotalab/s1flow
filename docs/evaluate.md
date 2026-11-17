@@ -49,7 +49,9 @@ validation and decision rules; metrics and optimization belong to evaluation alo
 
 ## Compare candidates
 
-`s1flow report` shows every model and question variant side by side, using only the development cases. The
+`s1flow report` shows every model and question variant side by side, using only the development cases. A
+variant is another wording of the question, written in task.py as `variants={"strict": Boolean(instructions="...")}`
+and run as `model/strict`; `s1flow optimize` adds them the same way. The
 terminal shows the candidates ordered by the task's objective, with the ones it cannot tell apart at the top marked
 `=` (ordered by `tiebreak` in task.py, or by name without one); it marks no pick. `--json` adds every
 metric of each candidate with the same candidate IDs and numbers, so a person, or an agent acting for them, can
@@ -90,7 +92,7 @@ shared metrics. Box questions get the shared metrics and a confidence selection 
 (no value there): the report shows the accuracy on the cases with a value and on those with none apart, and how sure
 an answer is comes from the model's `p_null` and `confidence`. A `RangeEstimate` is read by its mean error (the
 default objective, `MeanError()`), counts as right within half a `step` of the label (1% of the range when it has no step), and is as sure as its
-p10 - p90 interval is narrow. These four are compared, not adopted: a policy holds a yes/no or a choice. Yes/no questions add
+p10 - p90 interval is narrow. A policy holds these four like any other type. Yes/no questions add
 precision/recall and calibration charts. Choice questions get a curve of the selected answer's probability when the
 model returns a real distribution. A provider's own confidence score is treated as a separate signal, and no
 probability curve is drawn when the signal it needs isn't available.

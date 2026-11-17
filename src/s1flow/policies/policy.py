@@ -129,10 +129,17 @@ def record_feedback(spec: PolicySpec, decision_id: str, label: Any, *, log: Path
     if policy_digest is not None and policy_digest != spec.digest:
         raise ConfigError('feedback policy_digest does not match this policy')
     kind = spec.kind
-    wrong = label not in kind.options if isinstance(label, str) and kind.options else kind.label_error(kind.as_label(label)) is not None
-    if wrong:
-        labels = [*kind.options, *(['true', 'false'] if kind.binary else [])]
-        raise ConfigError(f'{spec.ref}: label {label!r} is not an answer to its question; one of: {", ".join(labels)}')
+    labels = [*kind.options, *(['true', 'false'] if kind.binary else [])]
+    if labels:
+        if label not in kind.options if isinstance(label, str) and kind.options else kind.label_error(kind.as_label(label)) is not None:
+            raise ConfigError(f'{spec.ref}: label {label!r} is not an answer to its question; one of: {", ".join(labels)}')
+    else:
+        try:
+            wrong = kind.label_error(kind.as_label(label))
+        except (TypeError, ValueError):  # a label its kind cannot read (a value read, a multichoice): say what one is
+            wrong = kind.label_error(label) or f'{label!r} is not a label of a {kind.type} question'
+        if wrong:
+            raise ConfigError(f'{spec.ref}: {wrong}')
     _emit(place.absolute(log, "log") if log is not None else None,
            FeedbackLog(at=clock.now(ms=True), decision_id=decision_id, policy=spec.ref, policy_digest=spec.digest,
                        label=kind.as_label(label)))
