@@ -55,7 +55,7 @@ def test_every_command_takes_h_and_its_help_ends_with_the_exit_codes():
     from s1flow.cli import parser
 
     found = list(_commands(parser()))
-    assert ("cases", "review") in found and ("export",) in found and ("optimize",) in found and ("report",) in found and len(found) == 14
+    assert ("cases", "review") in found and ("export",) in found and ("optimize",) in found and ("report",) in found and len(found) == 15
     for words in found + [("cases",), ("feedback",)]:
         done = cli(*words, "-h")
         assert done.exit_code == 0 and " ".join(EXITS.split()) in " ".join(done.output.split()), words
@@ -153,3 +153,12 @@ def test_adopt_exits_as_the_table_says(tmp_path, monkeypatch):
         refused = run("adopt", "truth", "bad", "--reason", "try")
         assert refused.returncode == 1 and "not written" in refused.stdout
         assert run("adopt", "truth", "bad", "--reason", "anyway", "--force").returncode == 0
+
+
+def test_adopt_spec_outside_a_project_says_to_save_with_root(tmp_path):
+    from conftest import runtime_spec
+
+    (tmp_path / "spec.json").write_text(runtime_spec().dump())
+    done = s1flow("adopt", "--spec", "spec.json", "--reason", "ship now", cwd=tmp_path)
+    assert done.returncode == 2 and "Traceback" not in done.stderr
+    assert "--root policies --connections FILE" in done.stderr.strip().splitlines()[-1]

@@ -4,6 +4,27 @@
 
 ### Added
 
+- `s1flow feedback import TASK labels.csv --log decisions.jsonl` records many right answers at once, such as labels
+  a person corrected: a CSV with `decision_id` and `label` columns, or JSON Lines. Every row is checked first, and
+  one wrong row writes nothing. A policy without `log=` (and with no OpenTelemetry tracer provider) now warns on its
+  first decide that nothing is recorded, and its `feedback` raises instead of dropping the label.
+- A policy holds a score or box question too, not only yes/no and choice: save it with `adopt --spec`, and its
+  answers are logged and take feedback like any other (`feedback record <task> <id> 2`, or a box as JSON). `adopt`
+  takes a score or box candidate from `report` like any other. `decide --policy` also prints the decision ID.
+- `report` names a model and question pair nobody ran under `not run:`, and counts them once there are more than
+  five, instead of listing each with "missing run evidence". `adopt --spec` outside a project says to save with
+  `--root`. The Skill and `init --task`'s task.py say how to write question variants, and that turning production
+  answers into cases needs a project with the task.
+- `s1flow decide --model provider:id` (`liquid:d1.2`, `openrouter:typesafe/jev-1.14`) calls a model that no
+  `s1flow.toml` names, with no project: try a model on an input before any task or evaluation. Only that
+  provider's key is needed. A name in the line-up still comes first, and an explicit `--connections` file still
+  lists every model allowed. The Skill starts with this step when the
+  person wants to see what a model answers.
+- The Skill walks through putting a yes/no or choice decision in production with no evaluation: one connection, a
+  hand-written policy saved unevaluated with `adopt --spec`, and a log whose answers become cases later.
+- A built-in `liquid` provider for Liquid's own API (`LIQUID_API_KEY`): d1.2 and d1.2-ultra without a gateway in
+  between, with text and images, for yes/no, choice, score and box questions. It reports the cost Liquid billed.
+  A box the model does not find counts as no answer for that case.
 - A built-in `gemini` provider for Google's own Decisions API on the Gemini API (`GEMINI_API_KEY`): Gemini
   Decision 1 without OpenRouter in between, with text, images, audio, video and PDFs. An input Google's safety
   filters block counts as refused for that case.
@@ -52,6 +73,13 @@
   disagree. The held-out test verdict now comes from `adopt` alone: it tests the picked candidate and does not
   save one that falls short. Delete `.github/workflows/s1flow-check.yml` from a project that has it. The decide
   Action (`gotalab/s1flow/decide`) is unchanged.
+
+### Fixed
+
+- A production decision on an image (or audio, video, PDF) now becomes a usable case: `feedback measure --add` wrote
+  the kept state with its prepared media inline, and every later read of those cases (`cases check`, `run`)
+  refused them as a bad media reference. Prepared media are now read back as they are, so the case holds the
+  exact bytes the model saw, checked against their sha256 and format.
 
 ## 0.1.0a5 (2026-11-12)
 

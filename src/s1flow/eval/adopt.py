@@ -160,8 +160,6 @@ class Shortlist:
 
 
 def shortlist(task: Task, only: list[str] | None = None, variants: list[str] | None = None) -> Shortlist:
-    if not task.kind.adoptable:
-        raise S1flowError(f"a policy ships boolean and choice questions; {task.id} asks a {task.kind.type}")
     cands = candidates(task, only, variants)
     if not cands:
         raise NotFound(f"no runs for {task.id}; s1flow run {task.id} first")

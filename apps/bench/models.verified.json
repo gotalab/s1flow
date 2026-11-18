@@ -211,6 +211,90 @@
     }
    }
   },
+  "d1.2": {
+   "at": "2026-11-16T19:42:02Z",
+   "answered_by": "d1.2",
+   "checks": {
+    "boolean": {
+     "ok": true,
+     "detail": "P(true) 0.99 / 0.01"
+    },
+    "choice": {
+     "ok": true,
+     "detail": "blue 0.99 / red 1.00"
+    },
+    "score": {
+     "ok": true,
+     "detail": "2.98 / 1.00 (want 3 / 1)"
+    },
+    "image": {
+     "ok": true,
+     "detail": "red 1.00 / blue 1.00"
+    },
+    "audio": {
+     "ok": false,
+     "detail": "Unsupported: liquid:d1.2 cannot send audio"
+    },
+    "video": {
+     "ok": false,
+     "detail": "Unsupported: liquid:d1.2 cannot send video"
+    },
+    "pdf": {
+     "ok": false,
+     "detail": "Unsupported: liquid:d1.2 cannot send pdf"
+    },
+    "images": {
+     "ok": true,
+     "detail": "red 1.00 / blue 1.00"
+    },
+    "box": {
+     "ok": true,
+     "detail": "IoU 0.85, confidence 0.99"
+    }
+   }
+  },
+  "d1.2-ultra": {
+   "at": "2026-11-16T19:42:03Z",
+   "answered_by": "d1.2-ultra",
+   "checks": {
+    "boolean": {
+     "ok": true,
+     "detail": "P(true) 0.99 / 0.01"
+    },
+    "choice": {
+     "ok": true,
+     "detail": "blue 0.99 / red 0.99"
+    },
+    "score": {
+     "ok": true,
+     "detail": "2.99 / 1.00 (want 3 / 1)"
+    },
+    "image": {
+     "ok": true,
+     "detail": "red 1.00 / blue 1.00"
+    },
+    "audio": {
+     "ok": false,
+     "detail": "Unsupported: liquid:d1.2-ultra cannot send audio"
+    },
+    "video": {
+     "ok": false,
+     "detail": "Unsupported: liquid:d1.2-ultra cannot send video"
+    },
+    "pdf": {
+     "ok": false,
+     "detail": "Unsupported: liquid:d1.2-ultra cannot send pdf"
+    },
+    "images": {
+     "ok": true,
+     "detail": "red 1.00 / blue 1.00"
+    },
+    "box": {
+     "ok": true,
+     "detail": "IoU 0.89, confidence 0.99"
+    }
+   }
+  },
   "d1@vercel": {
    "at": "2026-10-31T05:52:56Z",
    "answered_by": "liquid/d1",
@@ -298,6 +382,48 @@
     "box": {
      "ok": false,
      "detail": "Rejected: rejected by the provider (400): {\"error\":{\"message\":\"Perplexity does not accept box questions; question \\\"disc\\\" is a box\",\"code\":400}}"
+    }
+   }
+  },
+  "decision-1.1@openrouter": {
+   "at": "2026-11-17T23:04:56Z",
+   "answered_by": "microsoft/microsoft-decision-1.1-20261117",
+   "checks": {
+    "boolean": {
+     "ok": true,
+     "detail": "P(true) 1.00 / 0.00"
+    },
+    "choice": {
+     "ok": true,
+     "detail": "blue 1.00 / red 1.00"
+    },
+    "score": {
+     "ok": true,
+     "detail": "3.00 / 1.00 (want 3 / 1)"
+    },
+    "image": {
+     "ok": true,
+     "detail": "red 1.00 / blue 1.00"
+    },
+    "audio": {
+     "ok": false,
+     "detail": "Rejected: rejected by the provider (400): {\"error\":{\"message\":\"Azure does not accept \\\"input_audio\\\" parts in state\",\"code\":400}}"
+    },
+    "video": {
+     "ok": false,
+     "detail": "Rejected: rejected by the provider (400): {\"error\":{\"message\":\"Azure does not accept \\\"video_url\\\" parts in state\",\"code\":400}}"
+    },
+    "pdf": {
+     "ok": false,
+     "detail": "Rejected: rejected by the provider (400): {\"error\":{\"message\":\"Azure does not accept \\\"file\\\" parts in state\",\"code\":400}}"
+    },
+    "images": {
+     "ok": true,
+     "detail": "red 1.00 / blue 1.00"
+    },
+    "box": {
+     "ok": false,
+     "detail": "Rejected: rejected by the provider (400): {\"error\":{\"message\":\"Azure does not accept box questions; question 1 is a box\",\"code\":400}}"
     }
    }
   },

@@ -450,8 +450,7 @@ def test_a_question_keeps_what_its_type_leaves_open_in_a_task_and_a_policy():
                     label=lambda row: row, kind_params=params)
     assert json.loads(params.model_dump_json()) == {"iou": 0.7}
     assert box_task.kind.iou == 0.7
-    with pytest.raises(ValueError, match="boolean and choice"):
-        asked(Box(instructions="?"), DecisionRule(), params)
+    assert asked(Box(instructions="?"), DecisionRule(), params).of().iou == 0.7
     assert json.loads(asked(Boolean(instructions="?"), DecisionRule()).model_dump_json())["kind"] == {}  # unset, left out: digests stay
     with pytest.raises(ConfigError, match="kind_params: positive 'c' is not an option"):
         Task(id="t", cases="x", state=lambda r: r, question=Choice(instructions="?", criteria={"a": None, "b": None}),
@@ -607,3 +606,39 @@ class StoreMachine(RuleBasedStateMachine):
 
 TestStoreMachine = StoreMachine.TestCase
 TestStoreMachine.settings = settings(max_examples=60, stateful_step_count=15)
+
+
+def test_an_unrecorded_decision_is_said_once_and_feedback_with_nowhere_to_go_is_refused(store, tmp_path, monkeypatch):
+    """With no log= and no tracer provider, nothing keeps a decision: say so at the caller, once per policy; a label
+    that would be dropped is an error, not silence."""
+    import warnings
+
+    d = policies.DecisionPolicy(policy().spec, client=policy_client())
+    with warnings.catch_warnings(record=True) as told:
+        warnings.simplefilter("always")
+        d.decide(STATE)
+        d.decide(STATE)
+        asyncio.run(d.adecide(STATE))
+    assert [str(w.message) for w in told] == [
+        "t@v1: decisions are not recorded: no log= and no OpenTelemetry tracer provider, so no right answer can be "
+        "joined to them and production can't be measured; pass log=PATH (decide --log FILE)"]
+    assert told[0].filename == __file__  # at the app's line, not inside s1flow
+    async def both(p):
+        return await asyncio.gather(p.adecide(STATE), p.adecide(STATE))
+    with warnings.catch_warnings(record=True) as told:
+        warnings.simplefilter("always")
+        asyncio.run(both(policies.DecisionPolicy(policy().spec, client=policy_client())))
+    assert len(told) == 1 and told[0].filename == __file__  # under gather too
+    with pytest.raises(ConfigError, match="feedback has nowhere to be recorded"):
+        d.feedback("c1", "kind/bug")
+    log = tmp_path / "log.jsonl"
+    with warnings.catch_warnings(record=True) as told:
+        warnings.simplefilter("always")
+        policies.DecisionPolicy(policy().spec, client=policy_client(), log=log).decide(STATE)
+        from opentelemetry import trace
+        from opentelemetry.sdk.trace import TracerProvider
+        monkeypatch.setattr(trace, "get_tracer_provider", lambda: TracerProvider())  # spans go somewhere: the app's exporter
+        traced = policies.DecisionPolicy(policy().spec, client=policy_client())
+        traced.decide(STATE)
+        traced.feedback("c1", "kind/bug")
+    assert told == []
