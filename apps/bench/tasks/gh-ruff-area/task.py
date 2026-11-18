@@ -26,6 +26,7 @@ task = Task(
     ),
     label=lambda r: r["label"],
     # Labels go on an issue only when the answer is sure: the workflow reads `unsure` (policies v1-v3 chose by this).
+    # 95%: the area decides who looks at the issue, so a wrong label sends it to the wrong person.
     objective=Coverage(target_accuracy=0.95),
     source="GitHub issues of astral-sh/ruff (labels applied by maintainers)",
     show=lambda r: r["title"],

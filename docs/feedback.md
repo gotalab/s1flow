@@ -16,6 +16,23 @@ s1flow feedback measure ticket-bug decisions.jsonl --json         # measures; --
 s1flow optimize ticket-bug --json                  # a new candidate; report and adopt as for any other
 ```
 
+When people correct answers in bulk, such as a reviewer fixing labels in a spreadsheet, import them in one go
+instead of one `record` per decision:
+
+```bash
+s1flow feedback import ticket-bug@v1 labels.csv --log decisions.jsonl --path policies/ticket-bug/v1.json
+```
+
+The file is a CSV whose header has `decision_id` and `label` (other columns are ignored, and a label is read as
+`record` reads it), or JSON Lines of `{"decision_id": ..., "label": ...}`. Every row is checked first: a label that
+doesn't answer the question, a decision the log holds under another policy, or two labels for one decision stops
+the import, and nothing is written. A decision ID the log doesn't hold is recorded, with a notice, since its
+decision may be in another log.
+
+Your app records nothing unless it says where: give `policies.load(..., log=PATH)` (or `decide --log`), or set up an
+OpenTelemetry tracer provider. Without either, the first `decide` warns, and `feedback` raises instead of dropping
+the label.
+
 ## Measure in production
 
 Measurement skips unknown IDs, conflicting answers, mismatched policy digests and feedback that can't be tied
@@ -28,6 +45,8 @@ have feedback, and reports what share of decisions that is. Having lots of label
 collected without bias.
 
 ## Optimize the prompt
+
+`s1flow optimize` is experimental: its options and the record it saves may change between releases.
 
 `s1flow optimize` runs the optimizer task.py names (`optimizer=Gepa(budget=300, reflection=None)` in the
 template). GEPA searches for better prompts using a stand-in score (half correctness, half 1 − Brier score) on the

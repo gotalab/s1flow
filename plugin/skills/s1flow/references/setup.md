@@ -5,12 +5,10 @@
 ```bash
 uv tool install "s1flow[eval]"         # base + evaluation; add ,optimize for `optimize`, ,llm for LLM models
 s1flow init [dir] --task <id>          # dir (default s1flow/): s1flow.toml, tasks/<id>/task.py, .gitignore
-s1flow init --ci                       # also .github/workflows/s1flow-check.yml at the git root
 s1flow init --skill                    # also write this Skill where agents read it
 ```
 
-`init` writes nothing outside the project unless asked. Ask the person before `--ci` (a PR check that calls
-models on every PR that changes a task, a policy or `s1flow.toml`, with `on-pending: fail`) and before `--skill`.
+`init` writes nothing outside the project unless asked. Ask the person before `--skill`.
 The base install runs `init`, `decide`, `feedback record`, `adopt --spec`, `export`, `doctor` and
 `models`; `models --verify` needs `s1flow[images]`, and the rest need `s1flow[eval]`. The SDK never installs packages at runtime.
 
@@ -59,6 +57,7 @@ differ from the defaults. Built-in providers and the key each reads:
 | `cloudflare` | Workers AI, through s1flow's `clef-proxy/` relay (`CLEF_RELAY_URL`) | none (a `wrangler` login) |
 | `openai-decisions` | OpenAI's Decisions API | `OPENAI_API_KEY` |
 | `gemini` | Google's Decisions API on the Gemini API (Gemini Decision 1) | `GEMINI_API_KEY` |
+| `liquid` | Liquid's own API (d1.2, d1.2-ultra) | `LIQUID_API_KEY` |
 | `llm` | an LLM through LiteLLM (`s1flow[llm]`) | the one its LiteLLM prefix reads |
 
 OpenRouter and the Gateway return what each call billed and `llm` prices from LiteLLM's list; for the others,
@@ -117,11 +116,9 @@ Connections: `--connections` when given, else the project's `s1flow.toml`; never
 |---|---|---|
 | 0 | completed | read the output or saved file |
 | 1 | a gate failed or a finding exists | report the verdict; do not retry unchanged |
-| 2 | usage, configuration, could not run, or a pending check | read the `error:` line and fix the named input |
+| 2 | usage, configuration, or could not run | read the `error:` line and fix the named input |
 
 A usage error is one `error: ... (see s1flow <command> --help)` line. A `notice:` line on stderr is a warning.
-`check --cached-only` returns 2 when an answer is needed but not cached.
-
-`--json` gives machine-readable output for `report`, `adopt`, `check`, `optimize`, `cases review`,
+`--json` gives machine-readable output for `report`, `adopt`, `optimize`, `cases review`,
 `feedback measure`, `decide`, `doctor` and `models`. Other commands print their verdict and name the files they
 wrote.

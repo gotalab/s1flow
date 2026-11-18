@@ -85,7 +85,7 @@ def review(task: Task, *, min_probability: float = 0.9, limit: int = 30, sample:
             continue
         pred, conf = pr.pairs.value, pr.pairs.probability
         for i, cid in enumerate(pr.ids):
-            if pred[i] != pr.y[i] and conf[i] >= min_probability:
+            if pr.pairs.ok[i] and pred[i] != pr.y[i] and conf[i] >= min_probability:
                 opinions.setdefault(cid, []).append(Opinion(model=m, answer=_plain(pred[i]), probability=float(conf[i])))
     why: dict[str, list[str]] = {}
     for cid, ops in opinions.items():

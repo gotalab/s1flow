@@ -1,4 +1,4 @@
-"""`s1flow optimize`: a new candidate question from task.py's optimizer; it ships nothing."""
+"""`s1flow optimize` (experimental): a new candidate question from task.py's optimizer; it ships nothing."""
 
 import argparse
 from typing import Any
@@ -9,7 +9,7 @@ from .common import command, positive, project
 def optimize(a: argparse.Namespace) -> int:
     """Optimize current's question for a model into a new candidate with task.py's optimizer (GEPA by default, needs
     s1flow[optimize]); it ships nothing: report compares it with the others, adopt makes it current when a person
-    picks it."""
+    picks it. Experimental: its options and the record it saves may change between releases."""
     from ..eval import optimize as optimizing
     from ..eval.task import load
 

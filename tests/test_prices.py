@@ -57,12 +57,12 @@ def test_billed_is_never_repriced_and_list_is_marked():
 
 def test_a_spend_counts_the_unknown_apart_and_says_where_the_costs_came_from():
     s = Spend()
-    assert s.source is None and s.total_usd == 0.0
+    assert s.source is None and s.costs == []
     s.add(0.5, "billed")
     s.add(None, None)
     assert (s.costs, s.unknown, s.source) == ([0.5], 1, "billed")
     s.add(0.25, "list")
-    assert s.total_usd == 0.75 and s.source == "mixed"
+    assert s.costs == [0.5, 0.25] and s.source == "mixed"
     s.add(0.1, None)  # a cost whose source is not recorded says nothing of where the others came from
     assert s.sources == {"billed", "list"}
 
@@ -160,4 +160,4 @@ def test_a_cost_that_does_not_say_where_it_came_from_is_not_known():
     s = Spend()
     s.add(0.01, "billed")
     s.add(0.02, None)  # an answer cached before costs carried their source
-    assert s.total_usd == 0.01 and s.unknown == 1 and s.source == "billed"
+    assert s.costs == [0.01] and s.unknown == 1 and s.source == "billed"

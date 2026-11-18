@@ -10,7 +10,7 @@ from conftest import Sharp, attach, binary_preds, declared, labelled, make_proje
 
 from s1flow.client import Boolean, Box
 from s1flow.core.errors import ConfigError
-from s1flow.eval import Task, adopt, check, metrics, report
+from s1flow.eval import Task, adopt, metrics, report
 from s1flow.eval import run as running
 from s1flow.eval.objectives.measure import Table, bound, pairs
 from s1flow.eval.weights import decides, sensitivity
@@ -115,7 +115,7 @@ def test_a_custom_objective_is_declared_by_its_function_and_params():
     assert again.objectives == t.objectives and bound(again.primary, again.kind, again.custom_measures).value(p) == pytest.approx(5.25)
 
 
-def test_a_custom_objective_goes_through_adopt_and_check(tmp_path):
+def test_a_custom_objective_goes_through_adopt(tmp_path):
     t = own_task(tmp_path, wake_cost(miss=3))
     for name in ("good", "vague"):
         asyncio.run(running.run_model(t, name, limit=None, variant="base"))
@@ -124,14 +124,6 @@ def test_a_custom_objective_goes_through_adopt_and_check(tmp_path):
     o = r.evidence.evaluation.objective
     assert o is not None and o.objective == wake_cost(miss=3).objective and o.objective.code_sha256 == wake_cost().objective.code_sha256
     assert r.spec.rule.threshold is not None  # it set the threshold, as it declares
-    first = check.check(t)
-    assert first.verdict in ("pass", "better", "no_difference") and not any("changed after" in n for n in first.notes)
-    edited = _define("def wake_cost(label, reading, *, miss: float = 5.0) -> float:\n"  # the same objective, its code edited
-                     "    return 0.0 if reading is not None and reading.value == label else miss + 1", direction="min", sets="threshold")
-    again = check.check(own_task(tmp_path, edited(miss=3)))
-    assert any(f"wake_cost changed after toy@v{r.spec.version}" in n for n in again.notes)
-    with pytest.raises(ConfigError, match="wake_cost, a function of task.py's that is gone"):
-        check.check(own_task(tmp_path, Accuracy()))
 
 
 OWN_ERRORS = {

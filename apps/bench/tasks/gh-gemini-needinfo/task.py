@@ -5,6 +5,7 @@ The repository's Gemini triage bot applies these labels.
 """
 
 from s1flow.eval import Task
+from s1flow.objectives import Accuracy, Recall
 from s1flow.questions import Boolean
 
 task = Task(
@@ -20,6 +21,10 @@ task = Task(
         },
     ),
     label=lambda r: r["label"],
+    # A yes posts a comment asking the reporter for more. The issues caught while at most 5% of the complete ones
+    # get that comment: asking someone who gave everything is the mistake that costs the project most.
+    objective=Recall(max_false_alarm=0.05),
+    tiebreak=[Accuracy()],
     source="GitHub issues of google-gemini/gemini-cli (labels applied by the repository's Gemini triage bot; see gh-audit)",
     show=lambda r: r["title"],
 )

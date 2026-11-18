@@ -4,6 +4,27 @@
 
 ### Added
 
+- `s1flow feedback import TASK labels.csv --log decisions.jsonl` records many right answers at once, such as labels
+  a person corrected: a CSV with `decision_id` and `label` columns, or JSON Lines. Every row is checked first, and
+  one wrong row writes nothing. A policy without `log=` (and with no OpenTelemetry tracer provider) now warns on its
+  first decide that nothing is recorded, and its `feedback` raises instead of dropping the label.
+- A policy holds a score or box question too, not only yes/no and choice: save it with `adopt --spec`, and its
+  answers are logged and take feedback like any other (`feedback record <task> <id> 2`, or a box as JSON). `adopt`
+  takes a score or box candidate from `report` like any other. `decide --policy` also prints the decision ID.
+- `report` names a model and question pair nobody ran under `not run:`, and counts them once there are more than
+  five, instead of listing each with "missing run evidence". `adopt --spec` outside a project says to save with
+  `--root`. The Skill and `init --task`'s task.py say how to write question variants, and that turning production
+  answers into cases needs a project with the task.
+- `s1flow decide --model provider:id` (`liquid:d1.2`, `openrouter:typesafe/jev-1.14`) calls a model that no
+  `s1flow.toml` names, with no project: try a model on an input before any task or evaluation. Only that
+  provider's key is needed. A name in the line-up still comes first, and an explicit `--connections` file still
+  lists every model allowed. The Skill starts with this step when the
+  person wants to see what a model answers.
+- The Skill walks through putting a yes/no or choice decision in production with no evaluation: one connection, a
+  hand-written policy saved unevaluated with `adopt --spec`, and a log whose answers become cases later.
+- A built-in `liquid` provider for Liquid's own API (`LIQUID_API_KEY`): d1.2 and d1.2-ultra without a gateway in
+  between, with text and images, for yes/no, choice, score and box questions. It reports the cost Liquid billed.
+  A box the model does not find counts as no answer for that case.
 - A built-in `gemini` provider for Google's own Decisions API on the Gemini API (`GEMINI_API_KEY`): Gemini
   Decision 1 without OpenRouter in between, with text, images, audio, video and PDFs. An input Google's safety
   filters block counts as refused for that case.
@@ -19,9 +40,43 @@
 
 ### Changed
 
+- The comparison page (`charts.py`) orders its columns by what a choice weighs: the task's objective first, then
+  latency, then API cost, then the other metrics. The column the table is sorted by carries a mark.
+- `optimize` is marked experimental in `--help`, the docs and the Skill: its options and the record it saves may
+  change between releases. It works as before.
+- The summary `report --out` writes no longer sets a candidate's name in bold: `report` orders the candidates and
+  picks none.
+- `adopt --spec FILE --check` is now `adopt --spec FILE --validate`. It still validates the spec and its binding
+  and writes nothing; "check" now names only `cases check`.
+- A case the model refused (or whose input it does not take) is now scored as no answer instead of being left
+  out: wrong for accuracy, not accepted for coverage, so every number's denominator is all the labelled cases
+  the model answered or refused, and refusing a hard case no longer raises accuracy or coverage. `report` shows
+  the refusal rate (`refused`, the share of the scored cases) beside `n`. Numbers change only for a model that
+  refused at least one case. A model that answered nothing is still not measured, and a case whose every call
+  failed still keeps the candidate out of the comparison.
 - `ImageRef` is now `MediaRef`, and state preparation moved from `s1flow.client.images` to `s1flow.client.media`
   (`media.materialize`, `media.prepare(kind, data)`).
 - s1flow no longer caps a state at 4 images; a model that takes fewer refuses the case, which counts as refused.
+- Upgrading s1flow keeps saved answers, the answer cache and adopted policies: no s1flow version or source is part of
+  a request's or a policy's identity any more, only the model, the input, the question and a format number bumped when
+  what is sent or how an answer is read changes. Runs, cache entries and policies written by 0.1.0a4 and 0.1.0a5 stay
+  current; answers from 0.1.0a2 and 0.1.0a3 stay current where the input's keys were already in sorted order (those
+  releases sent the keys as written).
+
+### Removed
+
+- `s1flow check`, the check Action (`gotalab/s1flow@v...`, the repository's root `action.yml`) and `s1flow init --ci`
+  are gone. They measured a policy change on their own path, apart from `report` and `adopt`, so the two could
+  disagree. The held-out test verdict now comes from `adopt` alone: it tests the picked candidate and does not
+  save one that falls short. Delete `.github/workflows/s1flow-check.yml` from a project that has it. The decide
+  Action (`gotalab/s1flow/decide`) is unchanged.
+
+### Fixed
+
+- A production decision on an image (or audio, video, PDF) now becomes a usable case: `feedback measure --add` wrote
+  the kept state with its prepared media inline, and every later read of those cases (`cases check`, `run`)
+  refused them as a bad media reference. Prepared media are now read back as they are, so the case holds the
+  exact bytes the model saw, checked against their sha256 and format.
 
 ## 0.1.0a5 (2026-11-12)
 

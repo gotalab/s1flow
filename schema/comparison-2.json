@@ -354,7 +354,7 @@
      "type": "string"
     },
     "n": {
-     "description": "Answered labelled development cases scored for this candidate",
+     "description": "Labelled development cases scored for this candidate: the ones it answered and the ones it refused",
      "minimum": 0,
      "title": "N",
      "type": "integer"
@@ -647,7 +647,7 @@
   },
   "Failures": {
    "additionalProperties": false,
-   "description": "`calls` to `unlabeled` count call records; the `*_cases` and `never_asked` count labelled cases.\nA case never asked or with every call failed has no answer the model gave: a candidate missing one is\nnot compared with the others (`missing`). A refused case is the model's limit, left out of its denominator.",
+   "description": "`calls` to `unlabeled` count call records; the `*_cases` and `never_asked` count labelled cases.\nA case never asked or with every call failed has no answer the model gave: a candidate missing one is\nnot compared with the others (`missing`). A refused case is the model's limit: it is scored as no answer\n(wrong, and never sure), in every denominator, so `refused_cases / n` is the candidate's refusal rate.",
    "properties": {
     "calls": {
      "title": "Calls",
@@ -1065,7 +1065,7 @@
   },
   "SelectionPoint": {
    "additionalProperties": false,
-   "description": "One exploratory dev point for the minimum probability selection curve.\n\n``coverage`` is the share of answered labelled dev cases accepted at this\ncut.  ``sure_accuracy`` is intentionally nullable: an empty accepted\nset has no accuracy to report.  Counts are kept alongside the rates so a\nrenderer never has to reconstruct them from the chart.",
+   "description": "One exploratory dev point for the minimum probability selection curve.\n\n``coverage`` is the share of labelled dev cases accepted at this\ncut.  ``sure_accuracy`` is intentionally nullable: an empty accepted\nset has no accuracy to report.  Counts are kept alongside the rates so a\nrenderer never has to reconstruct them from the chart.",
    "properties": {
     "min_probability": {
      "maximum": 1,

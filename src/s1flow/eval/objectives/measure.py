@@ -1,13 +1,13 @@
 """What each objective is on a set of answers: `MEASURES[(objective name, what is measured)]` over `Pairs`,
 one label and the reading of its answers (policies/kinds.py) per case. numpy and scipy.
 
-    p = pairs(kind, labels, readings)     # metrics: read from the runs; check: by the policies; feedback: the logged Decision
+    p = pairs(kind, labels, readings)     # metrics: read from the runs; feedback: the logged Decision
     bound(objective, kind).value(p)       # the objective's value on those cases
     p.at(threshold=t)                     # the same answers read at another rule (metrics, per fold)
 
 What is measured is the question type, except that a choice scored as P(positive) is measured as a
 boolean. A measure never chooses a rule and a rule never knows a measure: metrics finds the
-rule on a fold's fit side and measures the eval side read at it, check and feedback measure what
+rule on a fold's fit side and measures the eval side read at it, feedback measures what
 a policy read. The kind's own numbers (`f1`, `mean_iou`, `mae`, `qwk`, `brier`, `ece`) are measures too.
 
 A constraint is a share an objective keeps on one side of a bound (Coverage: the accuracy of what is
@@ -34,7 +34,8 @@ def measured_as(kind: Kind) -> str:
 
 @dataclass(frozen=True)
 class Pairs:
-    """Cases as columns: each one's label and the reading of its answers (None when the call failed)."""
+    """Cases as columns: each one's label and the reading of its answers (None when there is no answer: the call
+    failed, or the model refused the case)."""
 
     measured: str  # measured_as(kind)
     options: list[str]  # a choice's keys
@@ -77,13 +78,14 @@ class Pairs:
     def at(self, threshold: float | np.ndarray | None = None, min_probability: float | np.ndarray | None = None) -> "Pairs":
         """The answered cases, read at the plain rule, read again at another one (per case, when arrays):
         a threshold makes the value P(positive) at or above it, a min probability marks what is under it unsure.
-        inf reads nothing as True, or every case as unsure."""
+        inf reads nothing as True, or every case as unsure. A case with no answer has nothing to read again:
+        at every rule it stays wrong and unsure."""
         out = self
         if threshold is not None:
             value = self.p_positive >= threshold
-            out = replace(out, value=value, probability=np.where(value, self.p_positive, 1 - self.p_positive), correct=value == self.y)
+            out = replace(out, value=value, probability=np.where(value, self.p_positive, 1 - self.p_positive), correct=self.ok & (value == self.y))
         if min_probability is not None:
-            out = replace(out, unsure=out.probability < min_probability, min_probability_set=np.ones(len(out), dtype=bool))
+            out = replace(out, unsure=~self.ok | (out.probability < min_probability), min_probability_set=np.ones(len(out), dtype=bool))
         return out
 
 
@@ -144,13 +146,7 @@ class Constraint:
     bound: float
     at_least: bool  # the share must reach the bound (else stay at or under it)
     what: str  # the share, in words
-    limit: str  # the bound, in words
-    excuse: str  # why a version that keeps it is better than one that does not, whatever its value
     beside: str | None  # its name beside the objective's value in a report (None: Coverage's is a column of its own)
-
-    @property
-    def missed(self) -> str:
-        return "misses" if self.at_least else "exceeds"
 
     @property
     def shown_broken(self) -> str:
@@ -189,7 +185,7 @@ class Measure:
     basis: str | None = None
 
 
-# One bootstrap draws BOOTSTRAP resamples of the cases (the evaluation's intervals, the check's paired differences);
+# One bootstrap draws BOOTSTRAP resamples of the cases (the evaluation's intervals);
 # a heavy measure is read on the first HEAVY of them.
 BOOTSTRAP = 1000
 HEAVY = 200
@@ -320,8 +316,7 @@ def _coverage(p: Pairs, _: Params) -> float | None:
 def _sure_accuracy(params: Params) -> Constraint:
     t = float(params["target_accuracy"])
     return Constraint(count=lambda p: (int((p.sure & p.correct).sum()), int(p.sure.sum())), bound=t, at_least=True,
-                      what="sure accuracy", limit=f"the target {100 * t:.0f}%",
-                      excuse="keeps the target even at a lower coverage", beside=None)
+                      what="sure accuracy", beside=None)
 
 
 def _recall(p: Pairs, _: Params) -> float | None:
@@ -336,8 +331,7 @@ def _precision(p: Pairs, _: Params) -> float | None:
 def _false_alarms(params: Params) -> Constraint:
     m = float(params["max_false_alarm"])
     return Constraint(count=lambda p: (int((p.said & ~p.y).sum()), int((~p.y).sum())), bound=m, at_least=False,
-                      what="false-alarm rate", limit=f"the cap {100 * m:g}%",
-                      excuse="keeps the cap even at a lower recall", beside="false alarms")
+                      what="false-alarm rate", beside="false alarms")
 
 
 FLOOR_COUNTS: dict[str, Callable[[Pairs], tuple[int, int]]] = {
@@ -348,8 +342,7 @@ FLOOR_COUNTS: dict[str, Callable[[Pairs], tuple[int, int]]] = {
 
 def floors(c: Constraints) -> list[Constraint]:
     """The task's floors (Constraints.min_precision, min_recall), each a share kept at or above its bound."""
-    return [Constraint(count=FLOOR_COUNTS[name], bound=v, at_least=True, what=name, limit=f"the floor {100 * v:g}%",
-                       excuse="keeps the floor whatever its value", beside=name) for name, v in c.floors.items()]
+    return [Constraint(count=FLOOR_COUNTS[name], bound=v, at_least=True, what=name, beside=name) for name, v in c.floors.items()]
 
 
 def _expected_loss(p: Pairs, params: Params) -> float | None:
@@ -469,7 +462,7 @@ def _ece(p: Pairs, _: Params, bins: int = 10) -> float | None:
     return float(total)
 
 
-_ACCURACY = Measure(_accuracy, basis="{reading}; correct / answered labelled dev cases")
+_ACCURACY = Measure(_accuracy, basis="{reading}; correct / labelled dev cases")
 _COVERAGE = Measure(_coverage, _sure_accuracy)
 
 # What each metric is on each kind (what it is called is METRICS', declare.py). A basis is what the comparison
@@ -483,32 +476,32 @@ MEASURES: dict[tuple[str, str], Measure] = {
     ("coverage", "choice"): _COVERAGE,
     ("coverage", "box"): _COVERAGE,
     ("coverage", "score"): _COVERAGE,
-    ("recall", "boolean"): Measure(_recall, _false_alarms, basis="{reading}; true positives / labelled positives among answered labelled dev cases"),
-    ("precision", "boolean"): Measure(_precision, basis="{reading}; true positives / predicted positives among answered labelled dev cases"),
+    ("recall", "boolean"): Measure(_recall, _false_alarms, basis="{reading}; true positives / labelled positives among labelled dev cases"),
+    ("precision", "boolean"): Measure(_precision, basis="{reading}; true positives / predicted positives among labelled dev cases"),
     ("expected_loss", "boolean"): Measure(_expected_loss),
     ("loss", "boolean"): Measure(_loss),
     ("loss", "choice"): Measure(_loss),
-    ("auroc", "boolean"): Measure(_auroc_binary, basis="genuine model probabilities; binary positive-vs-negative AUROC over answered labelled dev cases"),
+    ("auroc", "boolean"): Measure(_auroc_binary, basis="genuine model probabilities; binary positive-vs-negative AUROC over labelled dev cases"),
     ("auroc", "choice"): Measure(_auroc_choice, heavy=True,
-                                 basis="genuine model probabilities; macro one-v-rest AUROC over options and answered labelled dev cases"),
-    ("auroc", "box"): Measure(_auroc_box, basis="recorded box confidence; hit-ranking AUROC over answered labelled dev cases"),
+                                 basis="genuine model probabilities; macro one-v-rest AUROC over options and labelled dev cases"),
+    ("auroc", "box"): Measure(_auroc_box, basis="recorded box confidence; hit-ranking AUROC over labelled dev cases"),
     ("auroc", "score"): Measure(_auroc_score, basis="genuine model probabilities; mean over the cuts k of AUROC(label >= k, P(level >= k)) "
-                                                    "over answered labelled dev cases"),
-    ("mae", "score"): Measure(_mae, basis="expected level; mean absolute error in levels over answered labelled dev cases"),
-    ("qwk", "score"): Measure(_qwk, basis="{reading}; quadratic weighted kappa over answered labelled dev cases"),
-    ("f1", "boolean"): Measure(_f1_binary, basis="{reading}; harmonic mean of precision and recall over answered labelled dev cases"),
-    ("macro_f1", "choice"): Measure(_f1_macro, basis="{reading}; mean of per-class F1 over answered labelled dev cases"),
+                                                    "over labelled dev cases"),
+    ("mae", "score"): Measure(_mae, basis="expected level; mean absolute error in levels over labelled dev cases"),
+    ("qwk", "score"): Measure(_qwk, basis="{reading}; quadratic weighted kappa over labelled dev cases"),
+    ("f1", "boolean"): Measure(_f1_binary, basis="{reading}; harmonic mean of precision and recall over labelled dev cases"),
+    ("macro_f1", "choice"): Measure(_f1_macro, basis="{reading}; mean of per-class F1 over labelled dev cases"),
     # the kinds' own numbers (Kind.report), and the calibration every evaluation reports
-    ("mean_iou", "box"): Measure(_mean_iou, basis="{reading}; mean IoU over answered labelled dev cases"),
-    ("brier", "boolean"): Measure(_brier_binary, basis="genuine model probabilities; binary Brier score over answered labelled dev cases"),
-    ("brier", "choice"): Measure(_brier_choice, basis="genuine model probabilities; multiclass Brier score over answered labelled dev cases"),
-    ("brier", "box"): Measure(_brier_box, basis="recorded box confidence; Brier score of hit correctness over answered labelled dev cases"),
+    ("mean_iou", "box"): Measure(_mean_iou, basis="{reading}; mean IoU over labelled dev cases"),
+    ("brier", "boolean"): Measure(_brier_binary, basis="genuine model probabilities; binary Brier score over labelled dev cases"),
+    ("brier", "choice"): Measure(_brier_choice, basis="genuine model probabilities; multiclass Brier score over labelled dev cases"),
+    ("brier", "box"): Measure(_brier_box, basis="recorded box confidence; Brier score of hit correctness over labelled dev cases"),
     ("brier", "score"): Measure(_brier_score, basis="genuine model probabilities; ranked probability score over (levels - 1), "
-                                                    "over answered labelled dev cases"),
-    ("ece", "boolean"): Measure(_ece, basis="genuine model probabilities; calibration of answer correctness over answered labelled dev cases"),
-    ("ece", "choice"): Measure(_ece, basis="genuine model probabilities; calibration of selected-answer correctness over answered labelled dev cases"),
-    ("ece", "box"): Measure(_ece, basis="recorded box confidence; calibration of hit correctness over answered labelled dev cases"),
-    ("ece", "score"): Measure(_ece, basis="genuine model probabilities; calibration of the rounded level's correctness over answered labelled dev cases"),
+                                                    "over labelled dev cases"),
+    ("ece", "boolean"): Measure(_ece, basis="genuine model probabilities; calibration of answer correctness over labelled dev cases"),
+    ("ece", "choice"): Measure(_ece, basis="genuine model probabilities; calibration of selected-answer correctness over labelled dev cases"),
+    ("ece", "box"): Measure(_ece, basis="recorded box confidence; calibration of hit correctness over labelled dev cases"),
+    ("ece", "score"): Measure(_ece, basis="genuine model probabilities; calibration of the rounded level's correctness over labelled dev cases"),
 }
 
 

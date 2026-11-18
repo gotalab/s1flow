@@ -49,7 +49,7 @@ def validate_evidence(task: Task, policy: EvaluatedPolicy) -> None:
     """Only current model/input/data conditions can support adopting an evaluated policy."""
     runtime = DecisionPolicy(policy.spec, client=task.where.client())
     adoptable(runtime.model_spec, policy.spec.connection)
-    if runtime.execution_digest != policy.evidence.execution_digest:
+    if not runtime.same_execution(policy.evidence.execution_digest):
         raise ConfigError(f"{policy.spec.ref}: execution conditions changed; measure and adopt again")
     if policy.evidence.input_adapter_digest != task.input_adapter_digest:
         raise ConfigError(f"{policy.spec.ref}: input adapter changed; measure and adopt again")
@@ -87,8 +87,8 @@ class Row(BaseModel):
     """One candidate as the list shows it: measured on train + val (the test share is not shown)."""
 
     candidate: str  # Candidate.name
-    n: int  # labelled train + val cases it answered; refusals remain visible in their own count
-    refused: int  # labelled cases it refused or does not support: the model's limit, left out of its denominator
+    n: int  # labelled train + val cases it is scored on: the ones it answered and the ones it refused
+    refused: int  # labelled cases it refused or does not support: the model's limit, scored as no answer (within n)
     tied: bool  # the primary objective cannot tell it from the best on it
     excluded: list[str]  # constraints it breaks; it cannot be picked
     scores: list[ObjectiveScore]  # one per objective, the primary first: measured on the answers
@@ -160,8 +160,6 @@ class Shortlist:
 
 
 def shortlist(task: Task, only: list[str] | None = None, variants: list[str] | None = None) -> Shortlist:
-    if not task.kind.adoptable:
-        raise S1flowError(f"a policy ships boolean and choice questions; {task.id} asks a {task.kind.type}")
     cands = candidates(task, only, variants)
     if not cands:
         raise NotFound(f"no runs for {task.id}; s1flow run {task.id} first")

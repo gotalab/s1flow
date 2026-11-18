@@ -35,7 +35,8 @@ class Estimate(_Frozen):
 class Failures(_Frozen):
     """`calls` to `unlabeled` count call records; the `*_cases` and `never_asked` count labelled cases.
     A case never asked or with every call failed has no answer the model gave: a candidate missing one is
-    not compared with the others (`missing`). A refused case is the model's limit, left out of its denominator."""
+    not compared with the others (`missing`). A refused case is the model's limit: it is scored as no answer
+    (wrong, and never sure), in every denominator, so `refused_cases / n` is the candidate's refusal rate."""
 
     calls: int  # call records scored, one per case
     failed: int
@@ -44,7 +45,11 @@ class Failures(_Frozen):
     unlabeled: int
     never_asked: int  # labelled cases with no record under the question
     failed_cases: int  # labelled cases asked whose every call failed
-    refused_cases: int  # labelled cases refused or unsupported, none answered
+    refused_cases: int  # labelled cases refused or unsupported, scored as no answer
+
+    def refusal_rate(self, n: int) -> float | None:
+        """The share of the `n` scored cases the model refused or does not support; None with nothing scored."""
+        return self.refused_cases / n if n else None
 
     @property
     def missing(self) -> int:
@@ -205,12 +210,12 @@ class Evaluation(_Frozen):
 
     @model_validator(mode="after")
     def _population(self) -> "Evaluation":
-        if len(self.answered_ids) != self.n:  # rank compares candidates only on the same answered cases
+        if len(self.answered_ids) != self.n:  # rank compares candidates only on the same scored cases
             raise ValueError(f"answered_ids names {len(self.answered_ids)} cases, n is {self.n}")
         return self
 
 
-COST_NOTE = "Where the API costs come from: "  # the line a report and a check write when an API cost is an estimate or not known
+COST_NOTE = "Where the API costs come from: "  # the line a report writes when an API cost is an estimate or not known
 
 
 def cost_note(costs: list[tuple[str, str | None, str | None, int]]) -> str | None:
@@ -259,7 +264,7 @@ class CalibrationPoint(_ChartModel):
 class SelectionPoint(_ChartModel):
     """One exploratory dev point for the minimum probability selection curve.
 
-    ``coverage`` is the share of answered labelled dev cases accepted at this
+    ``coverage`` is the share of labelled dev cases accepted at this
     cut.  ``sure_accuracy`` is intentionally nullable: an empty accepted
     set has no accuracy to report.  Counts are kept alongside the rates so a
     renderer never has to reconstruct them from the chart.

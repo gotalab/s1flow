@@ -58,12 +58,12 @@ def test_current_data_digest_includes_materialized_image_bytes(tmp_path):
     assert task.data_digest != before
 
 
-def test_run_adopt_and_check_share_runtime_interpretation_and_freshness(tmp_path, no_ci):
+def test_run_and_adopt_share_runtime_interpretation_and_freshness(tmp_path, no_ci):
     import asyncio
 
     from s1flow.client import Capabilities, Response
     from s1flow.core.errors import ConfigError
-    from s1flow.eval import adopt, check, run
+    from s1flow.eval import adopt, run
 
     class Model:
         def __init__(self, build):
@@ -82,8 +82,6 @@ def test_run_adopt_and_check_share_runtime_interpretation_and_freshness(tmp_path
     selected = adopt.adopt(task, "m", "test", "local deterministic evidence")
     adopt.validate_evidence(task, selected)
     assert selected.evidence.evaluation.test is not None
-    result = check.check(task)  # adopt made it current
-    assert result.verdict == "pass" and result.sides[0].accuracy == 1
     # A standalone application only needs its runtime spec and trusted connections.
     from s1flow.policies import DecisionPolicy
     from s1flow.eval import feedback
@@ -286,23 +284,6 @@ def test_concurrency_change_invalidates_old_shortlist_but_reuses_raw_answers(tmp
     fresh = adopt.shortlist(task)
     assert fresh.evaluations["m"].n == listed.evaluations["m"].n
     assert fresh.evaluations["m"].calls.latency is None
-
-
-def test_final_check_does_not_certify_cached_latency_from_other_concurrency(tmp_path):
-    from s1flow.eval import adopt, check
-    from s1flow.eval.objectives.declare import Constraints, ExpectedLoss
-    from s1flow.project import Project
-
-    task = scoring_task(tmp_path, ExpectedLoss())
-    adopt.adopt(task, "m", "test", "measured under initial concurrency")
-    path = task.where.root / "s1flow.toml"
-    path.write_text(path.read_text() + "concurrency = 8\n")
-    task.project = Project(task.where.root)
-    task.constraints = Constraints(latency_p99_ms=10)
-    result = check.check(task, cached_only=True)
-    assert result.sides[0].cached == result.n and result.sides[0].calls == 0
-    assert result.verdict == "pending" and result.sides[0].latency_p99_ms is None
-    assert "latency constraint cannot be verified" in result.reasons[0]
 
 
 def test_requested_run_width_change_invalidates_shortlist_without_new_calls(tmp_path, monkeypatch):

@@ -10,7 +10,7 @@ sees: compare models with each other.
 """
 
 from s1flow.eval import Task
-from s1flow.objectives import Accuracy, Coverage
+from s1flow.objectives import Accuracy, Recall
 from s1flow.questions import Boolean
 
 ITEMS = {
@@ -41,7 +41,9 @@ task = Task(
         },
     ),
     label=lambda r: r["defective"],
-    objective=Coverage(target_accuracy=0.95),
+    # A person re-inspects what is read defective. The defects caught while at most 10% of the good items are sent
+    # back: half of these photos are defective, so an accuracy target would say little about a line where few are.
+    objective=Recall(max_false_alarm=0.10),
     tiebreak=[Accuracy()],
     source="VisA (Amazon, CC BY 4.0), test split: 10 defective and 10 good photos per item, 12 items",
     show=lambda r: r["id"],

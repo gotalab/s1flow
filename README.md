@@ -13,18 +13,18 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/how-it-works-dark.svg">
-  <img alt="Your coding agent collects labeled cases and compares decision models on them. You pick one, and your app runs it: answers above the confidence threshold are acted on, the rest go to a person, and the person's answers become new cases." src="docs/images/how-it-works.svg">
+  <img alt="Your coding agent, with the s1flow Skill, collects your labeled cases and measures decision models on those cases. You choose the one you trust, and your app decides with it exactly as measured: answers above the confidence threshold are acted on, the rest go to a person, and the person's answers become new cases." src="docs/images/how-it-works.svg">
 </picture>
 
 ## Accuracy hides what you can automate
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/automation-share-dark.svg">
-  <img alt="Ruff issues, 361 cases. Share each model can route on its own while staying 95% accurate, accuracy over all cases, median latency and API cost per 10,000 cases: Drex Max 88%, 91%, 310 ms, $0.28; Decider 87%, 92%, 233 ms, $0.09; d1-ultra 87%, 90%, 256 ms, $0.17; mammoth-1 87%, 90%, 184 ms, $0.47; Span-02 83%, 88%, 252 ms, $0.05; Jev 1.14 76%, 86%, 108 ms, $0.29; Clef 71%, 86%, 352 ms, $1.12." src="docs/images/automation-share.svg">
+  <img alt="Ruff issues, 361 cases. Share each model can route on its own while staying 95% accurate, accuracy over all cases, median latency and API cost per 10,000 cases: Drex Max 89%, 91%, 439 ms, $0.28; Decider 88%, 92%, 219 ms, $0.09; mammoth-1 87%, 90%, 178 ms, $0.47; d1-ultra 86%, 90%, 687 ms, $0.17; Span-02 84%, 89%, 528 ms, $0.05; Jev 1.14 76%, 85%, 110 ms, $0.29; Clef 66%, 86%, 298 ms, $1.10." src="docs/images/automation-share.svg">
 </picture>
 
 Routing Ruff's issues to the area they concern, these seven models are within 7 points of each other on
-accuracy, yet the share of issues each can route on its own while staying 95% accurate ranges from 71% to 88%.
+accuracy, yet the share of issues each can route on its own while staying 95% accurate ranges from 66% to 89%.
 That share needs a confidence with every answer, so the uncertain issues can go to a person while the rest are
 acted on. Latency and cost differ too, and do not follow the share. The numbers are a snapshot of seven of the 19
 decision models in the [reports](apps/bench/reports), each task scored by its own objective, not a ranking of
@@ -56,7 +56,6 @@ repository instead, so they change only when you run it again.
 
 The agent runs `s1flow init`, which creates an `s1flow/` folder and touches nothing else in your repository.
 The default line-up needs one key, `OPENROUTER_API_KEY`, and fetching issues needs the `gh` CLI, signed in.
-A CI check on pull requests is one flag away (`s1flow init --ci`) when you want it.
 
 **4. Run your pick in your app.** Your choice is saved as a *policy*: one JSON file holding the model, the
 question and the confidence threshold. Your app needs only the base package (`pip install s1flow`), which depends
@@ -78,8 +77,8 @@ No labels yet? You can [ship a policy today](docs/app.md) and evaluate it later.
 
 - **A comparison you can act on.** Pull cases from GitHub issues, app logs or labels you already have, and run every model and prompt against them. For each one you see how much it can handle at your target accuracy, with confidence intervals, cost and latency.
 - **What runs is what you measured.** A policy pins the model, prompt and threshold you evaluated. Change any of them, or the cases, and the old results no longer apply to it.
-- **A CI check on every policy change.** A GitHub Action tests the new policy against the current one on the test cases and posts the result on the pull request.
-- **All the major decision models, plus LLMs for comparison.** Jev (TypeSafe), Clef (Cloudflare), d1 (Liquid) and pplx-decider (Perplexity) through TypeSafe's API, OpenRouter, Vercel AI Gateway or Workers AI, OpenAI's Decisions API, LLMs through LiteLLM, or a provider you write yourself.
+- **A final test before a policy ships.** A share of your cases is held out while you compare. When you adopt a candidate, it is tested on that share, and one that falls short is not saved.
+- **All the major decision models, plus LLMs for comparison.** Jev (TypeSafe), Clef (Cloudflare), d1 (Liquid) and pplx-decider (Perplexity) through TypeSafe's API, Liquid's API, OpenRouter, Vercel AI Gateway or Workers AI, OpenAI's Decisions API, LLMs through LiteLLM, or a provider you write yourself.
 - **Production feedback becomes new cases.** Record the correct answer for a decision ID, and it goes into the next comparison.
 
 ## What s1flow leaves to your app

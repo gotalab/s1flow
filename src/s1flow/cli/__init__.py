@@ -2,7 +2,7 @@
 (cli/<command>.py: its function and its arguments); common.py is what they share.
 
 Each command imports what it needs when it runs, so the base install (pydantic and httpx) runs init, decide,
-feedback record, export, doctor, models and adopt --spec (models --verify draws images: s1flow[images]): an app or a workflow decides and
+feedback record and import, export, doctor, models and adopt --spec (models --verify draws images: s1flow[images]): an app or a workflow decides and
 records feedback, and an agent makes a project and gets the Skill, without the evaluation stack. The other commands need s1flow[eval]; on the base
 install they end in one line saying what to install, not a traceback. `s1flow --help` lists every command in one
 table (HELP), and a command that does not exist is one line naming the closest.
@@ -11,9 +11,10 @@ table (HELP), and a command that does not exist is one line naming the closest.
     s1flow decide --model jev --state @issue.json --boolean "Is it a bug report?"   one yes / no question
     s1flow decide --policy gh-ruff-area[@v3] --state @issue.json [--path policies.json] [--case-id] [--log [--keep-state]] [--github-output]
     s1flow feedback record gh-ruff-area@v3 DECISION_ID formatter --log log.jsonl   the right answer, once known
+    s1flow feedback import gh-ruff-area@v3 labels.csv --log log.jsonl         many at once (decision_id, label)
     s1flow feedback measure gh-ruff-area log.jsonl [--add]                   production from the logs (s1flow[eval])
     s1flow adopt --spec spec.json --reason "..." [--root policies] [--connections PATH]   save a spec as the next version, current
-    s1flow adopt --spec spec.json --check [--connections PATH]          validate it (and its binding) only
+    s1flow adopt --spec spec.json --validate [--connections PATH]       validate it (and its binding) only
     s1flow export [gh-ruff-area ...] --out policies.json                each task's current policy in one file, for an app to vendor
     s1flow doctor [--models jev,d1@vercel | --policy gh-ruff-area[@…] --connections PATH [--path policies.json]] [--reach] [--json]   the keys and hosts they need
     s1flow init --skill                                                 write the Agent Skill where agents read it (skill.py)
@@ -25,11 +26,11 @@ changes it ships it when it merges. Only adopt points it (history.jsonl says why
 Exit codes, the same for every command (EXITS), shown in every --help:
 
     0  done
-    1  a gate failed or something was found: check fails, adopt or feedback measure shows the held-out test or
-       production below, cases check finds a wrong case, doctor a key or host missing, models --verify a
-       declared capability failing
-    2  usage (an `error:` line naming the --help to read), configuration, could not run (an S1flowError), or
-       check pending (answers needed that only a run with keys can get); a bug in s1flow prints its traceback too
+    1  a gate failed or something was found: adopt or feedback measure shows the held-out test or production
+       below, cases check finds a wrong case, doctor a key or host missing, models --verify a declared
+       capability failing
+    2  usage (an `error:` line naming the --help to read), configuration, or could not run (an S1flowError);
+       a bug in s1flow prints its traceback too
 """
 
 import argparse
@@ -41,22 +42,21 @@ from typing import Any, NoReturn
 
 from ..core import place
 from ..core.errors import S1flowError
-from . import adopt, cases, check, decide, doctor, export, feedback, init, models, optimize, report, run
+from . import adopt, cases, decide, doctor, export, feedback, init, models, optimize, report, run
 from .common import EXITS, Parser, usage_error
 
-BASE = ("init", "decide", "feedback", "export", "doctor", "models")  # what the base install runs (feedback record; adopt --spec; models without --verify)
+BASE = ("init", "decide", "feedback", "export", "doctor", "models")  # what the base install runs (feedback record and import; adopt --spec; models without --verify)
 # Every command, in the order `s1flow --help` lists it: its module (cli/<name>.py) and its line in that list.
 COMMANDS = (
-    (init, "init", "make a project in ./s1flow: s1flow.toml, a task with --task, the CI workflow with --ci, the Agent Skill with --skill"),
+    (init, "init", "make a project in ./s1flow: s1flow.toml, a task with --task, the Agent Skill with --skill"),
     (models, "models", "the line-up in s1flow.toml, and what --verify found each model takes"),
     (run, "run", "ask the models about a task's cases (cached): runs/<task>/"),
     (report, "report", "every model and question variant on the saved runs by the task's objective (--out DIR writes it); no TASK: every task's current version and why"),
     (adopt, "adopt", "write a candidate as the task's current policy, with why (merging the change ships it)"),
-    (check, "check", "compare two versions on today's test cases, case by case (the CI gate)"),
-    (optimize, "optimize", "optimize the current policy's question into a new candidate; it ships nothing (s1flow[optimize])"),
+    (optimize, "optimize", "experimental: optimize the current policy's question into a new candidate; it ships nothing (s1flow[optimize])"),
     (cases, "cases", "check a task's cases; review and correct their labels"),
     (decide, "decide", "call a model (--model), or decide with a task's policy (--policy)"),
-    (feedback, "feedback", "record the right answer for a case a policy decided (record); measure policies in production (measure, s1flow[eval])"),
+    (feedback, "feedback", "record the right answer for a case a policy decided (record; import from a file); measure policies in production (measure, s1flow[eval])"),
     (export, "export", "the policies an app uses, each task's current version, in one file (policies.json)"),
     (doctor, "doctor", "the keys and hosts the models need, and whether they are there"),
 )
@@ -66,7 +66,7 @@ HELP = "\n".join([
     "--project PATH selects a project without changing cwd; --connections PATH selects one trusted connection file.",
     "Use these options only where listed by COMMAND --help; they also work before the command. SDK calls do not discover projects.", "", "Commands:",
     *(f"  {name:<16} {what}" for name, what in TABLE), "",
-    "init, decide, feedback record, export, doctor, models and adopt --spec run on the base install (models --verify: s1flow[images]); "
+    "init, decide, feedback record and import, export, doctor, models and adopt --spec run on the base install (models --verify: s1flow[images]); "
     "the others need the eval extra: install s1flow[eval].",
     EXITS,
 ])

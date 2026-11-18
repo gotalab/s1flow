@@ -3,13 +3,15 @@ import asyncio
 import json
 import math
 import time
+import warnings
+from collections.abc import Coroutine, Iterable
 from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
 from ..client import AsyncClient, Client, loop
 from ..client.answers import Refusal
-from ..client.identity import execution_digest, state_digest
+from ..client.identity import execution_digest, execution_digests, state_digest
 from ..client.models import ModelSpec
 from ..client.state import State, has_unprepared_media
 from ..core import clock, place
@@ -41,10 +43,15 @@ class DecisionPolicy:
         self.log = place.absolute(log, "log") if log is not None else None
         self.keep_state = keep_state
         self.model_spec = self._bind()
+        self._told_unrecorded = False
 
     @property
     def execution_digest(self) -> str:
         return execution_digest(self.model_spec, self.spec.digest)
+
+    def same_execution(self, recorded: str) -> bool:
+        """Whether a recorded execution digest is this one's, also as an earlier release wrote it."""
+        return recorded in execution_digests(self.model_spec, self.spec.digest)
 
     def _bind(self) -> ModelSpec:
         connection, wanted = self.spec.connection, self.spec.model_id
@@ -64,10 +71,21 @@ class DecisionPolicy:
     def decide(self, state: State, case_id: str | None = None, *, timeout: float | None = None) -> Decision:
         """`timeout`: seconds the whole model call may take, retries and their waits included. Past it the call is
         cancelled and `TimedOut` is raised (and logged as failed); None waits as long as the retries take."""
+        self._warn_if_unrecorded()
         return loop.run(self._decide(state, case_id, timeout))
 
-    async def adecide(self, state: State, case_id: str | None = None, *, timeout: float | None = None) -> Decision:
-        return await self._decide(state, case_id, timeout)
+    def adecide(self, state: State, case_id: str | None = None, *, timeout: float | None = None) -> Coroutine[Any, Any, Decision]:
+        self._warn_if_unrecorded()  # here, not in the coroutine: under gather the caller's line is gone by then
+        return self._decide(state, case_id, timeout)
+
+    def _warn_if_unrecorded(self) -> None:
+        """Once per policy, at the caller's line: a decision nothing records can never take a right answer."""
+        if self._told_unrecorded or recorded(self.log):
+            return
+        self._told_unrecorded = True
+        warnings.warn(f"{self.spec.ref}: decisions are not recorded: no log= and no OpenTelemetry tracer provider, so "
+                      "no right answer can be joined to them and production can't be measured; pass log=PATH "
+                      "(decide --log FILE)", stacklevel=3)
 
     async def _decide(self, state: State, case_id: str | None, timeout: float | None) -> Decision:
         spec = self.spec
@@ -117,21 +135,46 @@ class DecisionPolicy:
         _emit(self.log, rec, self.model_spec.provider, self.model_spec.id)
 
 
-def record_feedback(spec: PolicySpec, decision_id: str, label: Any, *, log: Path | str | None,
-                    policy_digest: str | None = None) -> None:
-    """Record a label for a decision of this policy. It calls no model, so it needs no connections."""
+def recorded(log: Path | str | None) -> bool:
+    """Whether a decide or feedback event goes anywhere: a log file, or a tracer provider the app set up for
+    OpenTelemetry (without one, the API drops every span)."""
+    if log is not None:
+        return True
+    if _tracer is None:
+        return False
+    return not isinstance(_otel_trace.get_tracer_provider(), (_otel_trace.ProxyTracerProvider, _otel_trace.NoOpTracerProvider))
+
+
+def feedback_event(spec: PolicySpec, decision_id: str, label: Any, *, policy_digest: str | None = None) -> FeedbackLog:
+    """The feedback record of a label for a decision of this policy, once the label is checked against its question."""
     if not decision_id or not isinstance(decision_id, str):
         raise ConfigError('feedback requires a decision_id')
     if policy_digest is not None and policy_digest != spec.digest:
         raise ConfigError('feedback policy_digest does not match this policy')
     kind = spec.kind
-    wrong = label not in kind.options if isinstance(label, str) and kind.options else kind.label_error(kind.as_label(label)) is not None
-    if wrong:
-        labels = [*kind.options, *(['true', 'false'] if kind.binary else [])]
-        raise ConfigError(f'{spec.ref}: label {label!r} is not an answer to its question; one of: {", ".join(labels)}')
-    _emit(place.absolute(log, "log") if log is not None else None,
-           FeedbackLog(at=clock.now(ms=True), decision_id=decision_id, policy=spec.ref, policy_digest=spec.digest,
-                       label=kind.as_label(label)))
+    labels = [*kind.options, *(['true', 'false'] if kind.binary else [])]
+    if labels:
+        if label not in kind.options if isinstance(label, str) and kind.options else kind.label_error(kind.as_label(label)) is not None:
+            raise ConfigError(f'{spec.ref}: label {label!r} is not an answer to its question; one of: {", ".join(labels)}')
+    elif wrong := kind.label_error(kind.as_label(label)):
+        raise ConfigError(f'{spec.ref}: {wrong}')
+    return FeedbackLog(at=clock.now(ms=True), decision_id=decision_id, policy=spec.ref, policy_digest=spec.digest,
+                       label=kind.as_label(label))
+
+
+def record_feedback(spec: PolicySpec, decision_id: str, label: Any, *, log: Path | str | None,
+                    policy_digest: str | None = None) -> None:
+    """Record a label for a decision of this policy. It calls no model, so it needs no connections."""
+    write_feedback([feedback_event(spec, decision_id, label, policy_digest=policy_digest)], log=log)
+
+
+def write_feedback(events: Iterable[FeedbackLog], *, log: Path | str | None) -> None:
+    """Append checked feedback records; with nowhere to record them, raise rather than drop them."""
+    if not recorded(log):
+        raise ConfigError('feedback has nowhere to be recorded: no log= and no OpenTelemetry tracer provider; pass log=PATH')
+    target = place.absolute(log, "log") if log is not None else None
+    for rec in events:
+        _emit(target, rec)
 
 
 def _emit(log: Path | None, rec: AnsweredLog | FailedLog | FeedbackLog, provider: str | None = None,

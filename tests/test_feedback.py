@@ -132,3 +132,36 @@ def test_new_cases_use_decision_id_and_exact_events_deduplicate(tmp_path):
     result = feedback.add(task, rows, write=False)
     assert result.added == 2
     assert "duplicates 1" in feedback.markdown(task, [], result, issues=logs.issues)
+
+
+def test_a_production_image_becomes_a_case_with_the_bytes_the_model_saw(tmp_path, monkeypatch):
+    """decide --log --keep-state, then feedback measure --add: the case's input is the logged one, image included."""
+    import io
+
+    import numpy as np
+    from conftest import fake_client, runtime_spec
+    from PIL import Image as PIL
+
+    from s1flow.client import media
+    from s1flow.eval import data
+    from s1flow.policies import DecisionPolicy
+
+    noise = PIL.fromarray(np.random.default_rng(0).integers(0, 256, (700, 700, 3), dtype=np.uint8))
+    buf = io.BytesIO()
+    noise.save(buf, "PNG")
+    (tmp_path / "screen.png").write_bytes(buf.getvalue())
+    state = media.materialize(["Is it broken?", {"type": "image", "path": "screen.png"}], tmp_path)
+    assert state[1].media_type == "image/jpeg"  # preparing it again would change the bytes
+
+    task = task_at(tmp_path)
+    client, _ = fake_client(monkeypatch)
+    log = tmp_path / "decisions.jsonl"
+    policy = DecisionPolicy(runtime_spec(task="toy"), client=client, log=log, keep_state=True)
+    policy.feedback(policy.decide(state).decision_id, False)
+    logs = feedback.read([log])
+    assert feedback.add(task, feedback.cases(task, logs)).added == 1
+
+    assert data.check(task).errors == []
+    (case,) = task.load_cases().all()
+    logged = logs.answered[0].state_sha256
+    assert state_digest(task.model_state(case)) == logged == state_digest(state)

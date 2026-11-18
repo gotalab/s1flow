@@ -49,8 +49,8 @@ def test_a_time_budget_takes_slow_models_out_of_the_headline(tmp_path):
                   for e in (cov("fast", 0.6, p99=150.0), cov("slow", 0.9, p99=900.0)))
     budgeted = t.copy(constraints=Constraints(latency_p99_ms=200))
     text = headline(budgeted, [fast, slow])
-    assert "**fast**" in text and "slow breaks a constraint and is left out (p99 900ms > 200ms)" in text
-    assert "**slow**" in headline(t, [fast, slow])
+    assert "fast has the highest" in text and "slow breaks a constraint and is left out (p99 900ms > 200ms)" in text
+    assert "slow has the highest" in headline(t, [fast, slow])
 
 
 def test_llm_retries_are_ours_and_left_out_of_the_latency(monkeypatch):

@@ -6,7 +6,7 @@
 s1flow init --task <id>      # s1flow/: s1flow.toml, tasks/<id>/task.py, .gitignore; nothing else
 ```
 
-Ask before passing `--ci` or `--skill` (`setup.md`). A task's directory is named its id.
+Ask before passing `--skill` (`setup.md`). A task's directory is named its id.
 
 ## Agree on the decision
 
@@ -36,7 +36,7 @@ For a score (levels 0..L-1): `MAE()` (the default, levels off on average), `QWK(
 or `Accuracy()` for the exact level. A level is the expected level, rounded.
 
 - **The held-out test share.** Ask how many cases to hold out (`split=Split(test=0.3, k=5, seed=1)` is the
-  default). The test share is never shown while choosing; `adopt` and `check` read it. Fewer than about 200
+  default). The test share is never shown while choosing; only `adopt` reads it. Fewer than about 200
   cases leaves a small test share.
 
 ## Collect the cases
@@ -106,6 +106,10 @@ task = Task(
 )
 ```
 
+- Other wordings of the question to compare: `variants={"strict": Boolean(instructions="...")}`, each of the
+  question's type and labels. `s1flow run <id> --models jev/strict` asks one, and `report` shows each as its own
+  candidate `model/variant` beside the base question; `optimize` adds variants the same way. A threshold is chosen per
+  candidate by the objective, so changing the wording and the cut are compared together.
 - A boolean question with a choice-like label uses `Boolean(...)`; a choice scored as one option against the rest
   sets `kind_params=KindParams(positive="bug")`.
 - Uneven costs: `ExpectedLoss(fn=, fp=)`, or `Loss(default=1, losses={"server": {"formatter": 3}})` (right answer
@@ -130,8 +134,9 @@ task = Task(
 - How the team already decides (a triage policy, CONTRIBUTING, a bot's prompt) goes in `tasks/<id>/context.md`:
   `optimize` reads it, the model never does. `criteria.md` is for the person's decision criteria, not the model.
 
-Supported question types: the direct `Client` takes boolean, choice, score and box where the provider does;
-evaluation compares all four; a policy holds one boolean or choice.
+Supported question types: boolean, choice, score and box, where the provider takes them. Evaluation compares all
+four, and a policy holds one question of any of them: `adopt` takes a score or box candidate from `report` like any
+other.
 
 ## Check the cases
 

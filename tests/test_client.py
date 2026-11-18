@@ -7,7 +7,9 @@ import subprocess
 import sys
 from pathlib import Path
 
+import httpx
 import pytest
+import respx
 from conftest import PROJECT, s1flow, ship
 
 from s1flow import AsyncClient, Client
@@ -236,6 +238,31 @@ def test_decide_with_a_model(toml):
     assert s1flow("decide", "--state", "{}", "--boolean", "?", cwd=cwd).returncode == 2  # neither --model nor --policy
 
 
+@respx.mock
+def test_decide_tries_a_model_no_s1flow_toml_names(tmp_path, toml):
+    """`--model provider:id` calls a built-in provider's model with no project, and beside a line-up that lacks it.
+    Nothing is declared for it, so a box question goes to the model unchecked."""
+    from s1flow.client.providers.liquid import BASE_URL
+
+    reply = {"model": "d1.2", "usage": {"input_tokens": 9, "output_tokens": 0, "cost": 0.000001}, "answers": {
+        "q": {"type": "noul", "noul": 0.9}, "where": {"type": "box", "box": {"top": 0.1, "bottom": 0.5, "left": 0.2, "right": 0.6}}}}
+    route = respx.post(f"{BASE_URL}/systemone").mock(return_value=httpx.Response(200, json=reply))
+    qs = json.dumps({"q": {"type": "boolean", "instructions": "A bug?"}, "where": {"type": "box", "instructions": "the dialog"}})
+    bare = tmp_path / "bare"
+    bare.mkdir()
+    for cwd in (bare, toml.parent):  # no project; a project whose line-up has no liquid
+        done = s1flow("decide", "--model", "liquid:d1.2", "--state", '"a crash"', "--questions", qs, cwd=cwd, env={"LIQUID_API_KEY": "k"})
+        assert done.returncode == 0, done.stderr
+        assert done.stdout.splitlines()[0] == "q: P(true) 0.900"
+        assert json.loads(route.calls[-1].request.read())["model"] == "d1.2"
+    done = s1flow("decide", "--model", "nope", "--state", '"x"', "--boolean", "?", cwd=bare)
+    assert done.returncode == 2 and "no s1flow.toml here" in done.stderr and "provider:id (liquid:d1.2)" in done.stderr
+    done = s1flow("decide", "--model", "nope:1", "--state", '"x"', "--boolean", "?", cwd=toml.parent)
+    assert done.returncode != 0 and "names: toy, later" in done.stderr and "provider:id" in done.stderr
+    done = s1flow("decide", "--model", "liquid:d1.2", "--state", '"x"', "--boolean", "?", "--connections", str(toml), cwd=bare)
+    assert done.returncode != 0 and "--connections" in done.stderr and len(route.calls) == 2  # the file lists every model allowed
+
+
 def test_the_client_loads_no_evaluation_stack(toml):
     """Asking a provider of your own four types in one call loads none of numpy, scipy, sklearn, litellm, dotenv."""
     code = (
@@ -346,7 +373,7 @@ def test_help_on_the_base_install_lists_what_it_runs():
 def test_a_spec_that_is_not_utf8_is_a_clean_cli_error(tmp_path):
     source = tmp_path / 'invalid.json'
     source.write_bytes(b'\xff\xfeinvalid')
-    done = s1flow('adopt', '--spec', str(source), '--check', '--json', cwd=tmp_path)
+    done = s1flow('adopt', '--spec', str(source), '--validate', '--json', cwd=tmp_path)
     assert done.returncode == 2
     assert 'Traceback' not in done.stderr and 'Traceback' not in done.stdout
     assert 'not a v2 policy' in done.stderr + done.stdout
@@ -377,3 +404,84 @@ def test_a_state_is_sent_with_its_keys_sorted_as_its_identity_hashes_it(toml):
         client.responses.create(model=model, state=state, questions=qs)
     assert model.sent[0] == model.sent[1] == '{"meta": {"a": [{"b": 3, "y": 2}], "z": 1}, "title": "bug"}'
     assert list(a) == ["title", "meta"]  # the caller's value is not changed
+
+
+def test_feedback_import_records_every_label_in_a_file_or_none(tmp_path):
+    """Labels a person corrected, many at once: a CSV (or JSON Lines) of decision_id and label, checked whole first."""
+    from s1flow.policies import Policies, PolicySpec
+
+    legacy = json.loads((PROJECT / "policies/gh-ruff-area/v1.json").read_text())
+    spec = PolicySpec(task="gh-ruff-area", version=1, connection="toy", model_id="t1", questions=legacy["questions"])
+    ship(Policies(tmp_path / "policies"), spec)
+    (tmp_path / "s1flow.toml").write_text(TOML)
+    log = tmp_path / "log.jsonl"
+    ids = []
+    for n in range(3):
+        done = s1flow("decide", "--policy", "gh-ruff-area", "--state", f'{{"title": "t{n}", "body": "x"}}', "--log", str(log),
+                      "--json", "--connections", str(tmp_path / "s1flow.toml"), cwd=tmp_path)
+        assert done.returncode == 0, done.stderr
+        ids.append(json.loads(done.stdout)["decision_id"])
+    lines = lambda: [json.loads(x) for x in log.read_text().splitlines()]  # noqa: E731
+    bad = tmp_path / "bad.csv"
+    bad.write_text(f"decision_id,label,note\n{ids[0]},linter,ok\n{ids[1]},formater,typo\n{ids[2]},server,\n{ids[0]},server,again\n")
+    done = s1flow("feedback", "import", "gh-ruff-area", str(bad), "--log", str(log), cwd=tmp_path)
+    assert done.returncode == 2 and "nothing recorded" in done.stderr
+    assert "line 3: gh-ruff-area@v1: label 'formater' is not an answer" in done.stderr
+    assert f"line 5: decision {ids[0]} already has the label 'linter'" in done.stderr
+    assert [x["type"] for x in lines()] == ["answered"] * 3  # one wrong row, nothing written
+    good = tmp_path / "labels.csv"
+    good.write_text(f"decision_id,label\n{ids[0]},linter\n{ids[1]},formatter\n{ids[0]},linter\n")
+    done = s1flow("feedback", "import", "gh-ruff-area", str(good), "--log", str(log), cwd=tmp_path)
+    assert done.returncode == 0, done.stderr
+    assert done.stdout.strip() == f"recorded 2 labels for gh-ruff-area@v1 in {log}" and done.stderr == ""
+    assert [(x["decision_id"], x["label"]) for x in lines()[3:]] == [(ids[0], "linter"), (ids[1], "formatter")]
+    jsonl = tmp_path / "more.jsonl"
+    jsonl.write_text(json.dumps({"decision_id": ids[2], "label": "server"}) + "\n\n" + json.dumps({"decision_id": "typo-id", "label": "server"}) + "\n")
+    done = s1flow("feedback", "import", "gh-ruff-area", str(jsonl), "--log", str(log), cwd=tmp_path)
+    assert done.returncode == 0, done.stderr
+    assert "notice: 1 of the 2 decision ids are not in" in done.stderr and "(first: typo-id)" in done.stderr
+    # a decision another version made is that version's to label
+    other = lines()[0]
+    other["decision"]["decision_id"], other["decision"]["policy"] = "by-v2", "gh-ruff-area@v2"
+    log.write_text(log.read_text() + json.dumps(other) + "\n")
+    jsonl.write_text(json.dumps({"decision_id": "by-v2", "label": "server"}) + "\n")
+    done = s1flow("feedback", "import", "gh-ruff-area", str(jsonl), "--log", str(log), cwd=tmp_path)
+    assert done.returncode == 2 and "decision by-v2 was made by gh-ruff-area@v2, not gh-ruff-area@v1" in done.stderr
+    spread = tmp_path / "spread.csv"  # a quoted note over three lines, and a spreadsheet's trailing empty row
+    spread.write_text(f'decision_id,label,note\n{ids[0]},formater,"a\nb\nc"\n,,\n')
+    done = s1flow("feedback", "import", "gh-ruff-area", str(spread), "--log", str(log), cwd=tmp_path)
+    assert done.returncode == 2 and "line 2: gh-ruff-area@v1: label 'formater'" in done.stderr and "line 5" not in done.stderr
+    spread.write_text(f'decision_id,label,note\n{ids[0]},linter,"unclosed\n{ids[1]},formatter,x\n')  # would swallow the next row
+    done = s1flow("feedback", "import", "gh-ruff-area", str(spread), "--log", str(log), cwd=tmp_path)
+    assert done.returncode == 2 and "the row from line 2 is not valid CSV" in done.stderr
+    changed = lines()[0]
+    changed["decision"]["decision_id"], changed["decision"]["policy_digest"] = "other-file", "0" * 64
+    log.write_text(log.read_text() + json.dumps(changed) + "\n")
+    jsonl.write_text(json.dumps({"decision_id": "other-file", "label": "server"}) + "\n")
+    done = s1flow("feedback", "import", "gh-ruff-area", str(jsonl), "--log", str(log), cwd=tmp_path)
+    assert done.returncode == 2 and "was made by another gh-ruff-area@v1 than this one (its digest differs)" in done.stderr
+    elsewhere = tmp_path / "labels-only.jsonl"  # labels sent to a log with no decisions in it: say they can't join yet
+    jsonl.write_text(json.dumps({"decision_id": ids[0], "label": "server"}) + "\n")
+    done = s1flow("feedback", "import", "gh-ruff-area", str(jsonl), "--log", str(elsewhere), cwd=tmp_path)
+    assert done.returncode == 0 and "notice: 1 of the 1 decision ids are not in" in done.stderr
+    no_header = tmp_path / "plain.csv"
+    no_header.write_text(f"{ids[0]},linter\n")
+    done = s1flow("feedback", "import", "gh-ruff-area", str(no_header), "--log", str(log), cwd=tmp_path)
+    assert done.returncode == 2 and "the header needs the columns decision_id and label" in done.stderr
+    (tmp_path / "empty.csv").write_text("decision_id,label\n")
+    done = s1flow("feedback", "import", "gh-ruff-area", str(tmp_path / "empty.csv"), "--log", str(log), cwd=tmp_path)
+    assert done.returncode == 2 and "no labels in it" in done.stderr
+    (tmp_path / "sjis.csv").write_bytes("decision_id,label,メモ\n".encode("shift_jis"))
+    done = s1flow("feedback", "import", "gh-ruff-area", str(tmp_path / "sjis.csv"), "--log", str(log), cwd=tmp_path)
+    assert done.returncode == 2 and "not UTF-8 text" in done.stderr
+
+
+def test_decide_without_a_log_says_nothing_is_recorded(tmp_path):
+    from s1flow.policies import Policies, PolicySpec
+
+    legacy = json.loads((PROJECT / "policies/gh-ruff-area/v1.json").read_text())
+    ship(Policies(tmp_path / "policies"), PolicySpec(task="gh-ruff-area", version=1, connection="toy", model_id="t1", questions=legacy["questions"]))
+    (tmp_path / "s1flow.toml").write_text(TOML)
+    done = s1flow("decide", "--policy", "gh-ruff-area", "--state", '{"title": "t", "body": "x"}', "--connections", str(tmp_path / "s1flow.toml"), cwd=tmp_path)
+    assert done.returncode == 0, done.stderr
+    assert done.stderr == "notice: gh-ruff-area@v1: decisions are not recorded: no log= and no OpenTelemetry tracer provider, so no right answer can be joined to them and production can't be measured; pass log=PATH (decide --log FILE)\n"

@@ -1,0 +1,30 @@
+# A saved policy version is never rewritten: `s1flow adopt` only adds one. A pull request that edits, removes or
+# renames a bench policy's vN.json or vN.evaluation.json fails here (docs/policies.md).
+name: saved policies
+on:
+  pull_request:
+    paths: ["apps/bench/policies/**", ".github/workflows/saved-policies.yml"]
+permissions:
+  contents: read
+jobs:
+  saved-policies:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 2  # the pull request merged into its base (HEAD) and that base (HEAD^1)
+          persist-credentials: false
+      - name: Saved versions stay as they are
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Everything but an added file (--diff-filter=a), a renamed one being one removed and one added
+          # (--no-renames). A diff that cannot be read fails the step: a rewritten version could pass.
+          changed=$(git diff --no-renames --name-only --diff-filter=a HEAD^1 HEAD -- apps/bench/policies)
+          rewritten=$(grep -E '^apps/bench/policies/[^/]+/v[0-9]+(\.evaluation)?\.json$' <<<"$changed" || true)
+          if [ -n "$rewritten" ]; then
+            echo "::error::this pull request rewrites saved policy versions; s1flow adopt saves a new one instead"
+            echo "$rewritten"
+            exit 1
+          fi
+          echo "No saved policy version is rewritten"

@@ -52,13 +52,13 @@ Now write `bug.json`. You don't need any evaluation data, model responses or pla
 ```
 
 ```bash
-s1flow adopt --spec bug.json --connections connections.toml --check --json
+s1flow adopt --spec bug.json --connections connections.toml --validate --json
 s1flow adopt --spec bug.json --root policies --connections connections.toml --reason "first rule" --json
 s1flow decide --policy ticket-bug@v1 --path policies/ticket-bug/v1.json \
   --connections connections.toml --state '{"text":"Crash on startup"}' --json
 ```
 
-`adopt --spec FILE --check` validates the spec and that the connection file (`--connections`, else the project's
+`adopt --spec FILE --validate` validates the spec and that the connection file (`--connections`, else the project's
 `s1flow.toml`) defines its connection and allows its model ID, without calling a model or saving anything. `adopt --spec` saves the policy as a new version that can't be changed,
 stamped with when it was created and which SDK version created it, and makes it current; it doesn't claim the
 policy has been evaluated.
@@ -78,6 +78,9 @@ decision = policy.decide({"text": "Crash on startup"}, case_id="ticket-42")
 print(decision.value, decision.probability, decision.decision_id)
 policy.feedback(decision.decision_id, True)  # the correct answer, once you know it
 ```
+
+`log=` is where decisions and right answers are kept, so they can be measured and become new cases. Without it
+(and without an OpenTelemetry tracer provider) nothing is recorded: the first `decide` warns, and `feedback` raises.
 
 ## The policy API
 
@@ -169,7 +172,9 @@ response = Client().responses.create(
 print(response.answers["bug"].probability)
 ```
 
-The `ModelSpec` here is written in your own code, so this example needs no connection file. If you refer to
+The `ModelSpec` here is written in your own code, so this example needs no connection file. From the shell, `s1flow decide --model
+liquid:d1.2 --state '"Crash on startup"' --boolean "Does this report describe a software defect?"` does the same
+with no project: `provider:id` names a built-in provider and the id it sends. If you refer to
 the model by an alias instead, pass the app's list of allowed models:
 
 ```python
@@ -181,7 +186,7 @@ response = Client(connections="connections.toml").responses.create(
 ```
 
 The Client supports yes/no (`boolean`), choice, score and box questions, and several questions in one request, as far as
-the provider supports them. Evaluation compares all four. A policy holds one yes/no or choice question.
+the provider supports them. Evaluation compares all four. A policy holds one question of any of these types.
 
 Every call sends the state with the keys of each JSON object in sorted order, so a case in an evaluation and a
 call in production that differ only in key order send the same request. Lists keep their order.

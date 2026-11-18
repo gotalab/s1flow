@@ -18,7 +18,7 @@ import hashlib
 import json
 import sys
 import time
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
@@ -26,11 +26,10 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from ..client import AsyncClient
-from ..client._client import AsyncResponses, ModelRef, validate_questions
 from ..client.answers import Response
-from ..client.identity import digest, execution_digest, request_digest, require_provider_revision, model_digest
+from ..client.identity import digest, execution_digest, request_digests, require_provider_revision, model_digest
 from ..client.models import DecisionModel, ModelSpec
-from ..client.questions import Question, Questions
+from ..client.questions import Questions
 from ..client.state import State
 from ..core import clock
 from ..core.errors import ConfigError, NotFound, S1flowError
@@ -39,12 +38,6 @@ from . import evalset, records
 from .records import PredictionRecord
 from .cases import Case
 from .task import Task
-
-
-def cache_key(spec: ModelSpec, state: State, questions: Questions) -> str:
-    """The effective binding and actual input, with the request implementation revision."""
-    require_provider_revision(spec)
-    return request_digest(spec, state, questions)
 
 
 def prompt_hash(questions: Questions) -> str:
@@ -69,83 +62,26 @@ def cache_path(cache_dir: Path, key: str) -> Path:
     return cache_dir / "answers" / key[:2] / f"{key}.json"
 
 
-def cached(cache_dir: Path, spec: ModelSpec, state: State, questions: Questions) -> bool:
-    """Whether the cache holds the answer `call` would read for this call (no call is made)."""
-    return cache_path(cache_dir, cache_key(spec, state, questions)).exists()
-
-
 async def call(
     cache_dir: Path, client: AsyncClient, model: DecisionModel, state: State, questions: Questions, fresh: bool = False,
     concurrency: int | None = None, *, spec: ModelSpec,
 ) -> tuple[Cached, bool]:
     """A cached call keeps the latency and concurrency of the call that made it."""
-    key = cache_key(spec, state, questions)
-    path = cache_path(cache_dir, key)
-    if path.exists() and not fresh:
+    require_provider_revision(spec)
+    paths = [cache_path(cache_dir, key) for key in request_digests(spec, state, questions)]
+    found = None if fresh else next((p for p in paths if p.exists()), None)  # an earlier release's key too
+    if found is not None:
         try:
-            return Cached.model_validate_json(path.read_text()), True
+            return Cached.model_validate_json(found.read_text()), True
         except ValidationError:  # not a failed call: recorded as one, it would stay failed until --fresh
-            raise ConfigError(f"{path}: an answer cached in an older shape; rewrite the cache entry "
+            raise ConfigError(f"{found}: an answer cached in an older shape; rewrite the cache entry "
                               "by rerunning with --fresh, or explicitly remove this entry before rerunning") from None
     d = await client.responses.create(model=model, state=state, questions=questions)
     got = Cached(response=d, concurrency=concurrency or model.concurrency)
+    path = paths[0]
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(got.dump())
     return got, False
-
-
-class CachedResponses(AsyncResponses):
-    """`responses.create` answered from the cache first (`call`). Counts, per decision returned, whether the
-    cache answered it (`hit`), and the calls made and the ones the cache answered."""
-
-    def __init__(self, inner: AsyncClient, cache_dir: Path):
-        super().__init__(inner.connections)
-        self._inner, self._cache_dir = inner, cache_dir
-        self.calls = self.cached = 0
-        self._hits: dict[int, bool] = {}
-        self._timing_current: dict[int, bool] = {}
-
-    async def create(
-        self, *, model: ModelRef, state: State, questions: Mapping[str, Question | dict[str, Any]], options: dict[str, Any] | None = None,
-    ) -> Response:
-        if options:
-            raise ConfigError("the evaluation's cache keys no per-call options")
-        if isinstance(model, str):
-            spec = self._connections.resolved(model)
-        elif isinstance(model, ModelSpec):
-            spec = model.resolved()
-        else:
-            # A free-standing object has no verified effective binding. Calling it is
-            # supported, but it cannot safely share a persistent answer cache.
-            d = await self._inner.responses.create(model=model, state=state, questions=questions)
-            self.calls += 1
-            self._hits[id(d)] = False
-            self._timing_current[id(d)] = True
-            return d
-        built = self._model(model)
-        got, hit = await call(self._cache_dir, self._inner, built, state, validate_questions(questions), spec=spec)
-        self.cached += hit
-        self.calls += not hit
-        self._hits[id(got.response)] = hit
-        self._timing_current[id(got.response)] = got.concurrency == built.concurrency
-        return got.response
-
-    def hit(self, d: Response) -> bool:
-        """Whether the cache answered this decision (one this object returned)."""
-        return self._hits[id(d)]
-
-    def timing_current(self, response: Response) -> bool:
-        """Whether this raw response's measured concurrency matches this execution."""
-        return self._timing_current[id(response)]
-
-
-class CachedClient(AsyncClient):
-    """An `AsyncClient` whose decisions come from the evaluation's cache first: what `check` passes to
-    `policies.load`, so a policy decides there as it does in production, and unchanged answers cost nothing."""
-
-    def __init__(self, inner: AsyncClient, cache_dir: Path):
-        self.connections = inner.connections
-        self.responses: CachedResponses = CachedResponses(inner, cache_dir)
 
 
 def run_path(task: Task, variant: str, model_name: str) -> Path:
@@ -232,16 +168,16 @@ async def run_model(
     # Identity is checked per materialized input. An unchanged id/prompt alone is
     # insufficient, and legacy history without an identity never becomes current.
     inputs: dict[str, State] = {}
-    identities: dict[str, str] = {}
+    identities: dict[str, tuple[str, ...]] = {}  # the current one first, then those earlier releases wrote
     for case in cases:
         try:
             inputs[case.id] = task.model_state(case)
-            identities[case.id] = request_digest(spec, inputs[case.id], questions)
+            identities[case.id] = request_digests(spec, inputs[case.id], questions)
         except ConfigError:
             raise
         except Exception:
             pass  # one() records the input error using the normal outcome path
-    done_before = {r.id for r in previous if r.request_digest and r.request_digest == identities.get(r.id)
+    done_before = {r.id for r in previous if r.request_digest and r.request_digest in identities.get(r.id, ())
                    and (r.answered or r.outcome in records.REFUSED)}
     todo = [c for c in cases if c.id not in done_before]
     sem = asyncio.Semaphore(width)
@@ -253,7 +189,7 @@ async def run_model(
         base: dict[str, Any] = {
             "id": case.id, "label": case.label, "model": model_name, "variant": variant,
             "prompt": prompt, "distribution": model.capabilities.distribution,
-            "request_digest": identities.get(case.id),
+            "request_digest": identities[case.id][0] if case.id in identities else None,
         }
         now = clock.now  # stamped when the call ends
         async with sem:

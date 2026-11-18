@@ -47,7 +47,7 @@ def report(a: argparse.Namespace) -> int:
                 listed = adopting.shortlist(task)
             except ConfigError:
                 raise
-            except S1flowError as e:  # nothing to rank yet (no complete runs, a question no policy ships): still show what there is
+            except S1flowError as e:  # nothing to rank yet (no complete runs): still show what there is
                 unranked = str(e.args[0] if e.args else e)
     snapshot_name = str(snapshot) if snapshot else None
     result = None
@@ -96,8 +96,14 @@ def report(a: argparse.Namespace) -> int:
         if len(rows) > a.offset + a.limit:
             print(f"  … {len(rows) - a.offset - a.limit} more: --offset {a.offset + a.limit}")
         ranked = {r.candidate for r in rows}
-        if left := [f"{r.candidate} ({', '.join(r.excluded) or 'incomplete'})" for r in result.candidates if r.candidate not in ranked]:
+        outside_ranking = [r for r in result.candidates if r.candidate not in ranked]
+        never_run = [r for r in outside_ranking if r.excluded == [f"missing run evidence for {r.candidate}"]]
+        if left := [f"{r.candidate} ({', '.join(r.excluded) or 'incomplete'})" for r in outside_ranking if r not in never_run]:
             print(f"not ranked: {'; '.join(left)}")
+        if never_run:  # model x question pairs no run asked: named while few, counted once they crowd the page
+            names = ", ".join(r.candidate for r in never_run) if len(never_run) <= 5 else \
+                f"{len(never_run)} model and question pairs (--json lists them)"
+            print(f"not run: {names}")
         if outside := [f"{r.candidate} ({', '.join(r.excluded)})" for r in rows if r.excluded]:
             print(f"outside the constraints: {'; '.join(outside)}")
         _print_weights(listed)
@@ -149,13 +155,14 @@ def _print_shortlist(task_id: str, rows: list[Any], order: Any) -> None:
     tied = [r for r in rows if r.tied]
     labels = [s.objective.label for s in rows[0].scores] if rows else []
     # the objectives (measured on the answers) | what the calls took | the model
-    head = ["", "candidate", "n", *labels, "|", "p50", "p90", "p99", "API $/10k", "|", "pin", "limit"]
+    refusals = any(r.refused for r in rows)  # the refusal rate has a column once a candidate refused a case
+    head = ["", "candidate", "n", *(["refused"] if refusals else []), *labels, "|", "p50", "p90", "p99", "API $/10k", "|", "pin", "limit"]
     table = [head]
     for r in rows:
         if r.excluded:
             continue
         lat = r.calls.latency
-        table.append(["=" if r.tied else "", r.candidate, str(r.n), *(score(s) for s in r.scores), "|",
+        table.append(["=" if r.tied else "", r.candidate, str(r.n), *([pct(r.refused / r.n, 1)] if refusals else []), *(score(s) for s in r.scores), "|",
                       ms(lat and lat.p50_ms), ms(lat and lat.p90_ms), ms(lat and lat.p99_ms), cost(r.calls.cost_per_10k_usd, r.calls.cost_source), "|",
                       r.pin, "" if r.per_minute is None else f"{r.per_minute}/min"])
 
@@ -174,11 +181,11 @@ def _print_shortlist(task_id: str, rows: list[Any], order: Any) -> None:
         if r.excluded:
             print(f"  excluded: {r.candidate} ({', '.join(r.excluded)})")
     print("Measured on train + val; the held-out test is read only for the one you pick. Left of the first |: the objectives, "
-          "measured on the answers (n: the labelled train + val cases it answered); then latency per call and API cost per 10,000 cases, measured on the calls. "
+          "measured on the answers (n: the labelled train + val cases it is scored on); then latency per call and API cost per 10,000 cases, measured on the calls. "
           "pin: yes a version, no a model that serves one, alias a model whose version can change (not adoptable: run name:<version>).")
     if refused := [r for r in rows if r.refused]:
-        print("refused: " + ", ".join(f"{r.candidate} {r.refused} cases" for r in refused)
-              + ": the model's limit (a refusal or an input it does not take), not a failed call; left out of its n.")
+        print("refused: " + ", ".join(f"{r.candidate} {r.refused} of {r.n} cases" for r in refused)
+              + ": the model's limit (a refusal or an input it does not take), not a failed call. A refused case stays in n, counted as no answer (wrong, and never sure).")
     if any(r.calls.cost_source in ("list", "mixed") for r in rows):
         print("~$: an estimated API cost, recorded tokens times s1flow.toml's list price, not a bill"
               + ("; billed API costs are listed beside them, so compare with care." if any(r.calls.cost_source == "billed" for r in rows) else "."))

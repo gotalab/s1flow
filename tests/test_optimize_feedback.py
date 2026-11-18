@@ -181,6 +181,28 @@ class RefusesC(ByQuestion):
         return await super().decide(state, questions, options=options)
 
 
+class RefusesAll(ByQuestion):
+    def __init__(self, b=None):
+        super().__init__(b)
+        self.id = "deaf"
+
+    async def decide(self, state, questions, *, options=None):
+        raise Unsupported("not this input")
+
+
+def test_a_model_that_answered_nothing_is_not_measured(tmp_path):
+    """Refusals are scored beside answers; with no answer at all there is nothing to measure, only the count."""
+    p = make_project(tmp_path, {"deaf": RefusesAll})
+    rows = [{"id": str(i), "text": CLASSES[i % 3]} for i in range(30)]
+    (tmp_path / "data.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
+    task = attach(Task(id="toy", cases="data.jsonl", dir=tmp_path, state=lambda r: {"text": r["text"]}, question=q("Which?"),
+                       label=lambda r: r["text"], objective=Coverage(target_accuracy=0.9)), p)
+    asyncio.run(running.run(task, ["deaf"]))
+    pr = metrics.load(task, "base", "deaf")
+    e = metrics.evaluate(task, pr)
+    assert (pr.ids, len(pr.pairs), e.n, e.accuracy) == ([], 0, 0, None) and e.failures.refused_cases == len(pr.refused_cases) > 0
+
+
 def test_rank_leaves_out_a_candidate_whose_calls_failed_on_some_cases(tmp_path):
     p = make_project(tmp_path, {"m": ByQuestion, "flaky": FailsOnC, "picky": RefusesC})
     rows = [{"id": str(i), "text": CLASSES[i % 3]} for i in range(120)]
@@ -190,10 +212,18 @@ def test_rank_leaves_out_a_candidate_whose_calls_failed_on_some_cases(tmp_path):
     asyncio.run(running.run(task, ["m", "flaky", "picky"]))
     with pytest.warns(UserWarning, match=r"flaky \(28 cases whose every call failed\); ask them again: s1flow run toy --models flaky"):
         listed = adopting.shortlist(task)
-    assert [c[0] for c in listed.cands] == ["m", "picky"]  # a refusal is the model's limit: it stays, scored on what it answered
+    assert [c[0] for c in listed.cands] == ["m", "picky"]  # a refusal is the model's limit: it stays, scored on every labelled case
     rows_ = {r.candidate: r for r in listed.rows()}
-    assert (rows_["m"].n, rows_["m"].refused) == (84, 0) and (rows_["picky"].n, rows_["picky"].refused) == (56, 28)
+    assert (rows_["m"].n, rows_["m"].refused) == (84, 0) and (rows_["picky"].n, rows_["picky"].refused) == (84, 28)
+    # the cases picky refused are the ones m gets wrong and unsure: refusing them makes picky look no better than m
+    evs = {name: metrics.evaluate(task, metrics.load(task, "base", name)) for name in ("m", "picky")}
+    for name, e in evs.items():
+        assert e.accuracy.value == pytest.approx(56 / 84), name
+        assert e.selective[0].coverage.value == pytest.approx(56 / 84) and e.selective[0].accuracy == 1.0, name
+    assert evs["picky"].answered_ids == evs["m"].answered_ids  # the same cases, so the two are compared
+    assert evs["picky"].objective.rule == evs["m"].objective.rule == DecisionRule(min_probability=0.8)  # a refusal sets no rule
     md = report.write(task, "base", task.where.root / "out")
+    assert "| picky | 84 | 66.7%" in md and "| 33.3% (28/84) | 0/84 |" in md  # the refusal rate, of the scored cases
     assert "flaky ✕ | 56 |" in md and "Not compared: flaky (28 cases whose every call failed)" in md and "`s1flow run toy --models flaky`" in md
     assert "**flaky**" not in md.split("## Comparison")[0]  # not the report's pick either
 
