@@ -2,9 +2,9 @@
  "schema": "s1flow/report@1",
  "task": "gh-gemini-pr-rework",
  "variant": "base",
- "at": "2026-11-17T23:06:39Z",
+ "at": "2026-11-18T05:43:43Z",
  "data_digest": "fca06a47194c6984e30f7be3b7f8b32f2320d7286371336c446df16b80416da5",
- "evaluation_contract_digest": "24492633edc1a83bd5b3ee7273928a18afddf1eef6d6089add015f82102e0b53",
+ "evaluation_contract_digest": "548049db79bf731cfe34a9c53397e09edac1b0e0e8a1e4219a7a6e75f68a4735",
  "input_adapter_digest": "7f4dd0b58264e6d843e9782164a71c782c6c2e400a28a4114b7924d353fd17ea",
  "evaluations": [
   {

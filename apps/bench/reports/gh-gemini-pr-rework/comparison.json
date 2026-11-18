@@ -1,9 +1,9 @@
 {
  "schema": "s1flow/comparison@2",
- "id": "72d1c156443fa5bfb174b866e412a0f021e607602c3667a0cb39b6dc928b11bd",
+ "id": "6f094340376cb6fc1d220a9986818271a33a5125271d8b2ecc3446cc8090375d",
  "task": "gh-gemini-pr-rework",
  "source": "Merged PRs of google-gemini/gemini-cli (review history via the GitHub API)",
- "at": "2026-11-17T23:06:33Z",
+ "at": "2026-11-18T05:43:39Z",
  "scope": "dev",
  "question_type": "boolean",
  "kind_params": {},
@@ -24,7 +24,7 @@
   "min_recall": null
  },
  "data_digest": "fca06a47194c6984e30f7be3b7f8b32f2320d7286371336c446df16b80416da5",
- "evaluation_contract_digest": "24492633edc1a83bd5b3ee7273928a18afddf1eef6d6089add015f82102e0b53",
+ "evaluation_contract_digest": "548049db79bf731cfe34a9c53397e09edac1b0e0e8a1e4219a7a6e75f68a4735",
  "input_adapter_digest": "7f4dd0b58264e6d843e9782164a71c782c6c2e400a28a4114b7924d353fd17ea",
  "binding_digests": {
   "clef": "f0ba18c14d995fef01ff2bbcbae8ef95ece632049c74340b3a7944140b86b542",

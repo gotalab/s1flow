@@ -1,6 +1,6 @@
 # enrico-screen
 
-2026-11-17 · 154 labelled dev cases (form 9, gallery 9, menu 9, settings 9, bare 8, chat 8, editor 8, list 8, more) · split: stratified k-fold (no test case among these: CV numbers only) · source: Enrico (labels MIT) on Rico screenshots (CC BY 4.0): up to 12 screens per design topic, mislabelled ones replaced
+2026-11-18 · 154 labelled dev cases (form 9, gallery 9, menu 9, settings 9, bare 8, chat 8, editor 8, list 8, more) · split: stratified k-fold (no test case among these: CV numbers only) · source: Enrico (labels MIT) on Rico screenshots (CC BY 4.0): up to 12 screens per design topic, mislabelled ones replaced
 
 elephant@openrouter has the highest coverage at 90% accuracy, 62% [55, 71] (API cost $0.31 per 10k, p99 384ms). Its interval overlaps with decider@openrouter, drex-max@openrouter, gemini-decision@google, jev:1.14, jev, clef@openrouter, clef-flash@openrouter, mammoth@openrouter, decider-flash@openrouter, decision-1.1@openrouter, d1-ultra@openrouter: the objective cannot tell them apart; interval overlap does not establish equivalence. The highest raw accuracy (dev) is decider@openrouter's, 73% [66, 80].
 

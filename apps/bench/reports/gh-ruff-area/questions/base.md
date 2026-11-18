@@ -1,6 +1,6 @@
 # gh-ruff-area
 
-2026-11-17 · 361 labelled dev cases (linter 186, configuration 95, formatter 47, server 33) · split: stratified k-fold (no test case among these: CV numbers only) · source: GitHub issues of astral-sh/ruff (labels applied by maintainers)
+2026-11-18 · 361 labelled dev cases (linter 186, configuration 95, formatter 47, server 33) · split: stratified k-fold (no test case among these: CV numbers only) · source: GitHub issues of astral-sh/ruff (labels applied by maintainers)
 
 drex-max@openrouter has the highest coverage at 95% accuracy, 89% [85, 92] (API cost $0.28 per 10k, p99 1240ms). Its interval overlaps with d1-ultra@openrouter, d1.2-ultra, decider@openrouter, mammoth@openrouter, span@openrouter: the objective cannot tell them apart; interval overlap does not establish equivalence. task.py names no tiebreak, so they are listed by name, unordered. The highest raw accuracy (dev) is decider@openrouter's, 92% [89, 94].
 

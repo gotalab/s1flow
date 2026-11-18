@@ -1,9 +1,9 @@
 {
  "schema": "s1flow/comparison@2",
- "id": "247c56cba5a3f886dc0b477438009bcb7ce15e5bff88df8486cb0b49a6d2bf28",
+ "id": "8980d102f3bbda975f5a9337654adfd4aadf979eedc5a27a01d4a889be41f5e5",
  "task": "ja-toxicity",
  "source": "LLM-jp Toxicity Dataset（LLM-jp, CC BY 4.0）の 1,000 字以下から toxic / nontoxic 各 150 件",
- "at": "2026-11-17T23:07:30Z",
+ "at": "2026-11-18T05:44:22Z",
  "scope": "dev",
  "question_type": "boolean",
  "kind_params": {},
@@ -26,7 +26,7 @@
   "min_recall": null
  },
  "data_digest": "2a1a933db808c569d55f158e07fe73712f3fce5a663144f4d650100d0815489a",
- "evaluation_contract_digest": "719486a062908ee3e4f1f1f75f1291a2b85de984b9a06a61ae92cdab5b1e9cf9",
+ "evaluation_contract_digest": "58a950ae900b3dfdb19b056bb97782395152f0fc12cb95850c6c4f23506f65bd",
  "input_adapter_digest": "00bbbafe6d82f6c43e5c56a992286de7eaeddef4ca8a3df25ea4abf6d96e6082",
  "binding_digests": {
   "clef": "f0ba18c14d995fef01ff2bbcbae8ef95ece632049c74340b3a7944140b86b542",

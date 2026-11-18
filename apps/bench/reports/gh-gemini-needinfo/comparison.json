@@ -1,9 +1,9 @@
 {
  "schema": "s1flow/comparison@2",
- "id": "048ea3336007e11d35bdc5da7ad1d5dbf8df3c4c1de3034d9648236c4fe11f0f",
+ "id": "d98f822fac86fa163a68a11721f3ea08199536093ab414fdeb9164ed67d29f4c",
  "task": "gh-gemini-needinfo",
  "source": "GitHub issues of google-gemini/gemini-cli (labels applied by the repository's Gemini triage bot; see gh-audit)",
- "at": "2026-11-17T23:06:19Z",
+ "at": "2026-11-18T05:43:27Z",
  "scope": "dev",
  "question_type": "boolean",
  "kind_params": {},
@@ -26,7 +26,7 @@
   "min_recall": null
  },
  "data_digest": "b17dc521de5b361930b92a4ab9abcb940fb73b6a2828ab3080cbad284ed044fa",
- "evaluation_contract_digest": "cace46bd032b03a0c0d619adc510cf1f5fd6428883c498905d7d93f8ab20291d",
+ "evaluation_contract_digest": "5661daf08cc5e17e50f28f8840e14215e602119864d8447c3cc742b46eac3bf8",
  "input_adapter_digest": "20fb596b887a939006b860447f40b7ebaf1944d519d68735969ad00537fbe652",
  "binding_digests": {
   "clef": "f0ba18c14d995fef01ff2bbcbae8ef95ece632049c74340b3a7944140b86b542",
