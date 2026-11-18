@@ -240,7 +240,8 @@ def render(task: Task, variant: str, evs: list[Evaluation], preds: dict[str, met
         "Refused: the share of the scored cases the model refused or does not support, each counted as no answer (wrong, and never sure). Failed counts calls.",
     ]
     if any(not e.probabilities for e in evs):
-        L.append("※ a model that returns no distribution (one answer): its probability is 1 for every answer, so the coverage is all or nothing.")
+        L.append("※ a model that returns no distribution (one answer): its probability is 1 for every answer"
+                 + (", so the coverage is all or nothing." if covered else "."))
     if box:
         L.append(f"Box: right at IoU {kind.iou:g} or more with the label's box. The probability is what jev returns; for an LLM, the agreement (IoU) of its repeated boxes. AUROC and ECE say how well that probability separates right from wrong.")
     if any(e.failures.unsupported for e in evs):

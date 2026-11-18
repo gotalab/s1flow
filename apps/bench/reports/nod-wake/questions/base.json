@@ -2,9 +2,9 @@
  "schema": "s1flow/report@1",
  "task": "nod-wake",
  "variant": "base",
- "at": "2026-11-18T05:45:02Z",
+ "at": "2026-11-18T05:58:45Z",
  "data_digest": "2cf9c7143e5fb396d2f6756e8d9a33f9ec871b0310e51e20cb220fc64a4479c8",
- "evaluation_contract_digest": "e48f84fcca5524ffbe09252cbf0598bebb4123df007819d88eb1115111f22022",
+ "evaluation_contract_digest": "8af0d66402f19fc2be95d499794be5a2a929e4250ff16aef81435b2e458f150e",
  "input_adapter_digest": "46434bbf9202e92eba8dd029dd828799b63a6dc5735b53349520626d43b52dd7",
  "evaluations": [
   {

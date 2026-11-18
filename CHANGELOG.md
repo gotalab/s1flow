@@ -41,8 +41,9 @@
 ### Changed
 
 - The summary `report --out` writes shows the `coverage` and `sure accuracy` columns only for a task whose
-  objective or tiebreak is `Coverage(...)`. For any other task they were printed at a 95% target nobody set.
-  `comparison.json` and the comparison page still hold that reference value.
+  objective or tiebreak is `Coverage(...)`, at that objective's target. For any other task they were printed at a
+  95% target nobody set; `comparison.json` and the comparison page still hold that reference value. A task whose
+  Coverage is only a tiebreak now gets its sure answers at the tiebreak's target, not at 95%.
 - The comparison page (`charts.py`) orders its columns by what a choice weighs: the task's objective first, then
   latency, then API cost, then the other metrics. The column the table is sorted by carries a mark.
 - `optimize` is marked experimental in `--help`, the docs and the Skill: its options and the record it saves may

@@ -108,12 +108,15 @@ def test_markdown_shows_coverage_only_where_the_task_asks_for_it(ran):
     task = ran.tasks_dir / "truth" / "task.py"
 
     def markdown(objective, out):
-        task.write_text(TASK.replace("from s1flow.questions", f"from s1flow.objectives import {objective.split('(')[0]}\nfrom s1flow.questions").replace('"truth?"))', f'"truth?"), objective={objective})'))
+        task.write_text(TASK.replace("from s1flow.questions", "from s1flow.objectives import AUROC, Coverage, Loss\nfrom s1flow.questions").replace('"truth?"))', f'"truth?"), objective={objective})'))
         assert cli("report", "truth", "--out", out).exit_code == 0
         return (ran.root / out / "questions" / "base.md").read_text()
 
     asked = markdown("Coverage(target_accuracy=0.9)", "asked")
     assert "| coverage | sure accuracy (lower bound) |" in asked and "keeps the target 90%" in asked
+
+    tiebreak = markdown("Loss(unsure=0.3), tiebreak=[Coverage(target_accuracy=0.8)]", "tiebreak")  # shown at the target it set, not 95%
+    assert "| coverage | sure accuracy (lower bound) |" in tiebreak and "keeps the target 80%" in tiebreak
 
     md = markdown("AUROC()", "other")  # at a target nobody set, coverage would read as a requirement
     assert "| coverage |" not in md and "sure accuracy" not in md and "\nCoverage: " not in md
