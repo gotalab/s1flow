@@ -1,6 +1,6 @@
 # massive-ja-intent
 
-2026-11-17 · 201 labelled dev cases (social_post 5, play_audiobook 5, email_query 5, general_quirky 5, qa_maths 5, iot_hue_lightoff 5, audio_volume_mute 5, datetime_convert 4, more) · split: stratified k-fold (no test case among these: CV numbers only) · source: MASSIVE 1.1 ja-JP test（Amazon, CC BY 4.0）から各意図 5 件まで
+2026-11-18 · 201 labelled dev cases (social_post 5, play_audiobook 5, email_query 5, general_quirky 5, qa_maths 5, iot_hue_lightoff 5, audio_volume_mute 5, datetime_convert 4, more) · split: stratified k-fold (no test case among these: CV numbers only) · source: MASSIVE 1.1 ja-JP test（Amazon, CC BY 4.0）から各意図 5 件まで
 
 decider@openrouter has the highest coverage at 95% accuracy, 93% [90, 97] (API cost $0.15 per 10k, p99 699ms). Its interval overlaps with mammoth@openrouter, decision-1@openrouter, clef@openrouter, drex-max@openrouter, d1.2-ultra: the objective cannot tell them apart; interval overlap does not establish equivalence. The highest raw accuracy (dev) is decider@openrouter's, 91% [87, 95].
 

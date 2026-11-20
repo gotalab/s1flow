@@ -1,9 +1,9 @@
 {
  "schema": "s1flow/comparison@2",
- "id": "c1d90b722a23a896b3a4055ea5b6eb3b8c3fb0b7aaaec274937fb4edad0c8ac0",
+ "id": "77921e8c5d169599e9975d9c2acc5595eaf7832caa6c08cd2188ca931c3f035e",
  "task": "gh-ruff-kind",
  "source": "GitHub issues of astral-sh/ruff (labels applied by maintainers)",
- "at": "2026-11-17T23:06:57Z",
+ "at": "2026-11-18T05:57:41Z",
  "scope": "dev",
  "question_type": "choice",
  "kind_params": {},
@@ -26,7 +26,7 @@
   "min_recall": null
  },
  "data_digest": "865d51e55ce9de9ba4444d13c8095bbea63809e744d51454643e940e34075702",
- "evaluation_contract_digest": "45e0c9155ec21c221c706a045cda442d38d4f4b4e4bda82e0fb359b9d9f2a8d3",
+ "evaluation_contract_digest": "1eb0ba4cd34bd55b1efbb6cff1e49cb06f2537ef6e7b7955c19ae56372fec84c",
  "input_adapter_digest": "90a468b7934c41df593cb5d32a25676d1c858a757033bdaa04575f7cf0123489",
  "binding_digests": {
   "clef": "f0ba18c14d995fef01ff2bbcbae8ef95ece632049c74340b3a7944140b86b542",

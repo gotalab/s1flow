@@ -2,9 +2,9 @@
  "schema": "s1flow/report@1",
  "task": "visa-defect",
  "variant": "base",
- "at": "2026-11-17T23:10:46Z",
+ "at": "2026-11-18T06:00:38Z",
  "data_digest": "f546dc99148bdc3f8bb33c8b5a786d85ab9f8279bdbd49d6aad8710783ab5031",
- "evaluation_contract_digest": "4ddab92263f87625eb94e97016fe36402464052612a6efdfd99d7bf49157c11c",
+ "evaluation_contract_digest": "3b9da9b9fa389ff1d469a7611718878f7794b8dad1de809e3f40f9671ecd1304",
  "input_adapter_digest": "2a56d660d3bf4a8d57f9a2ffa665b41175888a0013fdd5d5a9b06f6b75096855",
  "evaluations": [
   {
