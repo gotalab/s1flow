@@ -27,6 +27,22 @@ tasks or their data can change these tests. `tests/test_bench.py` checks only th
 policies and reports still read: when a change makes them unreadable, rewrite them to the current shape in the same
 change.
 
+## The site
+
+The public site, https://gotalab.github.io/s1flow, is `docs/` built with [Zensical](https://zensical.org)
+(`zensical.toml`; theme overrides in `docs/.overrides/`, styles in `docs/stylesheets/`). Its Benchmarks pages are
+written from `apps/bench/reports` by `scripts/site_benchmarks.py`: each task's `comparison.json`, and the reports
+README's table for what each answer is used for and why its objective. To preview it:
+
+```bash
+python scripts/site_benchmarks.py           # writes docs/benchmarks/ (not committed)
+uvx zensical==0.1.1 serve                   # or: build --clean --strict, into site/
+```
+
+`.github/workflows/site.yml` builds it with `--strict` (a broken link fails) on a pull request that touches it, and
+builds and publishes it on every push to main. Zensical also writes `llms.txt`, `llms-full.txt` and a Markdown copy
+of each page for agents. Links from `docs/` to files outside it don't exist on the site: link to their GitHub URL.
+
 ## Release
 
 A pull request that changes what users see (the CLI, the Python API, the decide Action, the Skill, file formats) adds a
