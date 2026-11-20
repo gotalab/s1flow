@@ -11,7 +11,11 @@
        "boolean": "#/$defs/Boolean",
        "box": "#/$defs/Box",
        "choice": "#/$defs/Choice",
-       "score": "#/$defs/Score"
+       "date": "#/$defs/Date",
+       "estimate": "#/$defs/RangeEstimate",
+       "number": "#/$defs/Number",
+       "score": "#/$defs/Score",
+       "text": "#/$defs/Text"
       },
       "propertyName": "type"
      },
@@ -27,6 +31,18 @@
       },
       {
        "$ref": "#/$defs/Box"
+      },
+      {
+       "$ref": "#/$defs/Text"
+      },
+      {
+       "$ref": "#/$defs/Number"
+      },
+      {
+       "$ref": "#/$defs/Date"
+      },
+      {
+       "$ref": "#/$defs/RangeEstimate"
       }
      ],
      "title": "Question"
@@ -252,6 +268,27 @@
     "criteria"
    ],
    "title": "Choice",
+   "type": "object"
+  },
+  "Date": {
+   "additionalProperties": false,
+   "description": "A calendar date read from the state, None when the state holds none.",
+   "properties": {
+    "type": {
+     "const": "date",
+     "default": "date",
+     "title": "Type",
+     "type": "string"
+    },
+    "instructions": {
+     "title": "Instructions",
+     "type": "string"
+    }
+   },
+   "required": [
+    "instructions"
+   ],
+   "title": "Date",
    "type": "object"
   },
   "DecisionRule": {
@@ -916,6 +953,39 @@
    "title": "Latency",
    "type": "object"
   },
+  "Number": {
+   "additionalProperties": false,
+   "description": "A number read from the state, None when the state holds none. `unit` names what it is counted in (USD, kg).",
+   "properties": {
+    "type": {
+     "const": "number",
+     "default": "number",
+     "title": "Type",
+     "type": "string"
+    },
+    "instructions": {
+     "title": "Instructions",
+     "type": "string"
+    },
+    "unit": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Unit"
+    }
+   },
+   "required": [
+    "instructions"
+   ],
+   "title": "Number",
+   "type": "object"
+  },
   "Objective": {
    "additionalProperties": false,
    "description": "One objective. Everything that changes its value is in `params`; `sets` is the Rule field it\nchooses (None: it reads the plain answer).",
@@ -1173,6 +1243,62 @@
    "title": "Price",
    "type": "object"
   },
+  "RangeEstimate": {
+   "additionalProperties": false,
+   "description": "A number between `min` and `max` the state does not state: the model's estimate, with the p10 - p90 interval\nof its distribution. `step` is the spacing of the values it may take (1 for a count).",
+   "properties": {
+    "type": {
+     "const": "estimate",
+     "default": "estimate",
+     "title": "Type",
+     "type": "string"
+    },
+    "instructions": {
+     "title": "Instructions",
+     "type": "string"
+    },
+    "min": {
+     "title": "Min",
+     "type": "number"
+    },
+    "max": {
+     "title": "Max",
+     "type": "number"
+    },
+    "step": {
+     "anyOf": [
+      {
+       "exclusiveMinimum": 0,
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Step"
+    },
+    "unit": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Unit"
+    }
+   },
+   "required": [
+    "instructions",
+    "min",
+    "max"
+   ],
+   "title": "RangeEstimate",
+   "type": "object"
+  },
   "Score": {
    "additionalProperties": false,
    "description": "Levels 0..L-1, described in order by `criteria`.",
@@ -1412,6 +1538,27 @@
     "primary"
    ],
    "title": "TestResult",
+   "type": "object"
+  },
+  "Text": {
+   "additionalProperties": false,
+   "description": "A passage read from the state as it is written (an invoice number, a name). The answer's value is None\nwhen the state holds nothing for it.",
+   "properties": {
+    "type": {
+     "const": "text",
+     "default": "text",
+     "title": "Type",
+     "type": "string"
+    },
+    "instructions": {
+     "title": "Instructions",
+     "type": "string"
+    }
+   },
+   "required": [
+    "instructions"
+   ],
+   "title": "Text",
    "type": "object"
   },
   "Throughput": {

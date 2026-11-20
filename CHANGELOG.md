@@ -38,6 +38,13 @@
   only a model that hears, watches or reads it can answer. Through OpenRouter, Gemini Decision 1 takes all three,
   Clef Omni audio and video, ScaleDown Classify 1 PDFs (the Skill's setup reference has their entries).
 
+- Four question types for the `Client`: `Text`, `Number` and `Date` read a value from the state (`None` when the
+  model finds nothing, with `p_null`, `confidence` and `span` where the model gives them), and `RangeEstimate` asks for
+  a number between a `min` and a `max` with its p10 - p90 interval. The `openrouter` provider sends them to
+  OpenRouter's Extractions route (Clairic, Schematron, Perplexity's Decider v1.3, ScaleDown Extract), a model
+  declares them in `capabilities.question_types`, and `s1flow models --verify` checks each. Evaluation and policies
+  do not take them yet.
+
 ### Changed
 
 - The comparison page (`charts.py`) orders its columns by what a choice weighs: the task's objective first, then

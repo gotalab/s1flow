@@ -128,7 +128,7 @@ def _state(a: argparse.Namespace) -> "State":
 
 
 def _line(qid: str, x: "Answer") -> str:
-    from ..client.answers import BooleanAnswer, BoxAnswer, ChoiceAnswer, ScoreAnswer
+    from ..client.answers import BooleanAnswer, BoxAnswer, ChoiceAnswer, DateAnswer, EstimateAnswer, NumberAnswer, ScoreAnswer, TextAnswer
 
     if isinstance(x, BooleanAnswer):
         return f"{qid}: P(true) {x.probability:.3f}"
@@ -143,6 +143,12 @@ def _line(qid: str, x: "Answer") -> str:
         b = x.box
         conf = x.confidence if x.confidence is not None else x.agreement
         return f"{qid}: top {b.top:.3f} bottom {b.bottom:.3f} left {b.left:.3f} right {b.right:.3f}" + ("" if conf is None else f"  (confidence {conf:.2f})")
+    if isinstance(x, (TextAnswer, NumberAnswer, DateAnswer)):
+        value = "none" if x.value is None else f"{x.value:g}" if isinstance(x, NumberAnswer) else str(x.value)
+        said = [f"{name} {v:.3f}" for name, v in (("p_null", x.p_null), ("confidence", x.confidence)) if v is not None]
+        return f"{qid}: {value}" + (f"  ({' · '.join(said)})" if said else "")
+    if isinstance(x, EstimateAnswer):
+        return f"{qid}: {x.value:g}" + ("" if x.p10 is None or x.p90 is None else f"  (p10 {x.p10:g} · p90 {x.p90:g})")
     return f"{qid}: refused" + (f" ({x.reason})" if x.reason else "")
 
 

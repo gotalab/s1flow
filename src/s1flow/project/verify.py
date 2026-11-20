@@ -12,6 +12,10 @@ answer is plain, and checks every claim a `Capabilities` can make:
 | `image`   | the disc's colour, on a red disc, then a blue one             | the colour, with p >= PASS, twice    |
 | `images`  | both discs in one state, red first                            | both colours in order                |
 | `box`     | the box of a disc off-centre in a 4:3 image                   | IoU >= BOX_PASS                      |
+| `text`    | the order number, on two orders                               | the number as written, twice         |
+| `number`  | how many boxes an order holds, on two orders                  | the count, twice                     |
+| `date`    | the day an order shipped, on two orders                       | the day, twice                       |
+| `estimate`| how many apples (0-10), on three apples, then seven           | nearer its own count, twice          |
 | `audio`   | the colour a voice says, "red", then "blue" (MP3)             | the colour, with p >= PASS, twice    |
 | `video`   | the colour at the end, red then blue, then blue then red      | the last colour, with p >= PASS, twice |
 | `pdf`     | is the invoice paid, on a paid one, then an unpaid one        | P(true) >= PASS, then <= 1 - PASS    |
@@ -39,18 +43,20 @@ import zlib
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal, TypeVar
+from typing import TYPE_CHECKING, Any, Literal, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from ..client import AsyncClient, images, media
 from ..core import clock
-from ..client.answers import Answer, BooleanAnswer, BoxAnswer, BoxEdges, ChoiceAnswer, Response, ScoreAnswer
+from ..client.answers import (
+    Answer, BooleanAnswer, BoxAnswer, BoxEdges, ChoiceAnswer, DateAnswer, EstimateAnswer, NumberAnswer, Response, ScoreAnswer, TextAnswer,
+)
 from ..client.boxes import iou
 from ..client import providers
 from ..client.models import Capabilities, DecisionModel, ModelSpec, Price
 from ..client.providers.needs import where_to_get
-from ..client.questions import Boolean, Box, Choice, Questions, Score
+from ..client.questions import Boolean, Box, Choice, Date, RangeEstimate, Number, Questions, Score, Text
 from ..client.state import Image, Media, MediaKind, Part, State
 from ..core.errors import ProviderError, S1flowError
 from . import Project
@@ -60,8 +66,10 @@ if TYPE_CHECKING:
 
 PASS = 0.6
 BOX_PASS = 0.5
-CheckName = Literal["boolean", "choice", "score", "image", "images", "box", "audio", "video", "pdf"]
-EVERYTHING = Capabilities(image=True, audio=True, video=True, pdf=True, question_types=frozenset({"boolean", "choice", "score", "box"}))
+CheckName = Literal["boolean", "choice", "score", "image", "images", "box", "audio", "video", "pdf", "text", "number", "date", "estimate"]
+READS: tuple[Literal["text", "number", "date", "estimate"], ...] = ("text", "number", "date", "estimate")  # each a question type alone
+EVERYTHING = Capabilities(image=True, audio=True, video=True, pdf=True,
+                          question_types=frozenset({"boolean", "choice", "score", "box", *READS}))
 
 
 class Check(BaseModel):
@@ -91,6 +99,7 @@ def claims(caps: Capabilities) -> dict[CheckName, bool]:
         "audio": caps.audio,
         "video": caps.video,
         "pdf": caps.pdf,
+        **{c: c in caps.question_types for c in READS},
     }
 
 
@@ -131,6 +140,17 @@ APPLES: Questions = {
 # A 400x300 image with a disc at x 40..160, y 40..160: the box as fractions of width and height.
 BOX_TRUTH = BoxEdges(top=40 / 300, bottom=160 / 300, left=40 / 400, right=160 / 400)
 BOX_Q: Questions = {"disc": Box(instructions="the red disc in the picture")}
+# Two orders that differ in everything asked, so an answer that ignores the state fails one of them. Each question
+# is named for what it reads: Schematron reads the name too, and returned the whole state for one named `read`
+# (2026-11-16).
+ORDERS: tuple[dict[str, Any], ...] = ({"state": "Order A-4417 shipped on 2026-03-05 with 12 boxes.", "order_number": "A-4417", "boxes": 12.0, "shipped": dt.date(2026, 3, 5)},
+          {"state": "Order K-9020 shipped on 2025-11-21 with 40 boxes.", "order_number": "K-9020", "boxes": 40.0, "shipped": dt.date(2025, 11, 21)})
+ORDER: Questions = {
+    "order_number": Text(instructions="The order number"),
+    "boxes": Number(instructions="How many boxes the order holds"),
+    "shipped": Date(instructions="The day the order shipped"),
+}
+APPLE_COUNT: Questions = {"apples": RangeEstimate(instructions="How many apples does Mia have?", min=0, max=10, step=1)}
 
 
 def _png(im: "PILImage.Image") -> Image:
@@ -206,7 +226,10 @@ def _media(kind: MediaKind, raw: bytes) -> Media:
 # ---------- reading the answers ----------
 
 
-A = TypeVar("A", BooleanAnswer, ChoiceAnswer, ScoreAnswer, BoxAnswer)
+A = TypeVar("A", BooleanAnswer, ChoiceAnswer, ScoreAnswer, BoxAnswer, TextAnswer, NumberAnswer, DateAnswer, EstimateAnswer)
+
+
+R = TypeVar("R", TextAnswer, NumberAnswer, DateAnswer)
 
 
 def _as(kind: type[A], a: Answer) -> A:
@@ -247,6 +270,7 @@ class _Probe:
             "boolean": self._boolean, "choice": self._choice, "score": self._score,
             "image": self._image, "images": self._images, "box": self._box,
             "audio": self._audio, "video": self._video, "pdf": self._pdf,
+            "text": self._text, "number": self._number, "date": self._date, "estimate": self._estimate,
         }
         try:
             ok, detail = await asks[name]()
@@ -300,6 +324,26 @@ class _Probe:
         return on >= PASS and off <= 1 - PASS, f"P(true) {on:.2f} / {off:.2f}"
 
 
+    async def _read(self, kind: type[R], name: str) -> tuple[bool, str]:
+        got = [_as(kind, (await self.ask(order["state"], {name: ORDER[name]})).answers[name]).value for order in ORDERS]
+        return all(g == order[name] for g, order in zip(got, ORDERS)), " / ".join("none" if g is None else str(g) for g in got)
+
+    async def _text(self) -> tuple[bool, str]:
+        return await self._read(TextAnswer, "order_number")
+
+    async def _number(self) -> tuple[bool, str]:
+        return await self._read(NumberAnswer, "boxes")
+
+    async def _date(self) -> tuple[bool, str]:
+        return await self._read(DateAnswer, "shipped")
+
+    async def _estimate(self) -> tuple[bool, str]:
+        three = _as(EstimateAnswer, (await self.ask("Mia picked three apples from the tree.", APPLE_COUNT)).answers["apples"]).value
+        seven = _as(EstimateAnswer, (await self.ask("Mia picked seven apples from the tree.", APPLE_COUNT)).answers["apples"]).value
+        nearer = abs(three - 3) < abs(three - 7) and abs(seven - 7) < abs(seven - 3)  # an estimate, not a reading: Clairic said 6 for seven
+        return nearer, f"{_level(three)} / {_level(seven)} (want near 3 / 7)"
+
+
 async def probe(client: AsyncClient, name: str) -> Verification:
     # Every model is asked about images (s1flow[images] draws them). Without a working Pillow this stops before
     # anything is asked; inside a check the error would read as a model that cannot see. Listing needs no extra.
@@ -308,7 +352,7 @@ async def probe(client: AsyncClient, name: str) -> Verification:
     model = client.connections.build(name)  # its own object: the declared capabilities are set aside for the probe
     model.capabilities = EVERYTHING.model_copy(update={"max_options": model.capabilities.max_options})
     p = _Probe(client, model)
-    first: tuple[CheckName, ...] = ("boolean", "choice", "score", "image", "audio", "video", "pdf")
+    first: tuple[CheckName, ...] = ("boolean", "choice", "score", "image", "audio", "video", "pdf", *READS)
     checks: dict[CheckName, Check] = dict(zip(first, await asyncio.gather(*(p.check(c) for c in first))))
     if checks["image"].ok:
         checks["images"], checks["box"] = await asyncio.gather(p.check("images"), p.check("box"))
@@ -471,6 +515,8 @@ def lineup(project: Project) -> list[dict[str, str]]:
             "boolean": _cell(said, v, "boolean"), "choice": _cell(said, v, "choice"), "score": _cell(said, v, "score"),
             "image": _cell(said, v, "image", "images"), "box": _cell(said, v, "box"),
             "audio": _cell(said, v, "audio"), "video": _cell(said, v, "video"), "pdf": _cell(said, v, "pdf"),
+            "text": _cell(said, v, "text"), "number": _cell(said, v, "number"), "date": _cell(said, v, "date"),
+            "estimate": _cell(said, v, "estimate"),
             "distribution": caps.distribution, "context": f"{caps.context_tokens // 1000}k",
             "limits": ", ".join(f"{k} {x}" for k, x in [("options", caps.max_options), ("instr", caps.max_instructions_chars), ("desc", caps.max_description_chars)] if x) or "-",
             "concurrency": str(m.concurrency), "checked": v.at[:10] if v else "-",

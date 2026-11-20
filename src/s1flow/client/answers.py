@@ -2,10 +2,12 @@
 that carries them.
 
 Field names follow the decision-model SDKs (TypeSafe, OpenAI, OpenRouter, Workers AI): `probability`
-(yes / no), `choice` / `score` with `probabilities` and the vendor's `confidence`. A question the model
+(yes / no), `choice` / `score` with `probabilities` and the vendor's `confidence`, a read `value` with
+`p_null`, an estimate's `value` with `p10` and `p90`. A question the model
 declined is a `Refusal`, the others of the same call still answered (OpenAI's per-question refusal).
 """
 
+import datetime as dt
 from typing import Annotated, Any, Literal, Union
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -66,6 +68,44 @@ class BoxAnswer(_Answer):
     agreement: float | None = None  # a box from k samples: the mean IoU of the samples with the answer
 
 
+class _Read(_Answer):
+    """A value read from the state. `value` is None when the model read nothing for it; `guess` is its most
+    likely value even then. `p_null` is the probability that the state holds nothing for it, `confidence` the
+    model's confidence in `guess` (Clairic gives one near 1 beside a `p_null` near 1), `span` where it was read:
+    [start, end) in code points of the text sent (a JSON state: its keys sorted, dumped with an indent of 1).
+    A model gives the ones it has (OpenRouter's Extractions route: Schematron gives the value alone).
+    Every field has a default: a saved record leaves out what is None, a value that was not read among them."""
+
+    p_null: float | None = None
+    confidence: float | None = None
+    span: tuple[int, int] | None = None
+
+
+class TextAnswer(_Read):
+    type: Literal["text"] = "text"
+    value: str | None = None
+    guess: str | None = None
+
+
+class NumberAnswer(_Read):
+    type: Literal["number"] = "number"
+    value: float | None = None
+    guess: float | None = None
+
+
+class DateAnswer(_Read):
+    type: Literal["date"] = "date"
+    value: dt.date | None = None
+    guess: dt.date | None = None
+
+
+class EstimateAnswer(_Answer):
+    type: Literal["estimate"] = "estimate"
+    value: float  # the model's point estimate
+    p10: float | None = None  # the 80% interval of its distribution
+    p90: float | None = None
+
+
 class Refusal(_Answer):
     """The model declined to answer this question (its limit, not a failed call)."""
 
@@ -73,8 +113,13 @@ class Refusal(_Answer):
     reason: str | None = None
 
 
-Answer = Annotated[Union[BooleanAnswer, ChoiceAnswer, ScoreAnswer, BoxAnswer, Refusal], Field(discriminator="type")]
-Given = BooleanAnswer | ChoiceAnswer | ScoreAnswer | BoxAnswer  # an answer that is not a refusal
+ReadAnswer = TextAnswer | NumberAnswer | DateAnswer
+Answer = Annotated[
+    Union[BooleanAnswer, ChoiceAnswer, ScoreAnswer, BoxAnswer, TextAnswer, NumberAnswer, DateAnswer, EstimateAnswer, Refusal],
+    Field(discriminator="type"),
+]
+# an answer that is not a refusal
+Given = BooleanAnswer | ChoiceAnswer | ScoreAnswer | BoxAnswer | TextAnswer | NumberAnswer | DateAnswer | EstimateAnswer
 
 
 CostSource = Literal["billed", "list"]

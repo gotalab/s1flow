@@ -12,11 +12,12 @@ OpenAI's Decisions API (openai_decisions.py) and the LLMs (llm.py) speak their o
 from typing import Any
 
 from ..answers import Answer, BooleanAnswer, BoxAnswer, BoxEdges, ChoiceAnswer, ScoreAnswer
-from ..questions import Questions
+from ..questions import Questions, no_fields
 from .contract import outside_contract, refusal
 
 
 def questions(qs: Questions, *, noul: bool = True) -> dict[str, Any]:
+    no_fields(qs, "the System One format")
     wire = {k: q.model_dump(exclude_none=True) for k, q in qs.items()}
     return {k: {**q, "type": "noul"} if noul and q["type"] == "boolean" else q for k, q in wire.items()}
 
