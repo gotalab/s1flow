@@ -70,6 +70,7 @@ KEY_PAGES: dict[str, str] = {
     "OPENAI_API_KEY": "https://platform.openai.com/api-keys",
     "ANTHROPIC_API_KEY": "https://console.anthropic.com/settings/keys",
     "GEMINI_API_KEY": "https://aistudio.google.com/apikey",
+    "LIQUID_API_KEY": "https://console.liquid.ai/dashboard/api-keys",
 }
 
 

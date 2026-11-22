@@ -34,10 +34,10 @@ inputs:
     default: ""
 outputs:
   answer:
-    description: The class key, or true / false.
+    description: "The answer: a class key, true / false, a score's level, or a box as JSON."
     value: ${{ steps.decide.outputs.answer }}
   probability:
-    description: The probability of the answer (0-1).
+    description: The probability of the answer (0-1); empty for a box.
     value: ${{ steps.decide.outputs.probability }}
   below_min_probability:
     description: "`null` when no lower bound is configured, otherwise `true` below it or `false` at or above it."

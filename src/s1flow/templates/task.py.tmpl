@@ -17,6 +17,8 @@ task = Task(
     question_id="q",
     question=Boolean(instructions={instructions}),
     label=lambda r: r["label"],
+    # Other wordings to compare, each a candidate `model/name` in `s1flow report`:
+    # variants={{"strict": Boolean(instructions="...")}},
     # Every value below is s1flow's default, written out so you can see what decides; change any of them.
     # The cases held out as the test share (stratified by label) and never shown while choosing, and the
     # cross-validation over the rest. The first `s1flow run` writes it to split.json; commit it with this file.

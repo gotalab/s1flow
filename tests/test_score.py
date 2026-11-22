@@ -11,6 +11,7 @@ from conftest import attach, make_project
 from s1flow.client import Capabilities, Response, Score, ScoreAnswer
 from s1flow.core.errors import ConfigError
 from s1flow.eval import Task, comparison, metrics, report
+from s1flow.eval import adopt as adopting
 from s1flow.eval import run as running
 from s1flow.eval.kinds import kind_of
 from s1flow.eval.objectives import measure
@@ -113,4 +114,7 @@ def test_a_score_task_runs_reports_and_compares(tmp_path):
     c = comparison.collect(task)
     row = next(r for r in c.candidates if r.model == "rater")
     assert row.value == e.objective.value and {"mae", "qwk", "brier"} <= set(row.metrics)
-    assert row.adoption_blocked == ["score questions are comparable but cannot be adopted as runtime policies"]
+    assert row.adoption_blocked == []
+    r = adopting.adopt(task, "rater", "me", "a score policy ships like any other")
+    assert r.spec.question.type == "score" and r.spec.rule == DecisionRule()
+    assert task.policies.read(task.id).digest == r.spec.digest
