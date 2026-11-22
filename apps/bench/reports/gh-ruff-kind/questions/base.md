@@ -1,6 +1,6 @@
 # gh-ruff-kind
 
-2026-11-17 · 210 labelled dev cases (feature 83, question 60, bug 52, documentation 15) · split: stratified k-fold (no test case among these: CV numbers only) · source: GitHub issues of astral-sh/ruff (labels applied by maintainers)
+2026-11-22 · 210 labelled dev cases (feature 83, question 60, bug 52, documentation 15) · split: stratified k-fold (no test case among these: CV numbers only) · source: GitHub issues of astral-sh/ruff (labels applied by maintainers)
 
 clef-flash@openrouter has the highest coverage at 90% accuracy, 27% [20, 33] (API cost $0.13 per 10k, p99 780ms). Its interval overlaps with clef-omni@openrouter, d1-ultra@openrouter, d1.1@openrouter, d1.2-ultra, decider-flash@openrouter, decider@openrouter, span@openrouter: the objective cannot tell them apart; interval overlap does not establish equivalence. task.py names no tiebreak, so they are listed by name, unordered. The highest raw accuracy (dev) is clef-omni@openrouter's, 62% [55, 69].
 

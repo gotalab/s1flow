@@ -1,6 +1,6 @@
 # ja-toxicity
 
-2026-11-17 · 210 labelled dev cases (True 105, False 105) · split: stratified k-fold (no test case among these: CV numbers only) · source: LLM-jp Toxicity Dataset（LLM-jp, CC BY 4.0）の 1,000 字以下から toxic / nontoxic 各 150 件
+2026-11-22 · 210 labelled dev cases (True 105, False 105) · split: stratified k-fold (no test case among these: CV numbers only) · source: LLM-jp Toxicity Dataset（LLM-jp, CC BY 4.0）の 1,000 字以下から toxic / nontoxic 各 150 件
 
 mammoth@openrouter has the highest coverage at 99% accuracy, 99% [97, 100] (API cost $0.53 per 10k, p99 273ms). Its interval overlaps with drex-max@openrouter, clef-flash@openrouter, decider-flash@openrouter, elephant@openrouter, d1-ultra@openrouter, d1.1@openrouter, d1.2, d1@vercel, jev:1.14, d1.2-ultra, luna@decisions, reflex@openrouter, decision-1@openrouter: the objective cannot tell them apart; interval overlap does not establish equivalence. The highest raw accuracy (dev) is drex-max@openrouter's, 99% [97, 100]. Its sure accuracy is close to the target: showing it is 99% or more takes over 5,000 labels.
 

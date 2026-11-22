@@ -1,35 +1,35 @@
 # gh-gemini-needinfo
 
-2026-11-17 · 210 labelled dev cases (False 165, True 45) · split: stratified k-fold (no test case among these: CV numbers only) · source: GitHub issues of google-gemini/gemini-cli (labels applied by the repository's Gemini triage bot; see gh-audit)
+2026-11-22 · 210 labelled dev cases (False 165, True 45) · split: stratified k-fold (no test case among these: CV numbers only) · source: GitHub issues of google-gemini/gemini-cli (labels applied by the repository's Gemini triage bot; see gh-audit)
 
 decision-1@openrouter has the highest recall at 5% false alarms or fewer, 27% [15, 40] (false alarms 4.8%) (API cost $0.21 per 10k, p99 359ms). Its interval overlaps with decider-flash@openrouter, clef@openrouter, decision-1.1@openrouter, joey@openrouter, span@openrouter, d1.2, d1.2-ultra, clef-flash@openrouter, gemini-decision@google, d1.1@openrouter, clef-omni@openrouter, reflex@openrouter, elephant@openrouter, d1-ultra@openrouter, d1@vercel, drex-max@openrouter, kev@openrouter, mammoth@openrouter, luna@decisions, jev:1.14, decider@openrouter: the objective cannot tell them apart; interval overlap does not establish equivalence. Ordered by task.py's tiebreak (accuracy (all)), decider-flash@openrouter comes first (API cost $0.06 per 10k, p99 203ms). The highest raw accuracy (dev) is joey@openrouter's, 80% [75, 85].
 
 ## Comparison
 
-| model | scored | accuracy (all) | F1 | AUROC | ECE | coverage | sure accuracy (lower bound) | refused | failed |
-|---|---|---|---|---|---|---|---|---|---|
-| clef-flash@openrouter | 210 | 77.1% [71, 83] | 0.38 | 0.63 | 0.11 | 8% [4, 11] | 87.5% (65.6%) | 0.0% (0/210) | 0/210 |
-| clef-omni@openrouter | 210 | 78.1% [73, 84] | 0.38 | 0.60 | 0.13 | 2% [0, 4] | 50.0% (9.8%) | 0.0% (0/210) | 0/210 |
-| clef@openrouter | 210 | 77.1% [72, 83] | 0.35 | 0.59 | 0.15 | 5% [2, 8] | 80.0% (49.3%) | 0.0% (0/210) | 0/210 |
-| d1-ultra@openrouter | 210 | 75.2% [70, 81] | 0.37 | 0.56 | 0.16 | 5% [2, 8] | 60.0% (30.4%) | 0.0% (0/210) | 0/210 |
-| d1.1@openrouter | 210 | 71.9% [66, 78] | 0.35 | 0.60 | 0.18 | 8% [4, 11] | 81.2% (58.3%) | 0.0% (0/210) | 0/210 |
-| d1.2 | 210 | 74.3% [68, 80] | 0.34 | 0.62 | 0.11 | 3% [1, 6] | 83.3% (41.8%) | 0.0% (0/210) | 0/210 |
-| d1.2-ultra | 210 | 75.7% [70, 82] | 0.37 | 0.58 | 0.16 | 5% [2, 8] | 100.0% (74.1%) | 0.0% (0/210) | 0/210 |
-| d1@vercel | 210 | 75.2% [70, 81] | 0.33 | 0.61 | 0.18 | 8% [4, 11] | 81.2% (58.3%) | 0.0% (0/210) | 0/210 |
-| decider-flash@openrouter | 210 | 78.6% [73, 84] | 0.35 | 0.62 | 0.14 | 4% [2, 7] | 66.7% (34.5%) | 0.0% (0/210) | 0/210 |
-| decider@openrouter | 210 | 77.6% [72, 83] | 0.39 | 0.60 | 0.18 | 12% [8, 17] | 92.3% (77.7%) | 0.0% (0/210) | 0/210 |
-| decision-1.1@openrouter | 210 | 71.9% [66, 79] | 0.35 | 0.59 | 0.21 | 2% [0, 5] | 80.0% (34.3%) | 0.0% (0/210) | 0/210 |
-| decision-1@openrouter | 210 | 71.4% [65, 78] | 0.35 | 0.58 | 0.24 | 1% [0, 2] | 50.0% (2.5%) | 0.0% (0/210) | 0/210 |
-| drex-max@openrouter | 210 | 75.2% [70, 81] | 0.37 | 0.57 | 0.20 | 5% [2, 8] | 90.0% (60.6%) | 0.0% (0/210) | 0/210 |
-| elephant@openrouter | 210 | 72.4% [66, 79] | 0.34 | 0.58 | 0.17 | 4% [1, 7] | 100.0% (68.8%) | 0.0% (0/210) | 0/210 |
-| gemini-decision@google | 210 | 73.8% [68, 80] | 0.35 | 0.60 | 0.17 | 2% [0, 4] | 75.0% (24.9%) | 0.0% (0/210) | 0/210 |
-| jev:1.14 | 210 | 71.9% [66, 78] | 0.34 | 0.61 | 0.13 | 1% [0, 2] | 50.0% (2.5%) | 0.0% (0/210) | 0/210 |
-| joey@openrouter | 210 | 80.0% [75, 85] | 0.34 | 0.58 | 0.07 | 1% [0, 2] | 50.0% (2.5%) | 0.0% (0/210) | 0/210 |
-| kev@openrouter | 210 | 78.1% [72, 83] | 0.30 | 0.58 | 0.05 | 1% [0, 2] | 50.0% (2.5%) | 0.0% (0/210) | 0/210 |
-| luna@decisions | 210 | 75.7% [70, 82] | 0.37 | 0.63 | 0.19 | 0% [0, 0] | — (0.0%) | 0.0% (0/210) | 0/210 |
-| mammoth@openrouter | 210 | 76.7% [71, 83] | 0.38 | 0.61 | 0.18 | 16% [11, 21] | 94.1% (82.6%) | 0.0% (0/210) | 0/210 |
-| reflex@openrouter | 210 | 78.1% [73, 84] | 0.39 | 0.63 | 0.19 | 6% [3, 9] | 91.7% (66.1%) | 0.0% (0/210) | 0/210 |
-| span@openrouter | 210 | 76.7% [71, 83] | 0.38 | 0.63 | 0.17 | 5% [2, 9] | 72.7% (43.6%) | 0.0% (0/210) | 0/210 |
+| model | scored | accuracy (all) | F1 | AUROC | ECE | refused | failed |
+|---|---|---|---|---|---|---|---|
+| clef-flash@openrouter | 210 | 77.1% [71, 83] | 0.38 | 0.63 | 0.11 | 0.0% (0/210) | 0/210 |
+| clef-omni@openrouter | 210 | 78.1% [73, 84] | 0.38 | 0.60 | 0.13 | 0.0% (0/210) | 0/210 |
+| clef@openrouter | 210 | 77.1% [72, 83] | 0.35 | 0.59 | 0.15 | 0.0% (0/210) | 0/210 |
+| d1-ultra@openrouter | 210 | 75.2% [70, 81] | 0.37 | 0.56 | 0.16 | 0.0% (0/210) | 0/210 |
+| d1.1@openrouter | 210 | 71.9% [66, 78] | 0.35 | 0.60 | 0.18 | 0.0% (0/210) | 0/210 |
+| d1.2 | 210 | 74.3% [68, 80] | 0.34 | 0.62 | 0.11 | 0.0% (0/210) | 0/210 |
+| d1.2-ultra | 210 | 75.7% [70, 82] | 0.37 | 0.58 | 0.16 | 0.0% (0/210) | 0/210 |
+| d1@vercel | 210 | 75.2% [70, 81] | 0.33 | 0.61 | 0.18 | 0.0% (0/210) | 0/210 |
+| decider-flash@openrouter | 210 | 78.6% [73, 84] | 0.35 | 0.62 | 0.14 | 0.0% (0/210) | 0/210 |
+| decider@openrouter | 210 | 77.6% [72, 83] | 0.39 | 0.60 | 0.18 | 0.0% (0/210) | 0/210 |
+| decision-1.1@openrouter | 210 | 71.9% [66, 79] | 0.35 | 0.59 | 0.21 | 0.0% (0/210) | 0/210 |
+| decision-1@openrouter | 210 | 71.4% [65, 78] | 0.35 | 0.58 | 0.24 | 0.0% (0/210) | 0/210 |
+| drex-max@openrouter | 210 | 75.2% [70, 81] | 0.37 | 0.57 | 0.20 | 0.0% (0/210) | 0/210 |
+| elephant@openrouter | 210 | 72.4% [66, 79] | 0.34 | 0.58 | 0.17 | 0.0% (0/210) | 0/210 |
+| gemini-decision@google | 210 | 73.8% [68, 80] | 0.35 | 0.60 | 0.17 | 0.0% (0/210) | 0/210 |
+| jev:1.14 | 210 | 71.9% [66, 78] | 0.34 | 0.61 | 0.13 | 0.0% (0/210) | 0/210 |
+| joey@openrouter | 210 | 80.0% [75, 85] | 0.34 | 0.58 | 0.07 | 0.0% (0/210) | 0/210 |
+| kev@openrouter | 210 | 78.1% [72, 83] | 0.30 | 0.58 | 0.05 | 0.0% (0/210) | 0/210 |
+| luna@decisions | 210 | 75.7% [70, 82] | 0.37 | 0.63 | 0.19 | 0.0% (0/210) | 0/210 |
+| mammoth@openrouter | 210 | 76.7% [71, 83] | 0.38 | 0.61 | 0.18 | 0.0% (0/210) | 0/210 |
+| reflex@openrouter | 210 | 78.1% [73, 84] | 0.39 | 0.63 | 0.19 | 0.0% (0/210) | 0/210 |
+| span@openrouter | 210 | 76.7% [71, 83] | 0.38 | 0.63 | 0.17 | 0.0% (0/210) | 0/210 |
 
 Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef-omni@openrouter = cloudflare/clef-omni-20261009; clef@openrouter = cloudflare/clef; d1-ultra@openrouter = liquid/d1-ultra-20261015; d1.1@openrouter = liquid/d1.1-20261027; d1.2 = d1.2; d1.2-ultra = d1.2-ultra; d1@vercel = liquid/d1; decider-flash@openrouter = perplexity/pplx-decider-flash-v1.2-20261016; decider@openrouter = perplexity/pplx-decider-v1.2-20261016; decision-1.1@openrouter = microsoft/microsoft-decision-1.1-20261117; decision-1@openrouter = microsoft/microsoft-decision-1-20261009; drex-max@openrouter = nace-ai/drex-max-20261016; elephant@openrouter = baseten/elephant-1-20261021; gemini-decision@google = gemini-decision-1; jev:1.14 = jev-1.14.0; joey@openrouter = baseten/joey-1-20261029; kev@openrouter = jaredpalmer/kev-4b-20260924; luna@decisions = gpt-6-luna; mammoth@openrouter = baseten/mammoth-1-20261021; reflex@openrouter = morph/reflex-20261103; span@openrouter = respan/span-02-20261015. To compare versions, run each by name: `s1flow run <task> --models jev:1.14`.
 
@@ -122,7 +122,7 @@ Where the API costs come from: billed: clef-flash@openrouter, clef-omni@openrout
 
 Measured: the wall time of a run that called every case. When every answer came from the cache, estimated as the calls' time summed and divided by the concurrency. The time depends more on the concurrency and the provider's rate limit than on the model.
 
-Coverage: answering the most probable first, the largest share whose sure accuracy keeps the target 95%. The cut is chosen on each CV fold's fit side and measured on its eval side. The lower bound is a one-sided 95% Clopper-Pearson; [ ] is a 95% bootstrap interval.
+[ ] is a 95% bootstrap interval.
 Scored: every labelled dev case the model answered or refused; held-out test results come only when a candidate is adopted. Refused: the share of the scored cases the model refused or does not support, each counted as no answer (wrong, and never sure). Failed counts calls.
 
 ## Threshold

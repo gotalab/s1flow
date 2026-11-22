@@ -2,9 +2,9 @@
  "schema": "s1flow/report@1",
  "task": "ja-toxicity",
  "variant": "base",
- "at": "2026-11-17T23:07:32Z",
+ "at": "2026-11-22T13:05:59Z",
  "data_digest": "2a1a933db808c569d55f158e07fe73712f3fce5a663144f4d650100d0815489a",
- "evaluation_contract_digest": "719486a062908ee3e4f1f1f75f1291a2b85de984b9a06a61ae92cdab5b1e9cf9",
+ "evaluation_contract_digest": "58a950ae900b3dfdb19b056bb97782395152f0fc12cb95850c6c4f23506f65bd",
  "input_adapter_digest": "00bbbafe6d82f6c43e5c56a992286de7eaeddef4ca8a3df25ea4abf6d96e6082",
  "evaluations": [
   {
