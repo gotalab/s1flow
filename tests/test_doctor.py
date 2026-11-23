@@ -175,6 +175,13 @@ def test_doctor_on_named_models(project):
     assert done.returncode == 1 and done.stderr.startswith("problem: nope: cannot load provider 'no_such_module:build'")
 
 
+def test_without_a_default_doctor_checks_every_model(tmp_path):
+    (tmp_path / "s1flow.toml").write_text('[models.jev]\nprovider = "typesafe"\nid = "jev-latest"\n[models.toy]\nprovider = "toy_provider:build"\nid = "t1"\n')
+    done = s1flow("doctor", cwd=tmp_path, env={"TYPESAFE_API_KEY": ""})
+    assert done.returncode == 1 and "s1flow.toml (every model)" in done.stdout and "toy_provider:build" in done.stdout
+    assert [line.split(":")[0:2] for line in done.stderr.splitlines()] == [["problem", " TYPESAFE_API_KEY is not set (jev)"]]
+
+
 def test_doctor_on_a_policy(project):
     from s1flow.policies.file import Policies
 
