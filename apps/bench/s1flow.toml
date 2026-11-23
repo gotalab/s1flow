@@ -209,3 +209,51 @@ id = "cloudflare/clef-omni"
 capabilities.context_tokens = 65536
 capabilities.image = true
 note = "Cloudflare Clef Omni, 30B-A3B MoE (2026-10-09 on OpenRouter)."
+
+# Added 2026-11-24 from the weekly survey (2026-11-16 and 2026-11-23 weeks). Each is called through the gateway that
+# serves the named version at a price: Perplexity's v1.3 is on OpenRouter only as a rate-limited `:free` endpoint,
+# and Drex Max v1.1 and Mo are on Vercel only.
+[models."decider-1.3@vercel"]
+provider = "gateway"
+id = "perplexity/pplx-decider-v1.3"
+capabilities.context_tokens = 262144
+capabilities.image = true
+note = "Perplexity Decider v1.3, 27B open weights (2026-11-12). decider@openrouter is v1.2."
+
+[models."heygen-decision@openrouter"]
+provider = "openrouter"
+id = "heygen/heygen-decision-1"
+capabilities.context_tokens = 131072  # HeyGen's own limit; OpenRouter lists 262,144
+capabilities.image = true
+capabilities.audio = true
+capabilities.video = true
+note = "HeyGen Decision 1 (2026-11-12). HeyGen also serves it on its own API (POST /v3/models/decisions), which s1flow has no provider for yet."
+
+[models."drex-max-1.1@vercel"]
+provider = "gateway"
+id = "nace-ai/drex-max-v1.1"
+capabilities.context_tokens = 262144
+capabilities.image = true
+note = "Nace Drex Max v1.1 (2026-11-08 on Vercel). drex-max@openrouter answers as drex-max-20261016."
+
+[models."bison@openrouter"]
+provider = "openrouter"
+id = "baseten/bison-1"
+capabilities.context_tokens = 32768
+capabilities.image = true
+note = "Baseten bison-1 (2026-11-20)."
+
+[models."groundhog@openrouter"]
+provider = "openrouter"
+id = "baseten/groundhog-1"
+capabilities.context_tokens = 16384
+capabilities.image = true
+note = "Baseten groundhog-1 (2026-11-20)."
+
+[models."mo@vercel"]
+provider = "gateway"
+id = "modaic/mo"
+capabilities.context_tokens = 262144
+capabilities.image = true
+capabilities.question_types = ["boolean", "choice", "score", "box"]
+note = "Modaic Mo (2026-11-21 on Vercel). Up to four images per request."
