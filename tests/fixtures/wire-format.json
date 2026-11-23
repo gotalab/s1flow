@@ -189,185 +189,6 @@
     }
    }
   },
-  "gateway": {
-   "text": {
-    "sent": {
-     "url": "https://ai-gateway.vercel.sh/v1/evaluate",
-     "headers": {},
-     "body": {
-      "model": "typesafe-ai/jev",
-      "state": {
-       "meta": {
-        "a": [
-         {
-          "b": 3,
-          "y": 2
-         }
-        ],
-        "z": 1
-       },
-       "title": "Crash on start"
-      },
-      "questions": {
-       "kind": {
-        "type": "choice",
-        "instructions": "What kind of issue?",
-        "criteria": {
-         "kind/bug": "it is broken",
-         "kind/question": null
-        }
-       },
-       "refund": {
-        "type": "boolean",
-        "instructions": "Does it ask for a refund?"
-       },
-       "urgency": {
-        "type": "score",
-        "instructions": "How urgent?",
-        "criteria": [
-         "low",
-         "high"
-        ]
-       }
-      }
-     }
-    },
-    "read": {
-     "answered_by": "typesafe-ai/jev",
-     "answers": {
-      "kind": {
-       "type": "choice",
-       "choice": "kind/bug",
-       "probabilities": {
-        "kind/bug": 0.8,
-        "kind/question": 0.2
-       },
-       "confidence": 0.9
-      },
-      "refund": {
-       "type": "boolean",
-       "probability": 0.1
-      },
-      "urgency": {
-       "type": "score",
-       "score": 0.6,
-       "probabilities": {
-        "0": 0.4,
-        "1": 0.6
-       },
-       "confidence": null
-      }
-     }
-    }
-   },
-   "image": {
-    "sent": {
-     "url": "https://ai-gateway.vercel.sh/v1/evaluate",
-     "headers": {},
-     "body": {
-      "model": "typesafe-ai/jev",
-      "state": [
-       "The screen shows:",
-       {
-        "type": "image_url",
-        "image_url": {
-         "url": "data:image/png;base64,iVBORw0KGgo="
-        }
-       }
-      ],
-      "questions": {
-       "kind": {
-        "type": "choice",
-        "instructions": "What kind of issue?",
-        "criteria": {
-         "kind/bug": "it is broken",
-         "kind/question": null
-        }
-       },
-       "refund": {
-        "type": "boolean",
-        "instructions": "Does it ask for a refund?"
-       },
-       "urgency": {
-        "type": "score",
-        "instructions": "How urgent?",
-        "criteria": [
-         "low",
-         "high"
-        ]
-       }
-      }
-     }
-    },
-    "read": {
-     "answered_by": "typesafe-ai/jev",
-     "answers": {
-      "kind": {
-       "type": "choice",
-       "choice": "kind/bug",
-       "probabilities": {
-        "kind/bug": 0.8,
-        "kind/question": 0.2
-       },
-       "confidence": 0.9
-      },
-      "refund": {
-       "type": "boolean",
-       "probability": 0.1
-      },
-      "urgency": {
-       "type": "score",
-       "score": 0.6,
-       "probabilities": {
-        "0": 0.4,
-        "1": 0.6
-       },
-       "confidence": null
-      }
-     }
-    }
-   },
-   "box": {
-    "sent": {
-     "url": "https://ai-gateway.vercel.sh/v1/evaluate",
-     "headers": {},
-     "body": {
-      "model": "typesafe-ai/jev",
-      "state": [
-       "The screen shows:",
-       {
-        "type": "image_url",
-        "image_url": {
-         "url": "data:image/png;base64,iVBORw0KGgo="
-        }
-       }
-      ],
-      "questions": {
-       "where": {
-        "type": "box",
-        "instructions": "Where is the error message?"
-       }
-      }
-     }
-    },
-    "read": {
-     "answered_by": "typesafe-ai/jev",
-     "answers": {
-      "where": {
-       "type": "box",
-       "box": {
-        "top": 0.1,
-        "bottom": 0.5,
-        "left": 0.2,
-        "right": 0.9
-       },
-       "confidence": 0.6,
-       "agreement": null
-      }
-     }
-    }
-   }
-  },
   "openrouter": {
    "text": {
     "sent": {
@@ -1044,6 +865,215 @@
         "1": 0.6
        },
        "confidence": null
+      }
+     }
+    }
+   }
+  },
+  "gateway": {
+   "text": {
+    "sent": {
+     "url": "https://ai-gateway.vercel.sh/v1/decisions",
+     "headers": {},
+     "body": {
+      "model": "typesafe-ai/jev",
+      "input": "{\n \"meta\": {\n  \"a\": [\n   {\n    \"b\": 3,\n    \"y\": 2\n   }\n  ],\n  \"z\": 1\n },\n \"title\": \"Crash on start\"\n}",
+      "questions": [
+       {
+        "type": "choice",
+        "name": "kind",
+        "instructions": "What kind of issue?",
+        "choices": [
+         {
+          "value": "kind/bug",
+          "description": "it is broken"
+         },
+         {
+          "value": "kind/question"
+         }
+        ]
+       },
+       {
+        "type": "predicate",
+        "name": "refund",
+        "instructions": "Does it ask for a refund?"
+       },
+       {
+        "type": "score",
+        "name": "urgency",
+        "instructions": "How urgent?",
+        "levels": [
+         {
+          "label": "0",
+          "description": "low"
+         },
+         {
+          "label": "1",
+          "description": "high"
+         }
+        ]
+       }
+      ]
+     }
+    },
+    "read": {
+     "answered_by": "typesafe-ai/jev",
+     "answers": {
+      "kind": {
+       "type": "choice",
+       "choice": "kind/bug",
+       "probabilities": {
+        "kind/bug": 0.8,
+        "kind/question": 0.2
+       },
+       "confidence": 0.7
+      },
+      "refund": {
+       "type": "boolean",
+       "probability": 0.1
+      },
+      "urgency": {
+       "type": "score",
+       "score": 0.6,
+       "probabilities": {
+        "0": 0.4,
+        "1": 0.6
+       },
+       "confidence": null
+      }
+     }
+    }
+   },
+   "image": {
+    "sent": {
+     "url": "https://ai-gateway.vercel.sh/v1/decisions",
+     "headers": {},
+     "body": {
+      "model": "typesafe-ai/jev",
+      "input": [
+       {
+        "role": "user",
+        "content": [
+         {
+          "type": "input_text",
+          "text": "The screen shows:"
+         },
+         {
+          "type": "input_image",
+          "image_url": "data:image/png;base64,iVBORw0KGgo="
+         }
+        ]
+       }
+      ],
+      "questions": [
+       {
+        "type": "choice",
+        "name": "kind",
+        "instructions": "What kind of issue?",
+        "choices": [
+         {
+          "value": "kind/bug",
+          "description": "it is broken"
+         },
+         {
+          "value": "kind/question"
+         }
+        ]
+       },
+       {
+        "type": "predicate",
+        "name": "refund",
+        "instructions": "Does it ask for a refund?"
+       },
+       {
+        "type": "score",
+        "name": "urgency",
+        "instructions": "How urgent?",
+        "levels": [
+         {
+          "label": "0",
+          "description": "low"
+         },
+         {
+          "label": "1",
+          "description": "high"
+         }
+        ]
+       }
+      ]
+     }
+    },
+    "read": {
+     "answered_by": "typesafe-ai/jev",
+     "answers": {
+      "kind": {
+       "type": "choice",
+       "choice": "kind/bug",
+       "probabilities": {
+        "kind/bug": 0.8,
+        "kind/question": 0.2
+       },
+       "confidence": 0.7
+      },
+      "refund": {
+       "type": "boolean",
+       "probability": 0.1
+      },
+      "urgency": {
+       "type": "score",
+       "score": 0.6,
+       "probabilities": {
+        "0": 0.4,
+        "1": 0.6
+       },
+       "confidence": null
+      }
+     }
+    }
+   },
+   "box": {
+    "sent": {
+     "url": "https://ai-gateway.vercel.sh/v1/decisions",
+     "headers": {},
+     "body": {
+      "model": "typesafe-ai/jev",
+      "input": [
+       {
+        "role": "user",
+        "content": [
+         {
+          "type": "input_text",
+          "text": "The screen shows:"
+         },
+         {
+          "type": "input_image",
+          "image_url": "data:image/png;base64,iVBORw0KGgo="
+         }
+        ]
+       }
+      ],
+      "questions": [
+       {
+        "type": "box",
+        "name": "where",
+        "instructions": "Where is the error message?"
+       }
+      ]
+     }
+    },
+    "read": {
+     "answered_by": "typesafe-ai/jev",
+     "answers": {
+      "where": {
+       "type": "box",
+       "box": {
+        "top": 0.1,
+        "bottom": 0.5,
+        "left": 0.2,
+        "right": 0.9
+       },
+       "confidence": 0.6,
+       "agreement": null
       }
      }
     }
