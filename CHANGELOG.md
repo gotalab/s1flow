@@ -77,6 +77,9 @@
 
 ### Fixed
 
+- `report` and `adopt` now give a candidate the same 95% intervals. `adopt` also reads the held-out test cases, and
+  their count changed the bootstrap draws, so the interval it printed differed from the one in `report` (F1
+  [0.602, 0.788] against [0.611, 0.785] on one task). Intervals now depend on the train + val cases alone.
 - A production decision on an image (or audio, video, PDF) now becomes a usable case: `feedback measure --add` wrote
   the kept state with its prepared media inline, and every later read of those cases (`cases check`, `run`)
   refused them as a bad media reference. Prepared media are now read back as they are, so the case holds the

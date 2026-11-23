@@ -326,15 +326,11 @@ def _read(b: Bound, p: Pairs, plan: splitting.Plan, folds: list[tuple[np.ndarray
     return _Read(b, p.at(**{at: cut}), cuts, search(b, p[plan.dev], grid, floors))
 
 
-def _resamples(n: int, dev: np.ndarray, seed: int) -> tuple[list[np.ndarray], list[np.ndarray]]:
-    """One bootstrap over the cases, BOOTSTRAP draws: each a resample of all n (the plain numbers) and one of the
-    dev cases `dev` (the objectives, and the calls' latency)."""
+def _resamples(dev: np.ndarray, seed: int) -> list[np.ndarray]:
+    """One bootstrap over the dev cases `dev`, BOOTSTRAP draws (the objectives, and the calls' latency). The draws
+    depend on the dev cases alone, so `report` (dev only) and `adopt` (dev and test) give the same intervals."""
     rng = np.random.default_rng(seed)
-    whole, of_dev = [], []
-    for _ in range(BOOTSTRAP):
-        whole.append(rng.integers(0, n, n))
-        of_dev.append(rng.choice(dev, len(dev)))
-    return whole, of_dev
+    return [rng.choice(dev, len(dev)) for _ in range(BOOTSTRAP)]
 
 
 def _intervals(bounds: Sequence[Bound], p: Pairs, resamples: list[np.ndarray]) -> list[tuple[float, float] | None]:
@@ -391,7 +387,7 @@ def evaluate(task: Task, pr: Preds, target: float | None = None, variant: str = 
     # `tiebreak` is measured at the primary's rule, the one a policy reads with: it chooses none of its own
     later = [_Read(bound(o, kind, custom), primary.pairs, [], None) for o in task.objectives[1:]]
 
-    _, of_dev = _resamples(n, dev, task.split.seed)
+    of_dev = _resamples(dev, task.split.seed)
     accuracy, auroc = bound(Accuracy(), kind), bound(AUROC(), kind)
     acc_i, au_i = _intervals([accuracy, auroc], p0, of_dev)
     primary_i, *later_i = _intervals([primary.bound, *(r.bound for r in later)], primary.pairs, of_dev)
