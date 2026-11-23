@@ -1,36 +1,36 @@
 # nod-wake
 
-2026-11-16 · 42 labelled dev cases (True 26, False 16) · split: leave-one-out (no test case among these: CV numbers only) · source: cases.json
+2026-11-23 · 42 labelled dev cases (True 26, False 16) · split: leave-one-out (no test case among these: CV numbers only) · source: cases.json
 
-gemini-decision@google has the lowest loss per case (miss 10, false alarm 1), 0.000 [0.000, 0.000] (API cost $0.36 per 10k, p99 501ms). Its interval overlaps with mammoth@openrouter, reflex@openrouter, clef-flash@openrouter, d1.2, d1@vercel, decider-flash@openrouter, elephant@openrouter, decision-1@openrouter, d1.2-ultra: the objective cannot tell them apart; interval overlap does not establish equivalence. The highest raw accuracy (dev) is gemini-decision@google's, 100% [100, 100].
+gemini-decision@google has the lowest loss per case (miss 10, false alarm 1), 0.000 [0.000, 0.000] (API cost $0.36 per 10k, p99 658ms). Its interval overlaps with mammoth@openrouter, reflex@openrouter, decision-1.1@openrouter, clef-flash@openrouter, d1.2, decider-flash@openrouter, elephant@openrouter, decision-1@openrouter, d1.2-ultra: the objective cannot tell them apart; interval overlap does not establish equivalence. The highest raw accuracy (dev) is gemini-decision@google's, 100% [100, 100].
 
 ## Comparison
 
-| model | scored | accuracy (all) | F1 | AUROC | ECE | coverage | sure accuracy (lower bound) | refused | failed |
-|---|---|---|---|---|---|---|---|---|---|
-| clef-flash@openrouter | 42 | 92.9% [83, 100] | 0.94 | 0.97 | 0.13 | 90% [81, 98] | 92.1% (80.8%) | 0.0% (0/42) | 0/57 |
-| clef-omni@openrouter | 42 | 90.5% [81, 98] | 0.92 | 0.95 | 0.12 | 79% [64, 90] | 93.9% (82.1%) | 0.0% (0/42) | 0/57 |
-| clef@openrouter | 42 | 92.9% [86, 100] | 0.94 | 0.99 | 0.10 | 95% [88, 100] | 95.0% (85.1%) | 0.0% (0/42) | 0/57 |
-| d1-ultra@openrouter | 42 | 92.9% [83, 100] | 0.94 | 1.00 | 0.07 | 98% [93, 100] | 92.7% (82.2%) | 0.0% (0/42) | 0/57 |
-| d1.1@openrouter | 42 | 92.9% [86, 100] | 0.94 | 0.99 | 0.07 | 95% [88, 100] | 95.0% (85.1%) | 0.0% (0/42) | 0/57 |
-| d1.2 | 42 | 95.2% [88, 100] | 0.96 | 1.00 | 0.13 | 98% [93, 100] | 97.6% (88.9%) | 0.0% (0/42) | 0/57 |
-| d1.2-ultra | 42 | 95.2% [88, 100] | 0.96 | 1.00 | 0.10 | 98% [93, 100] | 95.1% (85.4%) | 0.0% (0/42) | 0/57 |
-| d1@vercel | 42 | 95.2% [88, 100] | 0.96 | 0.99 | 0.06 | 98% [93, 100] | 95.1% (85.4%) | 0.0% (0/42) | 0/57 |
-| decider-flash@openrouter | 42 | 90.5% [81, 98] | 0.92 | 0.95 | 0.06 | 90% [81, 98] | 92.1% (80.8%) | 0.0% (0/42) | 0/57 |
-| decider@openrouter | 42 | 92.9% [83, 100] | 0.94 | 0.99 | 0.06 | 93% [86, 100] | 92.3% (81.3%) | 0.0% (0/42) | 0/57 |
-| decision-1@openrouter | 42 | 90.5% [81, 98] | 0.92 | 1.00 | 0.07 | 93% [86, 100] | 94.9% (84.7%) | 0.0% (0/42) | 0/57 |
-| drex-max@openrouter | 42 | 95.2% [88, 100] | 0.96 | 0.99 | 0.06 | 98% [93, 100] | 95.1% (85.4%) | 0.0% (0/42) | 0/57 |
-| elephant@openrouter | 42 | 90.5% [81, 98] | 0.92 | 0.99 | 0.12 | 90% [81, 98] | 97.4% (88.1%) | 0.0% (0/42) | 0/57 |
-| gemini-decision@google | 42 | 100.0% [100, 100] | 1.00 | 1.00 | 0.06 | 98% [93, 100] | 100.0% (93.0%) | 0.0% (0/42) | 0/57 |
-| jev:1.14 | 42 | 92.9% [86, 100] | 0.95 | 1.00 | 0.05 | 95% [88, 100] | 95.0% (85.1%) | 0.0% (0/42) | 0/57 |
-| joey@openrouter | 42 | 73.8% [60, 86] | 0.77 | 0.85 | 0.09 | 36% [21, 50] | 93.3% (72.1%) | 0.0% (0/42) | 0/57 |
-| kev@openrouter | 42 | 83.3% [71, 93] | 0.84 | 0.98 | 0.17 | 52% [36, 67] | 90.9% (74.1%) | 0.0% (0/42) | 0/57 |
-| luna@decisions | 42 | 88.1% [76, 98] | 0.91 | 0.98 | 0.09 | 83% [71, 93] | 97.1% (87.1%) | 2.4% (1/42) | 0/57 |
-| mammoth@openrouter | 42 | 100.0% [100, 100] | 1.00 | 1.00 | 0.11 | 98% [93, 100] | 100.0% (93.0%) | 0.0% (0/42) | 0/57 |
-| reflex@openrouter | 42 | 92.9% [86, 100] | 0.94 | 1.00 | 0.07 | 98% [93, 100] | 92.7% (82.2%) | 0.0% (0/42) | 0/57 |
-| span@openrouter | 42 | 83.3% [71, 93] | 0.84 | 0.99 | 0.10 | 69% [55, 83] | 93.1% (79.8%) | 0.0% (0/42) | 0/57 |
+| model | scored | accuracy (all) | F1 | AUROC | ECE | refused | failed |
+|---|---|---|---|---|---|---|---|
+| clef-flash@openrouter | 42 | 92.9% [83, 100] | 0.94 | 0.97 | 0.13 | 0.0% (0/42) | 0/57 |
+| clef-omni@openrouter | 42 | 90.5% [81, 98] | 0.92 | 0.95 | 0.12 | 0.0% (0/42) | 0/57 |
+| clef@openrouter | 42 | 92.9% [86, 100] | 0.94 | 0.99 | 0.10 | 0.0% (0/42) | 0/57 |
+| d1-ultra@openrouter | 42 | 92.9% [83, 100] | 0.94 | 1.00 | 0.07 | 0.0% (0/42) | 0/57 |
+| d1.1@openrouter | 42 | 92.9% [86, 100] | 0.94 | 0.99 | 0.07 | 0.0% (0/42) | 0/57 |
+| d1.2 | 42 | 95.2% [88, 100] | 0.96 | 1.00 | 0.13 | 0.0% (0/42) | 0/57 |
+| d1.2-ultra | 42 | 95.2% [88, 100] | 0.96 | 1.00 | 0.10 | 0.0% (0/42) | 0/57 |
+| decider-flash@openrouter | 42 | 90.5% [81, 98] | 0.92 | 0.95 | 0.06 | 0.0% (0/42) | 0/57 |
+| decider@openrouter | 42 | 92.9% [83, 100] | 0.94 | 0.99 | 0.06 | 0.0% (0/42) | 0/57 |
+| decision-1.1@openrouter | 42 | 92.9% [83, 100] | 0.94 | 0.99 | 0.07 | 0.0% (0/42) | 0/57 |
+| decision-1@openrouter | 42 | 90.5% [81, 98] | 0.92 | 1.00 | 0.07 | 0.0% (0/42) | 0/57 |
+| drex-max@openrouter | 42 | 95.2% [88, 100] | 0.96 | 0.99 | 0.06 | 0.0% (0/42) | 0/57 |
+| elephant@openrouter | 42 | 90.5% [81, 98] | 0.92 | 0.99 | 0.12 | 0.0% (0/42) | 0/57 |
+| gemini-decision@google | 42 | 100.0% [100, 100] | 1.00 | 1.00 | 0.06 | 0.0% (0/42) | 0/57 |
+| jev:1.14 | 42 | 92.9% [86, 100] | 0.95 | 1.00 | 0.05 | 0.0% (0/42) | 0/57 |
+| joey@openrouter | 42 | 73.8% [60, 86] | 0.77 | 0.85 | 0.09 | 0.0% (0/42) | 0/57 |
+| kev@openrouter | 42 | 83.3% [71, 93] | 0.84 | 0.98 | 0.17 | 0.0% (0/42) | 0/57 |
+| luna@decisions | 42 | 88.1% [76, 98] | 0.91 | 0.98 | 0.09 | 2.4% (1/42) | 0/57 |
+| mammoth@openrouter | 42 | 100.0% [100, 100] | 1.00 | 1.00 | 0.11 | 0.0% (0/42) | 0/57 |
+| reflex@openrouter | 42 | 92.9% [86, 100] | 0.94 | 1.00 | 0.07 | 0.0% (0/42) | 0/57 |
+| span@openrouter | 42 | 83.3% [71, 93] | 0.84 | 0.99 | 0.10 | 0.0% (0/42) | 0/57 |
 
-Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef-omni@openrouter = cloudflare/clef-omni-20261009; clef@openrouter = cloudflare/clef; d1-ultra@openrouter = liquid/d1-ultra-20261015; d1.1@openrouter = liquid/d1.1-20261027; d1.2 = d1.2; d1.2-ultra = d1.2-ultra; d1@vercel = liquid/d1; decider-flash@openrouter = perplexity/pplx-decider-flash-v1.2-20261016; decider@openrouter = perplexity/pplx-decider-v1.2-20261016; decision-1@openrouter = microsoft/microsoft-decision-1-20261009; drex-max@openrouter = nace-ai/drex-max-20261016; elephant@openrouter = baseten/elephant-1-20261021; gemini-decision@google = gemini-decision-1; jev:1.14 = jev-1.14.0; joey@openrouter = baseten/joey-1-20261029; kev@openrouter = jaredpalmer/kev-4b-20260924; luna@decisions = gpt-6-luna; mammoth@openrouter = baseten/mammoth-1-20261021; reflex@openrouter = morph/reflex-20261103; span@openrouter = respan/span-02-20261015. To compare versions, run each by name: `s1flow run <task> --models jev:1.14`.
+Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef-omni@openrouter = cloudflare/clef-omni-20261009; clef@openrouter = cloudflare/clef; d1-ultra@openrouter = liquid/d1-ultra-20261015; d1.1@openrouter = liquid/d1.1-20261027; d1.2 = d1.2; d1.2-ultra = d1.2-ultra; decider-flash@openrouter = perplexity/pplx-decider-flash-v1.2-20261016; decider@openrouter = perplexity/pplx-decider-v1.2-20261016; decision-1.1@openrouter = microsoft/microsoft-decision-1.1-20261117; decision-1@openrouter = microsoft/microsoft-decision-1-20261009; drex-max@openrouter = nace-ai/drex-max-20261016; elephant@openrouter = baseten/elephant-1-20261021; gemini-decision@google = gemini-decision-1; jev:1.14 = jev-1.14.0; joey@openrouter = baseten/joey-1-20261029; kev@openrouter = jaredpalmer/kev-4b-20260924; luna@decisions = gpt-6-luna; mammoth@openrouter = baseten/mammoth-1-20261021; reflex@openrouter = morph/reflex-20261103; span@openrouter = respan/span-02-20261015. To compare versions, run each by name: `s1flow run <task> --models jev:1.14`.
 
 ## Objectives and constraints
 
@@ -39,9 +39,9 @@ Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef-omni@openrouter
 | gemini-decision@google = | 0.000 [0.000, 0.000] | 100% [100, 100] | 0.50 | met |
 | mammoth@openrouter = | 0.000 [0.000, 0.000] | 100% [100, 100] | 0.50 | met |
 | reflex@openrouter = | 0.000 [0.000, 0.000] | 100% [100, 100] | 0.30 | met |
+| decision-1.1@openrouter = | 0.024 [0.000, 0.071] | 98% [93, 100] | 0.10 | met |
 | clef-flash@openrouter = | 0.048 [0.000, 0.119] | 95% [88, 100] | 0.30 | met |
 | d1.2 = | 0.048 [0.000, 0.119] | 95% [88, 100] | 0.30 | met |
-| d1@vercel = | 0.048 [0.000, 0.119] | 95% [88, 100] | 0.50 | met |
 | decider-flash@openrouter = | 0.048 [0.000, 0.119] | 95% [88, 100] | 0.30 | met |
 | elephant@openrouter = | 0.048 [0.000, 0.119] | 95% [88, 100] | 0.30 | met |
 | decision-1@openrouter = | 0.262 [0.000, 0.762] | 95% [88, 100] | 0.10 | met |
@@ -64,9 +64,9 @@ Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef-omni@openrouter
 
 | weights | tied at the top |
 |---|---|
-| as set: loss per case (miss 10, false alarm 1) | clef-flash@openrouter, d1.2, d1.2-ultra, d1@vercel, decider-flash@openrouter, decision-1@openrouter, elephant@openrouter, gemini-decision@google, mammoth@openrouter, reflex@openrouter |
-| halved: loss per case (miss 5, false alarm 1) | clef-flash@openrouter, d1-ultra@openrouter, d1.2, d1.2-ultra, d1@vercel, decider-flash@openrouter, decision-1@openrouter, elephant@openrouter, gemini-decision@google, mammoth@openrouter, reflex@openrouter |
-| doubled: loss per case (miss 20, false alarm 1) | clef-flash@openrouter, d1.2, d1.2-ultra, d1@vercel, decider-flash@openrouter, decision-1@openrouter, elephant@openrouter, gemini-decision@google, mammoth@openrouter, reflex@openrouter |
+| as set: loss per case (miss 10, false alarm 1) | clef-flash@openrouter, d1.2, d1.2-ultra, decider-flash@openrouter, decision-1.1@openrouter, decision-1@openrouter, elephant@openrouter, gemini-decision@google, mammoth@openrouter, reflex@openrouter |
+| halved: loss per case (miss 5, false alarm 1) | clef-flash@openrouter, d1-ultra@openrouter, d1.2, d1.2-ultra, decider-flash@openrouter, decision-1.1@openrouter, decision-1@openrouter, elephant@openrouter, gemini-decision@google, mammoth@openrouter, reflex@openrouter |
+| doubled: loss per case (miss 20, false alarm 1) | clef-flash@openrouter, d1.2, d1.2-ultra, decider-flash@openrouter, decision-1.1@openrouter, decision-1@openrouter, elephant@openrouter, gemini-decision@google, mammoth@openrouter, reflex@openrouter |
 
 **The candidates tied at the top change: these weights decide the choice.** The weights are the task owner's to set; s1flow has no default. Re-ranked from the recorded answers, nothing asked again.
 
@@ -81,25 +81,25 @@ Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef-omni@openrouter
 | d1.1@openrouter | 42 | 341 ms | 438 ms | 556 ms | 573 ms | 1.6 | 0 | 4 | $0.06 | billed |  |
 | d1.2 | 42 | 119 ms | 253 ms | 526 ms | 526 ms | 4.4 | 0 | 4 | $0.06 | billed |  |
 | d1.2-ultra | 42 | 120 ms | 147 ms | 224 ms | 249 ms | 1.9 | 0 | 4 | $0.13 | billed | ○ |
-| d1@vercel | 42 | 259 ms | 432 ms | 909 ms | 1201 ms | 3.5 | 0 | 4 | $0.06 | billed |  |
 | decider-flash@openrouter | 42 | 153 ms | 250 ms | 385 ms | 461 ms | 2.5 | 0 | 4 | $0.03 | billed | ○ |
 | decider@openrouter | 42 | 230 ms | 339 ms | 626 ms | 722 ms | 2.7 | 0 | 4 | $0.07 | billed |  |
+| decision-1.1@openrouter | 42 | 232 ms | 262 ms | 525 ms | 566 ms | 2.3 | 0 | 4 | $0.13 | billed | ○ |
 | decision-1@openrouter | 42 | 270 ms | 367 ms | 428 ms | 432 ms | 1.6 | 0 | 4 | $0.11 | billed |  |
 | drex-max@openrouter | 42 | 273 ms | 435 ms | 668 ms | 707 ms | 2.4 | 0 | 4 | $0.20 | billed |  |
 | elephant@openrouter | 42 | 176 ms | 214 ms | 324 ms | 360 ms | 1.8 | 0 | 4 | $0.12 | billed | ○ |
-| gemini-decision@google | 42 | 361 ms | 450 ms | 501 ms | 504 ms | 1.4 | 0 | 4 | $0.36 | estimated |  |
+| gemini-decision@google | 42 | 254 ms | 501 ms | 658 ms | 658 ms | 2.6 | 0 | 4 | $0.36 | estimated |  |
 | jev:1.14 | 42 | 128 ms | 254 ms | 593 ms | 596 ms | 4.6 | 0 | 4 | $0.31 | estimated |  |
 | joey@openrouter | 42 | 167 ms | 175 ms | 275 ms | 276 ms | 1.6 | 0 | 4 | $0.03 | billed | ○ |
 | kev@openrouter | 42 | 1093 ms | 3795 ms | 4385 ms | 4454 ms | 4.0 | 0 | 4 | $0.11 | billed |  |
 | luna@decisions | 41 | 266 ms | 354 ms | 530 ms | 537 ms | 2.0 | 0 | 4 | $0.45 | estimated |  |
-| mammoth@openrouter | 42 | 179 ms | 202 ms | 211 ms | 211 ms | 1.2 | 0 | 4 | $0.34 | billed | ○ |
-| reflex@openrouter | 42 | 239 ms | 288 ms | 442 ms | 472 ms | 1.9 | 0 | 4 | $0.14 | billed | ○ |
+| mammoth@openrouter | 42 | 384 ms | 760 ms | 1456 ms | 1741 ms | 3.8 | 0 | 4 | $0.34 | billed |  |
+| reflex@openrouter | 42 | 174 ms | 261 ms | 552 ms | 580 ms | 3.2 | 0 | 4 | $0.14 | billed | ○ |
 | span@openrouter | 42 | 471 ms | 611 ms | 789 ms | 794 ms | 1.7 | 0 | 4 | $0.04 | billed |  |
 
 Measured on the calls, not the answers: never an objective, only the constraints and the order of candidates the objectives tie (the p90 of each case's slowest call, then API cost). Frontier ○: no other model beats it on all three of the primary objective, API cost per 10k and p99.
 Latency is the time from sending to receiving one call that answered (the round trip from here included), without retries or the wait before them. Many calls at once read slower, from the provider's load and this machine's connections: to compare models, measure every candidate again at the same concurrency (`s1flow run <task> --fresh --concurrency N`, the same N for all).
 Under 100 calls, a model's p99 means little more than its max.
-Where the API costs come from: billed: clef-flash@openrouter, clef-omni@openrouter, clef@openrouter, d1-ultra@openrouter, d1.1@openrouter, d1.2, d1.2-ultra, d1@vercel, decider-flash@openrouter, decider@openrouter, decision-1@openrouter, drex-max@openrouter, elephant@openrouter, joey@openrouter, kev@openrouter, mammoth@openrouter, reflex@openrouter, span@openrouter; estimated (recorded tokens times a list price: s1flow.toml's where dated, else the LLM price table's; not a bill): gemini-decision@google (list price of 2026-11-12), jev:1.14 (list price of 2026-10-03), luna@decisions (list price of 2026-10-09). Billed and estimated API costs sit side by side, so their differences do not compare as they are.
+Where the API costs come from: billed: clef-flash@openrouter, clef-omni@openrouter, clef@openrouter, d1-ultra@openrouter, d1.1@openrouter, d1.2, d1.2-ultra, decider-flash@openrouter, decider@openrouter, decision-1.1@openrouter, decision-1@openrouter, drex-max@openrouter, elephant@openrouter, joey@openrouter, kev@openrouter, mammoth@openrouter, reflex@openrouter, span@openrouter; estimated (recorded tokens times a list price: s1flow.toml's where dated, else the LLM price table's; not a bill): gemini-decision@google (list price of 2026-11-12), jev:1.14 (list price of 2026-10-03), luna@decisions (list price of 2026-10-09). Billed and estimated API costs sit side by side, so their differences do not compare as they are.
 
 ## API cost and time for these cases
 
@@ -112,24 +112,24 @@ Where the API costs come from: billed: clef-flash@openrouter, clef-omni@openrout
 | d1.1@openrouter | $0.0003 | 3 s (estimated, 42 calls) | 14 min | 4 |
 | d1.2 | $0.0003 | 2 s (estimated, 42 calls) | 7 min | 4 |
 | d1.2-ultra | $0.0006 | 1 s (estimated, 42 calls) | 5 min | 4 |
-| d1@vercel | $0.0003 | 3 s (estimated, 42 calls) | 12 min | 4 |
 | decider-flash@openrouter | $0.0001 | 2 s (estimated, 42 calls) | 7 min | 4 |
 | decider@openrouter | $0.0003 | 3 s (estimated, 42 calls) | 11 min | 4 |
+| decision-1.1@openrouter | $0.0005 | 3 s (estimated, 42 calls) | 10 min | 4 |
 | decision-1@openrouter | $0.0005 | 3 s (estimated, 42 calls) | 12 min | 4 |
 | drex-max@openrouter | $0.0008 | 3 s (estimated, 42 calls) | 13 min | 4 |
 | elephant@openrouter | $0.0005 | 2 s (estimated, 42 calls) | 8 min | 4 |
-| gemini-decision@google | $0.0015 | 4 s (estimated, 42 calls) | 14 min | 4 |
+| gemini-decision@google | $0.0015 | 3 s (estimated, 42 calls) | 13 min | 4 |
 | jev:1.14 | $0.0013 | 2 s (estimated, 42 calls) | 7 min | 4 |
 | joey@openrouter | $0.0001 | 2 s (estimated, 42 calls) | 7 min | 4 |
 | kev@openrouter | $0.0005 | 19 s (estimated, 42 calls) | 74 min | 4 |
 | luna@decisions | $0.0019 | 3 s (estimated, 41 calls) | 11 min | 4 |
-| mammoth@openrouter | $0.0014 | 2 s (estimated, 42 calls) | 8 min | 4 |
-| reflex@openrouter | $0.0006 | 3 s (estimated, 42 calls) | 11 min | 4 |
+| mammoth@openrouter | $0.0014 | 5 s (estimated, 42 calls) | 20 min | 4 |
+| reflex@openrouter | $0.0006 | 2 s (estimated, 42 calls) | 9 min | 4 |
 | span@openrouter | $0.0002 | 5 s (estimated, 42 calls) | 20 min | 4 |
 
 Measured: the wall time of a run that called every case. When every answer came from the cache, estimated as the calls' time summed and divided by the concurrency. The time depends more on the concurrency and the provider's rate limit than on the model.
 
-Coverage: answering the most probable first, the largest share whose sure accuracy keeps the target 95%. The cut is chosen on each CV fold's fit side and measured on its eval side. The lower bound is a one-sided 95% Clopper-Pearson; [ ] is a 95% bootstrap interval.
+[ ] is a 95% bootstrap interval.
 Scored: every labelled dev case the model answered or refused; held-out test results come only when a candidate is adopted. Refused: the share of the scored cases the model refused or does not support, each counted as no answer (wrong, and never sure). Failed counts calls.
 Refused: inputs the model did not take (question type, image, audio, video, PDF, length limits) and answers it declined to give. The model's limit, not a failed call: the candidate is kept, and the case stays in every denominator.
 
@@ -146,9 +146,9 @@ The threshold with the lowest total loss, chosen by CV, a miss (a positive read 
 | d1.1@openrouter | 92.9% | 88.1% | 1 | 4 | 0.30 | 0.30 |
 | d1.2 | 95.2% | 95.2% | 0 | 2 | 0.30 | 0.30 |
 | d1.2-ultra | 95.2% | 92.9% | 1 | 2 | 0.30 | 0.30 |
-| d1@vercel | 95.2% | 95.2% | 0 | 2 | 0.50 | 0.50 |
 | decider-flash@openrouter | 90.5% | 95.2% | 0 | 2 | 0.30 | 0.30 |
 | decider@openrouter | 92.9% | 88.1% | 1 | 4 | 0.10 | 0.10 |
+| decision-1.1@openrouter | 92.9% | 97.6% | 0 | 1 | 0.10 | 0.10 |
 | decision-1@openrouter | 90.5% | 95.2% | 1 | 1 | 0.10 | 0.10 |
 | drex-max@openrouter | 95.2% | 88.1% | 1 | 4 | 0.10 | 0.10 |
 | elephant@openrouter | 90.5% | 95.2% | 0 | 2 | 0.30 | 0.30 |
@@ -259,20 +259,6 @@ The threshold with the lowest total loss, chosen by CV, a miss (a positive read 
 | 0.80 | 6 (23%) | 0 (0%) |
 | 0.90 | 7 (27%) | 0 (0%) |
 
-## Misses and false alarms by threshold (d1@vercel)
-
-| threshold | misses | false alarms |
-|---|---|---|
-| 0.10 | 0 (0%) | 14 (88%) |
-| 0.20 | 0 (0%) | 8 (50%) |
-| 0.30 | 0 (0%) | 5 (31%) |
-| 0.40 | 0 (0%) | 3 (19%) |
-| 0.50 | 0 (0%) | 2 (12%) |
-| 0.60 | 0 (0%) | 2 (12%) |
-| 0.70 | 2 (8%) | 1 (6%) |
-| 0.80 | 3 (12%) | 1 (6%) |
-| 0.90 | 3 (12%) | 0 (0%) |
-
 ## Misses and false alarms by threshold (decider-flash@openrouter)
 
 | threshold | misses | false alarms |
@@ -300,6 +286,20 @@ The threshold with the lowest total loss, chosen by CV, a miss (a positive read 
 | 0.70 | 4 (15%) | 0 (0%) |
 | 0.80 | 5 (19%) | 0 (0%) |
 | 0.90 | 7 (27%) | 0 (0%) |
+
+## Misses and false alarms by threshold (decision-1.1@openrouter)
+
+| threshold | misses | false alarms |
+|---|---|---|
+| 0.10 | 0 (0%) | 1 (6%) |
+| 0.20 | 0 (0%) | 1 (6%) |
+| 0.30 | 2 (8%) | 1 (6%) |
+| 0.40 | 3 (12%) | 1 (6%) |
+| 0.50 | 3 (12%) | 0 (0%) |
+| 0.60 | 3 (12%) | 0 (0%) |
+| 0.70 | 3 (12%) | 0 (0%) |
+| 0.80 | 4 (15%) | 0 (0%) |
+| 0.90 | 5 (19%) | 0 (0%) |
 
 ## Misses and false alarms by threshold (decision-1@openrouter)
 
@@ -425,7 +425,7 @@ The threshold with the lowest total loss, chosen by CV, a miss (a positive read 
 | 0.60 | 0 (0%) | 0 (0%) |
 | 0.70 | 2 (8%) | 0 (0%) |
 | 0.80 | 5 (19%) | 0 (0%) |
-| 0.90 | 11 (42%) | 0 (0%) |
+| 0.90 | 10 (38%) | 0 (0%) |
 
 ## Misses and false alarms by threshold (reflex@openrouter)
 
@@ -474,17 +474,17 @@ The threshold with the lowest total loss, chosen by CV, a miss (a positive read 
 
 ## Cases the models disagree on (12 of 22)
 
-| id | label | clef-flash@openrouter | clef-omni@openrouter | clef@openrouter | d1-ultra@openrouter | d1.1@openrouter | d1.2 | d1.2-ultra | d1@vercel | decider-flash@openrouter | decider@openrouter | decision-1@openrouter | drex-max@openrouter | elephant@openrouter | gemini-decision@google | jev:1.14 | joey@openrouter | kev@openrouter | luna@decisions | mammoth@openrouter | reflex@openrouter | span@openrouter | case |
+| id | label | clef-flash@openrouter | clef-omni@openrouter | clef@openrouter | d1-ultra@openrouter | d1.1@openrouter | d1.2 | d1.2-ultra | decider-flash@openrouter | decider@openrouter | decision-1.1@openrouter | decision-1@openrouter | drex-max@openrouter | elephant@openrouter | gemini-decision@google | jev:1.14 | joey@openrouter | kev@openrouter | luna@decisions | mammoth@openrouter | reflex@openrouter | span@openrouter | case |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| hotel-jaa-yasui | True | True (0.86) | True (0.91) | True (0.95) | True (0.99) | True (0.99) | True (0.97) | True (0.97) | True (1.00) | True (0.93) | True (1.00) | True (1.00) | True (0.99) | True (0.94) | True (1.00) | True (1.00) | False (0.54) | True (0.68) | True (0.99) | True (0.93) | True (1.00) | True (0.80) | {"earlier": ["ユーザー: 大阪出張、10/14泊で梅田近くのビジホ"], "agent": "候補は2つです。\n1. ホテ… |
-| add-milk | True | True (0.79) | True (0.90) | True (0.97) | True (0.99) | True (0.99) | True (0.97) | True (0.99) | True (1.00) | True (0.97) | True (1.00) | True (1.00) | True (1.00) | True (0.94) | True (1.00) | True (1.00) | False (0.62) | True (0.58) | True (0.99) | True (0.94) | True (1.00) | True (1.00) | {"earlier": ["ユーザー: 卵と食パン切れたからネットスーパーで頼んで"], "agent": "イオンネットスーパーで卵10… |
-| sw-fix-tests-un | True | True (0.93) | True (0.85) | True (0.97) | True (0.99) | True (1.00) | True (0.98) | True (0.98) | True (1.00) | True (0.94) | True (1.00) | True (1.00) | True (1.00) | True (0.97) | True (1.00) | True (1.00) | True (0.80) | False (0.62) | True (0.99) | True (0.93) | True (1.00) | True (0.99) | {"earlier": ["ユーザー: npm test 回して"], "agent": "テストを実行しました。48件中3件が失敗してい… |
-| sw-naming-change | True | True (0.91) | True (0.60) | True (0.97) | True (0.98) | True (0.99) | True (0.97) | True (0.97) | True (1.00) | False (0.66) | True (0.99) | True (0.99) | True (0.98) | True (0.98) | True (1.00) | True (1.00) | True (0.76) | True (0.50) | True (0.99) | True (0.90) | True (1.00) | True (0.98) | {"agent": "APIレスポンスのキー名を userId に統一しました。変更は api/handlers 以下の6ファイルです。"… |
-| thanks-plus-bus | True | True (0.89) | True (0.85) | True (0.98) | True (0.97) | True (0.99) | True (0.96) | True (0.97) | True (0.97) | True (0.97) | True (0.98) | True (1.00) | True (0.98) | True (0.98) | True (1.00) | True (1.00) | False (0.58) | True (0.84) | True (0.99) | True (0.94) | True (0.98) | True (0.98) | {"agent": "河口湖行きの高速バス、土曜7:10新宿発で2名分予約しました。", "user": "ありがとう！あと帰りのバスも調… |
-| ryokai-to-cancel-fee | True | True (0.72) | True (0.79) | True (0.91) | True (0.87) | True (0.96) | True (0.96) | True (0.70) | True (1.00) | True (0.68) | True (0.90) | True (0.93) | True (0.90) | True (0.83) | True (0.89) | True (1.00) | True (0.52) | False (0.55) | True (0.84) | True (0.90) | True (0.97) | False (0.61) | {"earlier": ["ユーザー: 来週の美容院、キャンセルしたい"], "agent": "前日以降のキャンセルのため、キャンセル料… |
-| tickets-kaatte | True | True (0.66) | True (0.83) | True (0.94) | True (0.99) | True (0.99) | True (0.97) | True (0.98) | True (1.00) | True (0.85) | True (1.00) | True (0.99) | True (1.00) | True (0.95) | True (1.00) | True (1.00) | False (0.55) | True (0.54) | True (0.99) | True (0.93) | True (1.00) | True (0.94) | {"earlier": ["ユーザー: ミセスのライブ、リセールで出たら教えて"], "agent": "11/22 東京ドーム公演のリセ… |
-| sw-dont-touch-file | True | True (0.92) | True (0.92) | True (0.98) | True (0.99) | True (1.00) | True (0.99) | True (0.98) | True (1.00) | True (0.97) | True (1.00) | True (1.00) | True (1.00) | True (0.92) | True (1.00) | True (1.00) | False (0.52) | True (0.64) | True (1.00) | True (0.94) | True (1.00) | True (0.96) | {"earlier": ["ユーザー: ログイン周りのバグ直して"], "agent": "原因は auth/session.ts のトー… |
-| email-send-ok | True | True (0.66) | True (0.64) | True (0.77) | True (0.92) | True (0.99) | True (0.97) | True (0.96) | True (1.00) | True (0.73) | True (0.88) | True (1.00) | True (0.95) | True (0.75) | True (0.99) | True (0.98) | True (0.81) | True (0.50) | True (0.99) | True (0.85) | False (0.61) | False (0.95) | {"earlier": ["ユーザー: 大家さんに、エアコン壊れたから修理お願いしたいってメール書いて"], "agent": "下書きを… |
-| wait-before-submit | True | True (0.70) | True (0.78) | True (0.94) | True (0.88) | True (0.97) | True (0.89) | True (0.86) | True (1.00) | True (0.96) | True (0.75) | True (0.97) | True (0.93) | False (0.51) | True (0.98) | True (0.99) | True (0.60) | True (0.54) | True (0.99) | True (0.95) | True (0.97) | True (0.88) | {"earlier": ["ユーザー: 区のワクチン接種の予約フォーム埋めといて"], "agent": "必要事項を入力しました。10月… |
-| yoroshiku-already-agreed | False | False (0.76) | True (0.68) | False (0.73) | False (0.89) | False (0.73) | False (0.79) | False (0.88) | False (0.80) | False (0.94) | False (0.83) | False (1.00) | False (0.94) | False (0.91) | False (0.96) | False (0.68) | True (0.74) | False (0.74) | True (0.71) | False (0.88) | False (0.95) | False (0.97) | {"earlier": ["ユーザー: 土曜のゴルフ、雨だったら中止にしたい"], "agent": "承知しました。土曜の朝6時に天気を… |
-| thumbs-to-send-question | True | True (0.92) | True (0.62) | True (0.90) | True (0.94) | True (0.98) | True (0.96) | True (0.94) | True (1.00) | True (0.89) | True (0.98) | True (1.00) | True (0.96) | True (0.93) | True (0.99) | True (0.98) | False (0.57) | True (0.57) | True (0.97) | True (0.97) | True (0.95) | False (0.51) | {"agent": "幹事の佐藤さんへ「当日は15分ほど遅れます」と送信しますか？", "user": "👍"} |
+| hotel-jaa-yasui | True | True (0.86) | True (0.91) | True (0.95) | True (0.99) | True (0.99) | True (0.97) | True (0.97) | True (0.93) | True (1.00) | True (1.00) | True (1.00) | True (0.99) | True (0.94) | True (1.00) | True (1.00) | False (0.54) | True (0.68) | True (0.99) | True (0.93) | True (1.00) | True (0.80) | {"earlier": ["ユーザー: 大阪出張、10/14泊で梅田近くのビジホ"], "agent": "候補は2つです。\n1. ホテ… |
+| add-milk | True | True (0.79) | True (0.90) | True (0.97) | True (0.99) | True (0.99) | True (0.97) | True (0.99) | True (0.97) | True (1.00) | True (1.00) | True (1.00) | True (1.00) | True (0.94) | True (1.00) | True (1.00) | False (0.62) | True (0.58) | True (0.99) | True (0.94) | True (1.00) | True (1.00) | {"earlier": ["ユーザー: 卵と食パン切れたからネットスーパーで頼んで"], "agent": "イオンネットスーパーで卵10… |
+| sw-fix-tests-un | True | True (0.93) | True (0.85) | True (0.97) | True (0.99) | True (1.00) | True (0.98) | True (0.98) | True (0.94) | True (1.00) | True (1.00) | True (1.00) | True (1.00) | True (0.97) | True (1.00) | True (1.00) | True (0.80) | False (0.62) | True (0.99) | True (0.93) | True (1.00) | True (0.99) | {"earlier": ["ユーザー: npm test 回して"], "agent": "テストを実行しました。48件中3件が失敗してい… |
+| sw-naming-change | True | True (0.91) | True (0.60) | True (0.97) | True (0.98) | True (0.99) | True (0.97) | True (0.97) | False (0.66) | True (0.99) | True (1.00) | True (0.99) | True (0.98) | True (0.98) | True (1.00) | True (1.00) | True (0.76) | True (0.50) | True (0.99) | True (0.90) | True (1.00) | True (0.98) | {"agent": "APIレスポンスのキー名を userId に統一しました。変更は api/handlers 以下の6ファイルです。"… |
+| thanks-plus-bus | True | True (0.89) | True (0.85) | True (0.98) | True (0.97) | True (0.99) | True (0.96) | True (0.97) | True (0.97) | True (0.98) | True (1.00) | True (1.00) | True (0.98) | True (0.98) | True (1.00) | True (1.00) | False (0.58) | True (0.84) | True (0.99) | True (0.94) | True (0.98) | True (0.98) | {"agent": "河口湖行きの高速バス、土曜7:10新宿発で2名分予約しました。", "user": "ありがとう！あと帰りのバスも調… |
+| ryokai-to-cancel-fee | True | True (0.72) | True (0.79) | True (0.91) | True (0.87) | True (0.96) | True (0.96) | True (0.70) | True (0.68) | True (0.90) | True (0.91) | True (0.93) | True (0.90) | True (0.83) | True (0.89) | True (1.00) | True (0.52) | False (0.55) | True (0.84) | True (0.93) | True (0.97) | False (0.61) | {"earlier": ["ユーザー: 来週の美容院、キャンセルしたい"], "agent": "前日以降のキャンセルのため、キャンセル料… |
+| tickets-kaatte | True | True (0.66) | True (0.83) | True (0.94) | True (0.99) | True (0.99) | True (0.97) | True (0.98) | True (0.85) | True (1.00) | True (1.00) | True (0.99) | True (1.00) | True (0.95) | True (1.00) | True (1.00) | False (0.55) | True (0.54) | True (0.99) | True (0.93) | True (1.00) | True (0.94) | {"earlier": ["ユーザー: ミセスのライブ、リセールで出たら教えて"], "agent": "11/22 東京ドーム公演のリセ… |
+| sw-dont-touch-file | True | True (0.92) | True (0.92) | True (0.98) | True (0.99) | True (1.00) | True (0.99) | True (0.98) | True (0.97) | True (1.00) | True (1.00) | True (1.00) | True (1.00) | True (0.92) | True (1.00) | True (1.00) | False (0.52) | True (0.64) | True (1.00) | True (0.94) | True (1.00) | True (0.96) | {"earlier": ["ユーザー: ログイン周りのバグ直して"], "agent": "原因は auth/session.ts のトー… |
+| oyasumi | False | False (0.92) | False (0.88) | False (0.56) | False (0.95) | True (0.53) | False (0.84) | False (0.83) | False (0.96) | False (0.56) | False (1.00) | False (0.99) | False (0.89) | False (0.89) | False (0.98) | False (0.88) | False (0.81) | False (0.78) | False (0.74) | False (0.94) | False (0.90) | False (0.99) | {"agent": "明日の朝7時に、天気と電車の遅延情報をまとめてお送りします。", "user": "おやすみ"} |
+| wait-before-submit | True | True (0.70) | True (0.78) | True (0.94) | True (0.88) | True (0.97) | True (0.89) | True (0.86) | True (0.96) | True (0.75) | True (1.00) | True (0.97) | True (0.93) | False (0.51) | True (0.98) | True (0.99) | True (0.60) | True (0.54) | True (0.99) | True (0.95) | True (0.97) | True (0.88) | {"earlier": ["ユーザー: 区のワクチン接種の予約フォーム埋めといて"], "agent": "必要事項を入力しました。10月… |
+| yoroshiku-already-agreed | False | False (0.76) | True (0.68) | False (0.73) | False (0.89) | False (0.73) | False (0.79) | False (0.88) | False (0.94) | False (0.83) | False (0.97) | False (1.00) | False (0.94) | False (0.91) | False (0.96) | False (0.68) | True (0.74) | False (0.74) | True (0.71) | False (0.88) | False (0.95) | False (0.97) | {"earlier": ["ユーザー: 土曜のゴルフ、雨だったら中止にしたい"], "agent": "承知しました。土曜の朝6時に天気を… |
+| ok-info | False | False (0.89) | False (0.81) | False (0.80) | False (0.94) | False (0.91) | False (0.73) | False (0.88) | False (0.94) | False (0.93) | False (1.00) | False (0.99) | False (0.95) | False (0.96) | False (0.93) | False (0.84) | True (0.73) | False (0.80) | False (0.77) | False (0.93) | False (0.97) | False (0.99) | {"agent": "お知らせです。明日10/1から、ご利用中の駐輪場の月額料金が2,000円から2,200円に変わります。お手続きは不要… |

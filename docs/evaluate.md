@@ -49,7 +49,9 @@ validation and decision rules; metrics and optimization belong to evaluation alo
 
 ## Compare candidates
 
-`s1flow report` shows every model and question variant side by side, using only the development cases. The
+`s1flow report` shows every model and question variant side by side, using only the development cases. A
+variant is another wording of the question, written in task.py as `variants={"strict": Boolean(instructions="...")}`
+and run as `model/strict`; `s1flow optimize` adds them the same way. The
 terminal shows the candidates ordered by the task's objective, with the ones it cannot tell apart at the top marked
 `=` (ordered by `tiebreak` in task.py, or by name without one); it marks no pick. `--json` adds every
 metric of each candidate with the same candidate IDs and numbers, so a person, or an agent acting for them, can

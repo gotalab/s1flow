@@ -79,6 +79,9 @@ print(decision.value, decision.probability, decision.decision_id)
 policy.feedback(decision.decision_id, True)  # the correct answer, once you know it
 ```
 
+`log=` is where decisions and right answers are kept, so they can be measured and become new cases. Without it
+(and without an OpenTelemetry tracer provider) nothing is recorded: the first `decide` warns, and `feedback` raises.
+
 ## The policy API
 
 You can also build a `PolicySpec` in Python and pass it to `DecisionPolicy(spec, client=client)`. Use `adecide`
@@ -169,7 +172,9 @@ response = Client().responses.create(
 print(response.answers["bug"].probability)
 ```
 
-The `ModelSpec` here is written in your own code, so this example needs no connection file. If you refer to
+The `ModelSpec` here is written in your own code, so this example needs no connection file. From the shell, `s1flow decide --model
+liquid:d1.2 --state '"Crash on startup"' --boolean "Does this report describe a software defect?"` does the same
+with no project: `provider:id` names a built-in provider and the id it sends. If you refer to
 the model by an alias instead, pass the app's list of allowed models:
 
 ```python
@@ -181,7 +186,7 @@ response = Client(connections="connections.toml").responses.create(
 ```
 
 The Client supports yes/no (`boolean`), choice, score and box questions, and several questions in one request, as far as
-the provider supports them. Evaluation compares all four. A policy holds one yes/no or choice question.
+the provider supports them. Evaluation compares all four. A policy holds one question of any of these types.
 
 Every call sends the state with the keys of each JSON object in sorted order, so a case in an evaluation and a
 call in production that differ only in key order send the same request. Lists keep their order.
