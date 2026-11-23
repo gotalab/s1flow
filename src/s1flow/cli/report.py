@@ -106,6 +106,8 @@ def report(a: argparse.Namespace) -> int:
             print(f"not run: {names}")
         if outside := [f"{r.candidate} ({', '.join(r.excluded)})" for r in rows if r.excluded]:
             print(f"outside the constraints: {'; '.join(outside)}")
+        if note := comparison.optimized_on_dev(task, [r.candidate for r in rows]):
+            print(f"note: {note}")
         _print_weights(listed)
         print(f"Every metric of each candidate: s1flow report {task.id} --json, or --candidate NAME; "
               f"the snapshot and a Markdown report: s1flow report {task.id} --out DIR")

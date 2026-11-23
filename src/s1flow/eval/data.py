@@ -30,6 +30,12 @@ class DataCheck(BaseModel):
     corrected: dict[str, int] = {}  # corrections.jsonl: verdict -> cases
 
 
+def label_errors(task: Task, cases: list[Case]) -> list[str]:
+    """The labels the task's question cannot score ("<id>: <why>"): a run refuses them before its first call, as
+    the report that reads its answers would fail on them."""
+    return [f"{c.id}: {wrong}" for c in cases if c.label is not None and (wrong := task.kind.label_error(c.label)) is not None]
+
+
 def check(task: Task) -> DataCheck:
     try:
         cases = task.load_cases().all()
@@ -49,9 +55,8 @@ def check(task: Task) -> DataCheck:
             errors.append(f"{id_}: {n} cases share this id")
     labelled = [c for c in cases if c.label is not None]
     kind = task.kind
+    errors += label_errors(task, labelled)
     for c in labelled:
-        if (wrong := kind.label_error(c.label)) is not None:
-            errors.append(f"{c.id}: {wrong}")
         if c.state in (None, "", [], {}):
             errors.append(f"{c.id}: the state is empty")
         elif has_unprepared_media(c.state):
