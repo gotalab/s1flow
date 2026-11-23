@@ -23,6 +23,25 @@ runs `cases check`, `run` and `report`, and leaves the choice of candidate to yo
 candidate on the held-out test cases where you run it, and the pull request carries the result
 ([Policies, evidence and releases](policies.md#evidence-and-releases)).
 
+After `actions/checkout` and a step that writes the state as JSON, a workflow calls it like this (`s1flow/` holds
+the project's `policies/` and `s1flow.toml`):
+
+```yaml
+      - id: s1
+        uses: gotalab/s1flow/decide@v0.1.0a5
+        with:
+          working-directory: s1flow
+          policy: gh-myrepo-bug                   # the task's current version
+          state: ${{ steps.state.outputs.json }}  # JSON in the shape the task was evaluated on
+          connections: s1flow.toml                # the models this workflow lets the policy call
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      - if: steps.s1.outputs.below_min_probability != 'true'
+        env:
+          ANSWER: ${{ steps.s1.outputs.answer }}
+        run: echo "act on $ANSWER here"
+```
+
 Input is passed through files and environment variables, never pasted into shell commands. The workflow installs
 the package you choose up front; loading a policy at runtime never installs anything. In production workflows,
 pin the Action to a release tag or commit SHA, and the package to a version. See [examples/](../examples) for
