@@ -95,25 +95,26 @@ def test_typesafe_text_requests_are_unchanged(monkeypatch):
 
 
 @respx.mock
-def test_openrouter_and_gateway_send_image_url_parts(monkeypatch):
+def test_openrouter_sends_image_url_parts(monkeypatch):
     monkeypatch.setenv("OPENROUTER_API_KEY", "t")
-    monkeypatch.setenv("AI_GATEWAY_API_KEY", "t")
-    orr = respx.post(f"{OR_URL}/systemone").mock(return_value=httpx.Response(200, json={"answers": CHOICE}))
-    gw = respx.post(f"{GW_URL}/evaluate").mock(return_value=httpx.Response(200, json={"answers": CHOICE}))
+    route = respx.post(f"{OR_URL}/systemone").mock(return_value=httpx.Response(200, json={"answers": CHOICE}))
     asyncio.run(OpenRouterModel("typesafe/jev-1.13", capabilities=IMG).decide(STATE, Q))
-    asyncio.run(GatewayModel("liquid/d1", capabilities=IMG).decide(STATE, Q))
-    part = {"type": "image_url", "image_url": {"url": media.data_url(STATE[1])}}
-    for route in (orr, gw):
-        body = json.loads(route.calls[0].request.read())
-        assert body["state"] == ["画面", part] and "assets" not in body
+    body = json.loads(route.calls[0].request.read())
+    assert body["state"] == ["画面", {"type": "image_url", "image_url": {"url": media.data_url(STATE[1])}}] and "assets" not in body
 
 
+@pytest.mark.parametrize("make,url,env", [
+    (lambda: DecisionsModel("gpt-6-luna", capabilities=IMG), f"{OPENAI_URL}/decisions", "OPENAI_API_KEY"),
+    (lambda: GatewayModel("modaic/mo", capabilities=IMG), f"{GW_URL}/decisions", "AI_GATEWAY_API_KEY"),
+])
 @respx.mock
-def test_decisions_sends_one_user_message_with_input_image(monkeypatch):
-    monkeypatch.setenv("OPENAI_API_KEY", "t")
+def test_decisions_sends_one_user_message_with_input_image(monkeypatch, make, url, env):
+    """OpenAI's and the AI Gateway's Decisions API. On the Gateway's deprecated /v1/evaluate, Mo read image_url parts
+    without seeing the picture and Drex Max v1.1 refused them (2026-11-24)."""
+    monkeypatch.setenv(env, "t")
     answers = [{"type": "choice", "name": "screen", "choice": "error", "probabilities": [{"value": "error", "probability": 1}]}]
-    route = respx.post(f"{OPENAI_URL}/decisions").mock(return_value=httpx.Response(200, json={"answers": answers}))
-    asyncio.run(DecisionsModel("gpt-6-luna", capabilities=IMG).decide(STATE, Q))
+    route = respx.post(url).mock(return_value=httpx.Response(200, json={"answers": answers}))
+    asyncio.run(make().decide(STATE, Q))
     body = json.loads(route.calls[0].request.read())
     assert body["input"] == [{"role": "user", "content": [
         {"type": "input_text", "text": "画面"}, {"type": "input_image", "image_url": media.data_url(STATE[1])},
