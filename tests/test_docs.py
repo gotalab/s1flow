@@ -1,6 +1,7 @@
-"""What the repository tells people to run is what this version has: the commands its docs name, and the release
-its examples and the Skill pin."""
+"""What the repository tells people to run is what this version has: the commands its docs name, the release its
+examples and the Skill pin, and Japanese pages that translate the English ones as they are now."""
 
+import hashlib
 import re
 import tomllib
 from pathlib import Path
@@ -9,7 +10,9 @@ from conftest import cli
 
 ROOT = Path(__file__).resolve().parents[1]
 DOCS = [ROOT / "README.md", ROOT / "AGENTS.md", ROOT / "decide" / "action.yml",
-        *sorted(ROOT.glob("docs/*.md")), *sorted(ROOT.glob("plugin/skills/**/*.md")), *sorted(ROOT.glob("examples/*"))]
+        *sorted(ROOT.glob("docs/*.md")), *sorted(ROOT.glob("docs-ja/*.md")), *sorted(ROOT.glob("plugin/skills/**/*.md")),
+        *sorted(ROOT.glob("examples/*"))]
+ENGLISH_ONLY = {"development.md"}  # for contributors; the Japanese site links to the English page
 VERSION = tomllib.loads((ROOT / "pyproject.toml").read_text())["project"]["version"]
 
 # A command as docs write one: `s1flow X`, uv run / uvx [options] s1flow X, or a code-block line starting s1flow X.
@@ -51,3 +54,21 @@ def test_the_examples_and_the_skill_pin_the_release_of_this_version():
     assert {want for _, want, _ in pins} == set(PINS)  # both kinds are there to check
     stale = [f"{p}: {ref}" for p, want, ref in pins if ref != want]
     assert not stale, f"pyproject.toml's version is {VERSION}: pin the Action at v{VERSION} and the package at =={VERSION} in {stale}"
+
+
+def source_hash(english: Path) -> str:
+    return hashlib.sha256(english.read_bytes()).hexdigest()[:12]
+
+
+def test_each_japanese_page_translates_the_english_page_as_it_is_now():
+    """docs-ja/X.md translates docs/X.md, and says which text it translated (translated_from: the English file's
+    hash). An English change without its translation fails here: update docs-ja/X.md, then its translated_from."""
+    english = {p.name for p in ROOT.glob("docs/*.md")} - ENGLISH_ONLY
+    japanese = {p.name for p in ROOT.glob("docs-ja/*.md")}
+    assert english == japanese, f"docs/ and docs-ja/ should hold the same pages: only in docs/ {sorted(english - japanese)}, only in docs-ja/ {sorted(japanese - english)}"
+    stale = []
+    for name in sorted(english):
+        stamp = re.search(r"^translated_from: (\S+)$", (ROOT / "docs-ja" / name).read_text(), re.M)
+        if not stamp or stamp[1] != source_hash(ROOT / "docs" / name):
+            stale.append(f"docs-ja/{name} (translated_from: {source_hash(ROOT / 'docs' / name)} once it matches docs/{name})")
+    assert not stale, f"these translations are behind their English page: {stale}"

@@ -1,17 +1,28 @@
 {#- Mintlify-style page actions: copy this page's Markdown; the menu opens it, or hands it to an assistant. -#}
 {% if page.markdown_url %}
   {% set md = config.site_url ~ page.url ~ "index.md" %}
-  {% set ask = "Read " ~ md ~ " so I can ask questions about s1flow." %}
+  {% if config.theme.language == "ja" %}
+    {% set t = {"copy": "ページをコピー", "more": "このページのほかの使い方", "copy_note": "このページを LLM 向けに Markdown でコピー",
+                "view": "Markdown で見る", "view_note": "このページをプレーンテキストで開く", "claude": "Claude で開く",
+                "chatgpt": "ChatGPT で開く", "ask_note": "このページについて質問する", "llms_note": "エージェント向けの全ページ一覧",
+                "ask": md ~ " を読んで、s1flow について質問に答えて。"} %}
+  {% else %}
+    {% set t = {"copy": "Copy page", "more": "More ways to use this page", "copy_note": "Copy this page as Markdown for an LLM",
+                "view": "View as Markdown", "view_note": "Open this page as plain text", "claude": "Open in Claude",
+                "chatgpt": "Open in ChatGPT", "ask_note": "Ask questions about this page", "llms_note": "Every page, listed for agents",
+                "ask": "Read " ~ md ~ " so I can ask questions about s1flow."} %}
+  {% endif %}
+  {% set ask = t.ask %}
   <div class="page-actions">
-    <button type="button" class="page-copy" data-md-copy-url="{{ page.markdown_url | url }}">Copy page</button>
+    <button type="button" class="page-copy" data-md-copy-url="{{ page.markdown_url | url }}">{{ t.copy }}</button>
     <details class="page-menu">
-      <summary aria-label="More ways to use this page"></summary>
+      <summary aria-label="{{ t.more }}"></summary>
       <div class="page-menu__list">
-        <button type="button" data-md-copy-url="{{ page.markdown_url | url }}"><b>Copy page</b><span>Copy this page as Markdown for an LLM</span></button>
-        <a href="{{ page.markdown_url | url }}"><b>View as Markdown</b><span>Open this page as plain text</span></a>
-        <a href="https://claude.ai/new?q={{ ask | urlencode }}" target="_blank" rel="noopener"><b>Open in Claude</b><span>Ask questions about this page</span></a>
-        <a href="https://chatgpt.com/?q={{ ask | urlencode }}" target="_blank" rel="noopener"><b>Open in ChatGPT</b><span>Ask questions about this page</span></a>
-        <a href="{{ config.site_url }}llms.txt"><b>llms.txt</b><span>Every page, listed for agents</span></a>
+        <button type="button" data-md-copy-url="{{ page.markdown_url | url }}"><b>{{ t.copy }}</b><span>{{ t.copy_note }}</span></button>
+        <a href="{{ page.markdown_url | url }}"><b>{{ t.view }}</b><span>{{ t.view_note }}</span></a>
+        <a href="https://claude.ai/new?q={{ ask | urlencode }}" target="_blank" rel="noopener"><b>{{ t.claude }}</b><span>{{ t.ask_note }}</span></a>
+        <a href="https://chatgpt.com/?q={{ ask | urlencode }}" target="_blank" rel="noopener"><b>{{ t.chatgpt }}</b><span>{{ t.ask_note }}</span></a>
+        <a href="{{ config.site_url }}llms.txt"><b>llms.txt</b><span>{{ t.llms_note }}</span></a>
       </div>
     </details>
   </div>

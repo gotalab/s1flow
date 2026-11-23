@@ -35,6 +35,14 @@ uvx zensical==0.1.1 serve                   # or: build --clean --strict, into s
 builds and publishes it on every push to main. Zensical also writes `llms.txt`, `llms-full.txt` and a Markdown copy
 of each page for agents. Links from `docs/` to files outside it don't exist on the site: link to their GitHub URL.
 
+The Japanese pages live in `docs-ja/` and are built into `/ja/` by `zensical.ja.toml`, after the English site
+(`uvx zensical==0.1.1 build -f zensical.ja.toml --strict`); they use the English site's styles and scripts. Each
+`docs-ja/X.md` translates `docs/X.md` and records which text in `translated_from`, a hash of the English file.
+Benchmarks and this page stay English only. When an English page changes, update its translation in the same pull
+request: `tests/test_docs.py` fails until `translated_from` matches, and prints the hash to set. Keep the English
+headings' anchors on the Japanese headings (`## 見出し { #english-anchor }`), so links and the language selector
+land on the same section.
+
 ## Release
 
 A pull request that changes what users see adds a changelog line and keeps the version ([AGENTS.md](https://github.com/gotalab/s1flow/blob/main/AGENTS.md)), so
