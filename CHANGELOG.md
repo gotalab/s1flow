@@ -84,6 +84,25 @@
 
 ### Fixed
 
+- Measuring and choosing, from a whole-project check. Some numbers in `report` and `adopt` move a little once:
+  - `run` refuses labels the question cannot score (a yes/no task labelled `0`/`1` or `"true"`) before its first
+    call and before it fixes the held-out test share, instead of asking every case and leaving `report` to fail.
+  - When the model behind an alias changes, the cases only the earlier model answered count as missing (`report`
+    says "N cases the answering model was never asked", where it said "N cases never asked"), and the next `run`
+    asks them again, past the cache. Before, they were neither scored nor missing: that candidate was scored on a
+    few cases, and every other candidate became unrankable beside it.
+  - The cross-validation folds and the 95% intervals no longer depend on the order the calls ended in: the cases
+    are read in case-id order. `report` and `adopt` now give a candidate the same intervals (`adopt` also reads the
+    test cases, and their count changed the bootstrap draws).
+  - A `run` that calls nothing (every case already answered) no longer makes the latency measured before unknown.
+    `optimize` asks the model at its own concurrency, so the new candidate's latency is known too.
+  - A candidate whose objective has no rule that keeps its constraint (no min probability reaches Coverage's target)
+    is left out of the list with the reason, instead of tying at 0 at the top and being refused by `adopt`.
+  - `report --out` leaves out runs of a model no longer in `s1flow.toml`, as `report` does, instead of failing.
+  - `optimize` leaves out the cases `cases correct` marked unclear or missing. `report` notes that an optimized
+    question is scored on the train and val cases it was chosen on, so its values lean high; `adopt` confirms it
+    on the held-out test.
+  - `feedback measure` shows a share and its interval both in percent (`80.0% [62.0, 91.0]`, not `0.800 [62, 91]`).
 - An app's `connections.toml` no longer needs a `default` line: copying a model's entry from `s1flow.toml` is
   enough, where it used to fail with "default: Field required". Without `default`, `doctor` checks every model and
   `run` asks for `--models`. The README's app example now sends the fields the measured cases had and keeps a log,

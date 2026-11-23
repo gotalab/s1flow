@@ -43,7 +43,7 @@ class Failures(_Frozen):
     unsupported: int  # refused before or by the provider
     data_errors: int  # the task's own errors
     unlabeled: int
-    never_asked: int  # labelled cases with no record under the question
+    never_asked: int  # labelled cases the answering model was never asked under the question (an earlier one's answer is not its)
     failed_cases: int  # labelled cases asked whose every call failed
     refused_cases: int  # labelled cases refused or unsupported, scored as no answer
 
@@ -59,7 +59,7 @@ class Failures(_Frozen):
 
 def why_missing(never_asked: int, failed_cases: int) -> str:
     """The cases `Failures.missing` counts, in words: what report, adopt and comparison say a candidate left out."""
-    return " and ".join(x for x in (f"{never_asked} cases never asked" if never_asked else "",
+    return " and ".join(x for x in (f"{never_asked} cases the answering model was never asked" if never_asked else "",
                                     f"{failed_cases} cases whose every call failed" if failed_cases else "") if x)
 
 

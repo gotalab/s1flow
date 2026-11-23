@@ -51,7 +51,8 @@ def optimize(task: Task, *, model: str | None = None, **overrides: Any) -> Optim
     name = f"optimize-{re.sub(r'[^\w.+@-]', '-', model)}-{dt.datetime.now().strftime('%Y%m%d-%H%M')}"
     sf = evalset.fixed(task)
     by_id = task.load_cases().by_id()
-    split = {role: [i for i in sf.ids(role) if i in by_id] for role in ("train", "val", "test")}
+    # a case whose label was taken away since (cases correct: unclear, missing) is left out: there is nothing to learn from
+    split = {role: [i for i in sf.ids(role) if i in by_id and by_id[i].label is not None] for role in ("train", "val", "test")}
     seed_q = task.question if start == "base" else task.variants[start]
     found = optimizer.run(Problem(task=task, model=model, start=seed_q,
                                   train=[by_id[i] for i in split["train"]], val=[by_id[i] for i in split["val"]]))

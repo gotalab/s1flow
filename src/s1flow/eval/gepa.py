@@ -160,13 +160,15 @@ class Trace:
 class QuestionAdapter:
     propose_new_texts = None  # use GEPA's reflective proposer with our template
 
-    def __init__(self, task: Task, client: AsyncClient, model: DecisionModel, *, spec: ModelSpec, concurrency: int = 8):
+    def __init__(self, task: Task, client: AsyncClient, model: DecisionModel, *, spec: ModelSpec):
         self.task = task
         self.client = client
         self.model = model
         self.spec = spec
         self.cache_dir = task.where.cache_dir
-        self.concurrency = concurrency
+        # The model's own, as `s1flow run` asks it: the answers cached here are the new candidate's run, and a latency
+        # measured at another concurrency would not be compared with the others'.
+        self.concurrency = model.concurrency
         self.calls = 0
 
     async def _answers(self, batch: list[Inst], q: Question) -> list[tuple[BooleanAnswer | ChoiceAnswer | None, str | None]]:
