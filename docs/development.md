@@ -1,6 +1,6 @@
 # Develop s1flow
 
-The checks to run and the rules for every change are in [AGENTS.md](../AGENTS.md). This page has the details. To call
+The checks to run and the rules for every change are in [AGENTS.md](https://github.com/gotalab/s1flow/blob/main/AGENTS.md). This page has the details. To call
 real models from the bench project, put its keys in `apps/bench/.env` (ignored by Git) and run
 `uv run s1flow doctor --project apps/bench` to check the connections.
 
@@ -37,7 +37,7 @@ of each page for agents. Links from `docs/` to files outside it don't exist on t
 
 ## Release
 
-A pull request that changes what users see adds a changelog line and keeps the version ([AGENTS.md](../AGENTS.md)), so
+A pull request that changes what users see adds a changelog line and keeps the version ([AGENTS.md](https://github.com/gotalab/s1flow/blob/main/AGENTS.md)), so
 main can hold several such changes before they ship. A release is a pull request of its own, opened when main has an
 `Unreleased` section. It raises the alpha number in `pyproject.toml` (`0.1.0a3` → `0.1.0a4`) and `uv.lock`, renames `Unreleased` to that version and date, and pins the
 decide Action at `v<version>` and the package at `==<version>` in `examples/` and the Skill's `references/app.md`

@@ -177,8 +177,8 @@ def test_concurrency_changes_invalidate_performance_without_rebuying_answers(tas
     assert metrics.evaluate(task, metrics.load(task, 'base', 'fake')).calls.latency is not None
     before = Parity.calls
     assert asyncio.run(run.run_model(task, 'fake', limit=None, variant='base', concurrency=8))['skipped'] == 12
-    current = metrics.evaluate(task, metrics.load(task, 'base', 'fake'))
-    assert current.n == 8 and current.calls.latency is None and current.calls.case_latency_p90_ms is None
+    current = metrics.evaluate(task, metrics.load(task, 'base', 'fake'))  # a run that called nothing measured nothing
+    assert current.n == 8 and current.calls.latency.concurrency == [1] and current.calls.case_latency_p90_ms is not None
     assert Parity.calls == before
     task.where.lineup().models['fake'].concurrency = 8
     assert metrics.evaluate(task, metrics.load(task, 'base', 'fake')).calls.latency is None

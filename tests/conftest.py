@@ -253,7 +253,10 @@ def scored(o: Objective, v: float, half: float = 0.05) -> ObjectiveScore:
 
 
 def ev(model: str, scores: list[ObjectiveScore], cost: float = 1.0, p99: float = 100.0, n: int = 100) -> Evaluation:
-    """An evaluation of `model` on n cases: these objective scores, this cost per 10,000 cases and latency."""
+    """An evaluation of `model` on n cases: these objective scores, this cost per 10,000 cases and latency. A primary
+    that sets a rule field and is given none gets one (at 0.5), as a measured one has: with none it could not be picked."""
+    if (primary := scores[0]).objective.sets and primary.rule is None:
+        scores = [primary.model_copy(update={"rule": DecisionRule.model_validate({primary.objective.sets: 0.5})}), *scores[1:]]
     lat = Latency(n=n, p50_ms=p99 / 2, p90_ms=p99, p95_ms=p99, p99_ms=p99, max_ms=p99, spread=2.0, retried=0, concurrency=[4], concurrency_unknown=0)
     return Evaluation(
         candidate=Candidate(model=model), answered_by=model, answered_by_all=[model], answered_ids=[str(i) for i in range(n)], n=n, probabilities=True,
