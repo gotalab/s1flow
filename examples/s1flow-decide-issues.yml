@@ -46,6 +46,7 @@ jobs:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          LIQUID_API_KEY: ${{ secrets.LIQUID_API_KEY }}
       - name: Act on the answer
         if: steps.s1.outcome == 'success'
         env:
@@ -100,6 +101,7 @@ jobs:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          LIQUID_API_KEY: ${{ secrets.LIQUID_API_KEY }}
       - name: Record the human label
         if: steps.s1.outcome == 'success'
         working-directory: s1flow

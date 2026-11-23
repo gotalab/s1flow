@@ -31,6 +31,6 @@ def run(a: argparse.Namespace) -> int:
 def add(sub: Any) -> None:
     p = command(sub, "run", run, context=("project", "connections"))
     p.add_argument("task")
-    p.add_argument("--models", help="comma-separated candidates, model[:version][/variant]: jev:1.14, d1@vercel/policy (default: s1flow.toml's `default`, on the task's own question)")
+    p.add_argument("--models", help="comma-separated candidates, model[:version][/variant]: jev:1.14, decider@openrouter/policy (default: s1flow.toml's `default`, on the task's own question)")
     p.add_argument("--fresh", action="store_true", help="call again instead of reading the cache (to measure latency and wall time)")
     p.add_argument("--concurrency", type=positive, help="calls in flight per model (default: the model's own); with it, models run one after another. 1 times each call alone")
