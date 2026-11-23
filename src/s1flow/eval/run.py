@@ -4,8 +4,8 @@ The file is append-only: one `PredictionRecord` per case asked (records.py), sta
 prompt hash, the model that actually answered (`answered_by`) and the time. A version asked for by
 name (`jev:1.14`) is a run of its own, `jev:1.14.jsonl`: under an alias (`jev`) the answering version can
 change between lines. Readers pick the lines for the current prompt and one answering model
-(metrics.load), so nothing is ever overwritten
-and a failed run only adds failure lines. A ConfigError (a missing key) stops the run instead:
+(records.select), so nothing is ever overwritten and a failed run only adds failure lines; a rerun asks again the
+cases only an earlier answering model answered. A ConfigError (a missing key) stops the run instead:
 it is not the case's outcome.
 
 Every call goes through the model-calling layer (`AsyncClient.responses.create`), wrapped in a cache:
@@ -32,9 +32,9 @@ from ..client.models import DecisionModel, ModelSpec
 from ..client.questions import Questions
 from ..client.state import State
 from ..core import clock
-from ..core.errors import ConfigError, NotFound, S1flowError
+from ..core.errors import ConfigError, DataError, NotFound, S1flowError
 from .candidate import Candidate
-from . import evalset, records
+from . import data, evalset, records
 from .records import PredictionRecord
 from .cases import Case
 from .task import Task
@@ -155,6 +155,10 @@ async def run_model(
     run on a task fixes its held-out test share (evalset.fix)."""
     spec = task.where.lineup().resolved(model_name)
     require_provider_revision(spec)
+    cases = task.load_cases().all()[:limit] if limit else task.load_cases().all()
+    if wrong := data.label_errors(task, cases):
+        raise DataError(f"{task.id}: {len(wrong)} labels the question cannot score, so no model is asked: "
+                        f"{'; '.join(wrong[:3])}{' …' if len(wrong) > 3 else ''} (s1flow cases check {task.id} lists them all)")
     evalset.fix(task)  # the CLI shows what it did
     client = task.where.client()
     model = client.connections.build(spec, name=model_name)
@@ -163,7 +167,6 @@ async def run_model(
     questions = task.questions(variant)
     prompt = prompt_hash(questions)
     out = run_path(task, variant, model_name)
-    cases = task.load_cases().all()[:limit] if limit else task.load_cases().all()
     previous = records.read(out) if not fresh else []
     # Identity is checked per materialized input. An unchanged id/prompt alone is
     # insufficient, and legacy history without an identity never becomes current.
@@ -177,8 +180,11 @@ async def run_model(
             raise
         except Exception:
             pass  # one() records the input error using the normal outcome path
-    done_before = {r.id for r in previous if r.request_digest and r.request_digest in identities.get(r.id, ())
-                   and (r.answered or r.outcome in records.REFUSED)}
+    selected = records.select([r for r in previous if r.request_digest and r.request_digest in identities.get(r.id, ())], prompt)
+    done_before = {r.id for r in selected.records if r.answered or r.outcome in records.REFUSED}
+    # A case only an earlier answering model answered (an alias that moved on) is asked again, past the cache that
+    # holds the earlier answer: scored on one answering model, the run has no answer to it.
+    again = set(selected.earlier)
     todo = [c for c in cases if c.id not in done_before]
     sem = asyncio.Semaphore(width)
     stats = {"calls": 0, "cached": 0, "skipped": len(cases) - len(todo), "unsupported": 0, "rejected": 0, "errors": 0, "data_errors": 0}
@@ -195,7 +201,7 @@ async def run_model(
         async with sem:
             try:
                 state = inputs[case.id] if case.id in inputs else task.model_state(case)
-                got, hit = await call(cache_dir, client, model, state, questions, fresh, width, spec=spec)
+                got, hit = await call(cache_dir, client, model, state, questions, fresh or case.id in again, width, spec=spec)
                 rec = records.from_response(base | {"at": now()}, got.response, task.question_id, hit, got.concurrency)
                 stats["cached" if hit else "calls"] += 1
             except ConfigError:
@@ -222,10 +228,12 @@ META = "s1flow/run-meta@1"  # runs/<task>/<variant>/<model>.meta.json
 
 
 def _write_meta(path: Path, stats: dict[str, int], concurrency: int, spec: ModelSpec) -> None:
-    """Wall time of the last run that made every call itself; cached reruns keep the earlier one."""
+    """The concurrency the run's calls were made at, and the wall time of the last run that made every call itself.
+    A run that called nothing measured nothing: the earlier concurrency stays, so its latencies stay current."""
     meta = json.loads(path.read_text()) if path.exists() else {"schema": META}
     meta["last"] = stats
-    meta["requested"] = {"concurrency": concurrency, "declared_concurrency": spec.concurrency, "model_digest": model_digest(spec)}
+    if stats["calls"] or "requested" not in meta:
+        meta["requested"] = {"concurrency": concurrency, "declared_concurrency": spec.concurrency, "model_digest": model_digest(spec)}
     if stats["calls"] and not stats["cached"]:
         meta["measured"] = {"seconds": stats["seconds"], "calls": stats["calls"], "concurrency": concurrency}
     path.write_text(json.dumps(meta))

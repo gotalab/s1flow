@@ -359,3 +359,26 @@ def test_clopper_pearson_brackets_the_share_and_broken_is_never_kept(kn, bound_)
     for at_least in (True, False):
         c = measure.Constraint(count=lambda p: (k, n), bound=bound_, at_least=at_least, what="", beside=None)
         assert not (c.broken(k, n) and c.holds(k, n))
+
+
+def test_report_and_adopt_give_one_interval(tmp_path):
+    """report scores the dev cases alone and adopt the dev and test cases: one candidate gets the same intervals."""
+    from dataclasses import replace
+
+    from conftest import labelled
+    from s1flow.eval import evalset
+    from s1flow.objectives import F1
+
+    rng = np.random.default_rng(5)
+    y = rng.random(120) < .4
+    p = np.clip(np.where(y, .7, .3) + rng.normal(0, .25, len(y)), 0, 1)
+    t = labelled(task([F1()]), y, tmp_path)
+    full = binary_preds(p, y)
+    assign = evalset.current(t).assign
+    dev = np.array([assign[i] != "test" for i in full.ids])
+    assert 0 < (~dev).sum() < len(dev)
+    shown = metrics.evaluate(t, replace(full, ids=[i for i, d in zip(full.ids, dev) if d], pairs=full.pairs[np.flatnonzero(dev)]))
+    adopted = metrics.evaluate(t, full, include_test=True)
+    assert adopted.test is not None and adopted.n == shown.n
+    assert adopted.objective.value == shown.objective.value and adopted.objective.interval == shown.objective.interval
+    assert adopted.accuracy.interval == shown.accuracy.interval
