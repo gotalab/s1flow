@@ -79,6 +79,9 @@ print(decision.value, decision.probability, decision.decision_id)
 policy.feedback(decision.decision_id, True)  # the correct answer, once you know it
 ```
 
+`log=` is where decisions and right answers are kept, so they can be measured and become new cases. Without it
+(and without an OpenTelemetry tracer provider) nothing is recorded: the first `decide` warns, and `feedback` raises.
+
 ## The policy API
 
 You can also build a `PolicySpec` in Python and pass it to `DecisionPolicy(spec, client=client)`. Use `adecide`

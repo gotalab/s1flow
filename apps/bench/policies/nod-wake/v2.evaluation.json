@@ -1,0 +1,348 @@
+{
+ "schema": "s1flow/policy-evaluation@3",
+ "policy_digest": "2d1adb62a2a98f84be06a1ce8506028a4809826f18753f9f8242fba90e87066a",
+ "candidate": {
+  "model": "gemini-decision@google",
+  "variant": "base"
+ },
+ "selection": {
+  "by": "Claude",
+  "reason": "v1's model, liquid/d1, is gone from Vercel AI Gateway since 2026-11-20 (404). Re-measured the top candidates on 2026-11-23: gemini-decision@google, mammoth and reflex miss nothing on the 42 dev cases (loss 0); on the 23 held-out cases gemini-decision and mammoth still miss nothing and reflex misses one. Gemini runs on Google's own API, and mammoth was rate limited that day",
+  "tied": [
+   "gemini-decision@google",
+   "mammoth@openrouter",
+   "reflex@openrouter",
+   "decision-1.1@openrouter",
+   "clef-flash@openrouter",
+   "d1.2",
+   "decider-flash@openrouter",
+   "elephant@openrouter",
+   "decision-1@openrouter",
+   "d1.2-ultra"
+  ],
+  "forced": false
+ },
+ "evidence": {
+  "data_sha256": "2cf9c7143e5fb396d2f6756e8d9a33f9ec871b0310e51e20cb220fc64a4479c8",
+  "execution_digest": "16a79205c8391dbd59ff42a70352690b80d6a15dfb344aa6a47eb647420364b4",
+  "input_adapter_digest": "46434bbf9202e92eba8dd029dd828799b63a6dc5735b53349520626d43b52dd7",
+  "evaluation_contract_digest": "227a1e4f405b5d3dd09e39b48608245f16b76127dc0f47e94cef6793a7ed2c55",
+  "git_sha": "98a6f421a4a61fe7dabbe3d13818285efab3d848",
+  "evaluation": {
+   "candidate": {
+    "model": "gemini-decision@google",
+    "variant": "base"
+   },
+   "answered_by": "gemini-decision-1",
+   "answered_by_all": [
+    "gemini-decision-1"
+   ],
+   "answered_ids": [
+    "add-milk",
+    "atode-yomu",
+    "book-yes-un",
+    "cancel-scheduled-draft",
+    "change-to-three",
+    "digits-nohist",
+    "digits-verification-code",
+    "email-send-ok",
+    "haai-while-working",
+    "hotel-jaa-yasui",
+    "hungry-pending-restaurant",
+    "maaiika-accept-20h",
+    "maaiika-coupon",
+    "madaa",
+    "mouiiyo-thanks-decline",
+    "nohist-koyo-question",
+    "nohist-urgent-room",
+    "ok-ambiguous-choice",
+    "ok-info",
+    "oyasumi",
+    "plan-a-sorede",
+    "rain-bbq-musing",
+    "restaurant-iine-hold",
+    "ryokai-to-cancel-fee",
+    "ryokai-user-action",
+    "self-correct-train-date",
+    "sw-deploy-thanks",
+    "sw-dont-touch-file",
+    "sw-fix-tests-un",
+    "sw-migration-wait",
+    "sw-naming-change",
+    "tashikani-no-change",
+    "tasukaru",
+    "thanks-after-booking",
+    "thanks-plus-bus",
+    "thumbs-to-send-question",
+    "thumbs-to-sent",
+    "tickets-kaatte",
+    "un-to-checkin-info",
+    "wait-before-submit",
+    "yappari-iiya-decline-offer",
+    "yoroshiku-already-agreed"
+   ],
+   "n": 42,
+   "probabilities": true,
+   "failures": {
+    "calls": 80,
+    "failed": 0,
+    "unsupported": 0,
+    "data_errors": 0,
+    "unlabeled": 15,
+    "never_asked": 0,
+    "failed_cases": 0,
+    "refused_cases": 0
+   },
+   "split": "leave-one-out (23 test cases of the fixed evaluation set held out)",
+   "split_method": "loo",
+   "accuracy": {
+    "value": 1.0,
+    "interval": [
+     1.0,
+     1.0
+    ]
+   },
+   "measures": {
+    "f1": {
+     "value": 1.0,
+     "interval": null
+    },
+    "precision": {
+     "value": 1.0,
+     "interval": null
+    },
+    "recall": {
+     "value": 1.0,
+     "interval": null
+    }
+   },
+   "auroc": {
+    "value": 1.0,
+    "interval": [
+     1.0,
+     1.0
+    ]
+   },
+   "brier": 0.010890663861391694,
+   "ece": 0.05538907637538608,
+   "selective": [
+    {
+     "target_accuracy": 0.95,
+     "coverage": {
+      "value": 0.9761904761904762,
+      "interval": [
+       0.9285714285714286,
+       1.0
+      ]
+     },
+     "accuracy": 1.0,
+     "n": 41,
+     "errors": 0,
+     "lower": 0.929538882729836,
+     "labels_needed": 19,
+     "min_probability": 0.599543399970881
+    }
+   ],
+   "error_loss_threshold": {
+    "accuracy": 1.0,
+    "misses": 0,
+    "false_alarms": 0,
+    "median": 0.5,
+    "chosen": 0.5
+   },
+   "floors": [],
+   "sweep": [
+    {
+     "threshold": 0.1,
+     "misses": 0,
+     "positives": 26,
+     "false_alarms": 2,
+     "negatives": 16
+    },
+    {
+     "threshold": 0.2,
+     "misses": 0,
+     "positives": 26,
+     "false_alarms": 1,
+     "negatives": 16
+    },
+    {
+     "threshold": 0.3,
+     "misses": 0,
+     "positives": 26,
+     "false_alarms": 1,
+     "negatives": 16
+    },
+    {
+     "threshold": 0.4,
+     "misses": 0,
+     "positives": 26,
+     "false_alarms": 0,
+     "negatives": 16
+    },
+    {
+     "threshold": 0.5,
+     "misses": 0,
+     "positives": 26,
+     "false_alarms": 0,
+     "negatives": 16
+    },
+    {
+     "threshold": 0.6,
+     "misses": 1,
+     "positives": 26,
+     "false_alarms": 0,
+     "negatives": 16
+    },
+    {
+     "threshold": 0.7,
+     "misses": 1,
+     "positives": 26,
+     "false_alarms": 0,
+     "negatives": 16
+    },
+    {
+     "threshold": 0.8,
+     "misses": 2,
+     "positives": 26,
+     "false_alarms": 0,
+     "negatives": 16
+    },
+    {
+     "threshold": 0.9,
+     "misses": 4,
+     "positives": 26,
+     "false_alarms": 0,
+     "negatives": 16
+    }
+   ],
+   "objective": {
+    "objective": {
+     "name": "expected_loss",
+     "params": {
+      "fn": 10.0,
+      "fp": 1.0
+     },
+     "direction": "min",
+     "sets": "threshold",
+     "unit": "number",
+     "label": "loss per case (miss 10, false alarm 1)",
+     "code_sha256": null
+    },
+    "value": 0.0,
+    "interval": [
+     0.0,
+     0.0
+    ],
+    "rule": {
+     "threshold": 0.5,
+     "min_probability": null
+    },
+    "constraint": null
+   },
+   "tiebreak": [
+    {
+     "objective": {
+      "name": "accuracy",
+      "params": {},
+      "direction": "max",
+      "sets": "threshold",
+      "unit": "share",
+      "label": "accuracy (all)",
+      "code_sha256": null
+     },
+     "value": 1.0,
+     "interval": [
+      1.0,
+      1.0
+     ],
+     "rule": null,
+     "constraint": null
+    }
+   ],
+   "test": {
+    "n": 23,
+    "accuracy": 1.0,
+    "coverage": 1.0,
+    "sure_accuracy": 1.0,
+    "tuned_accuracy": 1.0,
+    "primary": {
+     "value": 0.0,
+     "interval": [
+      0.0,
+      0.0
+     ]
+    },
+    "constraint": null
+   },
+   "high_confidence_errors": [],
+   "calls": {
+    "latency": {
+     "n": 42,
+     "p50_ms": 254.45,
+     "p90_ms": 501.3999999999998,
+     "p95_ms": 578.835,
+     "p99_ms": 657.539,
+     "max_ms": 658.4,
+     "spread": 2.58415798781686,
+     "retried": 0,
+     "concurrency": [
+      4
+     ],
+     "concurrency_unknown": 0
+    },
+    "case_latency_p90_ms": {
+     "value": 501.3999999999998,
+     "interval": [
+      361.34824999999995,
+      648.5799999999998
+     ]
+    },
+    "throughput": {
+     "per_min": 797.7776194885677,
+     "seconds": 3.158775,
+     "calls": 42,
+     "concurrency": 4,
+     "measured": false
+    },
+    "cost_per_10k_usd": 0.36157142857142865,
+    "cost_total_usd": 0.0015186000000000002,
+    "cost_source": "list",
+    "cost_unknown": 0,
+    "price": {
+     "input_per_mtok": 0.1,
+     "output_per_mtok": 0.0,
+     "per_request": 0.0,
+     "per_image": 0.0,
+     "as_of": "2026-11-12",
+     "source": "https://aistudio.google.com/docs/pricing#gemini-decision (paid tier; no output charge)"
+    }
+   }
+  },
+  "test": "kept",
+  "compared": [
+   "clef-flash@openrouter",
+   "clef-omni@openrouter",
+   "clef@openrouter",
+   "d1-ultra@openrouter",
+   "d1.1@openrouter",
+   "d1.2-ultra",
+   "d1.2",
+   "decider-flash@openrouter",
+   "decider@openrouter",
+   "decision-1.1@openrouter",
+   "decision-1@openrouter",
+   "drex-max@openrouter",
+   "elephant@openrouter",
+   "gemini-decision@google",
+   "jev:1.14",
+   "joey@openrouter",
+   "kev@openrouter",
+   "luna@decisions",
+   "mammoth@openrouter",
+   "reflex@openrouter",
+   "span@openrouter"
+  ]
+ },
+ "answered_by": "gemini-decision-1"
+}

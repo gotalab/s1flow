@@ -95,7 +95,7 @@ def _decide_policy(a: argparse.Namespace) -> int:
         sure = f"probability {r.probability:.3f}" if r.probability is not None else f"confidence {r.confidence:.3f}" if r.confidence is not None else "no probability"
         print(f"{r.policy}: {json.dumps(r.model_dump(mode='json')['value'], ensure_ascii=False)} ({sure}"
               + (", below minimum probability" if r.below_min_probability else "") + f"; {r.answered_by})")
-        print(f"decision_id {r.decision_id}" + ("" if a.log else " (no --log: not written to a log)"))
+        print(f"decision_id {r.decision_id}")
     return 0
 
 

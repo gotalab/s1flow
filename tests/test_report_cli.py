@@ -104,6 +104,26 @@ def test_a_variant_named_comparison_leaves_the_snapshot_alone(ran):
     assert (ran.root / "out" / "questions" / "comparison.md").is_file()
 
 
+def test_markdown_shows_coverage_only_where_the_task_asks_for_it(ran):
+    task = ran.tasks_dir / "truth" / "task.py"
+
+    def markdown(objective, out):
+        task.write_text(TASK.replace("from s1flow.questions", "from s1flow.objectives import AUROC, Coverage, Loss\nfrom s1flow.questions").replace('"truth?"))', f'"truth?"), objective={objective})'))
+        assert cli("report", "truth", "--out", out).exit_code == 0
+        return (ran.root / out / "questions" / "base.md").read_text()
+
+    asked = markdown("Coverage(target_accuracy=0.9)", "asked")
+    assert "| coverage | sure accuracy (lower bound) |" in asked and "keeps the target 90%" in asked
+
+    tiebreak = markdown("Loss(unsure=0.3), tiebreak=[Coverage(target_accuracy=0.8)]", "tiebreak")  # shown at the target it set, not 95%
+    assert "| coverage | sure accuracy (lower bound) |" in tiebreak and "keeps the target 80%" in tiebreak
+
+    md = markdown("AUROC()", "other")  # at a target nobody set, coverage would read as a requirement
+    assert "| coverage |" not in md and "sure accuracy" not in md and "\nCoverage: " not in md
+    rows = md.split("## Comparison")[1].split("\n\n")[1].splitlines()
+    assert len({line.count("|") for line in rows}) == 1  # every row has the header's columns
+
+
 def test_many_pairs_nobody_ran_are_counted_not_listed(ran):
     task_py = ran.tasks_dir / "truth" / "task.py"
     variants = ", ".join(f'"v{i}": Boolean(instructions="truth {i}?")' for i in range(3))
