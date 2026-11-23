@@ -8,6 +8,10 @@ Images, audio, video and PDFs are Chat Completions content parts in the top-leve
 that does not read a kind answers 400; TypeSafe's `assets` is dropped without an error, so it must not
 be sent here (2026-10-15). Gemini Decision 1, Clef Omni and ScaleDown read audio, video or PDFs this way
 through `/systemone` too (2026-11-11).
+
+A value read from the state or an estimate (text, number, date, estimate) goes to the Extractions route
+instead (`POST /api/alpha/extractions`, extractions.py): the same envelope with `fields` for `questions`,
+and a text state. One call asks one route, so questions of both sorts do not mix.
 """
 
 import asyncio
@@ -16,17 +20,28 @@ from pathlib import Path
 from typing import Any
 
 from ..answers import Response, Usage
-from ..media import chat_parts
+from ...core.errors import Unsupported
+from ..media import chat_parts, text_of
 from ..models import Capabilities, ModelBuild, ModelSpec, Price, check_supported
-from ..questions import Questions
+from ..questions import FIELD_TYPES, Questions
 from ..state import State, has_media
 from .build import NoOptions, options, spec_options
 from .http import Request, send
 from .needs import Needs, declares, origin
 from .published import per_token, publishes
-from . import systemone
+from . import extractions, systemone
 
 BASE_URL = "https://openrouter.ai/api/v1"
+EXTRACTIONS_URL = "https://openrouter.ai/api/alpha/extractions"
+
+
+def reads_fields(questions: Questions) -> bool:
+    """Whether the questions go to the Extractions route: all of them, or none."""
+    field = [k for k, q in questions.items() if q.type in FIELD_TYPES]
+    if field and len(field) < len(questions):
+        raise Unsupported(f"OpenRouter answers {', '.join(sorted(FIELD_TYPES))} questions on another route than the rest: "
+                          f"ask {', '.join(field)} in a call of their own")
+    return bool(field)
 
 
 class OpenRouterModel:
@@ -46,12 +61,19 @@ class OpenRouterModel:
             await asyncio.sleep(wait)
 
     def request(self, state: State, questions: Questions, *, options: dict[str, Any] | None = None) -> Request:
-        body: dict[str, Any] = {"model": self.model_id, "state": state, "questions": systemone.questions(questions)}
-        if has_media(state):
-            body["state"] = chat_parts(state)
+        if reads_fields(questions):
+            if has_media(state):
+                raise Unsupported(f"{self.id} reads {', '.join(sorted(FIELD_TYPES))} questions from a text state")
+            url = EXTRACTIONS_URL
+            body: dict[str, Any] = {"model": self.model_id, "state": text_of(state), "fields": extractions.fields(questions)}
+        else:
+            url = f"{BASE_URL}/systemone"
+            body = {"model": self.model_id, "state": state, "questions": systemone.questions(questions)}
+            if has_media(state):
+                body["state"] = chat_parts(state)
         if options:
             body.update(options)
-        return Request(f"{BASE_URL}/systemone", body, keys={"Authorization": ("Bearer ", "OPENROUTER_API_KEY")})
+        return Request(url, body, keys={"Authorization": ("Bearer ", "OPENROUTER_API_KEY")})
 
     async def decide(self, state: State, questions: Questions, *, options: dict[str, Any] | None = None) -> Response:
         check_supported(self, state, questions)
@@ -62,14 +84,15 @@ class OpenRouterModel:
         usage = data.get("usage") or {}
         cost = usage.get("cost")
         return Response(
-            answers=systemone.answers(data["answers"]),
+            answers=(extractions if reads_fields(questions) else systemone).answers(data["answers"]),
             answered_by=data.get("model", self.model_id),
             usage=Usage(input_tokens=usage.get("input_tokens") or 0, output_tokens=usage.get("output_tokens") or 0,
                         cost_usd=float(cost) if cost is not None else None, cost_source="billed" if cost is not None else None,
                         raw=usage or None),
             latency_ms=posted.latency_ms,
             retries=posted.retries,
-            provider_metadata={"provider": data.get("provider")},
+            # truncated (Extractions): the provider read only a prefix of the state, so "nothing there" may be unread.
+            provider_metadata={"provider": data.get("provider")} | ({"truncated": True} if data.get("truncated") else {}),
         )
 
 

@@ -20,13 +20,13 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/automation-share-dark.svg">
-  <img alt="Ruff issues, 361 cases. Share each model can route on its own while staying 95% accurate, accuracy over all cases, median latency and API cost per 10,000 cases: Drex Max 89%, 91%, 439 ms, $0.28; Decider 88%, 92%, 219 ms, $0.09; mammoth-1 87%, 90%, 178 ms, $0.47; d1-ultra 86%, 90%, 687 ms, $0.17; Span-02 84%, 89%, 528 ms, $0.05; Jev 1.14 76%, 85%, 110 ms, $0.29; Clef 66%, 86%, 298 ms, $1.10." src="docs/images/automation-share.svg">
+  <img alt="Ruff issues, 361 cases. Share each model can route on its own while staying 95% accurate, accuracy over all cases, median latency and API cost per 10,000 cases: Drex Max 89%, 91%, 230 ms, $0.28; d1.2-ultra 88%, 91%, 145 ms, $0.17; mammoth-1 87%, 90%, 187 ms, $0.47; d1-ultra 85%, 90%, 232 ms, $0.17; Span-02 82%, 89%, 194 ms, $0.05; Jev 1.14 76%, 85%, 110 ms, $0.29; Clef 66%, 86%, 298 ms, $1.10." src="docs/images/automation-share.svg">
 </picture>
 
-Routing Ruff's issues to the area they concern, these seven models are within 7 points of each other on
+Routing Ruff's issues to the area they concern, these seven models are within 6 points of each other on
 accuracy, yet the share of issues each can route on its own while staying 95% accurate ranges from 66% to 89%.
 That share needs a confidence with every answer, so the uncertain issues can go to a person while the rest are
-acted on. Latency and cost differ too, and do not follow the share. The numbers are a snapshot of seven of the 19
+acted on. Latency and cost differ too, and do not follow the share. The numbers are a snapshot of seven of the 21
 decision models in the [reports](apps/bench/reports), each task scored by its own objective, not a ranking of
 providers; latency depends on where you call from. Your own cases may tell a different story,
 which is exactly why you measure them.
@@ -66,10 +66,16 @@ one the policy uses ([format](docs/app.md#your-first-decision)).
 from s1flow import Client, policies
 
 client = Client(connections="connections.toml")
-policy = policies.load(path="s1flow/policies/is-bug/v1.json", client=client)
-decision = policy.decide({"text": "Crash on startup"})
-decision.value, decision.probability   # True, 0.93
+policy = policies.load(path="s1flow/policies/is-bug/v1.json", client=client,
+                       log="decisions.jsonl", keep_state=True)
+decision = policy.decide({"title": "Crash on startup", "body": "It panics on an empty file."})
+decision.value, decision.probability          # True, 0.93
+policy.feedback(decision.decision_id, True)   # the correct answer, once you know it
 ```
+
+The input has the same fields as the cases the policy was measured on. `log=` keeps each decision and its correct
+answer, so `s1flow feedback measure` can score the policy in production and add them as new cases
+([Feedback and improvement](docs/feedback.md)).
 
 No labels yet? You can [ship a policy today](docs/app.md) and evaluate it later.
 
@@ -99,4 +105,4 @@ combining scores. s1flow runs inside your Python app or as the CLI, with no serv
 | [Feedback and improvement](docs/feedback.md) | recording correct answers, measuring in production, prompt optimization |
 | [Connections and discovery](docs/connections.md) | which models your app may call, and how config files are found |
 | [CLI, agents and CI](docs/cli-and-ci.md) | exit codes, the Agent Skill, GitHub Actions |
-| [Develop s1flow](docs/development.md) | running this repository's checks |
+| [Develop s1flow](AGENTS.md) | running this repository's checks, the rules for every change, releases |

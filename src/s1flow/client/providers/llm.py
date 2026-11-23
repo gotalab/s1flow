@@ -34,7 +34,7 @@ from ..answers import Answer, BooleanAnswer, BoxAnswer, BoxEdges, ChoiceAnswer, 
 from ..boxes import iou
 from ..media import data_url, images_only, placeholders
 from ..models import Capabilities, ModelBuild, ModelSpec, Price, check_supported
-from ..questions import Boolean, Choice, Questions, Score
+from ..questions import Boolean, Choice, Questions, Score, no_fields
 from ..state import Image, State, has_image
 from .build import Options, options, spec_options
 from .http import AUTH_STATUS, refused_without, retryable
@@ -254,6 +254,7 @@ class LLMModel:
 
     async def decide(self, state: State, questions: Questions, *, options: dict[str, Any] | None = None) -> Response:
         check_supported(self, state, questions)
+        no_fields(questions, "the LLM baseline")
         messages: list[dict[str, Any]] = [
             {"role": "system", "content": SYSTEM},
             {"role": "user", "content": user_content(state, questions, self.box_units)},

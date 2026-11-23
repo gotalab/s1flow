@@ -5,9 +5,10 @@ trusted, and how the SDK and the CLI find it.
 
 ## The connection file
 
-The TOML format uses `default` and `[models.NAME]` sections (see the example in
-[Run decisions in your app](app.md#your-first-decision)). A connection can also point to a custom provider that
-your app implements.
+The TOML format is a `[models.NAME]` section per model (see the example in
+[Run decisions in your app](app.md#your-first-decision)), copied from your project's `s1flow.toml`. `default`, the
+models `s1flow run` and `doctor` take without `--models`, is optional: an app's file can leave it out. A connection
+can also point to a custom provider that your app implements.
 
 The whole file you pass is the set of allowed models, so give production its own file rather than a research
 catalog full of unrelated credentials. A policy can't supply a provider import, an endpoint URL, or a credential
