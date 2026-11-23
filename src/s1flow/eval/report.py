@@ -199,6 +199,8 @@ def render(task: Task, variant: str, evs: list[Evaluation], preds: dict[str, met
              else f" (right within {getattr(kind, 'tolerance'):g} of the label)" if kind.type == "estimate"
              else f" ({', '.join(f'{k} {v}' for k, v in labels.most_common(8))}" + (", more" if len(labels) > 8 else "") + ")")
     sel0 = first.selective[0] if first and first.selective else None
+    # Coverage is shown where the task asks for it: at a target nobody set, it reads as a requirement
+    covered = any(o.name == "coverage" for o in task.objectives)
     scored, ranked = compared(task, evs)
     L: list[str] = [
         f"# {task.id}" + (f" · {variant}" if variant != "base" else ""),
@@ -212,20 +214,21 @@ def render(task: Task, variant: str, evs: list[Evaluation], preds: dict[str, met
         "## Comparison",
         "",
         "| model | scored | " + " | ".join(METRICS[name].label for name in ("accuracy", own, "auroc", "ece"))
-        + " | coverage | sure accuracy (lower bound) | refused | failed |",
-        "|---|---|---|---|---|---|---|---|---|---|",
+        + (" | coverage | sure accuracy (lower bound)" if covered else "") + " | refused | failed |",
+        "|---|---|---|---|---|---|" + ("---|---|" if covered else "") + "---|---|",
     ]
     for e in evs:
         f = e.failures
         if not e.n or not e.selective:
-            L.append(f"| {e.candidate.name} | 0 | — | | | | | | {f.unsupported}/{f.calls} calls | {f.failed}/{f.calls} |")
+            L.append(f"| {e.candidate.name} | 0 | — | | | |{' | |' if covered else ''} {f.unsupported}/{f.calls} calls | {f.failed}/{f.calls} |")
             continue
         s = e.selective[0]
         flag = "" if e.probabilities else " ※"
         acc = e.accuracy or Estimate(value=None)
         L.append(
             f"| {e.candidate.name}{flag}{' ✕' if f.missing else ''} | {e.n} | {pct(acc.value, 1)}{band(acc.interval)} | {num(e.measures[own].value if own in e.measures else None)} | {num(e.auroc.value if e.auroc else None)} | {num(e.ece)} "
-            f"| {pct(s.coverage.value)}{band(s.coverage.interval)} | {pct(s.accuracy, 1)} ({pct(s.lower, 1)}) | {pct(f.refusal_rate(e.n), 1)} ({f.refused_cases}/{e.n}) | {f.failed}/{f.calls} |"
+            + (f"| {pct(s.coverage.value)}{band(s.coverage.interval)} | {pct(s.accuracy, 1)} ({pct(s.lower, 1)}) " if covered else "")
+            + f"| {pct(f.refusal_rate(e.n), 1)} ({f.refused_cases}/{e.n}) | {f.failed}/{f.calls} |"
         )
     L += left_out(task, evs)
     L += ["", "Answered by: " + "; ".join(
@@ -238,13 +241,15 @@ def render(task: Task, variant: str, evs: list[Evaluation], preds: dict[str, met
     L += time_table(evs)
     L += [
         "",
-        f"Coverage: answering the most probable first, the largest share whose sure accuracy keeps the target {pct(sel0.target_accuracy) if sel0 else ''}. "
-        "The cut is chosen on each CV fold's fit side and measured on its eval side. The lower bound is a one-sided 95% Clopper-Pearson; [ ] is a 95% bootstrap interval.",
+        (f"Coverage: answering the most probable first, the largest share whose sure accuracy keeps the target {pct(sel0.target_accuracy) if sel0 else ''}. "
+         "The cut is chosen on each CV fold's fit side and measured on its eval side. The lower bound is a one-sided 95% Clopper-Pearson; " if covered else "")
+        + "[ ] is a 95% bootstrap interval.",
         "Scored: every labelled dev case the model answered or refused; held-out test results come only when a candidate is adopted. "
         "Refused: the share of the scored cases the model refused or does not support, each counted as no answer (wrong, and never sure). Failed counts calls.",
     ]
     if any(not e.probabilities for e in evs):
-        L.append("※ a model that returns no distribution (one answer): its probability is 1 for every answer, so the coverage is all or nothing.")
+        L.append("※ a model that returns no distribution (one answer): its probability is 1 for every answer"
+                 + (", so the coverage is all or nothing." if covered else "."))
     if box:
         L.append(f"Box: right at IoU {kind.iou:g} or more with the label's box. The probability is what jev returns; for an LLM, the agreement (IoU) of its repeated boxes. AUROC and ECE say how well that probability separates right from wrong."
                  + (" Where the label says the target is not in the picture, right is an answer of no box, as sure as the model says nothing is there." if absent else ""))
@@ -286,11 +291,13 @@ def render(task: Task, variant: str, evs: list[Evaluation], preds: dict[str, met
                 L.append(f"| {row.threshold:.2f} | {row.misses} ({pct(row.misses / row.positives if row.positives else None)}) | {row.false_alarms} ({pct(row.false_alarms / row.negatives if row.negatives else None)}) |")
 
     if any(e.test for e in evs):
-        L += ["", "## Test (read once, at the end)", "", "| model | cases | accuracy | coverage | sure accuracy | primary objective |", "|---|---|---|---|---|---|"]
+        L += ["", "## Test (read once, at the end)", "", "| model | cases | accuracy |" + (" coverage | sure accuracy |" if covered else "") + " primary objective |",
+              "|---|---|---|---|" + ("---|---|" if covered else "")]
         for e in evs:
             if e.test:
                 held = e.test
-                L.append(f"| {e.candidate.name} | {held.n} | {pct(held.accuracy, 1)} | {pct(held.coverage)} | {pct(held.sure_accuracy, 1)} | {num(held.primary.value, 3)} |")
+                L.append(f"| {e.candidate.name} | {held.n} | {pct(held.accuracy, 1)} |" + (f" {pct(held.coverage)} | {pct(held.sure_accuracy, 1)} |" if covered else "")
+                         + f" {num(held.primary.value, 3)} |")
 
     L += ["", f"## Wrong at a high probability ({metrics.HIGH_CONF} or more)", ""]
     any_err = False
