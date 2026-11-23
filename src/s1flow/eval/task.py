@@ -227,8 +227,8 @@ class Task:
 
     @property
     def coverage_target(self) -> float:
-        """The accuracy the table of sure answers keeps: the objective's, when it is Coverage, else 0.95."""
-        return cast(float, self.primary.params["target_accuracy"]) if self.primary.name == "coverage" else 0.95
+        """The accuracy the table of sure answers keeps: the first Coverage objective's (or tiebreak's), else 0.95."""
+        return next((cast(float, o.params["target_accuracy"]) for o in self.objectives if o.name == "coverage"), 0.95)
 
     @property
     def error_losses(self) -> tuple[float, float]:

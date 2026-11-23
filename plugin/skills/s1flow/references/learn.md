@@ -18,6 +18,22 @@ It calls no model, so it takes no `--connections`; `--path` reads a policy file 
 a class key, `true` / `false`, a score's level (`2`), or a box as JSON (`{"top": 0.1, "bottom": 0.3, "left": 0.2, "right": 0.6}`). `case_id` can repeat and is never a feedback key: a repeated case can have
 several decision ids. Keep the answered and feedback logs together.
 
+When labels arrive in bulk (a person corrected answers in a spreadsheet, a review queue exported its results), import
+the file instead of recording one at a time:
+
+```bash
+s1flow feedback import <task>[@vN] labels.csv --log decisions.jsonl   # CSV header: decision_id,label (other columns ignored)
+s1flow feedback import <task>[@vN] labels.jsonl --log decisions.jsonl # {"decision_id": ..., "label": ...} per line
+```
+
+Every row is checked before anything is written; one wrong row (a label that doesn't answer the question, a decision
+the log holds under another version, two labels for one decision) writes nothing and names its line. Split a file
+that mixes versions and import each part under its version. A corrected label only counts if it reaches a log:
+when the person's app or tool keeps corrections elsewhere, export them with the decision ids and import them here.
+
+Nothing is recorded without a place to record it: a policy loaded without `log=` (and with no OpenTelemetry tracer
+provider) warns on its first decide, and its `feedback` raises. If the person's app has no `log=`, add it first.
+
 ## Measure production
 
 ```bash

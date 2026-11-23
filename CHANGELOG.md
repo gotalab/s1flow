@@ -4,6 +4,10 @@
 
 ### Added
 
+- `s1flow feedback import TASK labels.csv --log decisions.jsonl` records many right answers at once, such as labels
+  a person corrected: a CSV with `decision_id` and `label` columns, or JSON Lines. Every row is checked first, and
+  one wrong row writes nothing. A policy without `log=` (and with no OpenTelemetry tracer provider) now warns on its
+  first decide that nothing is recorded, and its `feedback` raises instead of dropping the label.
 - A policy holds a score or box question too, not only yes/no and choice: save it with `adopt --spec`, and its
   answers are logged and take feedback like any other (`feedback record <task> <id> 2`, or a box as JSON). `adopt`
   takes a score or box candidate from `report` like any other. `decide --policy` also prints the decision ID.
@@ -67,7 +71,10 @@
 - The `liquid` provider reads a box the model did not find as an answer of no box, not as a refusal: in an
   evaluation it is a wrong answer the model was sure of, where it was no answer before. `run` asks Liquid's models
   again once instead of reusing the answers saved before; other providers' saved answers stand.
-
+- The summary `report --out` writes shows the `coverage` and `sure accuracy` columns only for a task whose
+  objective or tiebreak is `Coverage(...)`, at that objective's target. For any other task they were printed at a
+  95% target nobody set; `comparison.json` and the comparison page still hold that reference value. A task whose
+  Coverage is only a tiebreak now gets its sure answers at the tiebreak's target, not at 95%.
 - The comparison page (`charts.py`) orders its columns by what a choice weighs: the task's objective first, then
   latency, then API cost, then the other metrics. The column the table is sorted by carries a mark.
 - `optimize` is marked experimental in `--help`, the docs and the Skill: its options and the record it saves may
@@ -98,6 +105,13 @@
   disagree. The held-out test verdict now comes from `adopt` alone: it tests the picked candidate and does not
   save one that falls short. Delete `.github/workflows/s1flow-check.yml` from a project that has it. The decide
   Action (`gotalab/s1flow/decide`) is unchanged.
+
+### Fixed
+
+- A production decision on an image (or audio, video, PDF) now becomes a usable case: `feedback measure --add` wrote
+  the kept state with its prepared media inline, and every later read of those cases (`cases check`, `run`)
+  refused them as a bad media reference. Prepared media are now read back as they are, so the case holds the
+  exact bytes the model saw, checked against their sha256 and format.
 
 ## 0.1.0a5 (2026-11-12)
 
