@@ -255,7 +255,7 @@ def test_an_app_without_a_project_adopts_with_root(tmp_path):
     app = tmp_path / "app"
     config = app / "connections.toml"
     config.parent.mkdir()
-    config.write_text('default = []\n[models.trusted]\nprovider = "toy_provider:build"\nid = "fixed-v1"\n')
+    config.write_text('[models.trusted]\nprovider = "toy_provider:build"\nid = "fixed-v1"\n')
     git = {"GIT_CONFIG_COUNT": "1", "GIT_CONFIG_KEY_0": "user.name", "GIT_CONFIG_VALUE_0": "App owner"}
     for v in (1, 2):
         (app / f"v{v}.json").write_text(runtime_spec(version=v).dump())
