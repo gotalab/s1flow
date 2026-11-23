@@ -12,7 +12,7 @@ translated_from: 0374ffd4aa92
 
 Skill は、[はじめる](get-started.md#add-the-skill-to-your-coding-agent)のとおりに入れます。プラグインは Cursor のマニフェストも持ち、Agent Plugins の形式に従っているので、Cursor のチーム向けマーケットプレイスに取り込むチームにも使えます。`SKILL.md` は、6 つのリファレンス（collect、measure、ship、app、learn、setup）のどれを各段階で読むかを示します。Skill は `plugin/skills/s1flow/` にあり、プラグインとパッケージの両方がこれを持っています。Skill は、ケース集め、比較、見直し、改善を同じ CLI で進めます。別の実装ではありません。
 
-はじめるの例のような頼み方をすると、Skill は `github.py` スクリプトで issue を取ってきて、`cases check`、`run`、`report` を実行し、どの候補を選ぶかはあなたに任せます。
+「はじめる」の例のような頼み方をすると、Skill は `github.py` スクリプトで issue を取ってきて、`cases check`、`run`、`report` を実行し、どの候補を選ぶかはあなたに任せます。
 
 ## GitHub Actions { #github-actions }
 

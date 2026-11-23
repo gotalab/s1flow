@@ -17,10 +17,20 @@
     for (const a of links) {
       a.dataset.root = a.dataset.root || (a.hreflang === "ja" ? ja : en);
       const target = a.hreflang === "ja" ? ja : en;
-      a.href = target + (target === ja && ENGLISH_ONLY.test(page) ? "" : page) + location.hash;
+      a.dataset.page = target + (target === ja && ENGLISH_ONLY.test(page) ? "" : page);
+      a.href = a.dataset.page + location.hash;
     }
   }
 
   if (window.document$) window.document$.subscribe(relink);
   else document.addEventListener("DOMContentLoaded", relink);
+  // The section can change without a page load (a link within the page): take it when the link is used.
+  document.addEventListener("pointerdown", (event) => {
+    const a = event.target.closest?.("a.md-select__link[data-page]");
+    if (a) a.href = a.dataset.page + location.hash;
+  }, true);
+  document.addEventListener("focusin", (event) => {
+    const a = event.target.closest?.("a.md-select__link[data-page]");
+    if (a) a.href = a.dataset.page + location.hash;
+  });
 })();

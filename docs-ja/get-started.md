@@ -12,8 +12,6 @@ Use s1flow to decide whether a new GitHub issue is a bug. Call the task is-bug,
 collect 200 labeled issues, compare the models and show me the result.
 ```
 
-（日本語で「s1flow で、新しい GitHub の issue がバグかどうかを判断したい。タスク名は is-bug、ラベル付きの issue を 200 件集めて、モデルを比べて結果を見せて」と頼んでも構いません。）
-
 エージェントがケースを集め、モデルを比べ、結果を見せます。選ぶのはあなたで、それをアプリが動かします。最初に頼む前に、エージェントには CLI と s1flow の Skill が要ります。
 
 ## CLI を入れる { #install-the-cli }
@@ -70,7 +68,7 @@ decision.value, decision.probability   # True, 0.93
 
 答えで何をするかは、あなたのコード次第です。そのまま実行するか、確率がポリシーの最低値より低ければ人に回します。正解が分かったら記録してください。次の比較のケースになります（[フィードバックと改善](feedback.md)）。
 
-ラベルがまだ無い？ [今日ポリシーを出して](app.md)、あとで評価することもできます。
+ラベルがまだありませんか？ [今日ポリシーを出して](app.md)、あとで評価することもできます。
 
 ## 次に読む { #next }
 
