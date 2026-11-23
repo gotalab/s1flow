@@ -47,3 +47,13 @@ def latency_first(slower_interval):
 def test_latency_intervals_that_touch_tie():
     assert latency_first((110.0, 130.0)) == ["slow", "fast"]  # touching: latency does not tell them apart, the objective does
     assert latency_first((110.5, 130.0)) == ["fast", "slow"]
+
+
+def test_a_candidate_whose_objective_has_no_rule_is_left_out():
+    """No min probability keeps Coverage's target on the dev cases: its 0 is no value to tie on, and adopt could not
+    make a policy of it, so the list leaves it out and says why."""
+    none = ev("none", [scored(Coverage(), 0.0, (0.0, 0.0))]).model_copy(update={"objective": scored(Coverage(), 0.0, (0.0, 0.0))})
+    some = ev("some", [scored(Coverage(), 0.0, (0.0, 0.1))])  # given a rule (conftest.ev): it can be picked
+    assert violations(Constraints(), none) == ["no min probability keeps coverage at 95% accuracy on the dev cases"]
+    ranked = rank(Coverage(), [], Constraints(), [none, some])
+    assert [(x.candidate, x.tied_with_best, bool(x.excluded)) for x in ranked] == [("some", True, False), ("none", False, True)]

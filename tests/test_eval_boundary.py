@@ -286,7 +286,7 @@ def test_concurrency_change_invalidates_old_shortlist_but_reuses_raw_answers(tmp
     assert fresh.evaluations["m"].calls.latency is None
 
 
-def test_requested_run_width_change_invalidates_shortlist_without_new_calls(tmp_path, monkeypatch):
+def test_a_run_at_another_width_that_calls_nothing_refuses_the_list_and_keeps_the_latency(tmp_path, monkeypatch):
     import asyncio
 
     from s1flow.core.errors import ConfigError
@@ -305,7 +305,8 @@ def test_requested_run_width_change_invalidates_shortlist_without_new_calls(tmp_
         adopt.adopt(task, "m", "test", "stale requested width", listed=listed)
     fresh = adopt.shortlist(task)
     assert fresh.evaluations["m"].n == listed.evaluations["m"].n
-    assert fresh.evaluations["m"].calls.latency is None
+    # it measured nothing at width 8: the latency measured before stays, at the width it was measured at
+    assert fresh.evaluations["m"].calls.latency == listed.evaluations["m"].calls.latency is not None
 
 
 @pytest.mark.parametrize("what", CONDITIONS)
