@@ -66,10 +66,16 @@ one the policy uses ([format](docs/app.md#your-first-decision)).
 from s1flow import Client, policies
 
 client = Client(connections="connections.toml")
-policy = policies.load(path="s1flow/policies/is-bug/v1.json", client=client)
-decision = policy.decide({"text": "Crash on startup"})
-decision.value, decision.probability   # True, 0.93
+policy = policies.load(path="s1flow/policies/is-bug/v1.json", client=client,
+                       log="decisions.jsonl", keep_state=True)
+decision = policy.decide({"title": "Crash on startup", "body": "It panics on an empty file."})
+decision.value, decision.probability          # True, 0.93
+policy.feedback(decision.decision_id, True)   # the correct answer, once you know it
 ```
+
+The input has the same fields as the cases the policy was measured on. `log=` keeps each decision and its correct
+answer, so `s1flow feedback measure` can score the policy in production and add them as new cases
+([Feedback and improvement](docs/feedback.md)).
 
 No labels yet? You can [ship a policy today](docs/app.md) and evaluate it later.
 

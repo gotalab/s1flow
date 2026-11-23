@@ -22,7 +22,7 @@ NAME = re.compile(r"[A-Za-z0-9][\w.+@-]*")  # no ":" (it asks for a version) and
 
 class Lineup(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    default: list[str]
+    default: list[str] = []  # what `run` and `doctor` take without --models; an app's connections file leaves it out
     models: dict[str, ModelSpec]
     _path: Path | None = PrivateAttr(default=None)
 
