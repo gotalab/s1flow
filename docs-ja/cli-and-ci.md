@@ -16,6 +16,6 @@ Skill は、[はじめる](get-started.md#add-the-skill-to-your-coding-agent)の
 
 ## GitHub Actions { #github-actions }
 
-`decide/action.yml` は、本体のパッケージと明示的な `connections` の入力を使い、`answer`、`probability`、`below_min_probability`、`decision_id`、`policy` を出力します。評価用の Action はありません。`adopt` は、実行した場所で、取り分けたテスト用のケースで候補を試し、プルリクエストがその結果を運びます（[ポリシー、証拠、リリース](policies.md#evidence-and-releases)）。
+`decide/action.yml` は、本体のパッケージと明示的な `connections` の入力を使い、`answer`、`probability`、`below_min_probability`、`decision_id`、`policy` を出力します。評価用の Action はありません。`adopt` は、実行した場所で、ホールドアウトしたテスト用のケースで候補を試し、プルリクエストがその結果を運びます（[ポリシー、証拠、リリース](policies.md#evidence-and-releases)）。
 
 入力はファイルと環境変数で渡し、シェルのコマンドに貼り込むことはありません。ワークフローは、選んだパッケージを最初に入れます。実行時にポリシーを読み込んでも、何かを入れることはありません。本番のワークフローでは、Action をリリースのタグかコミットの SHA に、パッケージをバージョンに固定してください。decide の Action を呼ぶワークフローの例は [examples/](https://github.com/gotalab/s1flow/tree/main/examples) にあります。

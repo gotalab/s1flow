@@ -22,7 +22,7 @@ nav = [
     { "ポリシー、証拠、リリース" = "policies.md" },
     { "アプリで判断を動かす" = "app.md" },
     { "フィードバックと改善" = "feedback.md" },
-    { "接続と探索" = "connections.md" },
+    { "接続ファイルとその探し方" = "connections.md" },
     { "CLI、エージェント、CI" = "cli-and-ci.md" },
     { "s1flow を開発する（英語）" = "https://gotalab.github.io/s1flow/development/" },
   ] },
