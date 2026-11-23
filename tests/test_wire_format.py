@@ -52,9 +52,6 @@ SYSTEM_ONE = {
 }
 REPLIES: dict[str, dict[str, Any]] = {
     "typesafe": {"model": "jev-1.14.0", "answers": SYSTEM_ONE, "usage": {"input_tokens": 90, "output_tokens": 0}},
-    "gateway": {"model": "typesafe-ai/jev", "answers": SYSTEM_ONE | {"refund": {"type": "boolean", "probability": 0.1}},
-                "usage": {"inputTokens": 90, "outputTokens": 0},
-                "providerMetadata": {"typesafe": {"confidence": {"kind": 0.9}}, "gateway": {"cost": "0.00001"}}},
     "openrouter": {"model": "typesafe/jev", "answers": SYSTEM_ONE, "usage": {"input_tokens": 90, "output_tokens": 0, "cost": 0.00001}},
     "cloudflare": {"result": {"model": "clef", "answers": SYSTEM_ONE | {"kind": SYSTEM_ONE["kind"] | {
         "choice": "o0_kind_bug", "probabilities": {"o0_kind_bug": 0.8, "o1_kind_question": 0.2}}}, "usage": {"input_tokens": 90}}},
@@ -68,11 +65,12 @@ REPLIES: dict[str, dict[str, Any]] = {
 }
 BOX_REPLIES: dict[str, dict[str, Any]] = {
     "typesafe": {"model": "jev-1.14.0", "answers": {"where": BOX_ANSWER}},
-    "gateway": {"model": "typesafe-ai/jev", "answers": {"where": BOX_ANSWER}},
+    "gateway": {"model": "typesafe-ai/jev", "answers": [BOX_ANSWER | {"name": "where"}]},
     "openrouter": {"model": "typesafe/jev", "answers": {"where": BOX_ANSWER}},
     "cloudflare": {"result": {"model": "clef", "answers": {"where": BOX_ANSWER}}},
 }
 ALL = Capabilities(image=True, question_types=frozenset({"boolean", "choice", "score", "box"}))
+REPLIES["gateway"] = REPLIES["openai-decisions"] | {"model": "typesafe-ai/jev", "provider_metadata": {"gateway": {"cost": "0.00001"}}}
 REPLIES["liquid"] = {"model": "d1.2", "answers": SYSTEM_ONE, "usage": {"input_tokens": 90, "output_tokens": 0, "cost": 0.0000018}}
 BOX_REPLIES["liquid"] = {"model": "d1.2", "answers": {"where": BOX_ANSWER | {"found": 0.9}}}
 REPLIES["gemini"] = {"model": "gemini-decision-1", "answers": SYSTEM_ONE, "usage": {"total_input_tokens": 90}}

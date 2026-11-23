@@ -40,6 +40,9 @@
 
 ### Changed
 
+- The `gateway` provider (Vercel AI Gateway) calls `/v1/decisions` instead of the deprecated `/v1/evaluate`. Images
+  now reach every model there as `input_image` parts: Drex Max v1.1 refused the old `image_url` parts and Mo read
+  them without seeing the picture. Saved answers and adoptions stay valid.
 - The summary `report --out` writes shows the `coverage` and `sure accuracy` columns only for a task whose
   objective or tiebreak is `Coverage(...)`, at that objective's target. For any other task they were printed at a
   95% target nobody set; `comparison.json` and the comparison page still hold that reference value. A task whose
