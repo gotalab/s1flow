@@ -40,10 +40,11 @@ jobs:
           log: ${{ runner.temp }}/s1flow-log.jsonl
         env:
           # The s1flow.toml above is the trusted allow-list; these are the keys its listed connections may read.
-          AI_GATEWAY_API_KEY: ${{ secrets.AI_GATEWAY_API_KEY }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          LIQUID_API_KEY: ${{ secrets.LIQUID_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       - name: Act on the answer
         if: steps.s1.outcome == 'success'
         env:
