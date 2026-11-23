@@ -38,6 +38,13 @@
   only a model that hears, watches or reads it can answer. Through OpenRouter, Gemini Decision 1 takes all three,
   Clef Omni audio and video, ScaleDown Classify 1 PDFs (the Skill's setup reference has their entries).
 
+- Four question types for the `Client`: `Text`, `Number` and `Date` read a value from the state (`None` when the
+  model finds nothing, with `p_null`, `confidence` and `span` where the model gives them), and `RangeEstimate` asks for
+  a number between a `min` and a `max` with its p10 - p90 interval. The `openrouter` provider sends them to
+  OpenRouter's Extractions route (Clairic, Schematron, Perplexity's Decider v1.3, ScaleDown Extract), a model
+  declares them in `capabilities.question_types`, and `s1flow models --verify` checks each. Evaluation and policies
+  do not take them yet.
+
 ### Changed
 
 - The summary `report --out` writes shows the `coverage` and `sure accuracy` columns only for a task whose
@@ -96,10 +103,17 @@
     question is scored on the train and val cases it was chosen on, so its values lean high; `adopt` confirms it
     on the held-out test.
   - `feedback measure` shows a share and its interval both in percent (`80.0% [62.0, 91.0]`, not `0.800 [62, 91]`).
+- An app's `connections.toml` no longer needs a `default` line: copying a model's entry from `s1flow.toml` is
+  enough, where it used to fail with "default: Field required". Without `default`, `doctor` checks every model and
+  `run` asks for `--models`. The README's app example now sends the fields the measured cases had and keeps a log,
+  so the correct answers can become new cases.
 - A production decision on an image (or audio, video, PDF) now becomes a usable case: `feedback measure --add` wrote
   the kept state with its prepared media inline, and every later read of those cases (`cases check`, `run`)
   refused them as a bad media reference. Prepared media are now read back as they are, so the case holds the
   exact bytes the model saw, checked against their sha256 and format.
+- An input Google's safety filters block is now recorded as refused (the model's limit, scored as no answer) when
+  Gemini Decision 1 is reached through OpenRouter too, not only on Google's own API. Through OpenRouter it was a
+  failed call, so the case was left out of the scores.
 
 ## 0.1.0a5 (2026-11-12)
 
