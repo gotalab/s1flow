@@ -1,9 +1,9 @@
 {
  "schema": "s1flow/comparison@2",
- "id": "2868d14f3dd2bad5b3778eecd91dd802fe99c8ade1f6828c2abb23568aaadaf6",
+ "id": "7ddf20eda326e0378571dfcbfabf90d09315bd86fafe28f321b5b939603576d3",
  "task": "massive-ja-intent",
  "source": "MASSIVE 1.1 ja-JP test（Amazon, CC BY 4.0）から各意図 5 件まで",
- "at": "2026-11-23T16:45:06Z",
+ "at": "2026-11-23T17:08:22Z",
  "scope": "dev",
  "question_type": "choice",
  "kind_params": {},
@@ -26,7 +26,7 @@
   "min_recall": null
  },
  "data_digest": "5456c912657b6262f7504ee0a5d93e5af26866852485a809c35229fa3c982f7d",
- "evaluation_contract_digest": "4ab6d5cc491925c9afb160e97501d5237bc5babde7590101e69239c51d91009e",
+ "evaluation_contract_digest": "dcf2c9ca87af151afc834b34f905c7f46a7b94df4a8ced72d4531d412055ae7b",
  "input_adapter_digest": "10c79c851c7129fd46c046e0cc5aee5b2727a2d5b9ce1162704dd1fb8a82fd4d",
  "binding_digests": {
   "clef": "f0ba18c14d995fef01ff2bbcbae8ef95ece632049c74340b3a7944140b86b542",

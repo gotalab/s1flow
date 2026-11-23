@@ -2,9 +2,9 @@
  "schema": "s1flow/report@1",
  "task": "gh-gemini-needinfo",
  "variant": "base",
- "at": "2026-11-23T16:44:07Z",
+ "at": "2026-11-23T17:06:43Z",
  "data_digest": "b17dc521de5b361930b92a4ab9abcb940fb73b6a2828ab3080cbad284ed044fa",
- "evaluation_contract_digest": "bf00cc54a687a5d15d078fab916780c88c8ba99d4658be3215899cd31a09ac9f",
+ "evaluation_contract_digest": "d822ee3adf79c859d18ad969ceafd8714a4ba3d4fe1b5123bcfe2bfb3aa0bba5",
  "input_adapter_digest": "20fb596b887a939006b860447f40b7ebaf1944d519d68735969ad00537fbe652",
  "evaluations": [
   {

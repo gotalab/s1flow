@@ -2,9 +2,9 @@
  "schema": "s1flow/report@1",
  "task": "massive-ja-intent",
  "variant": "base",
- "at": "2026-11-23T16:45:15Z",
+ "at": "2026-11-23T17:08:34Z",
  "data_digest": "5456c912657b6262f7504ee0a5d93e5af26866852485a809c35229fa3c982f7d",
- "evaluation_contract_digest": "4ab6d5cc491925c9afb160e97501d5237bc5babde7590101e69239c51d91009e",
+ "evaluation_contract_digest": "dcf2c9ca87af151afc834b34f905c7f46a7b94df4a8ced72d4531d412055ae7b",
  "input_adapter_digest": "10c79c851c7129fd46c046e0cc5aee5b2727a2d5b9ce1162704dd1fb8a82fd4d",
  "evaluations": [
   {
