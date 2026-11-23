@@ -1,6 +1,6 @@
 # enrico-screen
 
-2026-11-17 · 154 labelled dev cases (form 9, gallery 9, menu 9, settings 9, bare 8, chat 8, editor 8, list 8, more) · split: stratified k-fold (no test case among these: CV numbers only) · source: Enrico (labels MIT) on Rico screenshots (CC BY 4.0): up to 12 screens per design topic, mislabelled ones replaced
+2026-11-23 · 154 labelled dev cases (form 9, gallery 9, menu 9, settings 9, bare 8, chat 8, editor 8, list 8, more) · split: stratified k-fold (no test case among these: CV numbers only) · source: Enrico (labels MIT) on Rico screenshots (CC BY 4.0): up to 12 screens per design topic, mislabelled ones replaced
 
 elephant@openrouter has the highest coverage at 90% accuracy, 62% [55, 71] (API cost $0.31 per 10k, p99 384ms). Its interval overlaps with decider@openrouter, drex-max@openrouter, gemini-decision@google, jev:1.14, jev, clef@openrouter, clef-flash@openrouter, mammoth@openrouter, decider-flash@openrouter, decision-1.1@openrouter, d1-ultra@openrouter: the objective cannot tell them apart; interval overlap does not establish equivalence. The highest raw accuracy (dev) is decider@openrouter's, 73% [66, 80].
 
@@ -15,7 +15,6 @@ elephant@openrouter has the highest coverage at 90% accuracy, 62% [55, 71] (API 
 | d1.1@openrouter | 154 | 66.2% [59, 73] | 0.68 | 0.97 | 0.13 | 44% [36, 51] | 89.6% (81.3%) | 0.0% (0/154) | 0/154 |
 | d1.2 | 154 | 64.3% [56, 71] | 0.66 | 0.97 | 0.10 | 42% [34, 50] | 89.2% (80.7%) | 0.0% (0/154) | 0/154 |
 | d1.2-ultra | 154 | 62.3% [55, 69] | 0.63 | 0.97 | 0.09 | 45% [38, 53] | 88.6% (80.3%) | 0.0% (0/154) | 0/154 |
-| d1@vercel | 154 | 60.4% [53, 69] | 0.62 | 0.96 | 0.14 | 47% [40, 54] | 88.9% (80.8%) | 0.0% (0/154) | 0/154 |
 | decider-flash@openrouter | 154 | 70.1% [63, 77] | 0.72 | 0.98 | 0.05 | 55% [48, 63] | 90.6% (83.7%) | 0.0% (0/154) | 0/154 |
 | decider@openrouter | 154 | 72.7% [66, 80] | 0.74 | 0.99 | 0.10 | 56% [48, 64] | 88.4% (81.1%) | 0.0% (0/154) | 0/154 |
 | decision-1.1@openrouter | 154 | 68.2% [60, 75] | 0.69 | 0.98 | 0.04 | 49% [41, 57] | 89.3% (81.6%) | 0.0% (0/154) | 0/154 |
@@ -30,7 +29,7 @@ elephant@openrouter has the highest coverage at 90% accuracy, 62% [55, 71] (API 
 | reflex@openrouter | 154 | 64.9% [58, 73] | 0.66 | 0.98 | 0.12 | 46% [39, 54] | 90.1% (82.3%) | 0.0% (0/154) | 0/154 |
 | span@openrouter | 154 | 66.2% [59, 73] | 0.68 | 0.96 | 0.13 | 31% [24, 38] | 91.7% (81.9%) | 0.0% (0/154) | 0/154 |
 
-Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef-omni@openrouter = cloudflare/clef-omni-20261009; clef@openrouter = cloudflare/clef; d1-ultra@openrouter = liquid/d1-ultra-20261015; d1.1@openrouter = liquid/d1.1-20261027; d1.2 = d1.2; d1.2-ultra = d1.2-ultra; d1@vercel = liquid/d1; decider-flash@openrouter = perplexity/pplx-decider-flash-v1.2-20261016; decider@openrouter = perplexity/pplx-decider-v1.2-20261016; decision-1.1@openrouter = microsoft/microsoft-decision-1.1-20261117; drex-max@openrouter = nace-ai/drex-max-20261016; elephant@openrouter = baseten/elephant-1-20261021; gemini-decision@google = gemini-decision-1; jev = jev-1.14.0; jev:1.14 = jev-1.14.0; joey@openrouter = baseten/joey-1-20261029; luna@decisions = gpt-6-luna; mammoth@openrouter = baseten/mammoth-1-20261021; reflex@openrouter = morph/reflex-20261103; span@openrouter = respan/span-02-20261015. To compare versions, run each by name: `s1flow run <task> --models jev:1.14`.
+Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef-omni@openrouter = cloudflare/clef-omni-20261009; clef@openrouter = cloudflare/clef; d1-ultra@openrouter = liquid/d1-ultra-20261015; d1.1@openrouter = liquid/d1.1-20261027; d1.2 = d1.2; d1.2-ultra = d1.2-ultra; decider-flash@openrouter = perplexity/pplx-decider-flash-v1.2-20261016; decider@openrouter = perplexity/pplx-decider-v1.2-20261016; decision-1.1@openrouter = microsoft/microsoft-decision-1.1-20261117; drex-max@openrouter = nace-ai/drex-max-20261016; elephant@openrouter = baseten/elephant-1-20261021; gemini-decision@google = gemini-decision-1; jev = jev-1.14.0; jev:1.14 = jev-1.14.0; joey@openrouter = baseten/joey-1-20261029; luna@decisions = gpt-6-luna; mammoth@openrouter = baseten/mammoth-1-20261021; reflex@openrouter = morph/reflex-20261103; span@openrouter = respan/span-02-20261015. To compare versions, run each by name: `s1flow run <task> --models jev:1.14`.
 
 ## Objectives and constraints
 
@@ -48,7 +47,6 @@ Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef-omni@openrouter
 | decider-flash@openrouter = | 55% [48, 63] | 70% [63, 77] | 0.66 | met |
 | decision-1.1@openrouter = | 49% [41, 57] | 68% [60, 75] | 0.75 | met |
 | d1-ultra@openrouter = | 51% [44, 60] | 65% [57, 73] | 0.59 | met |
-| d1@vercel | 47% [40, 54] | 60% [53, 69] | 0.75 | met |
 | reflex@openrouter | 46% [39, 54] | 65% [58, 73] | 0.83 | met |
 | d1.2-ultra | 45% [38, 53] | 62% [55, 69] | 0.66 | met |
 | d1.1@openrouter | 44% [36, 51] | 66% [59, 73] | 0.61 | met |
@@ -71,7 +69,6 @@ Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef-omni@openrouter
 | d1.1@openrouter | 154 | 281 ms | 482 ms | 618 ms | 680 ms | 2.2 | 0 | 4 | $0.19 | billed |  |
 | d1.2 | 154 | 416 ms | 1093 ms | 1871 ms | 2168 ms | 4.5 | 0 | 4 | $0.19 | billed |  |
 | d1.2-ultra | 154 | 351 ms | 776 ms | 1503 ms | 1763 ms | 4.3 | 0 | 4 | $0.39 | billed |  |
-| d1@vercel | 154 | 2950 ms | 7427 ms | 9138 ms | 9627 ms | 3.1 | 18 | 4 | $0.19 | billed |  |
 | decider-flash@openrouter | 154 | 212 ms | 282 ms | 429 ms | 451 ms | 2.0 | 0 | 4 | $0.08 | billed | ○ |
 | decider@openrouter | 154 | 323 ms | 500 ms | 962 ms | 1109 ms | 3.0 | 0 | 4 | $0.15 | billed | ○ |
 | decision-1.1@openrouter | 154 | 399 ms | 462 ms | 766 ms | 867 ms | 1.9 | 0 | 4 | $0.19 | billed |  |
@@ -88,7 +85,7 @@ Answered by: clef-flash@openrouter = cloudflare/clef-flash; clef-omni@openrouter
 
 Measured on the calls, not the answers: never an objective, only the constraints and the order of candidates the objectives tie (the p90 of each case's slowest call, then API cost). Frontier ○: no other model beats it on all three of the primary objective, API cost per 10k and p99.
 Latency is the time from sending to receiving one call that answered (the round trip from here included), without retries or the wait before them. Many calls at once read slower, from the provider's load and this machine's connections: to compare models, measure every candidate again at the same concurrency (`s1flow run <task> --fresh --concurrency N`, the same N for all).
-Where the API costs come from: billed: clef-flash@openrouter, clef-omni@openrouter, clef@openrouter, d1-ultra@openrouter, d1.1@openrouter, d1.2, d1.2-ultra, d1@vercel, decider-flash@openrouter, decider@openrouter, decision-1.1@openrouter, drex-max@openrouter, elephant@openrouter, joey@openrouter, mammoth@openrouter, reflex@openrouter, span@openrouter; estimated (recorded tokens times a list price: s1flow.toml's where dated, else the LLM price table's; not a bill): gemini-decision@google (list price of 2026-11-12), jev (list price of 2026-10-03), jev:1.14 (list price of 2026-10-03), luna@decisions (list price of 2026-10-09). Billed and estimated API costs sit side by side, so their differences do not compare as they are.
+Where the API costs come from: billed: clef-flash@openrouter, clef-omni@openrouter, clef@openrouter, d1-ultra@openrouter, d1.1@openrouter, d1.2, d1.2-ultra, decider-flash@openrouter, decider@openrouter, decision-1.1@openrouter, drex-max@openrouter, elephant@openrouter, joey@openrouter, mammoth@openrouter, reflex@openrouter, span@openrouter; estimated (recorded tokens times a list price: s1flow.toml's where dated, else the LLM price table's; not a bill): gemini-decision@google (list price of 2026-11-12), jev (list price of 2026-10-03), jev:1.14 (list price of 2026-10-03), luna@decisions (list price of 2026-10-09). Billed and estimated API costs sit side by side, so their differences do not compare as they are.
 
 ## API cost and time for these cases
 
@@ -101,7 +98,6 @@ Where the API costs come from: billed: clef-flash@openrouter, clef-omni@openrout
 | d1.1@openrouter | $0.0029 | 12 s (estimated, 154 calls) | 13 min | 4 |
 | d1.2 | $0.0029 | 22 s (estimated, 154 calls) | 23 min | 4 |
 | d1.2-ultra | $0.0060 | 16 s (estimated, 154 calls) | 18 min | 4 |
-| d1@vercel | $0.0029 | 2 min (estimated, 154 calls) | 2.5 h | 4 |
 | decider-flash@openrouter | $0.0012 | 9 s (estimated, 154 calls) | 10 min | 4 |
 | decider@openrouter | $0.0024 | 14 s (estimated, 154 calls) | 15 min | 4 |
 | decision-1.1@openrouter | $0.0029 | 16 s (estimated, 154 calls) | 17 min | 4 |
@@ -128,17 +124,6 @@ Scored: every labelled dev case the model answered or refused; held-out test res
 | id | label | answer | probability | case |
 |---|---|---|---|---|
 | rico-66373 | modal | profile | 0.91 | rico-66373 |
-
-**d1@vercel** (6)
-
-| id | label | answer | probability | case |
-|---|---|---|---|---|
-| rico-35591 | mediaplayer | gallery | 0.95 | rico-35591 |
-| rico-43798 | menu | list | 0.93 | rico-43798 |
-| rico-66373 | modal | profile | 0.92 | rico-66373 |
-| rico-27717 | other | gallery | 0.91 | rico-27717 |
-| rico-62574 | settings | list | 0.91 | rico-62574 |
-| rico-37922 | profile | form | 0.90 | rico-37922 |
 
 **decision-1.1@openrouter** (3)
 
@@ -244,17 +229,17 @@ Scored: every labelled dev case the model answered or refused; held-out test res
 
 ## Cases the models disagree on (12 of 99)
 
-| id | label | clef-flash@openrouter | clef-omni@openrouter | clef@openrouter | d1-ultra@openrouter | d1.1@openrouter | d1.2 | d1.2-ultra | d1@vercel | decider-flash@openrouter | decider@openrouter | decision-1.1@openrouter | drex-max@openrouter | elephant@openrouter | gemini-decision@google | jev | jev:1.14 | joey@openrouter | luna@decisions | mammoth@openrouter | reflex@openrouter | span@openrouter | case |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| rico-18483 | chat | news (0.73) | list (0.49) | news (0.69) | news (0.45) | other (0.31) | other (0.46) | news (0.30) | list (0.56) | news (0.42) | news (0.50) | list (0.58) | news (0.76) | news (0.77) | list (0.50) | list (0.65) | list (0.62) | news (0.94) | list (1.00) | list (0.62) | news (0.81) | news (0.86) | rico-18483 |
-| rico-10522 | editor | editor (0.90) | editor (0.82) | editor (0.98) | editor (0.96) | editor (0.95) | editor (0.90) | editor (0.87) | editor (0.99) | editor (0.96) | editor (0.97) | editor (0.99) | editor (0.99) | editor (1.00) | editor (0.99) | editor (1.00) | editor (1.00) | news (0.50) | editor (0.99) | editor (0.99) | editor (0.99) | editor (0.92) | rico-10522 |
-| rico-24880 | form | form (0.82) | form (0.68) | form (0.79) | login (0.50) | form (0.68) | form (0.55) | form (0.49) | form (0.88) | form (0.87) | form (0.79) | form (0.85) | form (0.81) | form (0.83) | form (0.89) | form (0.90) | form (0.89) | form (0.73) | form (1.00) | form (0.73) | form (0.89) | form (0.68) | rico-24880 |
-| rico-3942 | list | list (0.52) | list (0.58) | list (0.44) | news (0.73) | news (0.51) | bare (0.38) | news (0.63) | news (0.59) | list (0.44) | list (0.62) | list (0.94) | list (0.45) | list (0.94) | list (0.69) | list (0.86) | list (0.89) | news (0.36) | list (1.00) | list (0.87) | list (0.88) | news (0.85) | rico-3942 |
-| rico-52193 | list | list (0.75) | list (0.71) | list (0.73) | list (0.42) | list (0.58) | list (0.56) | list (0.46) | list (0.97) | list (0.80) | list (0.75) | list (0.94) | list (0.69) | list (0.97) | list (0.75) | list (0.96) | list (0.96) | news (0.53) | list (1.00) | list (0.83) | list (0.60) | list (0.73) | rico-52193 |
-| rico-67717 | list | list (0.83) | list (0.72) | list (0.73) | news (0.52) | news (0.33) | list (0.37) | news (0.42) | list (0.92) | list (0.80) | list (0.85) | list (0.91) | list (0.65) | list (1.00) | list (0.78) | list (0.98) | list (0.99) | news (0.29) | list (1.00) | list (0.96) | list (0.83) | news (0.46) | rico-67717 |
-| rico-71299 | list | list (0.77) | list (0.71) | list (0.77) | news (0.52) | news (0.40) | list (0.41) | news (0.48) | list (0.88) | list (0.78) | list (0.90) | list (0.94) | list (0.66) | list (0.99) | list (0.82) | list (0.99) | list (1.00) | list (0.35) | list (1.00) | list (0.97) | list (0.95) | news (0.87) | rico-71299 |
-| rico-58529 | menu | menu (0.85) | menu (0.75) | menu (0.88) | menu (0.84) | menu (0.61) | menu (0.77) | menu (0.70) | menu (0.71) | menu (0.89) | menu (0.90) | menu (0.96) | menu (0.92) | menu (0.97) | menu (0.94) | menu (0.99) | menu (0.99) | profile (0.35) | menu (1.00) | menu (0.95) | menu (0.97) | menu (0.75) | rico-58529 |
-| rico-68494 | news | news (0.66) | news (0.67) | news (0.58) | news (0.43) | list (0.31) | news (0.40) | news (0.48) | news (0.59) | news (0.73) | news (0.63) | news (0.65) | news (0.82) | news (0.76) | news (0.59) | list (0.58) | list (0.57) | news (0.95) | list (1.00) | list (0.52) | news (0.86) | news (0.91) | rico-68494 |
-| rico-25255 | other | news (0.57) | list (0.60) | list (0.40) | other (0.41) | news (0.53) | news (0.28) | news (0.34) | list (0.44) | news (0.29) | list (0.30) | news (0.38) | other (0.47) | news (0.57) | news (0.38) | list (0.53) | list (0.55) | gallery (0.35) | list (1.00) | list (0.72) | other (0.55) | news (0.73) | rico-25255 |
-| rico-1281 | profile | profile (0.90) | list (0.38) | profile (0.95) | profile (0.92) | profile (0.76) | profile (0.77) | profile (0.72) | profile (0.86) | profile (0.92) | profile (0.92) | profile (0.97) | profile (0.96) | profile (0.98) | profile (0.98) | profile (0.98) | profile (0.97) | news (0.44) | profile (1.00) | profile (0.97) | other (0.52) | profile (0.95) | rico-1281 |
-| rico-21050 | profile | profile (0.77) | list (0.29) | profile (0.95) | profile (0.91) | profile (0.84) | profile (0.59) | profile (0.74) | profile (0.93) | profile (0.92) | profile (0.95) | profile (0.83) | profile (0.87) | profile (0.94) | profile (0.98) | profile (0.96) | profile (0.97) | news (0.81) | profile (1.00) | profile (0.98) | profile (0.67) | profile (0.78) | rico-21050 |
+| id | label | clef-flash@openrouter | clef-omni@openrouter | clef@openrouter | d1-ultra@openrouter | d1.1@openrouter | d1.2 | d1.2-ultra | decider-flash@openrouter | decider@openrouter | decision-1.1@openrouter | drex-max@openrouter | elephant@openrouter | gemini-decision@google | jev | jev:1.14 | joey@openrouter | luna@decisions | mammoth@openrouter | reflex@openrouter | span@openrouter | case |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| rico-18483 | chat | news (0.73) | list (0.49) | news (0.69) | news (0.45) | other (0.31) | other (0.46) | news (0.30) | news (0.42) | news (0.50) | list (0.58) | news (0.76) | news (0.77) | list (0.50) | list (0.65) | list (0.62) | news (0.94) | list (1.00) | list (0.62) | news (0.81) | news (0.86) | rico-18483 |
+| rico-10522 | editor | editor (0.90) | editor (0.82) | editor (0.98) | editor (0.96) | editor (0.95) | editor (0.90) | editor (0.87) | editor (0.96) | editor (0.97) | editor (0.99) | editor (0.99) | editor (1.00) | editor (0.99) | editor (1.00) | editor (1.00) | news (0.50) | editor (0.99) | editor (0.99) | editor (0.99) | editor (0.92) | rico-10522 |
+| rico-24880 | form | form (0.82) | form (0.68) | form (0.79) | login (0.50) | form (0.68) | form (0.55) | form (0.49) | form (0.87) | form (0.79) | form (0.85) | form (0.81) | form (0.83) | form (0.89) | form (0.90) | form (0.89) | form (0.73) | form (1.00) | form (0.73) | form (0.89) | form (0.68) | rico-24880 |
+| rico-3942 | list | list (0.52) | list (0.58) | list (0.44) | news (0.73) | news (0.51) | bare (0.38) | news (0.63) | list (0.44) | list (0.62) | list (0.94) | list (0.45) | list (0.94) | list (0.69) | list (0.86) | list (0.89) | news (0.36) | list (1.00) | list (0.87) | list (0.88) | news (0.85) | rico-3942 |
+| rico-52193 | list | list (0.75) | list (0.71) | list (0.73) | list (0.42) | list (0.58) | list (0.56) | list (0.46) | list (0.80) | list (0.75) | list (0.94) | list (0.69) | list (0.97) | list (0.75) | list (0.96) | list (0.96) | news (0.53) | list (1.00) | list (0.83) | list (0.60) | list (0.73) | rico-52193 |
+| rico-67717 | list | list (0.83) | list (0.72) | list (0.73) | news (0.52) | news (0.33) | list (0.37) | news (0.42) | list (0.80) | list (0.85) | list (0.91) | list (0.65) | list (1.00) | list (0.78) | list (0.98) | list (0.99) | news (0.29) | list (1.00) | list (0.96) | list (0.83) | news (0.46) | rico-67717 |
+| rico-71299 | list | list (0.77) | list (0.71) | list (0.77) | news (0.52) | news (0.40) | list (0.41) | news (0.48) | list (0.78) | list (0.90) | list (0.94) | list (0.66) | list (0.99) | list (0.82) | list (0.99) | list (1.00) | list (0.35) | list (1.00) | list (0.97) | list (0.95) | news (0.87) | rico-71299 |
+| rico-58529 | menu | menu (0.85) | menu (0.75) | menu (0.88) | menu (0.84) | menu (0.61) | menu (0.77) | menu (0.70) | menu (0.89) | menu (0.90) | menu (0.96) | menu (0.92) | menu (0.97) | menu (0.94) | menu (0.99) | menu (0.99) | profile (0.35) | menu (1.00) | menu (0.95) | menu (0.97) | menu (0.75) | rico-58529 |
+| rico-68494 | news | news (0.66) | news (0.67) | news (0.58) | news (0.43) | list (0.31) | news (0.40) | news (0.48) | news (0.73) | news (0.63) | news (0.65) | news (0.82) | news (0.76) | news (0.59) | list (0.58) | list (0.57) | news (0.95) | list (1.00) | list (0.52) | news (0.86) | news (0.91) | rico-68494 |
+| rico-25255 | other | news (0.57) | list (0.60) | list (0.40) | other (0.41) | news (0.53) | news (0.28) | news (0.34) | news (0.29) | list (0.30) | news (0.38) | other (0.47) | news (0.57) | news (0.38) | list (0.53) | list (0.55) | gallery (0.35) | list (1.00) | list (0.72) | other (0.55) | news (0.73) | rico-25255 |
+| rico-1281 | profile | profile (0.90) | list (0.38) | profile (0.95) | profile (0.92) | profile (0.76) | profile (0.77) | profile (0.72) | profile (0.92) | profile (0.92) | profile (0.97) | profile (0.96) | profile (0.98) | profile (0.98) | profile (0.98) | profile (0.97) | news (0.44) | profile (1.00) | profile (0.97) | other (0.52) | profile (0.95) | rico-1281 |
+| rico-21050 | profile | profile (0.77) | list (0.29) | profile (0.95) | profile (0.91) | profile (0.84) | profile (0.59) | profile (0.74) | profile (0.92) | profile (0.95) | profile (0.83) | profile (0.87) | profile (0.94) | profile (0.98) | profile (0.96) | profile (0.97) | news (0.81) | profile (1.00) | profile (0.98) | profile (0.67) | profile (0.78) | rico-21050 |
