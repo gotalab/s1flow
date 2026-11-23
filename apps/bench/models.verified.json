@@ -295,36 +295,6 @@
     }
    }
   },
-  "d1@vercel": {
-   "at": "2026-10-31T05:52:56Z",
-   "answered_by": "liquid/d1",
-   "checks": {
-    "boolean": {
-     "ok": true,
-     "detail": "P(true) 1.00 / 0.01"
-    },
-    "choice": {
-     "ok": true,
-     "detail": "blue 1.00 / red 1.00"
-    },
-    "score": {
-     "ok": true,
-     "detail": "3.00 / 1.00 (want 3 / 1)"
-    },
-    "image": {
-     "ok": true,
-     "detail": "red 1.00 / blue 1.00"
-    },
-    "images": {
-     "ok": true,
-     "detail": "red 1.00 / blue 1.00"
-    },
-    "box": {
-     "ok": false,
-     "detail": "Rejected: rejected by the provider (422): {\"error\":{\"message\":\"Invalid discriminator value. Expected 'noul' | 'choice' | 'score'\",\"type\":\"AI_APICallError\",\"param\":{\"error"
-    }
-   }
-  },
   "decider-flash@openrouter": {
    "at": "2026-10-31T05:07:06Z",
    "answered_by": "perplexity/pplx-decider-flash-v1.2-20261016",
