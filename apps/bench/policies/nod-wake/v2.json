@@ -1,0 +1,51 @@
+{
+ "schema": "s1flow/policy@2",
+ "task": "nod-wake",
+ "version": 2,
+ "connection": "gemini-decision@google",
+ "model_id": "gemini-decision-1",
+ "questions": {
+  "next": {
+   "question": {
+    "type": "choice",
+    "instructions": "あなたはユーザーの調べもの・予定・連絡・買い物・作業などを手伝っているAIエージェント。チャットでユーザーの最新の発言(user)を受け取った。agent はその直前のあなたの発言、earlier はそれより前のやりとり（古い順）。ユーザーの発言(user)を受けて、あなたはどうするべきか。",
+    "criteria": {
+     "wake": "起きて対応する。返事をする、または作業をする（始める・続ける・変える・やめる・調べる・確かめる）必要がある。質問、依頼、許可（「OK」「お願い」）、訂正、方針の変更や中止、相談、不満、提案への同意で予定や作業が変わる。進行中の作業に関わる発言。",
+     "stamp": "スタンプだけで足りる。返事も作業も要らない。お礼、相づち、感想、雑談、冗談、「あとで読む」、「そのままでいい」、会話の締め。",
+     "ignore": "反応不要。意味のない入力や誤入力、発言の途中で続きが来そう、あなた宛てではない。"
+    }
+   },
+   "kind": {
+    "positive": "wake"
+   },
+   "rule": {
+    "threshold": 0.5,
+    "min_probability": null
+   }
+  }
+ },
+ "at": "2026-11-23T16:50:46Z",
+ "s1flow_version": "0.1.0a5",
+ "state_schema": {
+  "type": "object",
+  "properties": {
+   "agent": {
+    "type": "string"
+   },
+   "earlier": {
+    "type": "array",
+    "items": {
+     "type": "string"
+    }
+   },
+   "user": {
+    "type": "string"
+   }
+  },
+  "required": [
+   "agent",
+   "user"
+  ],
+  "additionalProperties": false
+ }
+}
