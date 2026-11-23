@@ -18,8 +18,6 @@ uv add s1flow   # or: pip install s1flow
 Your app decides which model connections it allows. For example, `connections.toml`:
 
 ```toml
-default = ["triage"]
-
 [models.triage]
 provider = "typesafe"
 id = "jev-1.14.0" # use a model ID your account has access to

@@ -92,10 +92,17 @@
 
 ### Fixed
 
+- An app's `connections.toml` no longer needs a `default` line: copying a model's entry from `s1flow.toml` is
+  enough, where it used to fail with "default: Field required". Without `default`, `doctor` checks every model and
+  `run` asks for `--models`. The README's app example now sends the fields the measured cases had and keeps a log,
+  so the correct answers can become new cases.
 - A production decision on an image (or audio, video, PDF) now becomes a usable case: `feedback measure --add` wrote
   the kept state with its prepared media inline, and every later read of those cases (`cases check`, `run`)
   refused them as a bad media reference. Prepared media are now read back as they are, so the case holds the
   exact bytes the model saw, checked against their sha256 and format.
+- An input Google's safety filters block is now recorded as refused (the model's limit, scored as no answer) when
+  Gemini Decision 1 is reached through OpenRouter too, not only on Google's own API. Through OpenRouter it was a
+  failed call, so the case was left out of the scores.
 
 ## 0.1.0a5 (2026-11-12)
 

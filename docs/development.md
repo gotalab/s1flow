@@ -1,16 +1,8 @@
 # Develop s1flow
 
-The checks below run offline and need no API keys. To call real models from the bench project, put its keys in
-`apps/bench/.env` (ignored by Git) and run `uv run s1flow doctor --project apps/bench` to check the connections.
-
-```bash
-uv sync --frozen
-uv run pytest -q -n auto --dist worksteal   # also checks schema/, the import contracts and the wheel
-uv run ruff check          # pyflakes: unused imports and variables, undefined names
-uv run mypy src/s1flow
-```
-
-CI (`.github/workflows/tests.yml`) runs the same commands on every pull request and on main.
+The checks to run and the rules for every change are in [AGENTS.md](../AGENTS.md). This page has the details. To call
+real models from the bench project, put its keys in `apps/bench/.env` (ignored by Git) and run
+`uv run s1flow doctor --project apps/bench` to check the connections.
 
 Some tests are properties checked on generated cases (Hypothesis): the measures against their definitions or
 scikit-learn, the evaluation's reading of a case against production's, the rule search against its constraints, and
@@ -29,12 +21,9 @@ change.
 
 ## Release
 
-A pull request that changes what users see (the CLI, the Python API, the decide Action, the Skill, file formats) adds a
-line under the changelog's `## Unreleased` heading (creating it at the top when it is missing) and keeps the
-version. Merging it releases nothing: main can hold several such changes before they ship.
-
-A release is a pull request of its own, opened when main has an `Unreleased` section. It raises the alpha number in
-`pyproject.toml` (`0.1.0a3` → `0.1.0a4`) and `uv.lock`, renames `Unreleased` to that version and date, and pins the
+A pull request that changes what users see adds a changelog line and keeps the version ([AGENTS.md](../AGENTS.md)), so
+main can hold several such changes before they ship. A release is a pull request of its own, opened when main has an
+`Unreleased` section. It raises the alpha number in `pyproject.toml` (`0.1.0a3` → `0.1.0a4`) and `uv.lock`, renames `Unreleased` to that version and date, and pins the
 decide Action at `v<version>` and the package at `==<version>` in `examples/` and the Skill's `references/app.md`
 (`tests/test_docs.py` fails until they agree). It changes nothing else: outside the changelog, every line it changes
 names the old or the new version, and `.github/workflows/release-only.yml` fails a pull request that changes the

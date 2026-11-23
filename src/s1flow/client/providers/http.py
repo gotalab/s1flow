@@ -1,8 +1,9 @@
 """The one HTTP path every decision-model provider uses: retries, then one of two outcomes.
 
 - a JSON body, with how long the attempt that answered took and how many retries came before it, or
-- `Rejected` (the provider refused the input as outside its limits: 413, 422, or a 400 that
-  says a part is not accepted) or `ProviderError` (anything else), both carrying the status.
+- `Rejected` (the provider refused the input as outside its limits: 413, 422, a 400 that
+  says a part is not accepted, or a 400 from Google's safety filters) or `ProviderError` (anything
+  else), both carrying the status.
 
 A key that is not set is left out rather than stopping the call: a sandbox's proxy may add it on the way
 (a network secret). If the provider then answers 401 or 403, the error is the missing key's.
@@ -15,6 +16,7 @@ model's speed, and are counted in `retries` instead.
 
 import asyncio
 import os
+import re
 import time
 from dataclasses import dataclass, field
 from typing import Any
@@ -32,6 +34,9 @@ REFUSAL_STATUS = frozenset({413, 422})
 # 'ScaleDown reads one document per request', 2026-11-12). A bare 400 stays a failure: it is
 # more often our request than the model's limit.
 REFUSAL_HINTS = ("does not accept", "too large", "exceeds the maximum", "accepts at most", "document per request")
+# A 400 whose error `code` names one of Google's safety filters: Gemini Decision 1 blocked the input. Google's own
+# API sends the code as JSON; OpenRouter wraps that JSON, escaped, in its message (2026-11-23).
+SAFETY_BLOCK = re.compile(r'\\?"code\\?"\s*:\s*\\?"(safety|prohibited_content|blocklist|image_safety|content_blocked)\\?"')
 
 _clients: dict[int, httpx.AsyncClient] = {}
 
@@ -75,6 +80,8 @@ def retryable(status: int | None) -> bool:
 
 
 def classify(status: int, text: str) -> Rejected | ProviderError:
+    if status == 400 and SAFETY_BLOCK.search(text):
+        return Rejected(f"blocked by the provider's safety filters ({status}): {text[:200]}", status)
     if status in REFUSAL_STATUS or (status == 400 and any(h in text.lower() for h in REFUSAL_HINTS)):
         return Rejected(f"rejected by the provider ({status}): {text[:200]}", status)
     return ProviderError(f"{status}: {text[:500]}", status)
