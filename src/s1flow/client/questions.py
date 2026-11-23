@@ -1,6 +1,6 @@
 """The questions a decision model answers: yes / no, one of N, a level, a box.
 
-Vocabulary follows the decision-model APIs (TypeSafe, AI Gateway, OpenRouter, Workers AI): a map of
+Vocabulary follows the decision-model APIs (TypeSafe, OpenRouter, Workers AI): a map of
 typed `questions`, keyed by name. Every provider translates these into its own wire format (yes / no
 is `noul` on TypeSafe's, `predicate` on OpenAI's).
 """
