@@ -79,10 +79,11 @@
 
 - Measuring and choosing, from a whole-project check. Some numbers in `report` and `adopt` move a little once:
   - `run` refuses labels the question cannot score (a yes/no task labelled `0`/`1` or `"true"`) before its first
-    call, instead of asking every case and leaving `report` to fail on them.
-  - When the model behind an alias changes, the cases only the earlier model answered count as missing, and the
-    next `run` asks them again, past the cache. Before, they were neither scored nor missing: that candidate was
-    scored on a few cases, and every other candidate became unrankable beside it.
+    call and before it fixes the held-out test share, instead of asking every case and leaving `report` to fail.
+  - When the model behind an alias changes, the cases only the earlier model answered count as missing (`report`
+    says "N cases the answering model was never asked", where it said "N cases never asked"), and the next `run`
+    asks them again, past the cache. Before, they were neither scored nor missing: that candidate was scored on a
+    few cases, and every other candidate became unrankable beside it.
   - The cross-validation folds and the 95% intervals no longer depend on the order the calls ended in: the cases
     are read in case-id order. `report` and `adopt` now give a candidate the same intervals (`adopt` also reads the
     test cases, and their count changed the bootstrap draws).

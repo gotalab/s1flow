@@ -128,6 +128,23 @@ def test_cases_only_an_earlier_answering_model_answered_are_asked_again(nod, mon
     assert len(pr.ids) == 5 and not first & set(pr.never_asked) and pr.versions == ["fake-1b", "fake-1"]
 
 
+def test_a_failed_ask_again_does_not_bring_back_the_earlier_answering_model(nod, monkeypatch):
+    """The cache holds the earlier model's answers: a case whose ask again failed is asked past it the next time,
+    or its cached answer would make the earlier model the scored one again, and the next run swap back."""
+    go = lambda **kw: asyncio.run(running.run_model(nod, "fake", variant="base", **kw))  # noqa: E731
+    go(limit=3)
+    monkeypatch.setattr(Fake, "decide", answering_as("fake-1b"))
+    go(limit=5)
+    Fake.broken = True
+    go(limit=5)  # the 3 asked again fail
+    Fake.broken = False
+    for _ in range(2):
+        go(limit=5)
+        assert metrics.load(nod, "base", "fake", include_test=True).version == "fake-1b"
+    pr = metrics.load(nod, "base", "fake", include_test=True)
+    assert len(pr.ids) == 5 and not pr.failed_cases
+
+
 def answering_as(version):
     real = Fake.decide
 

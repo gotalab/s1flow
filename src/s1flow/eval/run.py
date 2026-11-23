@@ -147,6 +147,13 @@ def ask_again(task: Task, missing: list[tuple[str, str]]) -> str:
     return f"s1flow run {task.id} --models {','.join(names)}"
 
 
+def require_labels(task: Task, cases: list[Case]) -> None:
+    """Refuse labels the question cannot score before any call, and before the held-out test share is drawn from them."""
+    if wrong := data.label_errors(task, cases):
+        raise DataError(f"{task.id}: {len(wrong)} labels the question cannot score, so no model is asked: "
+                        f"{'; '.join(wrong[:3])}{' …' if len(wrong) > 3 else ''} (s1flow cases check {task.id} lists them all)")
+
+
 async def run_model(
     task: Task, model_name: str, *, limit: int | None, variant: str, fresh: bool = False,
     concurrency: int | None = None,
@@ -156,9 +163,7 @@ async def run_model(
     spec = task.where.lineup().resolved(model_name)
     require_provider_revision(spec)
     cases = task.load_cases().all()[:limit] if limit else task.load_cases().all()
-    if wrong := data.label_errors(task, cases):
-        raise DataError(f"{task.id}: {len(wrong)} labels the question cannot score, so no model is asked: "
-                        f"{'; '.join(wrong[:3])}{' …' if len(wrong) > 3 else ''} (s1flow cases check {task.id} lists them all)")
+    require_labels(task, cases)
     evalset.fix(task)  # the CLI shows what it did
     client = task.where.client()
     model = client.connections.build(spec, name=model_name)
@@ -180,11 +185,12 @@ async def run_model(
             raise
         except Exception:
             pass  # one() records the input error using the normal outcome path
-    selected = records.select([r for r in previous if r.request_digest and r.request_digest in identities.get(r.id, ())], prompt)
+    current = [r for r in previous if r.request_digest and r.request_digest in identities.get(r.id, ()) and r.prompt == prompt]
+    selected = records.select(current, prompt)
     done_before = {r.id for r in selected.records if r.answered or r.outcome in records.REFUSED}
-    # A case only an earlier answering model answered (an alias that moved on) is asked again, past the cache that
-    # holds the earlier answer: scored on one answering model, the run has no answer to it.
-    again = set(selected.earlier)
+    # A case another answering model answered (an alias that moved on) and the scored one has not is asked again,
+    # past the cache: it holds the other model's answer, which would make that model the scored one again.
+    again = {r.id for r in current if r.answered and r.answered_by != selected.answered_by} - done_before
     todo = [c for c in cases if c.id not in done_before]
     sem = asyncio.Semaphore(width)
     stats = {"calls": 0, "cached": 0, "skipped": len(cases) - len(todo), "unsupported": 0, "rejected": 0, "errors": 0, "data_errors": 0}

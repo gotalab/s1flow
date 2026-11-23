@@ -21,6 +21,7 @@ def run(a: argparse.Namespace) -> int:
     names = a.models.split(",") if a.models else [m.name for m in p.client().connections.list(default_only=True)]
     task = load(p, a.task)
     running.candidates(task, names)  # every name checked before the split is written
+    running.require_labels(task, task.load_cases().all())  # and every label: the split is stratified by them
     if note := evalset.fix(task):
         print(f"notice: {note}", file=sys.stderr)
     stats = asyncio.run(running.run(task, names, fresh=a.fresh, concurrency=a.concurrency))

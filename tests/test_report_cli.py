@@ -79,6 +79,18 @@ def test_out_must_be_a_directory(ran):
     assert got.exit_code == 2 and "--out takes a directory" in got.err and "Traceback" not in got.err
 
 
+def test_run_refuses_labels_it_cannot_score_before_it_fixes_the_split(tmp_path, monkeypatch):
+    project = make_project(tmp_path / "p", {"good": compare_fake("good")})
+    d = project.tasks_dir / "truth"
+    d.mkdir(parents=True)
+    (d / "task.py").write_text(TASK)
+    (d / "data.jsonl").write_text("".join(json.dumps({"id": str(i), "truth": i % 2}) + "\n" for i in range(30)))  # 0/1, not true/false
+    monkeypatch.chdir(project.root)
+    got = cli("run", "truth", "--models", "good")
+    assert got.exit_code == 2 and "30 labels the question cannot score, so no model is asked" in got.err
+    assert not (d / "split.json").exists() and not (project.root / "runs").exists()
+
+
 def test_out_leaves_out_a_model_no_longer_in_the_line_up(ran):
     """A run kept from a model taken out of s1flow.toml is not reported, as report and adopt leave it out."""
     toml = ran.root / "s1flow.toml"
