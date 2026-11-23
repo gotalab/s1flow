@@ -137,6 +137,9 @@ task = Task(
 Supported question types: boolean, choice, score and box, where the provider takes them. Evaluation compares all
 four, and a policy holds one question of any of them: `adopt` takes a score or box candidate from `report` like any
 other.
+The `Client` also asks `Text`, `Number`, `Date` (a value read from the state, `None` when absent) and
+`RangeEstimate` (a number in a range) of an OpenRouter model that answers them; evaluation and policies do not take
+these yet.
 
 ## Check the cases
 

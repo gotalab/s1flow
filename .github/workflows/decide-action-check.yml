@@ -1,0 +1,46 @@
+# Run on demand (Actions > decide Action check > Run workflow) to see the decide Action answer on a real runner
+# the way a user's repository calls it: a folder with only policies/ and an s1flow.toml, so the Action installs
+# its own copy of s1flow. Nothing runs it on its own. The policy is apps/bench's gh-ruff-kind, on Clef Flash
+# through OpenRouter; the s1flow.toml grants only that model, so the run needs only the repository secret
+# OPENROUTER_API_KEY. A copyable workflow for real use is in examples/.
+name: decide Action check
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  decide:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Lay out a project like a user's
+        run: |
+          mkdir -p "$RUNNER_TEMP/app/policies"
+          cp -r apps/bench/policies/gh-ruff-kind "$RUNNER_TEMP/app/policies/"
+          printf '%s\n' 'default = ["clef-flash@openrouter"]' '' '[models."clef-flash@openrouter"]' 'provider = "openrouter"' \
+            'id = "cloudflare/clef-flash"' \
+            > "$RUNNER_TEMP/app/s1flow.toml"
+      - id: s1
+        uses: ./decide
+        with:
+          working-directory: ${{ runner.temp }}/app
+          policy: gh-ruff-kind
+          state: '{"title": "F401 --fix removes an import that __all__ re-exports", "body": "ruff check --fix deletes the import even though the name is listed in __all__."}'
+          connections: s1flow.toml
+          case-id: decide-action-check
+          log: ${{ runner.temp }}/s1flow-log.jsonl
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      - name: Check the outputs and the log
+        env:
+          ANSWER: ${{ steps.s1.outputs.answer }}
+          PROBABILITY: ${{ steps.s1.outputs.probability }}
+          DECISION_ID: ${{ steps.s1.outputs.decision_id }}
+          POLICY: ${{ steps.s1.outputs.policy }}
+        run: |
+          echo "$POLICY: $ANSWER (probability $PROBABILITY, decision_id $DECISION_ID)" >> "$GITHUB_STEP_SUMMARY"
+          [ -n "$ANSWER" ] || { echo "::error::no answer"; exit 1; }
+          [ -n "$DECISION_ID" ] || { echo "::error::no decision_id"; exit 1; }
+          grep -qF "$DECISION_ID" "$RUNNER_TEMP/s1flow-log.jsonl" || { echo "::error::the log has no line for $DECISION_ID"; exit 1; }

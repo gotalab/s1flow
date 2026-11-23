@@ -24,7 +24,7 @@ from s1flow.client import BooleanAnswer, ChoiceAnswer, Client, Image
 from s1flow.client.state import Media
 from s1flow.client import identity
 from s1flow.client.models import Capabilities, ModelSpec
-from s1flow.client.questions import Boolean, Box, Choice, Score
+from s1flow.client.questions import Boolean, Box, Choice, Date, RangeEstimate, Number, Score, Text
 from s1flow.policies import DecisionRule
 from s1flow.policies.kinds import KindParams, kind_of
 
@@ -69,6 +69,23 @@ BOX_REPLIES: dict[str, dict[str, Any]] = {
     "openrouter": {"model": "typesafe/jev", "answers": {"where": BOX_ANSWER}},
     "cloudflare": {"result": {"model": "clef", "answers": {"where": BOX_ANSWER}}},
 }
+# Values read from the state and an estimate: OpenRouter's Extractions route, as Clairic answered it (2026-11-16).
+FIELDS = {
+    "invoice": Text(instructions="The invoice number"),
+    "po": Text(instructions="Purchase order number"),
+    "total": Number(instructions="The total", unit="USD"),
+    "issued": Date(instructions="The issue date"),
+    "days": RangeEstimate(instructions="Days until it is paid", min=0, max=120, step=1),
+}
+FIELD_REPLIES: dict[str, dict[str, Any]] = {
+    "openrouter": {"model": "cloudflare/clairic-20261029", "answers": {
+        "invoice": {"type": "text", "value": "INV-2291", "guess": "INV-2291", "span": [8, 16], "p_null": 0.00001, "confidence": 0.99998},
+        "po": {"type": "text", "value": None, "guess": "INV-2291", "span": [8, 16], "p_null": 0.99999, "confidence": 0.9989},
+        "total": {"type": "number", "value": 1080, "guess": 1080, "p_null": 0.0004, "confidence": 0.9978},
+        "issued": {"type": "date", "value": "2026-09-02", "guess": "2026-09-02", "p_null": 0.00002, "confidence": 0.99998},
+        "days": {"type": "estimate", "value": 30, "mean": 29.54, "median": 30, "p10": 26, "p90": 31, "p_below": 2e-8, "p_above": 4e-7},
+    }, "truncated": False, "usage": {"input_tokens": 543, "output_tokens": 0, "passes": 3, "cost": 0.0000543}},
+}
 ALL = Capabilities(image=True, question_types=frozenset({"boolean", "choice", "score", "box"}))
 REPLIES["gateway"] = REPLIES["openai-decisions"] | {"model": "typesafe-ai/jev", "provider_metadata": {"gateway": {"cost": "0.00001"}}}
 REPLIES["liquid"] = {"model": "d1.2", "answers": SYSTEM_ONE, "usage": {"input_tokens": 90, "output_tokens": 0, "cost": 0.0000018}}
@@ -79,7 +96,8 @@ EVERY = ALL.model_copy(update={"audio": True, "video": True, "pdf": True})
 MODELS = {
     "typesafe": ModelSpec(provider="typesafe", id="jev-1.14.0", capabilities=ALL),
     "gateway": ModelSpec(provider="gateway", id="typesafe-ai/jev", capabilities=ALL),
-    "openrouter": ModelSpec(provider="openrouter", id="typesafe/jev", capabilities=EVERY),
+    "openrouter": ModelSpec(provider="openrouter", id="typesafe/jev", capabilities=EVERY.model_copy(
+        update={"question_types": ALL.question_types | {"text", "number", "date", "estimate"}})),
     "gemini": ModelSpec(provider="gemini", id="gemini-decision-1", capabilities=EVERY.model_copy(update={"question_types": frozenset({"boolean", "choice", "score"})})),
     "liquid": ModelSpec(provider="liquid", id="d1.2", capabilities=ALL),
     "cloudflare": ModelSpec(provider="cloudflare", id="clef", capabilities=ALL),
@@ -103,7 +121,7 @@ def _read(response: Any) -> dict[str, Any]:
 def _http(provider: str) -> dict[str, Any]:
     out = {}
     asks = [("text", TEXT, QUESTIONS, REPLIES), ("image", WITH_IMAGE, QUESTIONS, REPLIES), ("box", WITH_IMAGE, BOX, BOX_REPLIES),
-            ("audio, video, pdf", OTHER_MEDIA, QUESTIONS, MEDIA_REPLIES)]
+            ("audio, video, pdf", OTHER_MEDIA, QUESTIONS, MEDIA_REPLIES), ("fields", TEXT, FIELDS, FIELD_REPLIES)]
     for name, state, questions, replies in asks:
         if provider not in replies:
             continue

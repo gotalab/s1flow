@@ -446,6 +446,91 @@
       }
      }
     }
+   },
+   "fields": {
+    "sent": {
+     "url": "https://openrouter.ai/api/alpha/extractions",
+     "headers": {},
+     "body": {
+      "model": "typesafe/jev",
+      "state": "{\n \"meta\": {\n  \"a\": [\n   {\n    \"b\": 3,\n    \"y\": 2\n   }\n  ],\n  \"z\": 1\n },\n \"title\": \"Crash on start\"\n}",
+      "fields": {
+       "invoice": {
+        "type": "text",
+        "instructions": "The invoice number"
+       },
+       "po": {
+        "type": "text",
+        "instructions": "Purchase order number"
+       },
+       "total": {
+        "type": "number",
+        "instructions": "The total",
+        "unit": "USD"
+       },
+       "issued": {
+        "type": "date",
+        "instructions": "The issue date"
+       },
+       "days": {
+        "type": "estimate",
+        "instructions": "Days until it is paid",
+        "min": 0.0,
+        "max": 120.0,
+        "step": 1.0
+       }
+      }
+     }
+    },
+    "read": {
+     "answered_by": "cloudflare/clairic-20261029",
+     "answers": {
+      "invoice": {
+       "p_null": 1e-05,
+       "confidence": 0.99998,
+       "span": [
+        8,
+        16
+       ],
+       "type": "text",
+       "value": "INV-2291",
+       "guess": "INV-2291"
+      },
+      "po": {
+       "p_null": 0.99999,
+       "confidence": 0.9989,
+       "span": [
+        8,
+        16
+       ],
+       "type": "text",
+       "value": null,
+       "guess": "INV-2291"
+      },
+      "total": {
+       "p_null": 0.0004,
+       "confidence": 0.9978,
+       "span": null,
+       "type": "number",
+       "value": 1080.0,
+       "guess": 1080.0
+      },
+      "issued": {
+       "p_null": 2e-05,
+       "confidence": 0.99998,
+       "span": null,
+       "type": "date",
+       "value": "2026-09-02",
+       "guess": "2026-09-02"
+      },
+      "days": {
+       "type": "estimate",
+       "value": 30.0,
+       "p10": 26.0,
+       "p90": 31.0
+      }
+     }
+    }
    }
   },
   "cloudflare": {

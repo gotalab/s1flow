@@ -42,6 +42,8 @@ URL = "https://example.test/v1/systemone"
     (400, '{"error":{"message":"Phala does not accept \\"image_url\\" parts in state"}}', Rejected),
     (400, '{"error":{"message":"Clef Omni accepts at most 4 audio clips, got 5","code":400}}', Rejected),
     (400, '{"error":{"message":"ScaleDown reads one document per request; state has 2 media parts","code":400}}', Rejected),
+    (400, '{"error":{"message":"Input blocked","code":"prohibited_content"}}', Rejected),  # Google's safety filters
+    (400, '{"error":{"message":"HTTP 400: {\\"error\\":{\\"code\\":\\"safety\\"}}","code":400}}', Rejected),  # the same, through OpenRouter
     (400, '{"error":"invalid max_tokens: at most 1024 tokens per request"}', ProviderError),  # our request, not a refusal
     (400, '{"detail":{"error_type":"api_usage_error","message":"Invalid request."}}', ProviderError),
     (400, '{"error":"response_format not supported"}', ProviderError),  # a bare "not supported" stays a failure
@@ -211,6 +213,27 @@ def test_gemini_safety_block_is_a_refusal_and_other_400s_are_failures(monkeypatc
     respx.post(f"{GEMINI_URL}/decisions").mock(return_value=httpx.Response(400, json=bad_key))
     with pytest.raises(ProviderError, match="did not accept GEMINI_API_KEY .*check the key"):
         asyncio.run(GeminiModel("gemini-decision-1").decide("x", QS))
+
+
+# Recorded from google/gemini-decision-1 on OpenRouter's /systemone on 2026-11-23 (a ja-toxicity case): Google's
+# error arrives as escaped JSON inside OpenRouter's message.
+OPENROUTER_BLOCKED = (
+    '{"error":{"message":"HTTP 400: {\\"error\\":{\\"message\\":\\"Input blocked: The prompt could not be submitted. '
+    "The prompt contains sensitive words that violate Google's [Generative AI Prohibited Use policy]"
+    '(https://policies.google.com/terms/generative-ai/use-policy). Try rephrasing the prompt.\\",'
+    '\\"code\\":\\"prohibited_content\\"}}","code":400}}'
+)
+
+
+@respx.mock
+def test_gemini_safety_block_through_openrouter_is_a_refusal(monkeypatch):
+    from s1flow.client.providers.openrouter import BASE_URL as OR_URL, OpenRouterModel
+
+    monkeypatch.setenv("OPENROUTER_API_KEY", "test")
+    respx.post(f"{OR_URL}/systemone").mock(return_value=httpx.Response(400, text=OPENROUTER_BLOCKED))
+    with pytest.raises(Rejected, match="safety filters") as e:
+        asyncio.run(OpenRouterModel("google/gemini-decision-1").decide("x", QS))
+    assert e.value.status == 400
 
 
 def test_clef_option_names_are_made_safe_and_mapped_back():

@@ -7,14 +7,13 @@ question's criteria are `true_description` / `false_description`; and usage is `
 cost (s1flow.toml's list price estimates it). The key goes in `x-goog-api-key`.
 
 Images, audio, video and PDFs are content blocks with base64 `data` (media.gemini_blocks). An input the safety
-filters block is a 400 whose error `code` names the filter: the provider refused the input (Rejected). A key
+filters block is a 400 whose error `code` names the filter, refused as such on every route (http.classify). A key
 Google does not accept is a 400 too (`API_KEY_INVALID`), even when none was sent.
 """
 
-import re
 from typing import Any
 
-from ...core.errors import ProviderError, Rejected
+from ...core.errors import ProviderError
 from ..answers import Response, Usage
 from ..media import gemini_blocks, text_of
 from ..models import Capabilities, ModelBuild, ModelSpec, check_supported
@@ -26,7 +25,6 @@ from .needs import Needs, declares, origin
 from . import systemone
 
 BASE_URL = "https://generativelanguage.googleapis.com/v1beta"
-BLOCKED = re.compile(r'"code"\s*:\s*"(safety|prohibited_content|blocklist|image_safety|content_blocked)"')
 BOOLEAN_CRITERIA = {"true": "true_description", "false": "false_description"}
 
 
@@ -64,8 +62,6 @@ class GeminiModel:
         try:
             posted = await send(self.request(state, questions, options=options))
         except ProviderError as e:
-            if e.status == 400 and BLOCKED.search(str(e)):
-                raise Rejected(f"blocked by the provider's safety filters: {str(e)[:200]}", e.status) from e
             if e.status == 400 and "API_KEY_INVALID" in str(e):  # Google's answer to a bad key is a 400, not a 401
                 raise ProviderError(f"the provider did not accept GEMINI_API_KEY ({str(e)[:120]}): check the key", e.status) from e
             raise
