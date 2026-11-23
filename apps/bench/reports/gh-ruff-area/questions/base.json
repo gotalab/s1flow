@@ -2,9 +2,9 @@
  "schema": "s1flow/report@1",
  "task": "gh-ruff-area",
  "variant": "base",
- "at": "2026-11-23T16:47:49Z",
+ "at": "2026-11-23T17:07:15Z",
  "data_digest": "1e8600db174d91adbee77c01f9622fe02a1f7c86764fce5310bad1fd768dcd37",
- "evaluation_contract_digest": "c54672724fb38feb11ff6472624f1428bd8b474520544411b0809b2779ea6671",
+ "evaluation_contract_digest": "9c3dcd5bb17d51618882e65a90dc4120818414ae374b8b4d7156a308c4795a67",
  "input_adapter_digest": "09d37363edc69f72e972abcaf1da27a622d78368f8b709faad34b39741229115",
  "evaluations": [
   {

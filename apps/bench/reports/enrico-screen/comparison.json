@@ -1,9 +1,9 @@
 {
  "schema": "s1flow/comparison@2",
- "id": "f3664883e5c60d63b5ad7fa3a5a25e10d65ffca1538c5001af251ff7f5cf0dcb",
+ "id": "6c3b4ce4957ee655e441cffc9cb12761173de0b5595aaf30c44608dee46e5507",
  "task": "enrico-screen",
  "source": "Enrico (labels MIT) on Rico screenshots (CC BY 4.0): up to 12 screens per design topic, mislabelled ones replaced",
- "at": "2026-11-23T16:43:50Z",
+ "at": "2026-11-23T17:06:18Z",
  "scope": "dev",
  "question_type": "choice",
  "kind_params": {},
@@ -26,7 +26,7 @@
   "min_recall": null
  },
  "data_digest": "24664965e4132e85f7fd24c514cb8ca7876ae0d66fef0d10032a297aec593694",
- "evaluation_contract_digest": "fe05691ed806e7e2133a8c5fe7a4980328ad98af527e59579f9c8be89667c43b",
+ "evaluation_contract_digest": "9529db66988888ad6dcf3654ee4a0e54dfc42ebe78dc7167377de71944c67ba7",
  "input_adapter_digest": "4338dab50f4577fd0b6ecca3a3b3ab21f501e9248cfaf0a383004beb933dead9",
  "binding_digests": {
   "clef": "f0ba18c14d995fef01ff2bbcbae8ef95ece632049c74340b3a7944140b86b542",
