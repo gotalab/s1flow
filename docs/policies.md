@@ -47,7 +47,7 @@ one passes leaves a trace.
 
 ```bash
 s1flow adopt --spec spec.json --reason "hand-written first rule" --json
-s1flow adopt ticket-bug d1@vercel/short --reason "v2 misreads feature requests"
+s1flow adopt ticket-bug decider@openrouter/short --reason "v2 misreads feature requests"
 s1flow export ticket-bug --out policies.json
 ```
 

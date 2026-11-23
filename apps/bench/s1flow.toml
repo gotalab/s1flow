@@ -42,13 +42,6 @@ price.source = "TypeSafe's list price for jev (output free); the API returns no 
 id = "jev-1.14.0"
 capabilities.question_types = ["boolean", "choice", "score", "box"]  # box from 1.14 on: 1.13 answers a bare 400
 
-[models."d1@vercel"]
-provider = "gateway"
-id = "liquid/d1"
-capabilities.context_tokens = 65536
-capabilities.image = true
-note = "Sees images as image_url parts (undocumented; the documented file part reaches it as text, 2026-10-16)."
-
 [models."kev@openrouter"]
 provider = "openrouter"
 id = "jaredpalmer/kev-4b"
@@ -60,6 +53,13 @@ capabilities.context_tokens = 8192
 provider = "openrouter"
 id = "microsoft/microsoft-decision-1"
 capabilities.context_tokens = 32768
+
+[models."decision-1.1@openrouter"]
+provider = "openrouter"
+id = "microsoft/microsoft-decision-1.1"
+capabilities.context_tokens = 32768
+capabilities.image = true
+note = "Successor of decision-1 (GA 2026-11-17). Images must be at least 280 px on each side."
 
 [models."decider@openrouter"]
 provider = "openrouter"

@@ -42,8 +42,9 @@ The person wants a decision in production now and may measure it later. Save it 
    instead of `--validate`. It is saved as `v1`, marked as never evaluated.
 4. Try it once: `s1flow decide --policy ticket-bug --state @input.json --connections connections.toml` (outside a
    project, add `--path policies/ticket-bug/v1.json`).
-5. Call it from the app as below, with `log=` and `keep_state=True`. Later, right answers go in with
-   `feedback record` or `policy.feedback`, and `feedback measure --add` turns logged inputs into cases
+5. Call it from the app as below, with `log=` and `keep_state=True` (without `log=` nothing is recorded: the first
+   decide warns and `feedback` raises). Later, right answers go in with `feedback record` or `policy.feedback`, many
+   at once with `feedback import`, and `feedback measure --add` turns logged inputs into cases
    (`references/learn.md`). That step needs an s1flow project with a task of the same id: `s1flow init --task
    <task>` (beside the app, or in a separate repository), with the task's question written as the policy's. Measuring and adopting a better version then follow the usual flow.
 

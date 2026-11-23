@@ -38,7 +38,7 @@ def test_the_docs_name_only_commands_the_cli_has():
     commands = choices()
     assert {"init", "run", "report", "adopt", "decide"} <= commands  # the parse found the list
     subcommands = {c: choices(c) for c in commands}
-    assert subcommands["feedback"] == {"record", "measure"}  # and finds a command's sub-commands
+    assert subcommands["feedback"] == {"record", "import", "measure"}  # and finds a command's sub-commands
     unknown = [f"{p.relative_to(ROOT)}: s1flow {c} {sub}".rstrip() for p in DOCS for c, sub in named(p.read_text())
                if c not in commands or (sub and subcommands[c] and sub not in subcommands[c])]
     assert not unknown, f"no such command (s1flow --help lists {', '.join(sorted(commands))}): {unknown}"
