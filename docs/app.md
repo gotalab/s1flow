@@ -186,5 +186,14 @@ response = Client(connections="connections.toml").responses.create(
 The Client supports yes/no (`boolean`), choice, score and box questions, and several questions in one request, as far as
 the provider supports them. Evaluation compares all four. A policy holds one question of any of these types.
 
+It also asks for a value read from the state (`Text`, `Number`, `Date`) or a number the state does not state
+(`RangeEstimate`, between a `min` and a `max`), where a model answers them: through OpenRouter, Clairic takes all four,
+Schematron text, numbers and dates, Perplexity's Decider v1.3 and ScaleDown Extract text. A read answer's `value`
+is `None` when the model found nothing; `p_null`, `confidence` and `span` come with it when the model gives them. An
+estimate comes with `p10` and `p90`. A `span` counts characters in the text sent: for a JSON state, the state with its
+keys sorted, dumped with an indent of 1. Some models read the question's name as well as its instructions, so name
+it for what it reads (`order_number`, not `q`). OpenRouter serves these on another route, so one request asks either
+these or the other four types. Evaluation and policies do not take them yet.
+
 Every call sends the state with the keys of each JSON object in sorted order, so a case in an evaluation and a
 call in production that differ only in key order send the same request. Lists keep their order.
