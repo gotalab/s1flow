@@ -32,11 +32,12 @@ class DataCheck(BaseModel):
     corrected: dict[str, int] = {}  # corrections.jsonl: verdict -> cases
 
 
-def _label(label: Any) -> str:
-    """A label as the count of labels names it: a multichoice's options in one order, a boxes label by how many."""
-    if isinstance(label, (list, tuple)):
-        if all(isinstance(k, str) for k in label):
-            return ", ".join(sorted(label)) or "none"
+def _label(kind: Any, label: Any) -> str:
+    """A label as the count of labels names it: a multichoice's options in one order, a boxes label by how many.
+    A label the kind cannot hold is named as written (`label_errors` reports it)."""
+    if kind.type == "multichoice" and isinstance(label, (list, tuple)) and all(isinstance(k, str) for k in label):
+        return ", ".join(sorted(label)) or "none"
+    if kind.type == "boxes" and isinstance(label, (list, tuple)):
         return "1 box" if len(label) == 1 else f"{len(label)} boxes"
     return str(label)
 
@@ -81,7 +82,7 @@ def check(task: Task) -> DataCheck:
         if key in seen and not same_label(kind, seen[key].label, c.label):
             warnings.append(f"{seen[key].id} and {c.id} have the same state and different labels ({seen[key].label!r} / {c.label!r})")
         seen.setdefault(key, c)
-    labels = Counter(_label(c.label) for c in labelled)
+    labels = Counter(_label(kind, c.label) for c in labelled)
     if kind.binary and labelled:
         small = min(labels.get("True", 0), labels.get("False", 0)) / len(labelled)
         if small < MINORITY and task.primary.name == "accuracy":
