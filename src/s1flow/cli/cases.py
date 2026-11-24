@@ -42,6 +42,11 @@ def cases_correct(a: argparse.Namespace) -> int:
         raise ConfigError(f"verdict is one of {', '.join(VERDICTS)}, got {a.verdict!r}")
     value = None if a.label is None else label(a.label)
     task = load(project(a), a.task)
+    if isinstance(value, str) and task.kind.type in ("number", "estimate"):
+        try:
+            value = float(value)
+        except ValueError:
+            pass  # the task's kind says what a label is
     by = a.by or git.user(task.where.root)
     if not by:
         raise ConfigError("a correction records who decided: give --by or set git config user.name")

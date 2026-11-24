@@ -81,6 +81,9 @@
        "type": "integer"
       },
       {
+       "type": "number"
+      },
+      {
        "type": "string"
       },
       {

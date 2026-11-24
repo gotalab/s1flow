@@ -8,7 +8,7 @@ one label and the reading of its answers (policies/kinds.py) per case. numpy and
 What is measured is the question type, except that a choice scored as P(positive) is measured as a
 boolean. A measure never chooses a rule and a rule never knows a measure: metrics finds the
 rule on a fold's fit side and measures the eval side read at it, feedback measures what
-a policy read. The kind's own numbers (`f1`, `mean_iou`, `mae`, `qwk`, `brier`, `ece`) are measures too.
+a policy read. The kind's own numbers (`f1`, `mean_iou`, `mae`, `qwk`, `mean_error`, `brier`, `ece`) are measures too.
 
 A constraint is a share an objective keeps on one side of a bound (Coverage: the accuracy of what is
 answered; Recall: the false alarms among the negatives). Only the built-ins hold one.
@@ -23,6 +23,9 @@ from scipy.special import betaincinv
 from ...client.answers import BoxEdges
 from ...client.boxes import iou
 from ...core.errors import ConfigError
+from ...policies.kinds import ABSENT
+
+READ = ("text", "number", "date")  # a value read from the state, whose label may be ABSENT
 from ..kinds import Kind, Reading
 from .declare import Constraints, Objective
 
@@ -51,13 +54,14 @@ class Pairs:
     confidence: np.ndarray  # box (0 when failed)
     expected: np.ndarray  # score: the expected level (nan when failed, and for the other kinds)
     levels: int = 0  # score: L, its levels 0..L-1
+    bounds: tuple[float, float] = (0.0, 0.0)  # estimate: the question's range
 
     def __len__(self) -> int:
         return len(self.y)
 
     def __getitem__(self, idx: np.ndarray) -> "Pairs":
         return Pairs(  # not dataclasses.replace: a bootstrap takes thousands of these
-            measured=self.measured, options=self.options, levels=self.levels, y=self.y[idx], ok=self.ok[idx], value=self.value[idx], unsure=self.unsure[idx], min_probability_set=self.min_probability_set[idx], correct=self.correct[idx],
+            measured=self.measured, options=self.options, levels=self.levels, bounds=self.bounds, y=self.y[idx], ok=self.ok[idx], value=self.value[idx], unsure=self.unsure[idx], min_probability_set=self.min_probability_set[idx], correct=self.correct[idx],
             probability=self.probability[idx], p_positive=self.p_positive[idx], confidence=self.confidence[idx],
             distribution=None if self.distribution is None else self.distribution[idx], expected=self.expected[idx],
         )
@@ -98,7 +102,7 @@ def pairs(kind: Kind, labels: Sequence[Any], readings: Sequence[Reading | None])
     normalized = [kind.as_label(label) for label in labels]
     y = np.empty(n, dtype=object)
     y[:] = normalized
-    if n and all(isinstance(v, bool) for v in normalized):
+    if n and kind.type not in READ and all(isinstance(v, bool) for v in normalized):  # a value read keeps ABSENT as it is
         y = y.astype(bool)
     value = np.empty(n, dtype=object)
     value[:] = [None if r is None else r.value for r in readings]
@@ -116,6 +120,7 @@ def pairs(kind: Kind, labels: Sequence[Any], readings: Sequence[Reading | None])
         distribution=np.array([flat if r is None or r.distribution is None else r.distribution for r in readings], dtype=float) if has_dist else None,
         confidence=np.array([0.0 if r is None or r.confidence is None else r.confidence for r in readings], dtype=float),
         expected=np.array([np.nan if r is None or r.expected is None else r.expected for r in readings], dtype=float), levels=levels,
+        bounds=(float(getattr(kind, "low", 0.0)), float(getattr(kind, "high", 0.0))) if kind.type == "estimate" else (0.0, 0.0),
     )
 
 
@@ -365,6 +370,38 @@ def _auroc_box(p: Pairs, _: Params) -> float | None:
     return _auc(p.correct, p.confidence)  # does the confidence rank hits above misses
 
 
+def _auroc_hit(p: Pairs, _: Params) -> float | None:
+    return _auc(p.correct, p.probability)  # does what min_probability reads rank the right answers above the wrong
+
+
+def _brier_hit(p: Pairs, _: Params) -> float | None:
+    return float(np.mean((p.probability - p.correct) ** 2))
+
+
+def _there(p: Pairs) -> np.ndarray:
+    """A value read from the state: the cases labelled with a value (the rest are labelled absent)."""
+    return np.array([y is not ABSENT for y in p.y], dtype=bool)
+
+
+def _value_accuracy(p: Pairs, _: Params) -> float | None:
+    there = _there(p)
+    return float(p.correct[there].mean()) if there.any() else None
+
+
+def _absent_accuracy(p: Pairs, _: Params) -> float | None:
+    there = _there(p)
+    return float(p.correct[~there].mean()) if (~there).any() else None
+
+
+def _mean_error(p: Pairs, _: Params) -> float | None:
+    """An estimate's mean distance from its label; a failed call is as far off as its label can be in the range."""
+    if not len(p):
+        return None
+    y = p.y.astype(float)
+    far = np.maximum(y - p.bounds[0], p.bounds[1] - y)
+    return float(np.mean(np.where(p.ok, np.abs(np.where(p.ok, p.expected, y) - y), far)))
+
+
 def _f1_binary(p: Pairs, _: Params) -> float | None:
     said, y = p.said, p.y.astype(bool)
     return float(_f1(np.array([np.sum(y & said)]), np.array([np.sum(y)]), np.array([np.sum(said)]))[0])
@@ -493,6 +530,22 @@ MEASURES: dict[tuple[str, str], Measure] = {
     ("macro_f1", "choice"): Measure(_f1_macro, basis="{reading}; mean of per-class F1 over labelled dev cases"),
     # the kinds' own numbers (Kind.report), and the calibration every evaluation reports
     ("mean_iou", "box"): Measure(_mean_iou, basis="{reading}; mean IoU over labelled dev cases"),
+    ("mean_error", "estimate"): Measure(_mean_error, basis="the estimate; mean distance from the label, in the question's unit, "
+                                                             "over labelled dev cases"),
+    ("accuracy", "estimate"): _ACCURACY,
+    ("coverage", "estimate"): _COVERAGE,
+    ("auroc", "estimate"): Measure(_auroc_hit, basis="narrowness of the p10 - p90 interval; hit-ranking AUROC over labelled dev cases"),
+    ("brier", "estimate"): Measure(_brier_hit, basis="narrowness of the p10 - p90 interval; Brier score of hit correctness over labelled dev cases"),
+    ("ece", "estimate"): Measure(_ece, basis="narrowness of the p10 - p90 interval; calibration of hit correctness over labelled dev cases"),
+    **{(name, read): m for read in ("text", "number", "date") for name, m in {
+        "accuracy": _ACCURACY,
+        "coverage": _COVERAGE,
+        "auroc": Measure(_auroc_hit, basis="probability of the value read; hit-ranking AUROC over labelled dev cases"),
+        "brier": Measure(_brier_hit, basis="probability of the value read; Brier score of answer correctness over labelled dev cases"),
+        "ece": Measure(_ece, basis="probability of the value read; calibration of answer correctness over labelled dev cases"),
+        "value_accuracy": Measure(_value_accuracy, basis="{reading}; correct / labelled dev cases whose label is a value"),
+        "absent_accuracy": Measure(_absent_accuracy, basis="{reading}; correct / labelled dev cases labelled absent"),
+    }.items()},
     ("brier", "boolean"): Measure(_brier_binary, basis="genuine model probabilities; binary Brier score over labelled dev cases"),
     ("brier", "choice"): Measure(_brier_choice, basis="genuine model probabilities; multiclass Brier score over labelled dev cases"),
     ("brier", "box"): Measure(_brier_box, basis="recorded box confidence; Brier score of hit correctness over labelled dev cases"),
@@ -545,7 +598,14 @@ def shown(p: Pairs, i: int) -> tuple[bool | str, bool | str]:
     """One case's label and reading, as a list of errors writes them."""
     if p.measured == "box":
         return "box", f"IoU {_ious(p[np.array([i])])[0]:.2f}"
+    if p.measured in READ:
+        return "absent" if p.y[i] is ABSENT else str(p.y[i]), "absent" if p.value[i] is None else str(p.value[i])
     return plain(p.y[i]), plain(p.value[i])
+
+
+def written(p: Pairs, v: Any) -> Any:
+    """A label or a reading as a report writes it: a value read that is not there is `absent`."""
+    return "absent" if p.measured in READ and (v is ABSENT or v is None) else plain(v)
 
 
 def plain(v: Any) -> Any:

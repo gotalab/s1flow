@@ -671,10 +671,16 @@
      "type": "integer"
     },
     {
+     "type": "number"
+    },
+    {
      "type": "string"
     },
     {
      "$ref": "#/$defs/BoxEdges"
+    },
+    {
+     "type": "null"
     }
    ],
    "title": "Value"

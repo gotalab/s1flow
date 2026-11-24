@@ -340,6 +340,36 @@ def test_a_box_policy_decides_logs_and_takes_feedback(tmp_path: Path, monkeypatc
     assert isinstance(back, AnsweredLog) and back.decision.value == box and back.decision.confidence == .4
 
 
+@pytest.mark.parametrize('question, answer, value, typed, label', [
+    ('text', {'type': 'text', 'value': 'A-12', 'confidence': .9, 'p_null': .05}, 'A-12', 'A-13', 'A-13'),
+    ('text', {'type': 'text', 'value': None, 'p_null': .95}, None, False, False),  # the CLI's `false`: the case holds none
+    ('number', {'type': 'number', 'value': 12.5, 'confidence': .9}, 12.5, '12', 12.0),
+    ('estimate', {'type': 'estimate', 'value': 40, 'p10': 35, 'p90': 45}, 40.0, '41', 41.0),
+])
+def test_a_value_policy_decides_logs_and_takes_feedback(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, question: str, answer: dict[str, Any],
+                                                        value: Any, typed: Any, label: Any) -> None:
+    from pydantic import TypeAdapter
+    from s1flow.client.answers import Answer
+    from s1flow.policies.log import AnsweredLog, from_span, span
+    from s1flow.policies.policy import record_feedback
+    from s1flow.questions import Number, RangeEstimate, Text
+
+    q = {'text': Text(instructions='The order number'), 'number': Number(instructions='The total'),
+         'estimate': RangeEstimate(instructions='How many boxes', min=0, max=100)}[question]
+    spec = runtime_spec(task='read', questions={'v': asked(q, DecisionRule(min_probability=.5))})
+    log = tmp_path / 'events.jsonl'
+    d = DecisionPolicy(spec, client=_answering(monkeypatch, TypeAdapter(Answer).validate_python(answer)), log=log).decide({'text': 'x'})
+    assert d.value == value
+    record_feedback(spec, d.decision_id, typed, log=log)
+    with pytest.raises(ConfigError):
+        record_feedback(spec, d.decision_id, [1], log=log)
+    events = [json.loads(line) for line in log.read_text().splitlines()]
+    assert [e['type'] for e in events] == ['answered', 'feedback'] and events[1]['label'] == label
+    answered = AnsweredLog.model_validate(events[0])
+    back = from_span(*span(answered)[:1], answered.at, span(answered)[1])
+    assert isinstance(back, AnsweredLog) and back.decision.value == value
+
+
 def test_timeout_cancels_the_call_and_logs_it_failed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     c, _ = fake_client(monkeypatch)
     cancelled: list[bool] = []
