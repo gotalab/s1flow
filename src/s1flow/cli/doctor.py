@@ -30,10 +30,10 @@ def doctor(a: argparse.Namespace) -> int:
     else:
         models = client(a, root).connections
         lineup = models.lineup
-        names = [n for n in a.models.split(",") if n] if a.models else lineup.default
+        names = [n for n in a.models.split(",") if n] if a.models else lineup.default or list(lineup.models)
         for n in names:
             lineup.resolved(n)
-        source = f"{models.path or 's1flow.toml'}" + ("" if a.models else " (its default)")
+        source = f"{models.path or 's1flow.toml'}" + ("" if a.models else " (its default)" if lineup.default else " (every model)")
         report = checking.check(source, [(n, lineup.spec(n.partition(":")[0])) for n in names],
                                 env=dict(os.environ), from_dotenv=from_dotenv, probe=a.reach)
     old_skills = skill.stale()
@@ -52,7 +52,7 @@ def add(sub: Any) -> None:
     doc = command(sub, "doctor", doctor, context=("project", "connections"), help="the keys and hosts the models need, and whether they are there",
                   description="For each model, the environment variables its provider reads (set or not; never a value) and the hosts "
                               "it calls (for a sandbox's allow-list). Exit 0 when everything needed is there, 1 otherwise, one line per problem.")
-    doc.add_argument("--models", help="comma-separated names from s1flow.toml (default: its `default`)")
+    doc.add_argument("--models", help="comma-separated names from s1flow.toml (default: its `default`, else every model)")
     doc.add_argument("--policy", metavar=POLICY, help="the model of this policy (the current version when no @ is given)")
     doc.add_argument("--path", help="with --policy: a policy file, or a policy set from `s1flow export` (policies.json), instead of policies/ (as decide --path)")
     doc.add_argument("--reach", action="store_true", help="also send one plain HTTPS request per host, without a key (no model is called)")

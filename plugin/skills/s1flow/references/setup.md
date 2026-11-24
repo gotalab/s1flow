@@ -40,7 +40,8 @@ s1flow models --verify [--models jev:1.15]   # ask plain questions; check every 
 ```
 
 A model and its versions are declared in `s1flow.toml` (`[models."jev@openrouter".versions."1.15"]`, `id = ...`).
-`--verify` asks every model every check, declared or not (`images` and `box` only once `image` works); finding new versions is in `measure.md`. When it
+`--verify` asks every model every check, declared or not (`images` and `box` only once `image` works; `text`, `number`,
+`date` and `estimate` are the question types that read a value or estimate one); finding new versions is in `measure.md`. When it
 shows `works, not declared` (`+` in `s1flow models`), propose that one line for the model's entry, such as
 `capabilities.audio = true`, for the person to review like a new entry. Add only what `--verify` showed working,
 and before a run, not during one: capabilities are part of the model's binding, so a changed entry is asked again.

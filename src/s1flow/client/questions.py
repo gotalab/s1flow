@@ -1,17 +1,21 @@
-"""The questions a decision model answers: yes / no, one of N, a level, a box.
+"""The questions a decision model answers: yes / no, one of N, a level, a box, a value read from the state,
+an estimate in a range.
 
-Vocabulary follows the decision-model APIs (TypeSafe, AI Gateway, OpenRouter, Workers AI): a map of
+Vocabulary follows the decision-model APIs (TypeSafe, OpenRouter, Workers AI): a map of
 typed `questions`, keyed by name. Every provider translates these into its own wire format (yes / no
-is `noul` on TypeSafe's, `predicate` on OpenAI's).
+is `noul` on TypeSafe's, `predicate` on OpenAI's; a value or an estimate is a `field` on OpenRouter's
+Extractions route).
 """
 
 from typing import Annotated, Literal, Union
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-QuestionType = Literal["boolean", "choice", "score", "box"]
+QuestionType = Literal["boolean", "choice", "score", "box", "text", "number", "date", "estimate", "multichoice", "boxes"]
 STRICT = ConfigDict(extra="forbid")  # a misspelt key in a question (and so in a policy's digest) is an error, not dropped
 TEXT_TYPES: frozenset[QuestionType] = frozenset({"boolean", "choice", "score"})
+# Read from the state or estimated, not decided: OpenRouter serves these on its Extractions route (extractions.py).
+FIELD_TYPES: frozenset[QuestionType] = frozenset({"text", "number", "date", "estimate"})
 
 
 class Boolean(BaseModel):
@@ -29,6 +33,16 @@ class Choice(BaseModel):
     criteria: dict[str, str | None]
 
 
+class MultiChoice(BaseModel):
+    """Every option that applies, possibly none: each option is its own yes or no (Liquid d1.2, 2026-11-17, where
+    it is a `choice` with `multiple`)."""
+
+    model_config = STRICT
+    type: Literal["multichoice"] = "multichoice"
+    instructions: str
+    criteria: dict[str, str | None]
+
+
 class Score(BaseModel):
     """Levels 0..L-1, described in order by `criteria`."""
 
@@ -41,7 +55,8 @@ class Score(BaseModel):
 class Box(BaseModel):
     """One bounding box of the target described in `instructions` (jev 1.14, 2026-10-15).
 
-    There is no "not found" answer: ask a Boolean alongside when the target may be absent.
+    A model that can say the target is not in the picture answers with no box (Liquid d1.2). The others always
+    give one (jev): ask them a Boolean alongside when the target may be absent.
     """
 
     model_config = STRICT
@@ -49,7 +64,74 @@ class Box(BaseModel):
     instructions: str
 
 
-Question = Annotated[Union[Boolean, Choice, Score, Box], Field(discriminator="type")]
+class Boxes(BaseModel):
+    """A bounding box for every instance of the target in the picture, none when there is none (Liquid d1.2,
+    2026-11-17). `max` caps how many a model returns (Liquid's own cap is 16 when it is left out)."""
+
+    model_config = STRICT
+    type: Literal["boxes"] = "boxes"
+    instructions: str
+    max: int | None = Field(default=None, ge=1)
+
+
+class Text(BaseModel):
+    """A passage read from the state as it is written (an invoice number, a name). The answer's value is None
+    when the state holds nothing for it."""
+
+    model_config = STRICT
+    type: Literal["text"] = "text"
+    instructions: str
+
+
+class Number(BaseModel):
+    """A number read from the state, None when the state holds none. `unit` names what it is counted in (USD, kg)."""
+
+    model_config = STRICT
+    type: Literal["number"] = "number"
+    instructions: str
+    unit: str | None = None
+
+
+class Date(BaseModel):
+    """A calendar date read from the state, None when the state holds none."""
+
+    model_config = STRICT
+    type: Literal["date"] = "date"
+    instructions: str
+
+
+class RangeEstimate(BaseModel):
+    """A number between `min` and `max` the state does not state: the model's estimate, with the p10 - p90 interval
+    of its distribution. `step` is the spacing of the values it may take (1 for a count)."""
+
+    model_config = STRICT
+    type: Literal["estimate"] = "estimate"
+    instructions: str
+    min: float
+    max: float
+    step: float | None = Field(default=None, gt=0)
+    unit: str | None = None
+
+    @model_validator(mode="after")
+    def _ordered(self) -> "RangeEstimate":
+        if not self.min < self.max:
+            raise ValueError(f"an estimate's min is under its max, got {self.min:g} and {self.max:g}")
+        return self
+
+
+def no_fields(questions: "Questions", who: str) -> None:
+    """Refuse the questions `who` has no way to ask, before any call: it would send a text question in a shape
+    the model reads as something else."""
+    from ..core.errors import Unsupported
+
+    if field := [f"{q.type} ({k})" for k, q in questions.items() if q.type in FIELD_TYPES]:
+        raise Unsupported(f"{who} has no {', '.join(sorted(FIELD_TYPES))} questions: {', '.join(field)}")
+    for kind in ("multichoice", "boxes"):
+        if named := [k for k, q in questions.items() if q.type == kind]:
+            raise Unsupported(f"{who} has no {kind} questions: {', '.join(named)}")
+
+
+Question = Annotated[Union[Boolean, Choice, Score, Box, Text, Number, Date, RangeEstimate, MultiChoice, Boxes], Field(discriminator="type")]
 Questions = dict[str, Question]
 
 

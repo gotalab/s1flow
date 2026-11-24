@@ -12,7 +12,7 @@ from .evaluation import Estimate, Evaluation, Floor, ObjectiveScore, cost_note, 
 from .objectives import measure
 from .objectives.declare import METRICS, Objective
 from .objectives.measure import bound
-from . import evalset, metrics
+from . import adopt, evalset, metrics
 from .run import ask_again
 from .select import Ranked, rank, unlike_among_tied
 from .shown import band, num, pct, usd
@@ -30,8 +30,8 @@ def show(case: Case, limit: int = 70) -> str:
 
 
 def available_models(task: Task, variant: str) -> list[str]:
-    d = task.where.runs_dir / task.id / variant
-    return sorted(p.stem for p in d.glob("*.jsonl")) if d.exists() else []
+    """The models with a run on the variant's question that are still in the line-up, as report and adopt list them."""
+    return [model for _, model, _ in adopt.candidates(task, variants=[variant])]
 
 
 def fmt(kind: Kind, o: Objective, sc: ObjectiveScore, with_ci: bool = True) -> str:
@@ -187,9 +187,19 @@ def render(task: Task, variant: str, evs: list[Evaluation], preds: dict[str, met
     kind = task.kind
     own = kind.report[0]  # the kind's own number, beside its accuracy
     box = kind.type == "box"
+    read = kind.type in ("text", "number", "date")
     first = next((e for e in evs if e.n), None)
     labelled = [c for c in task.load_cases().labelled() if sf.assign.get(c.id) != "test"]
-    labels = Counter(str(c.label) for c in labelled) if not box else Counter()
+    multi = kind.type == "multichoice"
+    several = kind.type == "boxes"
+    labels = (Counter(k for c in labelled for k in c.label) if multi  # how many cases each option applies to
+              else Counter(str(c.label) for c in labelled) if not (box or read or several or kind.type == "estimate") else Counter())
+    absent = sum(c.label is False for c in labelled)
+    about = (f" (right at IoU {kind.iou:g} or more" + (f"; {absent} with no target" if absent else "") + ")" if box
+             else f" ({sum(len(c.label) for c in labelled)} boxes; {sum(not c.label for c in labelled)} cases with none)" if several
+             else f" ({len(labelled) - absent} with a value, {absent} with none)" if read
+             else f" (right within {getattr(kind, 'tolerance'):g} of the label)" if kind.type == "estimate"
+             else f" ({', '.join(f'{k} {v}' for k, v in labels.most_common(8))}" + (", more" if len(labels) > 8 else "") + ")")
     sel0 = first.selective[0] if first and first.selective else None
     # Coverage is shown where the task asks for it: at a target nobody set, it reads as a requirement
     covered = any(o.name == "coverage" for o in task.objectives)
@@ -198,10 +208,13 @@ def render(task: Task, variant: str, evs: list[Evaluation], preds: dict[str, met
         f"# {task.id}" + (f" · {variant}" if variant != "base" else ""),
         "",
         f"{dt.date.today()} · {len(labelled)} labelled dev cases"
-        + (f" (right at IoU {kind.iou:g} or more)" if box else f" ({', '.join(f'{k} {v}' for k, v in labels.most_common(8))}" + (", more" if len(labels) > 8 else "") + ")")
+        + about
         + f" · split: {first.split if first else '—'} · source: {task.source}",
         "",
         headline(task, evs, scored, ranked),
+        *(["", f"Note: {variant} was written by optimize, which chose it on these train and val cases, so its values "
+            "lean high beside the others'; adopt confirms a pick on the held-out test, which optimize never read."]
+          if variant in task.optimized else []),
         "",
         "## Comparison",
         "",
@@ -243,7 +256,21 @@ def render(task: Task, variant: str, evs: list[Evaluation], preds: dict[str, met
         L.append("※ a model that returns no distribution (one answer): its probability is 1 for every answer"
                  + (", so the coverage is all or nothing." if covered else "."))
     if box:
-        L.append(f"Box: right at IoU {kind.iou:g} or more with the label's box. The probability is what jev returns; for an LLM, the agreement (IoU) of its repeated boxes. AUROC and ECE say how well that probability separates right from wrong.")
+        L.append(f"Box: right at IoU {kind.iou:g} or more with the label's box. The probability is what jev returns; for an LLM, the agreement (IoU) of its repeated boxes. AUROC and ECE say how well that probability separates right from wrong."
+                 + (" Where the label says the target is not in the picture, right is an answer of no box, as sure as the model says nothing is there." if absent else ""))
+    if read:
+        L.append("Value read: right when it equals the label, or when nothing was read from a case labelled as holding none. The probability is the "
+                 "model's: P(nothing there) for an answer of none, else P(something there) times its confidence in the value; 1 when it gives neither.")
+    if several:
+        L.append(f"Boxes: right when every box of the label has an answer box of its own at IoU {kind.iou:g} or more and no answer box is left over. "
+                 "The probability is that of the whole set: each slot's presence or absence and each box's confidence as the model gives them, multiplied; 0 where it says there "
+                 "are more than it gave. Box F1, precision and recall count every box of every case; count error is how far the number of boxes is off.")
+    if multi:
+        L.append("Multichoice: every option the model gives 0.5 or more, right when that set is exactly the label's. The probability is that of the "
+                 "whole set: each option's own yes or no, multiplied. Option F1, precision and recall count every option of every case.")
+    if kind.type == "estimate":
+        L.append(f"Estimate: right within {getattr(kind, 'tolerance'):g} of the label. What stands in for a probability is how narrow the p10 - p90 "
+                 "interval is against the question's range (1: a point, 0: the whole range). AUROC and ECE say how well that separates right from wrong.")
     if any(e.failures.unsupported for e in evs):
         L.append("Refused: inputs the model did not take (question type, image, audio, video, PDF, length limits) and answers it declined to give. "
                  "The model's limit, not a failed call: the candidate is kept, and the case stays in every denominator.")
@@ -308,11 +335,11 @@ def disagreements(task: Task, preds: dict[str, metrics.Preds], cases: dict[str, 
     for m, p in preds.items():
         for i, cid in enumerate(p.ids):
             if cid in common and cid in cases and p.pairs.ok[i]:  # a refused case gave no verdict
-                decided.setdefault(cid, {})[m] = (measure.plain(p.pairs.value[i]), float(p.pairs.probability[i]))
+                decided.setdefault(cid, {})[m] = (measure.written(p.pairs, p.pairs.value[i]), float(p.pairs.probability[i]))
     split = [cid for cid, d in decided.items() if len({v for v, _ in d.values()}) > 1]
     if not split:
         return ["", "## Cases the models disagree on", "", "None."]
-    label = {cid: measure.plain(p.y[i]) for p in preds.values() for i, cid in enumerate(p.ids)}
+    label = {cid: measure.written(p.pairs, p.y[i]) for p in preds.values() for i, cid in enumerate(p.ids)}
     names = list(preds)
     L = ["", f"## Cases the models disagree on (12 of {len(split)})", "", "| id | label | " + " | ".join(names) + " | case |", "|---|---|" + "---|" * len(names) + "---|"]
     for cid in sorted(split, key=lambda c: -max(cf for _, cf in decided[c].values()))[:12]:

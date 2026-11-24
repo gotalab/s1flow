@@ -1,16 +1,8 @@
 # Develop s1flow
 
-The checks below run offline and need no API keys. To call real models from the bench project, put its keys in
-`apps/bench/.env` (ignored by Git) and run `uv run s1flow doctor --project apps/bench` to check the connections.
-
-```bash
-uv sync --frozen
-uv run pytest -q -n auto --dist worksteal   # also checks schema/, the import contracts and the wheel
-uv run ruff check          # pyflakes: unused imports and variables, undefined names
-uv run mypy src/s1flow
-```
-
-CI (`.github/workflows/tests.yml`) runs the same commands on every pull request and on main.
+The checks to run and the rules for every change are in [AGENTS.md](https://github.com/gotalab/s1flow/blob/main/AGENTS.md). This page has the details. To call
+real models from the bench project, put its keys in `apps/bench/.env` (ignored by Git) and run
+`uv run s1flow doctor --project apps/bench` to check the connections.
 
 Some tests are properties checked on generated cases (Hypothesis): the measures against their definitions or
 scikit-learn, the evaluation's reading of a case against production's, the rule search against its constraints, and
@@ -27,14 +19,27 @@ tasks or their data can change these tests. `tests/test_bench.py` checks only th
 policies and reports still read: when a change makes them unreadable, rewrite them to the current shape in the same
 change.
 
+## The site
+
+The public site, https://gotalab.github.io/s1flow, is `docs/` built with [Zensical](https://zensical.org)
+(`zensical.toml`; theme overrides in `docs/.overrides/`, styles in `docs/stylesheets/`). Its Benchmarks pages are
+written from `apps/bench/reports` by `scripts/site_benchmarks.py`: each task's `comparison.json`, and the reports
+README's table for what each answer is used for and why its objective. To preview it:
+
+```bash
+python scripts/site_benchmarks.py           # writes docs/benchmarks/ (not committed)
+uvx zensical==0.1.1 serve                   # or: build --clean --strict, into site/
+```
+
+`.github/workflows/site.yml` builds it with `--strict` (a broken link fails) on a pull request that touches it, and
+builds and publishes it on every push to main. Zensical also writes `llms.txt`, `llms-full.txt` and a Markdown copy
+of each page for agents. Links from `docs/` to files outside it don't exist on the site: link to their GitHub URL.
+
 ## Release
 
-A pull request that changes what users see (the CLI, the Python API, the decide Action, the Skill, file formats) adds a
-line under the changelog's `## Unreleased` heading (creating it at the top when it is missing) and keeps the
-version. Merging it releases nothing: main can hold several such changes before they ship.
-
-A release is a pull request of its own, opened when main has an `Unreleased` section. It raises the alpha number in
-`pyproject.toml` (`0.1.0a3` → `0.1.0a4`) and `uv.lock`, renames `Unreleased` to that version and date, and pins the
+A pull request that changes what users see adds a changelog line and keeps the version ([AGENTS.md](https://github.com/gotalab/s1flow/blob/main/AGENTS.md)), so
+main can hold several such changes before they ship. A release is a pull request of its own, opened when main has an
+`Unreleased` section. It raises the alpha number in `pyproject.toml` (`0.1.0a3` → `0.1.0a4`) and `uv.lock`, renames `Unreleased` to that version and date, and pins the
 decide Action at `v<version>` and the package at `==<version>` in `examples/` and the Skill's `references/app.md`
 (`tests/test_docs.py` fails until they agree). It changes nothing else: outside the changelog, every line it changes
 names the old or the new version, and `.github/workflows/release-only.yml` fails a pull request that changes the

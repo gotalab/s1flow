@@ -128,10 +128,13 @@ def _state(a: argparse.Namespace) -> "State":
 
 
 def _line(qid: str, x: "Answer") -> str:
-    from ..client.answers import BooleanAnswer, BoxAnswer, ChoiceAnswer, ScoreAnswer
+    from ..client.answers import BooleanAnswer, BoxAnswer, BoxesAnswer, ChoiceAnswer, DateAnswer, EstimateAnswer, MultiChoiceAnswer, NumberAnswer, ScoreAnswer, TextAnswer
 
     if isinstance(x, BooleanAnswer):
         return f"{qid}: P(true) {x.probability:.3f}"
+    if isinstance(x, MultiChoiceAnswer):
+        each = " · ".join(f"{k} {p:.3f}" for k, p in sorted((x.probabilities or {}).items(), key=lambda kv: -kv[1]))
+        return f"{qid}: {', '.join(x.choices) or 'none'}" + (f"  ({each})" if each else "")
     if isinstance(x, ChoiceAnswer):
         probs = sorted((x.probabilities or {}).items(), key=lambda kv: -kv[1])
         dist = " · ".join(f"{k} {p:.3f}" for k, p in probs) if probs else x.choice
@@ -139,10 +142,21 @@ def _line(qid: str, x: "Answer") -> str:
     if isinstance(x, ScoreAnswer):
         dist = " · ".join(f"{k}: {p:.3f}" for k, p in sorted((x.probabilities or {}).items(), key=lambda kv: int(kv[0])))
         return f"{qid}: {x.score:.2f}" + (f"  ({dist})" if dist else "")
+    if isinstance(x, BoxesAnswer):
+        each = "; ".join(f"top {b.box.top:.3f} bottom {b.box.bottom:.3f} left {b.box.left:.3f} right {b.box.right:.3f}" for b in x.boxes)
+        return f"{qid}: {len(x.boxes)}{' or more' if x.at_least else ''} " + ("box" if len(x.boxes) == 1 else "boxes") + (f"  ({each})" if each else "")
     if isinstance(x, BoxAnswer):
         b = x.box
+        if b is None:
+            return f"{qid}: not in the picture" + ("" if x.found is None else f"  (found {x.found:.3f})")
         conf = x.confidence if x.confidence is not None else x.agreement
         return f"{qid}: top {b.top:.3f} bottom {b.bottom:.3f} left {b.left:.3f} right {b.right:.3f}" + ("" if conf is None else f"  (confidence {conf:.2f})")
+    if isinstance(x, (TextAnswer, NumberAnswer, DateAnswer)):
+        value = "none" if x.value is None else f"{x.value:g}" if isinstance(x, NumberAnswer) else str(x.value)
+        said = [f"{name} {v:.3f}" for name, v in (("p_null", x.p_null), ("confidence", x.confidence)) if v is not None]
+        return f"{qid}: {value}" + (f"  ({' · '.join(said)})" if said else "")
+    if isinstance(x, EstimateAnswer):
+        return f"{qid}: {x.value:g}" + ("" if x.p10 is None or x.p90 is None else f"  (p10 {x.p10:g} · p90 {x.p90:g})")
     return f"{qid}: refused" + (f" ({x.reason})" if x.reason else "")
 
 

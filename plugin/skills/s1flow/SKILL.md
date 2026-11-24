@@ -32,6 +32,11 @@ score or box). `provider:id` needs no project, only that provider's key (`refere
 To put a decision of any type in production without measuring it first, write it as a policy and save it
 unevaluated (`references/app.md`, "Ship without an evaluation"): its log keeps every answer, so cases can come later.
 
+**Open the question type's playbook** whenever you choose or change `objective=`, suggest a metric, a target or a
+hand-off line (which answers a person takes), or before `adopt`. The type is `question=` in `task.py`:
+`references/types/boolean.md`, `references/types/choice.md`, `references/types/score.md` or
+`references/types/box.md`. It says what to ask and what today's objectives can and cannot do. Other types have none yet.
+
 Read the one reference for the stage at hand:
 
 | Stage | Read |

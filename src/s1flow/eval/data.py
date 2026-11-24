@@ -5,12 +5,14 @@ this is the one place that says whether the result is usable.
 """
 
 import json
+from typing import Any
 from collections import Counter
 
 from pydantic import BaseModel
 
 from ..core.errors import DataError
 from ..client.state import has_unprepared_media
+from ..policies.kinds import same_label
 from . import evalset
 from .cases import Case
 from .shown import pct
@@ -30,6 +32,22 @@ class DataCheck(BaseModel):
     corrected: dict[str, int] = {}  # corrections.jsonl: verdict -> cases
 
 
+def _label(kind: Any, label: Any) -> str:
+    """A label as the count of labels names it: a multichoice's options in one order, a boxes label by how many.
+    A label the kind cannot hold is named as written (`label_errors` reports it)."""
+    if kind.type == "multichoice" and isinstance(label, (list, tuple)) and all(isinstance(k, str) for k in label):
+        return ", ".join(sorted(label)) or "none"
+    if kind.type == "boxes" and isinstance(label, (list, tuple)):
+        return "1 box" if len(label) == 1 else f"{len(label)} boxes"
+    return str(label)
+
+
+def label_errors(task: Task, cases: list[Case]) -> list[str]:
+    """The labels the task's question cannot score ("<id>: <why>"): a run refuses them before its first call, as
+    the report that reads its answers would fail on them."""
+    return [f"{c.id}: {wrong}" for c in cases if c.label is not None and (wrong := task.kind.label_error(c.label)) is not None]
+
+
 def check(task: Task) -> DataCheck:
     try:
         cases = task.load_cases().all()
@@ -38,20 +56,19 @@ def check(task: Task) -> DataCheck:
         return DataCheck(cases=0, labelled=0, labels={}, errors=[str(e)])
     errors: list[str] = []
     warnings: list[str] = []
+    kind = task.kind
     collected = {c.id: c.label for c in task.load_cases().collected()}
     for f in fixes.values():
         if f.id not in collected:
             errors.append(f"{f.id}: corrected in corrections.jsonl, but no case has this id")
-        elif collected[f.id] != f.was:
+        elif not same_label(kind, collected[f.id], f.was):
             warnings.append(f"{f.id}: corrected from {f.was!r}, but the collected label is now {collected[f.id]!r}; read it again")
     for id_, n in Counter(c.id for c in cases).items():
         if n > 1:
             errors.append(f"{id_}: {n} cases share this id")
     labelled = [c for c in cases if c.label is not None]
-    kind = task.kind
+    errors += label_errors(task, labelled)
     for c in labelled:
-        if (wrong := kind.label_error(c.label)) is not None:
-            errors.append(f"{c.id}: {wrong}")
         if c.state in (None, "", [], {}):
             errors.append(f"{c.id}: the state is empty")
         elif has_unprepared_media(c.state):
@@ -62,10 +79,10 @@ def check(task: Task) -> DataCheck:
     seen: dict[str, Case] = {}
     for c in labelled:
         key = json.dumps(c.state, sort_keys=True, ensure_ascii=False, default=str)
-        if key in seen and seen[key].label != c.label:
+        if key in seen and not same_label(kind, seen[key].label, c.label):
             warnings.append(f"{seen[key].id} and {c.id} have the same state and different labels ({seen[key].label!r} / {c.label!r})")
         seen.setdefault(key, c)
-    labels = Counter(str(c.label) for c in labelled)
+    labels = Counter(_label(kind, c.label) for c in labelled)
     if kind.binary and labelled:
         small = min(labels.get("True", 0), labels.get("False", 0)) / len(labelled)
         if small < MINORITY and task.primary.name == "accuracy":

@@ -18,8 +18,6 @@ uv add s1flow   # or: pip install s1flow
 Your app decides which model connections it allows. For example, `connections.toml`:
 
 ```toml
-default = ["triage"]
-
 [models.triage]
 provider = "typesafe"
 id = "jev-1.14.0" # use a model ID your account has access to
@@ -187,6 +185,28 @@ response = Client(connections="connections.toml").responses.create(
 
 The Client supports yes/no (`boolean`), choice, score and box questions, and several questions in one request, as far as
 the provider supports them. Evaluation compares all four. A policy holds one question of any of these types.
+
+It also asks for a value read from the state (`Text`, `Number`, `Date`) or a number the state does not state
+(`RangeEstimate`, between a `min` and a `max`), where a model answers them: Liquid's d1.2 and d1.2-ultra take all four on Liquid's own API, in the same call as other questions; through OpenRouter, Clairic takes all four,
+Schematron text, numbers and dates, Perplexity's Decider v1.3 and ScaleDown Extract text. A read answer's `value`
+is `None` when the model found nothing; `p_null`, `confidence` and `span` come with it when the model gives them. An
+estimate comes with `p10` and `p90`. A `span` counts characters in the text sent (Liquid's is kept for a text state only): for a JSON state, the state with its
+keys sorted, dumped with an indent of 1. Some models read the question's name as well as its instructions, so name
+it for what it reads (`order_number`, not `q`). OpenRouter serves these on another route, so one request asks either
+these or the other four types. Evaluation compares them too ([evaluate.md](evaluate.md)), and a policy holds one like any other type.
+
+A box answer's `box` is `None` when the model says the target is not in the picture, with `found` (the probability
+that it is there) where the model gives one: Liquid's d1.2 does. A model that always gives a box (jev) cannot say so.
+A box policy's decision is then `None`, and `feedback record ... false` labels a case with no target.
+
+`Boxes` asks for a box for every instance of the target, none when there is none: the answer's `boxes`, each with
+its `confidence` and `found`, `at_least` when the model stopped at the question's `max`, and the `presence` of each
+slot. Liquid's d1.2 and d1.2-ultra answer it; evaluation compares it, and a policy holds one
+(`feedback record` takes its boxes as JSON, `none` for none).
+
+`MultiChoice` asks for every option that applies, possibly none: the answer's `choices`, with each option's own
+probability in `probabilities` (they do not sum to 1). Liquid's d1.2 and d1.2-ultra answer it; evaluation compares it,
+and a policy holds one (`feedback record ... late,damage`, or `none`).
 
 Every call sends the state with the keys of each JSON object in sorted order, so a case in an evaluation and a
 call in production that differ only in key order send the same request. Lists keep their order.

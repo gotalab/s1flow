@@ -340,6 +340,102 @@ def test_a_box_policy_decides_logs_and_takes_feedback(tmp_path: Path, monkeypatc
     assert isinstance(back, AnsweredLog) and back.decision.value == box and back.decision.confidence == .4
 
 
+@pytest.mark.parametrize('question, answer, value, typed, label', [
+    ('text', {'type': 'text', 'value': 'A-12', 'confidence': .9, 'p_null': .05}, 'A-12', 'A-13', 'A-13'),
+    ('text', {'type': 'text', 'value': None, 'p_null': .95}, None, False, False),  # the CLI's `false`: the case holds none
+    ('number', {'type': 'number', 'value': 12.5, 'confidence': .9}, 12.5, '12', 12.0),
+    ('estimate', {'type': 'estimate', 'value': 40, 'p10': 35, 'p90': 45}, 40.0, '41', 41.0),
+])
+def test_a_value_policy_decides_logs_and_takes_feedback(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, question: str, answer: dict[str, Any],
+                                                        value: Any, typed: Any, label: Any) -> None:
+    from pydantic import TypeAdapter
+    from s1flow.client.answers import Answer
+    from s1flow.policies.log import AnsweredLog, from_span, span
+    from s1flow.policies.policy import record_feedback
+    from s1flow.questions import Number, RangeEstimate, Text
+
+    q = {'text': Text(instructions='The order number'), 'number': Number(instructions='The total'),
+         'estimate': RangeEstimate(instructions='How many boxes', min=0, max=100)}[question]
+    spec = runtime_spec(task='read', questions={'v': asked(q, DecisionRule(min_probability=.5))})
+    log = tmp_path / 'events.jsonl'
+    d = DecisionPolicy(spec, client=_answering(monkeypatch, TypeAdapter(Answer).validate_python(answer)), log=log).decide({'text': 'x'})
+    assert d.value == value
+    record_feedback(spec, d.decision_id, typed, log=log)
+    with pytest.raises(ConfigError):
+        record_feedback(spec, d.decision_id, [1], log=log)
+    events = [json.loads(line) for line in log.read_text().splitlines()]
+    assert [e['type'] for e in events] == ['answered', 'feedback'] and events[1]['label'] == label
+    answered = AnsweredLog.model_validate(events[0])
+    back = from_span(*span(answered)[:1], answered.at, span(answered)[1])
+    assert isinstance(back, AnsweredLog) and back.decision.value == value
+
+
+def test_a_multichoice_policy_decides_logs_and_takes_feedback(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from s1flow.client.answers import MultiChoiceAnswer
+    from s1flow.policies.log import AnsweredLog, from_span, span
+    from s1flow.policies.policy import record_feedback
+    from s1flow.questions import MultiChoice
+
+    q = MultiChoice(instructions='What does the customer complain about?', criteria={'late': 'late', 'damage': 'damaged', 'billing': 'a wrong charge'})
+    spec = runtime_spec(task='topics', questions={'topics': asked(q, DecisionRule(min_probability=.5))})
+    log = tmp_path / 'events.jsonl'
+    answer = MultiChoiceAnswer(choices=['damage', 'late'], probabilities={'late': .9, 'damage': .8, 'billing': .1})
+    d = DecisionPolicy(spec, client=_answering(monkeypatch, answer), log=log).decide({'text': 'late and broken'})
+    assert d.value == ('late', 'damage') and d.probability == pytest.approx(.9 * .8 * .9)
+    record_feedback(spec, d.decision_id, 'damage,late', log=log)  # as the CLI types it
+    record_feedback(spec, d.decision_id, 'none', log=log)
+    with pytest.raises(ConfigError, match='list of the options that apply'):
+        record_feedback(spec, d.decision_id, 'late,refund', log=log)
+    events = [json.loads(line) for line in log.read_text().splitlines()]
+    assert [e['label'] for e in events[1:]] == [['late', 'damage'], []]
+    answered = AnsweredLog.model_validate(events[0])
+    back = from_span(*span(answered)[:1], answered.at, span(answered)[1])
+    assert isinstance(back, AnsweredLog) and back.decision.value == ('late', 'damage')
+
+
+def test_a_box_policy_can_decide_the_target_is_not_there(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from s1flow.client.answers import BoxAnswer
+    from s1flow.policies.log import AnsweredLog, from_span, span
+    from s1flow.policies.policy import record_feedback
+    from s1flow.questions import Box
+
+    spec = runtime_spec(task='find-button', questions={'button': asked(Box(instructions='The submit button'), DecisionRule(min_probability=.5))})
+    log = tmp_path / 'events.jsonl'
+    d = DecisionPolicy(spec, client=_answering(monkeypatch, BoxAnswer(box=None, found=.02)), log=log).decide(
+        {'screen': Image(media_type='image/png', data='YWJj', sha256='x', width=1, height=1)})
+    assert (d.value, d.confidence, d.below_min_probability) == (None, pytest.approx(.98), False)
+    record_feedback(spec, d.decision_id, False, log=log)  # the CLI's `false`: not in the picture
+    events = [json.loads(line) for line in log.read_text().splitlines()]
+    assert events[1]['label'] is False
+    answered = AnsweredLog.model_validate(events[0])
+    back = from_span(*span(answered)[:1], answered.at, span(answered)[1])
+    assert isinstance(back, AnsweredLog) and back.decision.value is None
+
+
+def test_a_boxes_policy_decides_logs_and_takes_feedback(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from s1flow.client.answers import BoxEdges, BoxesAnswer, FoundBox
+    from s1flow.policies.log import AnsweredLog, from_span, span
+    from s1flow.policies.policy import record_feedback
+    from s1flow.questions import Boxes
+
+    spec = runtime_spec(task='discs', questions={'discs': asked(Boxes(instructions='every red disc'), DecisionRule(min_probability=.5))})
+    a, b = BoxEdges(top=.1, bottom=.3, left=.2, right=.6), BoxEdges(top=.5, bottom=.7, left=.1, right=.3)
+    log = tmp_path / 'events.jsonl'
+    answer = BoxesAnswer(boxes=[FoundBox(box=a, found=.99, confidence=.9), FoundBox(box=b, found=.99, confidence=.9)], presence=[.99, .99, .01])
+    d = DecisionPolicy(spec, client=_answering(monkeypatch, answer), log=log).decide(
+        {'screen': Image(media_type='image/png', data='YWJj', sha256='x', width=1, height=1)})
+    assert d.value == (a, b) and d.probability is None and d.confidence == pytest.approx(.99 ** 3 * .81)
+    record_feedback(spec, d.decision_id, json.dumps([b.model_dump(), a.model_dump()]), log=log)  # as the CLI types it
+    record_feedback(spec, d.decision_id, 'none', log=log)
+    with pytest.raises(ConfigError, match="list of every instance's box"):
+        record_feedback(spec, d.decision_id, '{"top": 0.1}', log=log)
+    events = [json.loads(line) for line in log.read_text().splitlines()]
+    assert [e['label'] for e in events[1:]] == [[a.model_dump(), b.model_dump()], []]
+    answered = AnsweredLog.model_validate(events[0])
+    back = from_span(*span(answered)[:1], answered.at, span(answered)[1])
+    assert isinstance(back, AnsweredLog) and back.decision.value == (a, b)
+
+
 def test_timeout_cancels_the_call_and_logs_it_failed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     c, _ = fake_client(monkeypatch)
     cancelled: list[bool] = []

@@ -156,8 +156,13 @@ def feedback_event(spec: PolicySpec, decision_id: str, label: Any, *, policy_dig
     if labels:
         if label not in kind.options if isinstance(label, str) and kind.options else kind.label_error(kind.as_label(label)) is not None:
             raise ConfigError(f'{spec.ref}: label {label!r} is not an answer to its question; one of: {", ".join(labels)}')
-    elif wrong := kind.label_error(kind.as_label(label)):
-        raise ConfigError(f'{spec.ref}: {wrong}')
+    else:
+        try:
+            wrong = kind.label_error(kind.as_label(label))
+        except (TypeError, ValueError):  # a label its kind cannot read (a value read, a multichoice): say what one is
+            wrong = kind.label_error(label) or f'{label!r} is not a label of a {kind.type} question'
+        if wrong:
+            raise ConfigError(f'{spec.ref}: {wrong}')
     return FeedbackLog(at=clock.now(ms=True), decision_id=decision_id, policy=spec.ref, policy_digest=spec.digest,
                        label=kind.as_label(label))
 

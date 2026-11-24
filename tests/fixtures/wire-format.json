@@ -182,185 +182,7 @@
         "left": 0.2,
         "right": 0.9
        },
-       "confidence": 0.6,
-       "agreement": null
-      }
-     }
-    }
-   }
-  },
-  "gateway": {
-   "text": {
-    "sent": {
-     "url": "https://ai-gateway.vercel.sh/v1/evaluate",
-     "headers": {},
-     "body": {
-      "model": "typesafe-ai/jev",
-      "state": {
-       "meta": {
-        "a": [
-         {
-          "b": 3,
-          "y": 2
-         }
-        ],
-        "z": 1
-       },
-       "title": "Crash on start"
-      },
-      "questions": {
-       "kind": {
-        "type": "choice",
-        "instructions": "What kind of issue?",
-        "criteria": {
-         "kind/bug": "it is broken",
-         "kind/question": null
-        }
-       },
-       "refund": {
-        "type": "boolean",
-        "instructions": "Does it ask for a refund?"
-       },
-       "urgency": {
-        "type": "score",
-        "instructions": "How urgent?",
-        "criteria": [
-         "low",
-         "high"
-        ]
-       }
-      }
-     }
-    },
-    "read": {
-     "answered_by": "typesafe-ai/jev",
-     "answers": {
-      "kind": {
-       "type": "choice",
-       "choice": "kind/bug",
-       "probabilities": {
-        "kind/bug": 0.8,
-        "kind/question": 0.2
-       },
-       "confidence": 0.9
-      },
-      "refund": {
-       "type": "boolean",
-       "probability": 0.1
-      },
-      "urgency": {
-       "type": "score",
-       "score": 0.6,
-       "probabilities": {
-        "0": 0.4,
-        "1": 0.6
-       },
-       "confidence": null
-      }
-     }
-    }
-   },
-   "image": {
-    "sent": {
-     "url": "https://ai-gateway.vercel.sh/v1/evaluate",
-     "headers": {},
-     "body": {
-      "model": "typesafe-ai/jev",
-      "state": [
-       "The screen shows:",
-       {
-        "type": "image_url",
-        "image_url": {
-         "url": "data:image/png;base64,iVBORw0KGgo="
-        }
-       }
-      ],
-      "questions": {
-       "kind": {
-        "type": "choice",
-        "instructions": "What kind of issue?",
-        "criteria": {
-         "kind/bug": "it is broken",
-         "kind/question": null
-        }
-       },
-       "refund": {
-        "type": "boolean",
-        "instructions": "Does it ask for a refund?"
-       },
-       "urgency": {
-        "type": "score",
-        "instructions": "How urgent?",
-        "criteria": [
-         "low",
-         "high"
-        ]
-       }
-      }
-     }
-    },
-    "read": {
-     "answered_by": "typesafe-ai/jev",
-     "answers": {
-      "kind": {
-       "type": "choice",
-       "choice": "kind/bug",
-       "probabilities": {
-        "kind/bug": 0.8,
-        "kind/question": 0.2
-       },
-       "confidence": 0.9
-      },
-      "refund": {
-       "type": "boolean",
-       "probability": 0.1
-      },
-      "urgency": {
-       "type": "score",
-       "score": 0.6,
-       "probabilities": {
-        "0": 0.4,
-        "1": 0.6
-       },
-       "confidence": null
-      }
-     }
-    }
-   },
-   "box": {
-    "sent": {
-     "url": "https://ai-gateway.vercel.sh/v1/evaluate",
-     "headers": {},
-     "body": {
-      "model": "typesafe-ai/jev",
-      "state": [
-       "The screen shows:",
-       {
-        "type": "image_url",
-        "image_url": {
-         "url": "data:image/png;base64,iVBORw0KGgo="
-        }
-       }
-      ],
-      "questions": {
-       "where": {
-        "type": "box",
-        "instructions": "Where is the error message?"
-       }
-      }
-     }
-    },
-    "read": {
-     "answered_by": "typesafe-ai/jev",
-     "answers": {
-      "where": {
-       "type": "box",
-       "box": {
-        "top": 0.1,
-        "bottom": 0.5,
-        "left": 0.2,
-        "right": 0.9
-       },
+       "found": null,
        "confidence": 0.6,
        "agreement": null
       }
@@ -540,6 +362,7 @@
         "left": 0.2,
         "right": 0.9
        },
+       "found": null,
        "confidence": 0.6,
        "agreement": null
       }
@@ -622,6 +445,91 @@
         "1": 0.6
        },
        "confidence": null
+      }
+     }
+    }
+   },
+   "fields": {
+    "sent": {
+     "url": "https://openrouter.ai/api/alpha/extractions",
+     "headers": {},
+     "body": {
+      "model": "typesafe/jev",
+      "state": "{\n \"meta\": {\n  \"a\": [\n   {\n    \"b\": 3,\n    \"y\": 2\n   }\n  ],\n  \"z\": 1\n },\n \"title\": \"Crash on start\"\n}",
+      "fields": {
+       "invoice": {
+        "type": "text",
+        "instructions": "The invoice number"
+       },
+       "po": {
+        "type": "text",
+        "instructions": "Purchase order number"
+       },
+       "total": {
+        "type": "number",
+        "instructions": "The total",
+        "unit": "USD"
+       },
+       "issued": {
+        "type": "date",
+        "instructions": "The issue date"
+       },
+       "days": {
+        "type": "estimate",
+        "instructions": "Days until it is paid",
+        "min": 0.0,
+        "max": 120.0,
+        "step": 1.0
+       }
+      }
+     }
+    },
+    "read": {
+     "answered_by": "cloudflare/clairic-20261029",
+     "answers": {
+      "invoice": {
+       "p_null": 1e-05,
+       "confidence": 0.99998,
+       "span": [
+        8,
+        16
+       ],
+       "type": "text",
+       "value": "INV-2291",
+       "guess": "INV-2291"
+      },
+      "po": {
+       "p_null": 0.99999,
+       "confidence": 0.9989,
+       "span": [
+        8,
+        16
+       ],
+       "type": "text",
+       "value": null,
+       "guess": "INV-2291"
+      },
+      "total": {
+       "p_null": 0.0004,
+       "confidence": 0.9978,
+       "span": null,
+       "type": "number",
+       "value": 1080.0,
+       "guess": 1080.0
+      },
+      "issued": {
+       "p_null": 2e-05,
+       "confidence": 0.99998,
+       "span": null,
+       "type": "date",
+       "value": "2026-09-02",
+       "guess": "2026-09-02"
+      },
+      "days": {
+       "type": "estimate",
+       "value": 30.0,
+       "p10": 26.0,
+       "p90": 31.0
       }
      }
     }
@@ -795,6 +703,7 @@
         "left": 0.2,
         "right": 0.9
        },
+       "found": null,
        "confidence": 0.6,
        "agreement": null
       }
@@ -959,6 +868,216 @@
         "1": 0.6
        },
        "confidence": null
+      }
+     }
+    }
+   }
+  },
+  "gateway": {
+   "text": {
+    "sent": {
+     "url": "https://ai-gateway.vercel.sh/v1/decisions",
+     "headers": {},
+     "body": {
+      "model": "typesafe-ai/jev",
+      "input": "{\n \"meta\": {\n  \"a\": [\n   {\n    \"b\": 3,\n    \"y\": 2\n   }\n  ],\n  \"z\": 1\n },\n \"title\": \"Crash on start\"\n}",
+      "questions": [
+       {
+        "type": "choice",
+        "name": "kind",
+        "instructions": "What kind of issue?",
+        "choices": [
+         {
+          "value": "kind/bug",
+          "description": "it is broken"
+         },
+         {
+          "value": "kind/question"
+         }
+        ]
+       },
+       {
+        "type": "predicate",
+        "name": "refund",
+        "instructions": "Does it ask for a refund?"
+       },
+       {
+        "type": "score",
+        "name": "urgency",
+        "instructions": "How urgent?",
+        "levels": [
+         {
+          "label": "0",
+          "description": "low"
+         },
+         {
+          "label": "1",
+          "description": "high"
+         }
+        ]
+       }
+      ]
+     }
+    },
+    "read": {
+     "answered_by": "typesafe-ai/jev",
+     "answers": {
+      "kind": {
+       "type": "choice",
+       "choice": "kind/bug",
+       "probabilities": {
+        "kind/bug": 0.8,
+        "kind/question": 0.2
+       },
+       "confidence": 0.7
+      },
+      "refund": {
+       "type": "boolean",
+       "probability": 0.1
+      },
+      "urgency": {
+       "type": "score",
+       "score": 0.6,
+       "probabilities": {
+        "0": 0.4,
+        "1": 0.6
+       },
+       "confidence": null
+      }
+     }
+    }
+   },
+   "image": {
+    "sent": {
+     "url": "https://ai-gateway.vercel.sh/v1/decisions",
+     "headers": {},
+     "body": {
+      "model": "typesafe-ai/jev",
+      "input": [
+       {
+        "role": "user",
+        "content": [
+         {
+          "type": "input_text",
+          "text": "The screen shows:"
+         },
+         {
+          "type": "input_image",
+          "image_url": "data:image/png;base64,iVBORw0KGgo="
+         }
+        ]
+       }
+      ],
+      "questions": [
+       {
+        "type": "choice",
+        "name": "kind",
+        "instructions": "What kind of issue?",
+        "choices": [
+         {
+          "value": "kind/bug",
+          "description": "it is broken"
+         },
+         {
+          "value": "kind/question"
+         }
+        ]
+       },
+       {
+        "type": "predicate",
+        "name": "refund",
+        "instructions": "Does it ask for a refund?"
+       },
+       {
+        "type": "score",
+        "name": "urgency",
+        "instructions": "How urgent?",
+        "levels": [
+         {
+          "label": "0",
+          "description": "low"
+         },
+         {
+          "label": "1",
+          "description": "high"
+         }
+        ]
+       }
+      ]
+     }
+    },
+    "read": {
+     "answered_by": "typesafe-ai/jev",
+     "answers": {
+      "kind": {
+       "type": "choice",
+       "choice": "kind/bug",
+       "probabilities": {
+        "kind/bug": 0.8,
+        "kind/question": 0.2
+       },
+       "confidence": 0.7
+      },
+      "refund": {
+       "type": "boolean",
+       "probability": 0.1
+      },
+      "urgency": {
+       "type": "score",
+       "score": 0.6,
+       "probabilities": {
+        "0": 0.4,
+        "1": 0.6
+       },
+       "confidence": null
+      }
+     }
+    }
+   },
+   "box": {
+    "sent": {
+     "url": "https://ai-gateway.vercel.sh/v1/decisions",
+     "headers": {},
+     "body": {
+      "model": "typesafe-ai/jev",
+      "input": [
+       {
+        "role": "user",
+        "content": [
+         {
+          "type": "input_text",
+          "text": "The screen shows:"
+         },
+         {
+          "type": "input_image",
+          "image_url": "data:image/png;base64,iVBORw0KGgo="
+         }
+        ]
+       }
+      ],
+      "questions": [
+       {
+        "type": "box",
+        "name": "where",
+        "instructions": "Where is the error message?"
+       }
+      ]
+     }
+    },
+    "read": {
+     "answered_by": "typesafe-ai/jev",
+     "answers": {
+      "where": {
+       "type": "box",
+       "box": {
+        "top": 0.1,
+        "bottom": 0.5,
+        "left": 0.2,
+        "right": 0.9
+       },
+       "found": null,
+       "confidence": 0.6,
+       "agreement": null
       }
      }
     }
@@ -1136,8 +1255,248 @@
         "left": 0.2,
         "right": 0.9
        },
+       "found": 0.9,
        "confidence": 0.6,
        "agreement": null
+      }
+     }
+    }
+   },
+   "fields": {
+    "sent": {
+     "url": "https://api.liquid.ai/decisions/v1/systemone",
+     "headers": {},
+     "body": {
+      "model": "d1.2",
+      "state": {
+       "meta": {
+        "a": [
+         {
+          "b": 3,
+          "y": 2
+         }
+        ],
+        "z": 1
+       },
+       "title": "Crash on start"
+      },
+      "questions": {
+       "invoice": {
+        "type": "text",
+        "instructions": "The invoice number"
+       },
+       "po": {
+        "type": "text",
+        "instructions": "Purchase order number"
+       },
+       "total": {
+        "type": "number",
+        "instructions": "The total",
+        "unit": "USD"
+       },
+       "issued": {
+        "type": "date",
+        "instructions": "The issue date"
+       },
+       "days": {
+        "type": "number",
+        "range": [
+         0.0,
+         120.0
+        ],
+        "instructions": "Days until it is paid",
+        "step": 1.0
+       }
+      }
+     }
+    },
+    "read": {
+     "answered_by": "d1.2",
+     "answers": {
+      "invoice": {
+       "p_null": 0.0012999999999999678,
+       "confidence": null,
+       "span": null,
+       "type": "text",
+       "value": "INV-2291",
+       "guess": null
+      },
+      "po": {
+       "p_null": 0.9799,
+       "confidence": null,
+       "span": null,
+       "type": "text",
+       "value": null,
+       "guess": null
+      },
+      "total": {
+       "p_null": 0.01980000000000004,
+       "confidence": null,
+       "span": null,
+       "type": "number",
+       "value": 1080.0,
+       "guess": null
+      },
+      "issued": {
+       "p_null": 0.0,
+       "confidence": null,
+       "span": null,
+       "type": "date",
+       "value": "2026-09-02",
+       "guess": null
+      },
+      "days": {
+       "type": "estimate",
+       "value": 30.0,
+       "p10": 26.0,
+       "p90": 31.0
+      }
+     }
+    }
+   },
+   "multichoice": {
+    "sent": {
+     "url": "https://api.liquid.ai/decisions/v1/systemone",
+     "headers": {},
+     "body": {
+      "model": "d1.2",
+      "state": {
+       "meta": {
+        "a": [
+         {
+          "b": 3,
+          "y": 2
+         }
+        ],
+        "z": 1
+       },
+       "title": "Crash on start"
+      },
+      "questions": {
+       "topics": {
+        "type": "choice",
+        "multiple": true,
+        "instructions": "What does the customer complain about?",
+        "criteria": {
+         "late": "late delivery",
+         "damage": "damaged goods",
+         "price": null
+        }
+       }
+      }
+     }
+    },
+    "read": {
+     "answered_by": "d1.2",
+     "answers": {
+      "topics": {
+       "type": "multichoice",
+       "choices": [
+        "late",
+        "damage"
+       ],
+       "probabilities": {
+        "late": 0.9692,
+        "damage": 0.9692,
+        "price": 0.0
+       }
+      }
+     }
+    }
+   },
+   "box not there": {
+    "sent": {
+     "url": "https://api.liquid.ai/decisions/v1/systemone",
+     "headers": {},
+     "body": {
+      "model": "d1.2",
+      "state": [
+       "The screen shows:",
+       {
+        "type": "image_url",
+        "image_url": {
+         "url": "data:image/png;base64,iVBORw0KGgo="
+        }
+       }
+      ],
+      "questions": {
+       "where": {
+        "type": "box",
+        "instructions": "Where is the error message?"
+       }
+      }
+     }
+    },
+    "read": {
+     "answered_by": "d1.2",
+     "answers": {
+      "where": {
+       "type": "box",
+       "box": null,
+       "found": 0.0017,
+       "confidence": null,
+       "agreement": null
+      }
+     }
+    }
+   },
+   "boxes": {
+    "sent": {
+     "url": "https://api.liquid.ai/decisions/v1/systemone",
+     "headers": {},
+     "body": {
+      "model": "d1.2",
+      "state": [
+       "The screen shows:",
+       {
+        "type": "image_url",
+        "image_url": {
+         "url": "data:image/png;base64,iVBORw0KGgo="
+        }
+       }
+      ],
+      "questions": {
+       "where": {
+        "type": "boxes",
+        "instructions": "Every stamp",
+        "max": 3
+       }
+      }
+     }
+    },
+    "read": {
+     "answered_by": "d1.2",
+     "answers": {
+      "where": {
+       "type": "boxes",
+       "boxes": [
+        {
+         "box": {
+          "top": 0.1,
+          "bottom": 0.5,
+          "left": 0.2,
+          "right": 0.9
+         },
+         "confidence": 0.93,
+         "found": 0.998
+        },
+        {
+         "box": {
+          "top": 0.6,
+          "bottom": 0.8,
+          "left": 0.1,
+          "right": 0.3
+         },
+         "confidence": 0.92,
+         "found": 0.951
+        }
+       ],
+       "at_least": false,
+       "presence": [
+        0.998,
+        0.951,
+        0.001
+       ]
       }
      }
     }
@@ -1588,6 +1947,7 @@
         "left": 0.2,
         "right": 0.9
        },
+       "found": null,
        "confidence": null,
        "agreement": null
       }
@@ -2068,6 +2428,7 @@
         "left": 0.19,
         "right": 0.89
        },
+       "found": null,
        "confidence": null,
        "agreement": 0.9250601581299416
       }

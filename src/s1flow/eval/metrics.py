@@ -17,7 +17,7 @@ interval, and the held-out test share is read at the rules chosen on the rest.
 import json
 from collections.abc import Sequence
 from dataclasses import dataclass, field, replace
-from typing import Any, Literal, cast
+from typing import Any, cast
 
 import numpy as np
 
@@ -25,7 +25,7 @@ from ..client import cost
 from ..client.answers import CostSource
 from ..client.identity import request_digests, require_provider_revision, model_digest
 from ..client.models import ModelSpec, Price
-from ..core.errors import NotFound
+from ..core.errors import DataError, NotFound
 from ..policies.kinds import Reading
 from ..policies.rule import DecisionRule
 from .candidate import Candidate
@@ -34,6 +34,7 @@ from . import split as splitting
 from .evaluation import (
     Calls, ErrorLossThreshold, Estimate, Evaluation, Failures, Floor, HighConfidenceError, Latency, ObjectiveScore, Selective, SweepRow,
     TestResult, Throughput, ChartData, ThresholdPoint, ProbabilityBin, CalibrationPoint, SelectionPoint, DistributionEvidence,
+    SELECTION_BASIS, SelectionBasis,
 )
 from .objectives import measure
 from .objectives.declare import AUROC, Accuracy, Coverage, ExpectedLoss
@@ -73,7 +74,7 @@ class Preds:
     unsupported: int = 0  # refused before or by the provider (records.REFUSED)
     data_errors: int = 0  # the task's own errors (records: data_error)
     unlabeled: int = 0
-    never_asked: list[str] = field(default_factory=list)  # labelled cases with no record under this question
+    never_asked: list[str] = field(default_factory=list)  # labelled cases the answering model has no record of under this question
     failed_cases: list[str] = field(default_factory=list)  # labelled cases asked, no answer: every call failed (like never asked)
     refused_cases: list[str] = field(default_factory=list)  # labelled cases refused or unsupported: scored as no answer
     measured: dict[str, int] | None = None  # wall time of the last uncached run (run.py)
@@ -83,25 +84,6 @@ class Preds:
     @property
     def y(self) -> np.ndarray:
         return self.pairs.y
-
-
-def select(lines: list[PredictionRecord], prompt: str) -> tuple[list[PredictionRecord], str | None, list[str]]:
-    """The records to score: lines for this prompt from the answering model that answered last, the latest
-    line per case. A case that model never answered keeps its latest refusal or failure, so it still counts
-    as unsupported or failed."""
-    lines = [r for r in lines if r.prompt == prompt]
-    answered = sorted((r for r in lines if r.answered), key=lambda r: r.at)
-    versions = list(dict.fromkeys(r.answered_by for r in reversed(answered) if r.answered_by))
-    chosen = versions[0] if versions else None
-    best: dict[str, PredictionRecord] = {}
-    for r in sorted(lines, key=lambda r: r.at):
-        k = r.id
-        if r.answered:
-            if r.answered_by == chosen:
-                best[k] = r
-        elif k not in best or not best[k].answered:
-            best[k] = r
-    return list(best.values()), chosen, versions
 
 
 def _spec(task: Task, name: str) -> ModelSpec | None:
@@ -141,8 +123,9 @@ def load(task: Task, variant: str, model: str, *, include_test: bool = False) ->
     if expected_concurrency is not None:
         lines = [r if r.concurrency == expected_concurrency else r.model_copy(update={"latency_ms": None, "concurrency": None})
                  for r in lines]
-    recs, chosen, versions = select(lines, prompt)
-    asked = {r.id for r in lines if r.prompt == prompt}
+    selected = records.select(lines, prompt)
+    recs, chosen, versions = selected.records, selected.answered_by, selected.versions
+    asked = {r.id for r in lines if r.prompt == prompt} - set(selected.earlier)  # an earlier model's answer is not this one's
     ok = [r for r in recs if r.answered]
     kind = task.kind
     spec = _spec(task, model)
@@ -188,6 +171,10 @@ def load(task: Task, variant: str, model: str, *, include_test: bool = False) ->
         if label is None:
             pr.unlabeled += 1
             continue
+        try:
+            kind.as_label(label)
+        except (TypeError, ValueError) as e:  # a label the task cannot hold is never scored as something else
+            raise DataError(f"{cid}: {kind.label_error(label) or e}; `s1flow cases check` lists every such case") from None
         if (a := r.given) is None:
             if r.outcome == "failed":
                 pr.failed_cases.append(cid)
@@ -326,15 +313,11 @@ def _read(b: Bound, p: Pairs, plan: splitting.Plan, folds: list[tuple[np.ndarray
     return _Read(b, p.at(**{at: cut}), cuts, search(b, p[plan.dev], grid, floors))
 
 
-def _resamples(n: int, dev: np.ndarray, seed: int) -> tuple[list[np.ndarray], list[np.ndarray]]:
-    """One bootstrap over the cases, BOOTSTRAP draws: each a resample of all n (the plain numbers) and one of the
-    dev cases `dev` (the objectives, and the calls' latency)."""
+def _resamples(dev: np.ndarray, seed: int) -> list[np.ndarray]:
+    """One bootstrap of the dev cases `dev`, BOOTSTRAP draws, for the objectives and the calls' latency. It draws from
+    the dev cases alone, so report (dev cases) and adopt (the test share too) give the same intervals."""
     rng = np.random.default_rng(seed)
-    whole, of_dev = [], []
-    for _ in range(BOOTSTRAP):
-        whole.append(rng.integers(0, n, n))
-        of_dev.append(rng.choice(dev, len(dev)))
-    return whole, of_dev
+    return [rng.choice(dev, len(dev)) for _ in range(BOOTSTRAP)]
 
 
 def _intervals(bounds: Sequence[Bound], p: Pairs, resamples: list[np.ndarray]) -> list[tuple[float, float] | None]:
@@ -391,7 +374,7 @@ def evaluate(task: Task, pr: Preds, target: float | None = None, variant: str = 
     # `tiebreak` is measured at the primary's rule, the one a policy reads with: it chooses none of its own
     later = [_Read(bound(o, kind, custom), primary.pairs, [], None) for o in task.objectives[1:]]
 
-    _, of_dev = _resamples(n, dev, task.split.seed)
+    of_dev = _resamples(dev, task.split.seed)
     accuracy, auroc = bound(Accuracy(), kind), bound(AUROC(), kind)
     acc_i, au_i = _intervals([accuracy, auroc], p0, of_dev)
     primary_i, *later_i = _intervals([primary.bound, *(r.bound for r in later)], primary.pairs, of_dev)
@@ -613,7 +596,7 @@ def chart_data(task: Task, pr: Preds, evaluation: Evaluation) -> ChartData:
     raw_value = objective.value(pairs) if len(dev) else None
     cv_value = None if evaluation.objective is None else evaluation.objective.value
 
-    selection_basis: Literal["selected-answer probability", "box confidence"] = "box confidence" if task.kind.type == "box" else "selected-answer probability"
+    selection_basis: SelectionBasis = SELECTION_BASIS.get(task.kind.type, "selected-answer probability")
     selected = None
     if evaluation.objective is not None and evaluation.objective.rule is not None:
         selected = evaluation.objective.rule.min_probability

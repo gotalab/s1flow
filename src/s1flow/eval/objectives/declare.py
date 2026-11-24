@@ -117,8 +117,18 @@ METRICS: dict[str, Metric] = {
     "recall": Metric("recall", "share", "max"),
     "f1": Metric("F1", "number", "max"),
     "macro_f1": Metric("macro-F1", "number", "max"),
+    "box_f1": Metric("box F1", "number", "max"),
+    "box_precision": Metric("box precision", "share", "max"),
+    "box_recall": Metric("box recall", "share", "max"),
+    "count_error": Metric("count error", "number", "min"),
+    "option_f1": Metric("option F1", "number", "max"),
+    "option_precision": Metric("option precision", "share", "max"),
+    "option_recall": Metric("option recall", "share", "max"),
     "mean_iou": Metric("mean IoU", "number", "max"),
     "mae": Metric("MAE (levels)", "number", "min"),
+    "mean_error": Metric("mean error", "number", "min"),
+    "value_accuracy": Metric("accuracy (value there)", "share", "max"),
+    "absent_accuracy": Metric("accuracy (nothing there)", "share", "max"),
     "qwk": Metric("QWK", "number", "max"),
     "auroc": Metric("AUROC", "number", "max"),
     "brier": Metric("Brier score", "number", "min"),
@@ -154,6 +164,23 @@ def MAE() -> Objective:
     return _plain("mae")
 
 
+def OptionF1() -> Objective:
+    """A multichoice's F1 over every option of every case: how well the options chosen match the options labelled,
+    where exact-set accuracy would count a case with one option off as wholly wrong."""
+    return _plain("option_f1")
+
+
+def BoxF1() -> Objective:
+    """A boxes task's F1 over every box of every case: label boxes found against answer boxes that match none."""
+    return _plain("box_f1")
+
+
+def MeanError() -> Objective:
+    """The mean distance of an estimate from its label, in the question's own unit (a failed call is as far off as
+    its label can be within the range)."""
+    return _plain("mean_error")
+
+
 def QWK() -> Objective:
     """Quadratic weighted kappa of a score question's level (the expected level, rounded) against its label: 1 agrees, 0 is chance."""
     return _plain("qwk")
@@ -178,7 +205,7 @@ def Loss(default: float = 1.0, losses: dict[str, dict[str, float]] | None = None
 
 BUILT_IN: dict[str, Callable[..., Objective]] = {
     "coverage": Coverage, "recall": Recall, "expected_loss": ExpectedLoss, "auroc": AUROC, "accuracy": Accuracy, "f1": F1, "macro_f1": MacroF1,
-    "mae": MAE, "qwk": QWK, "loss": Loss,
+    "mae": MAE, "mean_error": MeanError, "option_f1": OptionF1, "box_f1": BoxF1, "qwk": QWK, "loss": Loss,
 }
 
 
