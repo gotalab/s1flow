@@ -44,9 +44,18 @@ Production measurement uses the objective and decision rule you adopted. It desc
 have feedback, and reports what share of decisions that is. Having lots of labels doesn't mean they were
 collected without bias.
 
+## Improve the question
+
+A coding agent with the s1flow Skill improves the question the way a person would: it reads the current question's
+mistakes on the train and validation cases (`s1flow report TASK --out DIR`, then `DIR/questions/<variant>.md`),
+writes a new wording as a variant in task.py, runs it, and shows it beside the current one. It never reads the test
+share, so `s1flow adopt` can still check the pick there. `report` notes that a variant may have been written from
+the cases it is scored on, so its values there lean high. The Skill's `references/improve.md` holds the steps.
+
 ## Optimize the prompt
 
-`s1flow optimize` is experimental: its options and the record it saves may change between releases.
+`s1flow optimize` is the other way, and experimental: its options and the record it saves may change between
+releases.
 
 `s1flow optimize` runs the optimizer task.py names (`optimizer=Gepa(budget=300, reflection=None)` in the
 template). GEPA searches for better prompts using a stand-in score (half correctness, half 1 − Brier score) on the

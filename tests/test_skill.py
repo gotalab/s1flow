@@ -16,7 +16,7 @@ from s1flow import skill
 from s1flow.cli import main as base
 
 REPO = Path(__file__).resolve().parents[1]
-TOPICS = ["app", "collect", "learn", "measure", "setup", "ship"]
+TOPICS = ["app", "collect", "improve", "learn", "measure", "setup", "ship"]
 TYPES = ["boolean", "box", "choice", "score"]  # references/types/<type>.md: one playbook per question type
 REFERENCES = [*(f"references/{t}.md" for t in TOPICS), *(f"references/types/{t}.md" for t in TYPES)]
 

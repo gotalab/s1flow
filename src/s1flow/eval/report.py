@@ -13,6 +13,7 @@ from .objectives import measure
 from .objectives.declare import METRICS, Objective
 from .objectives.measure import bound
 from . import adopt, evalset, metrics
+from .comparison import shaped_on_dev
 from .run import ask_again
 from .select import Ranked, rank, unlike_among_tied
 from .shown import band, num, pct, usd
@@ -212,9 +213,7 @@ def render(task: Task, variant: str, evs: list[Evaluation], preds: dict[str, met
         + f" · split: {first.split if first else '—'} · source: {task.source}",
         "",
         headline(task, evs, scored, ranked),
-        *(["", f"Note: {variant} was written by optimize, which chose it on these train and val cases, so its values "
-            "lean high beside the others'; adopt confirms a pick on the held-out test, which optimize never read."]
-          if variant in task.optimized else []),
+        *(["", f"Note: {note[0].upper()}{note[1:]}."] if (note := shaped_on_dev(task, [variant])) else []),
         "",
         "## Comparison",
         "",

@@ -4,7 +4,7 @@ It never asks a model, and it neither ranks nor recommends: ``metrics`` owns the
 """
 import json
 import math
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal, cast
@@ -381,14 +381,18 @@ def _actual_row(item: _CandidateInput, task: Task, total: int, *, include_charts
     return row, evaluation, chart_notice
 
 
-def optimized_on_dev(task: Task, names: Sequence[str]) -> str | None:
-    """What to say beside candidates whose question an optimizer chose: it read the train and val cases they are
-    scored on here, so their values lean high next to the others'; None when there are none."""
-    chosen = [n for n in names if Candidate.parse(n).variant in task.optimized]
-    if not chosen:
+def shaped_on_dev(task: Task, variants: Iterable[str]) -> str | None:
+    """What to say beside question variants that may have been written from the train and val cases they are scored
+    on here: optimize's always were; one in task.py was if its author read those cases' answers, which s1flow cannot
+    tell. Such a question's values lean high next to the others'. None when no variant other than base is shown."""
+    shown = [v for v in dict.fromkeys(variants) if v != "base"]
+    if not shown:
         return None
-    return (f"{', '.join(chosen)}: optimize chose the question on the train and val cases scored here, so these values "
-            "lean high beside the others'; adopt confirms a pick on the held-out test, which optimize never read")
+    optimized = [v for v in shown if v in task.optimized]
+    written = [v for v in shown if v not in task.optimized]
+    said = ([f"optimize wrote {', '.join(optimized)} from them"] if optimized else []) + \
+        ([f"{', '.join(written)} in task.py may have been written from them"] if written else [])
+    return f"a question written from these train and val cases leans high on them (adopt checks a pick on the held-out test): {'; '.join(said)}"
 
 
 def collect(task: Task, *, variants: Sequence[str] | None = None, only: Sequence[str] | None = None,
@@ -424,7 +428,7 @@ def collect(task: Task, *, variants: Sequence[str] | None = None, only: Sequence
         if evaluation is not None and evaluation.n and not evaluation.failures.missing and not row.excluded:
             evaluations[item.candidate.name] = evaluation
 
-    if note := optimized_on_dev(task, [r.candidate for r in rows if r.n]):
+    if note := shaped_on_dev(task, [Candidate.parse(r.candidate).variant for r in rows if r.n]):
         notices.insert(2, note)  # beside the two above: the text shows the first three
     definitions = _metric_definitions(task, observed_evaluations)
     rows_by_name = {r.candidate: r for r in rows}
