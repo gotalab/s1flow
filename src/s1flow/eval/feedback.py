@@ -347,8 +347,13 @@ def add(task: Task, cs: list[Answered], *, write: bool = True) -> Added:
 
 
 def markdown(task: Task, prod: list[InProduction], added: Added, *, issues: JoinIssues | None = None) -> str:
-    def shown(e: Estimate) -> str:
-        return "—" if e.value is None else f"{e.value:.3f}{band(e.interval) if e.interval else ' (no interval)'}"
+    def shown(e: Estimate, share: bool = True) -> str:
+        """A share in percent with its interval in percent, as report writes it; another measure (MAE) as a number."""
+        if e.value is None:
+            return "—"
+        if share:
+            return pct(e.value, 1) + (band(e.interval, 1) if e.interval else " (no interval)")
+        return f"{e.value:.3f}" + (f" [{e.interval[0]:.3f}, {e.interval[1]:.3f}]" if e.interval else " (no interval)")
 
     lines = [f"# {task.id} · production", "",
              "Measured only on decisions with observed valid feedback. The feedback share cannot establish absence of selection bias. "
@@ -357,7 +362,7 @@ def markdown(task: Task, prod: list[InProduction], added: Added, *, issues: Join
              "|---|---|---|---|---|---|---|"]
     for row in prod:
         label = row.primary.label if row.primary else "unavailable"
-        lines.append(f"| {row.policy} | {row.answered} | {row.failed} | {pct(row.feedback_share)} ({row.with_feedback}) | {label} | {shown(row.objective)} | {shown(row.accuracy)} |")
+        lines.append(f"| {row.policy} | {row.answered} | {row.failed} | {pct(row.feedback_share)} ({row.with_feedback}) | {label} | {shown(row.objective, row.primary is None or row.primary.unit == "share")} | {shown(row.accuracy)} |")
         if row.comparison_reason:
             lines.append(f"- {row.policy}: no adoption comparison: {row.comparison_reason}")
         if row.below:

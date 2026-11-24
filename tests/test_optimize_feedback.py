@@ -14,7 +14,7 @@ from s1flow.policies.file import asked
 from s1flow.client.identity import state_digest
 from s1flow.policies.state_shape import schema_of
 from s1flow.client import Capabilities, Choice, ChoiceAnswer, Response, ModelBuild
-from s1flow.eval import Task, evalset, feedback, metrics
+from s1flow.eval import Task, comparison, evalset, feedback, metrics
 from s1flow.eval.evaluation import Evaluation, Failures, ObjectiveScore
 from s1flow.eval import optimize as optimizing
 from s1flow.core.errors import ProviderError, Unsupported
@@ -148,6 +148,46 @@ def test_a_question_that_does_not_win_is_still_only_a_candidate(task):
     assert r.candidate.endswith(r.variant) and task.policies.versions("toy") == [1] and task.policies.current("toy") == 1
 
 
+def test_a_case_whose_label_was_taken_away_is_not_given_to_the_optimizer(task):
+    from s1flow.eval.cases import Correction
+
+    current(task)
+    train = evalset.fixed(task).ids("train")[0]
+    fix = Correction(id=train, verdict="unclear", was=task.load_cases().by_id()[train].label, reason="r", by="t", at="2026-11-23")
+    (task.dir / "corrections.jsonl").write_text(fix.model_dump_json() + "\n")
+    task.load_cases().forget()
+    task.optimizer = rewrite = Rewrite("Better?")
+    r = optimizing.optimize(task)
+    given = rewrite.seen[0]
+    assert all(c.label is not None for c in given.train + given.val) and train not in r.optimization.split["train"]
+
+
+def test_an_optimized_candidate_is_noted_as_measured_on_the_cases_it_was_chosen_on(task):
+    """optimize chose the question on the train and val cases the list scores it on: report says so beside it."""
+    current(task)
+    task.optimizer = Rewrite("Better?")
+    r = optimizing.optimize(task)
+    note = comparison.optimized_on_dev(task, [c[0] for c in adopting.shortlist(task).cands])
+    assert note is not None and note.startswith(f"{r.candidate}: optimize chose the question on the train and val cases")
+    assert note in comparison.collect(task).notices
+    assert "written by optimize, which chose it on these train and val cases" in report.write(task, r.variant, task.where.root / "out")
+    assert comparison.optimized_on_dev(task, ["m"]) is None
+
+
+def test_gepa_asks_the_model_at_its_own_concurrency(task):
+    """GEPA's answers are cached for the new candidate's run: made at another concurrency, its latency is unknown."""
+    pytest.importorskip("gepa")
+    from s1flow.eval import gepa
+
+    client = task.where.client()
+    adapter = gepa.QuestionAdapter(task, client, client.connections.build("m"), spec=client.connections.resolved("m"))
+    case = task.load_cases().all()[0]
+    adapter.evaluate([gepa.Inst(case)], {"question": gepa.to_text(task.question)})
+    got, hit = asyncio.run(running.call(task.where.cache_dir, client, client.connections.build("m"), task.model_state(case), task.questions("base"),
+                                        spec=client.connections.resolved("m")))
+    assert hit and got.concurrency == client.connections.build("m").concurrency == 4
+
+
 def test_rank_leaves_out_a_candidate_that_skipped_cases(task):
     current(task)
     task.variants["v"] = q("Better?")
@@ -267,6 +307,9 @@ def test_production_accuracy_comes_from_the_feedback(task, tmp_path):
     prod = feedback.production(task, feedback.cases(task, found), found.failed)[0]
     assert (prod.answered, prod.failed, prod.with_feedback, prod.correct, prod.sure_n) == (10, 1, 9, 8, 8)  # c9's label is not an option
     assert prod.accuracy.interval and prod.below is False  # 7 of 8 sure ones right: too few to show it below 90%
+    md = feedback.markdown(task, [prod], feedback.Added(added=0, no_state=0, no_label=0, invalid_label=0, already=0, written=True))
+    lo, hi = prod.accuracy.interval
+    assert f"| {100 * prod.accuracy.value:.1f}% [{100 * lo:.1f}, {100 * hi:.1f}] |" in md  # value and interval, both in percent
 
 
 def test_scarce_feedback_gives_no_interval(task, tmp_path):
