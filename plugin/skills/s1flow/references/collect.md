@@ -10,34 +10,54 @@ Ask before passing `--skill` (`setup.md`). A task's directory is named its id.
 
 ## Agree on the decision
 
-Read `tasks/<id>/criteria.md` first, if it exists. One task is one decision: a boolean, or one of as many options as the
-model takes (often about 20). Write down with the person:
+Read `tasks/<id>/criteria.md` first, if it exists. One task is one decision: one question of one type. Write down
+with the person:
 
 - the question in one sentence, and for a choice, each option's meaning in one line under about 100 characters
   (it becomes the option's criteria word for word);
 - what the model sees (`state`): only what the app will have at the moment it asks, in the same shape. A field
   the app will not have at runtime leaks the answer;
 - what counts as the right answer (`label`), and who gave it: a person, a bot, a later event;
-- the objective. For a yes/no decision, ask: **which mistake hurts more, a false negative (a yes read as no) or a
-  false positive (a no read as yes), and by how much?** Take the answer's own words to the objective; never pick
-  the weights yourself. Write the answer into `criteria.md` if the person agrees, so the next decision can use it.
-
-| The person says... | Objective |
-|---|---|
-| about the same | `Accuracy()` (the default) |
-| a false negative is N times worse (or a false positive is) | `ExpectedLoss(fn=N, fp=1)` |
-| false positives must stay under X% of the noes | `Recall(max_false_alarm=X)` |
-| the positives matter, the rest is the bulk | `F1()` |
-| act only on sure answers, a person takes the rest | `Coverage(target_accuracy=0.95)` |
-
-On a yes/no decision every objective here but Coverage chooses the P(yes) threshold from the data, and the policy
-keeps it. For a choice: `Accuracy()`, `MacroF1()` if the rare options matter as much, or Coverage.
-For a score (levels 0..L-1): `MAE()` (the default, levels off on average), `QWK()` for agreement over the levels,
-or `Accuracy()` for the exact level. A level is the expected level, rounded.
-
+- the objective, and whether a person takes the answers the model is unsure of. Read the playbook for the
+  question's type (`types/<type>.md`, listed in `SKILL.md`): the purposes it serves, the metric for each, what to
+  ask, and how the hand-off line is set. Take the answer's own words to the objective; never pick a weight, target
+  or bar yourself. Write the answer into `criteria.md` if the person agrees, so the next decision can use it.
 - **The held-out test share.** Ask how many cases to hold out (`split=Split(test=0.3, k=5, seed=1)` is the
   default). The test share is never shown while choosing; only `adopt` reads it. Fewer than about 200
   cases leaves a small test share.
+
+How an objective acts, for every type:
+
+- `objective=` is the one objective that sets how the policy reads its answers. It sets at most one number, chosen
+  on the dev cases: a yes/no question's threshold (P(yes) at or above it reads yes), or the min probability, the
+  hand-off line (an answer whose probability is under it is unsure, and a person takes it). Only an objective that
+  sets the min probability marks answers unsure: a policy adopted on any other acts on every answer. Say so before
+  the person adopts it.
+- More measures: `tiebreak=[...]` (built-in objectives such as `MAE()` or `MacroF1()`, and "latency", "cost")
+  orders the candidates the objective cannot tell apart. They choose no number of their own.
+- The question report is `s1flow report <task> --out DIR`'s `DIR/questions/<variant>.md`: per candidate, the type's
+  own metric, ※ for a model that gives no probabilities, and with Coverage the sure share and its lower bound. `report --json`
+  has every metric and `"probabilities": false` for ※. Plain `s1flow report <task>` shows the ranking only.
+- The line reads the probability the model gave its answer. A model that gives none (※ in the question report) has
+  probability 1 on every answer, so a line on it keeps all or nothing: do not set one on such a candidate.
+- `Loss` charges 0 for a right answer and `default` (1 when left out) for any mistake its table does not name; ask
+  whether the unnamed mistakes all cost that much. `unsure` is in the same unit.
+- `Loss(unsure=)` and an `@per_case` objective that sets the min probability choose the line from a fixed grid
+  (0.05 to 0.95 by 0.05; 0.1, 0.3, 0.5, 0.7, 0.9 under 50 dev cases), and a tie goes to the value nearest 0.5. A
+  line can come from that tie, not the data: when a look costs as much as a mistake or more, or on a ※ candidate,
+  the policy still keeps a line. Before adopting, say how much the line hands off: the chosen `min_probability` is
+  the candidate's `rule` in `report --json`; read it on the chart page's "Accepted share and accuracy" curve
+  (`measure.md`, Charts).
+- When no value keeps the objective's target, the task's floors or a `Recall` cap on the dev cases, `report` lists
+  the candidate as excluded and `adopt` refuses it. Change the number with the person, or compare other candidates.
+- The app sees an unsure answer as `below_min_probability` on the decision (`app.md`).
+- Coverage's line keeps its target on all the dev cases together. The sure accuracy the question report shows is
+  out of fold and can sit under the target; its one-sided 95% lower bound sits further under. Show the person
+  both.
+- The numbers are the person's: weights, targets, floors, the IoU bar, what a look costs. A default (Coverage's
+  0.95, IoU 0.5) is a default, not advice.
+- A type with no playbook yet (`multichoice`, `boxes`, `text`, `number`, `date`, `estimate`): say so, and use its
+  notes under "Write task.py".
 
 ## Collect the cases
 
