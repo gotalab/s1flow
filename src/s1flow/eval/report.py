@@ -190,7 +190,9 @@ def render(task: Task, variant: str, evs: list[Evaluation], preds: dict[str, met
     read = kind.type in ("text", "number", "date")
     first = next((e for e in evs if e.n), None)
     labelled = [c for c in task.load_cases().labelled() if sf.assign.get(c.id) != "test"]
-    labels = Counter(str(c.label) for c in labelled) if not (box or read or kind.type == "estimate") else Counter()
+    multi = kind.type == "multichoice"
+    labels = (Counter(k for c in labelled for k in c.label) if multi  # how many cases each option applies to
+              else Counter(str(c.label) for c in labelled) if not (box or read or kind.type == "estimate") else Counter())
     absent = sum(c.label is False for c in labelled)
     about = (f" (right at IoU {kind.iou:g} or more)" if box
              else f" ({len(labelled) - absent} with a value, {absent} with none)" if read
@@ -256,6 +258,9 @@ def render(task: Task, variant: str, evs: list[Evaluation], preds: dict[str, met
     if read:
         L.append("Value read: right when it equals the label, or when nothing was read from a case labelled as holding none. The probability is the "
                  "model's: P(nothing there) for an answer of none, else P(something there) times its confidence in the value; 1 when it gives neither.")
+    if multi:
+        L.append("Multichoice: every option the model gives 0.5 or more, right when that set is exactly the label's. The probability is that of the "
+                 "whole set: each option's own yes or no, multiplied. Option F1, precision and recall count every option of every case.")
     if kind.type == "estimate":
         L.append(f"Estimate: right within {getattr(kind, 'tolerance'):g} of the label. What stands in for a probability is how narrow the p10 - p90 "
                  "interval is against the question's range (1: a point, 0: the whole range). AUROC and ECE say how well that separates right from wrong.")

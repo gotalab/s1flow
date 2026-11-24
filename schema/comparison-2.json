@@ -444,6 +444,7 @@
        "choice": "#/$defs/Choice",
        "date": "#/$defs/Date",
        "estimate": "#/$defs/RangeEstimate",
+       "multichoice": "#/$defs/MultiChoice",
        "number": "#/$defs/Number",
        "score": "#/$defs/Score",
        "text": "#/$defs/Text"
@@ -474,6 +475,9 @@
       },
       {
        "$ref": "#/$defs/RangeEstimate"
+      },
+      {
+       "$ref": "#/$defs/MultiChoice"
       }
      ],
      "title": "Question"
@@ -936,6 +940,42 @@
     "direction"
    ],
    "title": "MetricDefinition",
+   "type": "object"
+  },
+  "MultiChoice": {
+   "additionalProperties": false,
+   "description": "Every option that applies, possibly none: each option is its own yes or no (Liquid d1.2, 2026-11-17, where\nit is a `choice` with `multiple`).",
+   "properties": {
+    "type": {
+     "const": "multichoice",
+     "default": "multichoice",
+     "title": "Type",
+     "type": "string"
+    },
+    "instructions": {
+     "title": "Instructions",
+     "type": "string"
+    },
+    "criteria": {
+     "additionalProperties": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "title": "Criteria",
+     "type": "object"
+    }
+   },
+   "required": [
+    "instructions",
+    "criteria"
+   ],
+   "title": "MultiChoice",
    "type": "object"
   },
   "Number": {
@@ -1417,7 +1457,8 @@
     "text",
     "number",
     "date",
-    "estimate"
+    "estimate",
+    "multichoice"
    ],
    "title": "Question Type",
    "type": "string"

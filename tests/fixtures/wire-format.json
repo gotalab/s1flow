@@ -1348,6 +1348,56 @@
       }
      }
     }
+   },
+   "multichoice": {
+    "sent": {
+     "url": "https://api.liquid.ai/decisions/v1/systemone",
+     "headers": {},
+     "body": {
+      "model": "d1.2",
+      "state": {
+       "meta": {
+        "a": [
+         {
+          "b": 3,
+          "y": 2
+         }
+        ],
+        "z": 1
+       },
+       "title": "Crash on start"
+      },
+      "questions": {
+       "topics": {
+        "type": "choice",
+        "multiple": true,
+        "instructions": "What does the customer complain about?",
+        "criteria": {
+         "late": "late delivery",
+         "damage": "damaged goods",
+         "price": null
+        }
+       }
+      }
+     }
+    },
+    "read": {
+     "answered_by": "d1.2",
+     "answers": {
+      "topics": {
+       "type": "multichoice",
+       "choices": [
+        "late",
+        "damage"
+       ],
+       "probabilities": {
+        "late": 0.9692,
+        "damage": 0.9692,
+        "price": 0.0
+       }
+      }
+     }
+    }
    }
   },
   "gemini": {

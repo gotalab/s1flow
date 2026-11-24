@@ -195,5 +195,9 @@ keys sorted, dumped with an indent of 1. Some models read the question's name as
 it for what it reads (`order_number`, not `q`). OpenRouter serves these on another route, so one request asks either
 these or the other four types. Evaluation compares them too ([evaluate.md](evaluate.md)), and a policy holds one like any other type.
 
+`MultiChoice` asks for every option that applies, possibly none: the answer's `choices`, with each option's own
+probability in `probabilities` (they do not sum to 1). Liquid's d1.2 and d1.2-ultra answer it; evaluation compares it,
+and a policy holds one (`feedback record ... late,damage`, or `none`).
+
 Every call sends the state with the keys of each JSON object in sorted order, so a case in an evaluation and a
 call in production that differ only in key order send the same request. Lists keep their order.

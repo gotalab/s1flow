@@ -45,6 +45,11 @@
   declares them in `capabilities.question_types`, and `s1flow models --verify` checks each. The `liquid` provider
   asks them too (d1.2, d1.2-ultra), in the same call as other questions: `found` is read as 1 - `p_null`, and a
   number in a range as the estimate with its interval.
+- A `MultiChoice` question: every option that applies, possibly none, each with its own probability. The `liquid`
+  provider asks it (d1.2, d1.2-ultra), `s1flow models --verify` checks it, and evaluation compares it: the label is
+  the list of options, an answer is right when its set is exactly the label's, `Coverage` reads the probability of
+  the whole set, and the new `OptionF1()` objective counts every option of every case. A policy holds one, and
+  `feedback record` takes its options typed as `late,damage` (`none` for none).
 - Evaluation compares those four types. A value read is right when it equals the label, or when nothing is read on
   a case labelled `False` (no value there); reports add the accuracy on the cases with a value and on those with
   none, and `Coverage` reads `p_null` and `confidence`. A `RangeEstimate` task defaults to the new `MeanError()`

@@ -4,12 +4,14 @@ to one case become a `Reading`, and which rules apply. Adding a type of question
     kind = kind_of(question, KindParams())          # a task's or a policy's question, with what its type leaves open
     kind.read(answers, rule)                        # average the answers, then read the average
     kind.label_error(label)                            # cases check and feedback
+    same_label(kind, a, b)                             # two labels that say the same (review, cases check)
 
 | kind               | label                        | value                                   | probability          | rule sets               |
 |--------------------|------------------------------|-----------------------------------------|----------------------|----------------------------|
 | boolean            | true / false                 | P(true) >= threshold                    | of the value         | threshold, min_probability |
 | choice             | an option's key              | the most probable option, on average    | of that option       | min_probability            |
 | choice + positive  | true / false                 | P(positive) >= threshold                | of the value         | threshold, min_probability |
+| multichoice        | the options that apply, []   | each option whose P >= 0.5 (P from its probability, else 1 / 0 from its choices) | of the whole set | min_probability |
 | score              | a level, 0..L-1              | the expected level, rounded (.5 up)     | of that level        | min_probability            |
 | box                | {top, bottom, left, right}   | the first answer's box                  | none (`confidence`)  | min_probability            |
 | text, number, date | the value, or False (absent) | the value read, None when absent        | of the value         | min_probability            |
@@ -35,9 +37,10 @@ from typing import Any, ClassVar, Literal, Protocol, Sequence, Union
 from pydantic import BaseModel, ConfigDict, Field, SerializerFunctionWrapHandler, ValidationError, model_serializer
 
 from ..client.answers import (
-    Answer, BooleanAnswer, BoxAnswer, BoxEdges, ChoiceAnswer, DateAnswer, EstimateAnswer, NumberAnswer, ScoreAnswer, TextAnswer,
+    Answer, BooleanAnswer, BoxAnswer, BoxEdges, ChoiceAnswer, DateAnswer, EstimateAnswer, MultiChoiceAnswer, NumberAnswer, ScoreAnswer,
+    TextAnswer,
 )
-from ..client.questions import Box, Choice, Question, QuestionType, RangeEstimate, Score
+from ..client.questions import Box, Choice, MultiChoice, Question, QuestionType, RangeEstimate, Score
 from ..client.providers.contract import validate_answer_values
 from ..core.errors import ProviderError
 from .rule import DecisionRule, RuleField
@@ -45,16 +48,18 @@ from .rule import DecisionRule, RuleField
 ABSENT: Literal[False] = False  # the label of a case whose state holds nothing for a text, number or date question
 SELECTIVE: frozenset[RuleField] = frozenset({"min_probability"})
 BINARY: frozenset[RuleField] = frozenset({"threshold", "min_probability"})
-# a task's label: True / False (binary), an option's key, a level, a box, a value read (False: absent), a number
-Label = Union[bool, int, float, str, BoxEdges]
+# a task's label: True / False (binary), an option's key, a level, a box, a value read (False: absent), a number,
+# the options that apply (a multichoice)
+Label = Union[bool, int, float, str, BoxEdges, list[str]]
 
 
 class Reading(BaseModel):
     """One case, read: the value, its probability and whether it is under the rule's min_probability,
     with what the kind reads it from."""
 
-    # True / False (binary), an option's key, a level, a box, a value read (None: nothing there), an estimate
-    value: Union[bool, int, float, str, BoxEdges, None]
+    # True / False (binary), an option's key, a level, a box, a value read (None: nothing there), an estimate,
+    # the options that apply in the question's order (a multichoice)
+    value: Union[bool, int, float, str, BoxEdges, tuple[str, ...], None]
     probability: float | None = None  # of `value`; None for a box (see `confidence`)
     below_min_probability: bool | None = None  # None when no probability lower bound is configured
     p_positive: float | None = None  # binary: P(true), or P(positive) for a choice scored as binary
@@ -75,7 +80,7 @@ class Average:
     expected: float | None = None
     confidence: float | None = None
     box: BoxEdges | None = None
-    value: Union[float, str, None] = None  # a value read (None: nothing there), or an estimate
+    value: Union[float, str, tuple[str, ...], None] = None  # a value read (None: nothing there), an estimate, the options that apply
 
 
 class Kind(Protocol):
@@ -137,12 +142,22 @@ class _Kind(BaseModel):
             raise ValueError("no answers to read")
         if wrong := next((a for a in answers if not isinstance(a, self.answer)), None):
             raise ProviderError(f"answered a {self.type} question as {wrong.type}, outside the contract")
-        options = self.options if self.type == "choice" else None
+        options = self.options if self.type == "choice" else getattr(self, "keys", None) if self.type == "multichoice" else None
         levels = getattr(self, "levels", None) if self.type == "score" else None
         within = (self.low, self.high) if isinstance(self, EstimateKind) else None
         for answer in answers:
             validate_answer_values(self.type, answer, options=options, levels=levels, within=within)
         return list(answers)
+
+
+def same_label(kind: Kind, a: Any, b: Any) -> bool:
+    """Whether two labels of a task say the same: compared as the kind reads them, so a multichoice's options
+    in any order are one label, and 0 is not False (no value)."""
+    try:
+        a, b = kind.as_label(a), kind.as_label(b)
+    except (TypeError, ValueError):  # a label the task cannot hold: compared as written
+        pass
+    return bool(a == b) and isinstance(a, bool) == isinstance(b, bool)
 
 
 def _typed_number(answer: Any) -> Any:
@@ -259,6 +274,44 @@ class ChoiceKind(_Kind):
         assert dist is not None
         i = max(range(len(dist)), key=lambda j: dist[j])
         return Reading(value=self.keys[i], probability=dist[i], below_min_probability=_below_min_probability(rule, dist[i]), distribution=dist)
+
+
+class MultiChoiceKind(_Kind):
+    """Every option that applies, each its own yes or no at 0.5. Right when the set is the label's. Its probability
+    is that of the whole set: the product over the options of how sure each one's yes or no is. Evaluated, not
+    adoptable."""
+
+    type: ClassVar[QuestionType] = "multichoice"
+    answer: ClassVar[tuple[Any, ...]] = (MultiChoiceAnswer,)
+    keys: list[str]
+
+    def label_error(self, label: Any) -> str | None:
+        ok = isinstance(label, (list, tuple)) and all(isinstance(k, str) and k in self.keys for k in label) and len(set(label)) == len(label)
+        return None if ok else f"a multichoice label is the list of the options that apply ({', '.join(self.keys)}), [] for none; got {label!r}"
+
+    def as_label(self, answer: Any) -> Any:
+        """The options in the question's order; options typed as text (the CLI's `late,damage`, `none` for none) are
+        that list. ValueError for anything that is not a list of its options."""
+        if isinstance(answer, str):
+            answer = [] if answer.strip().lower() in ("", "none") else [k.strip() for k in answer.split(",")]
+        if (wrong := self.label_error(answer)) is not None:
+            raise ValueError(wrong)
+        return tuple(k for k in self.keys if k in answer)
+
+    def one(self, a: MultiChoiceAnswer) -> tuple[list[float], bool]:
+        """One answer's P(it applies) per option; 1 or 0 from its choices where it gave no probability."""
+        probs = a.probabilities or {}
+        return [float(probs[k]) if k in probs else (1.0 if k in a.choices else 0.0) for k in self.keys], all(k in probs for k in self.keys)
+
+    def average(self, answers: Sequence[Answer]) -> Average:
+        ds = [self.one(a) for a in self._given(answers)]
+        each = [_mean([d[j] for d, _ in ds]) for j in range(len(self.keys))]
+        value = tuple(k for k, p in zip(self.keys, each) if p >= 0.5)
+        return Average(distributed=all(h for _, h in ds), confidence=math.prod(max(p, 1 - p) for p in each), value=value)
+
+    def reading(self, average: Average, rule: DecisionRule) -> Reading:
+        assert isinstance(average.value, tuple) and average.confidence is not None
+        return Reading(value=average.value, probability=average.confidence, below_min_probability=_below_min_probability(rule, average.confidence))
 
 
 class ScoreKind(_Kind):
@@ -491,6 +544,8 @@ def kind_of(question: Question, params: KindParams = KindParams()) -> Kind:
         if params.positive not in keys:
             raise ValueError(f"positive {params.positive!r} is not an option ({', '.join(keys)})")
         return PositiveChoiceKind(keys=keys, positive=params.positive)
+    if isinstance(question, MultiChoice):
+        return MultiChoiceKind(keys=list(question.criteria))
     if isinstance(question, Score):
         return ScoreKind(levels=len(question.criteria))
     if isinstance(question, Box):

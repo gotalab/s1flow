@@ -24,7 +24,7 @@ from s1flow.client import BooleanAnswer, ChoiceAnswer, Client, Image
 from s1flow.client.state import Media
 from s1flow.client import identity
 from s1flow.client.models import Capabilities, ModelSpec
-from s1flow.client.questions import Boolean, Box, Choice, Date, RangeEstimate, Number, Score, Text
+from s1flow.client.questions import Boolean, Box, Choice, Date, MultiChoice, RangeEstimate, Number, Score, Text
 from s1flow.policies import DecisionRule
 from s1flow.policies.kinds import KindParams, kind_of
 
@@ -94,6 +94,11 @@ FIELD_REPLIES["liquid"] = {"model": "d1.2", "answers": {
     "issued": {"type": "date", "date": "2026-09-02", "text": "2026-09-02", "span": [40, 50], "found": 1},
     "days": {"type": "number", "number": 30, "interval": [26, 31], "unit": None},
 }, "usage": {"input_tokens": 161, "output_tokens": 0, "cost": 0.00000322}}
+# Every option that applies: Liquid's `choice` with `multiple`, as d1.2 answered it (2026-11-17).
+MULTI = {"topics": MultiChoice(instructions="What does the customer complain about?", criteria={"late": "late delivery", "damage": "damaged goods", "price": None})}
+MULTI_REPLIES: dict[str, dict[str, Any]] = {"liquid": {"model": "d1.2", "answers": {
+    "topics": {"type": "choice", "choices": ["late", "damage"], "probabilities": {"late": 0.9692, "damage": 0.9692, "price": 0}},
+}, "usage": {"input_tokens": 88, "output_tokens": 0, "cost": 0.00000176}}}
 ALL = Capabilities(image=True, question_types=frozenset({"boolean", "choice", "score", "box"}))
 REPLIES["gateway"] = REPLIES["openai-decisions"] | {"model": "typesafe-ai/jev", "provider_metadata": {"gateway": {"cost": "0.00001"}}}
 REPLIES["liquid"] = {"model": "d1.2", "answers": SYSTEM_ONE, "usage": {"input_tokens": 90, "output_tokens": 0, "cost": 0.0000018}}
@@ -108,7 +113,7 @@ MODELS = {
         update={"question_types": ALL.question_types | {"text", "number", "date", "estimate"}})),
     "gemini": ModelSpec(provider="gemini", id="gemini-decision-1", capabilities=EVERY.model_copy(update={"question_types": frozenset({"boolean", "choice", "score"})})),
     "liquid": ModelSpec(provider="liquid", id="d1.2", capabilities=ALL.model_copy(
-        update={"question_types": ALL.question_types | {"text", "number", "date", "estimate"}})),
+        update={"question_types": ALL.question_types | {"text", "number", "date", "estimate", "multichoice"}})),
     "cloudflare": ModelSpec(provider="cloudflare", id="clef", capabilities=ALL),
     "openai-decisions": ModelSpec(provider="openai-decisions", id="gpt-6-luna", capabilities=Capabilities(image=True)),
     "llm": ModelSpec(provider="llm", id="openai/gpt-test", options={"box_units": "k1000"}, capabilities=ALL),
@@ -130,7 +135,8 @@ def _read(response: Any) -> dict[str, Any]:
 def _http(provider: str) -> dict[str, Any]:
     out = {}
     asks = [("text", TEXT, QUESTIONS, REPLIES), ("image", WITH_IMAGE, QUESTIONS, REPLIES), ("box", WITH_IMAGE, BOX, BOX_REPLIES),
-            ("audio, video, pdf", OTHER_MEDIA, QUESTIONS, MEDIA_REPLIES), ("fields", TEXT, FIELDS, FIELD_REPLIES)]
+            ("audio, video, pdf", OTHER_MEDIA, QUESTIONS, MEDIA_REPLIES), ("fields", TEXT, FIELDS, FIELD_REPLIES),
+            ("multichoice", TEXT, MULTI, MULTI_REPLIES)]
     for name, state, questions, replies in asks:
         if provider not in replies:
             continue

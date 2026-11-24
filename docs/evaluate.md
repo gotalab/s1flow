@@ -92,7 +92,10 @@ shared metrics. Box questions get the shared metrics and a confidence selection 
 (no value there): the report shows the accuracy on the cases with a value and on those with none apart, and how sure
 an answer is comes from the model's `p_null` and `confidence`. A `RangeEstimate` is read by its mean error (the
 default objective, `MeanError()`), counts as right within half a `step` of the label (1% of the range when it has no step), and is as sure as its
-p10 - p90 interval is narrow. A policy holds these four like any other type. Yes/no questions add
+p10 - p90 interval is narrow. A `MultiChoice` is labelled with the list of
+the options that apply (`[]` for none) and is right when the options chosen are exactly those; its probability is that
+of the whole set, each option's own yes or no multiplied. `OptionF1()` is the objective that counts every option of
+every case, where accuracy counts a case with one option off as wrong. A policy holds these five like any other type. Yes/no questions add
 precision/recall and calibration charts. Choice questions get a curve of the selected answer's probability when the
 model returns a real distribution. A provider's own confidence score is treated as a separate signal, and no
 probability curve is drawn when the signal it needs isn't available.

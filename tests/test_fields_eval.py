@@ -9,16 +9,16 @@ import pytest
 
 from conftest import attach, make_project
 
-from s1flow.client import Capabilities, DateAnswer, EstimateAnswer, NumberAnswer, Response, TextAnswer
-from s1flow.core.errors import ConfigError, ProviderError, Unsupported
-from s1flow.eval import Task, comparison, metrics, report, review
+from s1flow.client import Capabilities, DateAnswer, EstimateAnswer, MultiChoiceAnswer, NumberAnswer, Response, TextAnswer
+from s1flow.core.errors import ConfigError, DataError, ProviderError, Unsupported
+from s1flow.eval import Task, comparison, data, metrics, report, review
 from s1flow.eval import run as running
 from s1flow.eval.kinds import kind_of
 from s1flow.eval.objectives import measure
-from s1flow.objectives import Accuracy, Coverage, MAE, MeanError
+from s1flow.objectives import Accuracy, Coverage, MAE, MeanError, OptionF1
 from s1flow.policies import DecisionRule
-from s1flow.policies.kinds import ABSENT, KindParams
-from s1flow.questions import Boolean, Date, Number, RangeEstimate, Text
+from s1flow.policies.kinds import ABSENT, KindParams, same_label
+from s1flow.questions import Boolean, Date, MultiChoice, Number, RangeEstimate, Text
 
 TEXT, NUMBER, DATE = Text(instructions="The order number"), Number(instructions="The total"), Date(instructions="The day it shipped")
 DAYS = RangeEstimate(instructions="Days until it is paid", min=0, max=120, step=1)
@@ -234,3 +234,113 @@ def test_a_number_label_of_zero_is_not_the_absent_label(tmp_path):
                        label=lambda r: r["boxes"]), p)
     fix = review.correct(task, "3", "relabel", reason="no total is stated", by="tester", label=ABSENT)
     assert fix.was == 0 and fix.label is False
+
+
+# ---------- multichoice: every option that applies ----------
+
+TOPICS = MultiChoice(instructions="What does the customer complain about?", criteria={"late": "late", "damage": "damaged", "billing": "a wrong charge"})
+
+
+def test_a_multichoice_label_is_the_list_of_options_that_apply():
+    kind = kind_of(TOPICS)
+    assert kind.type == "multichoice" and kind.objectives[0] == "accuracy"
+    assert kind.label_error([]) is None and kind.label_error(["damage", "late"]) is None
+    for bad in ("late", ["late", "late"], ["refund"], None, True):
+        assert "list of the options that apply" in kind.label_error(bad)
+    assert kind.as_label(["damage", "late"]) == ("late", "damage")  # in the question's order
+    assert kind.as_label("damage, late") == ("late", "damage") and kind.as_label("none") == () and kind.as_label("late") == ("late",)  # typed on the CLI
+    for bad in ("late,refund", ["late", "refund"], 3):  # never read with an unknown option dropped
+        with pytest.raises(ValueError, match="list of the options that apply"):
+            kind.as_label(bad)
+    assert same_label(kind, ["damage", "late"], ("late", "damage")) and not same_label(kind, ["late"], ["late", "damage"])
+    assert not same_label(kind_of(Number(instructions="How many?")), 0, ABSENT)  # 0 is a number, False no value
+    with pytest.raises(ValueError, match="positive scores a choice question"):
+        kind_of(TOPICS, KindParams(positive="late"))
+
+
+def test_a_multichoice_is_read_option_by_option_and_is_as_sure_as_the_whole_set():
+    kind = kind_of(TOPICS)
+    r = kind.read([MultiChoiceAnswer(choices=["late"], probabilities={"late": 0.9, "damage": 0.2, "billing": 0.0})], DecisionRule(min_probability=0.8))
+    assert r.value == ("late",) and r.probability == pytest.approx(0.9 * 0.8 * 1.0) and r.below_min_probability is True
+    avg = kind.average([MultiChoiceAnswer(choices=["late", "billing"])])  # no probabilities: sure of everything, and said so
+    assert avg.value == ("late", "billing") and avg.confidence == 1.0 and avg.distributed is False
+    assert kind.read([MultiChoiceAnswer(choices=[], probabilities={"late": 0.1, "damage": 0.2, "billing": 0.3})], PLAIN).value == ()
+    with pytest.raises(ProviderError, match="are not options"):
+        kind.read([MultiChoiceAnswer(choices=["refund"])], PLAIN)
+
+
+def test_the_measures_of_a_multichoice():
+    kind = kind_of(TOPICS)
+    given = [(["late"], 0.9), (["late", "damage"], 0.6), ([], 0.8), (["billing"], 0.7), None]
+    labels = [["late"], ["late"], [], ["damage", "billing"], ["late"]]  # right, one too many, right (none), one missed, no answer
+    readings = [None if g is None else kind.read([MultiChoiceAnswer(choices=g[0], probabilities={k: (g[1] if k in g[0] else 0.0) for k in kind.keys})], PLAIN)
+                for g in given]
+    p = measure.pairs(kind, labels, readings)
+    assert list(p.correct) == [True, False, True, False, False]
+    assert measure.bound(Accuracy(), kind).value(p) == 0.4
+    # options chosen: late, late, damage, billing (4), of which the labels have 3; the labels have 5
+    assert measure.measure("option_precision", p) == 0.75 and measure.measure("option_recall", p) == 0.6
+    assert measure.measure("option_f1", p) == pytest.approx(2 * 3 / (4 + 5)) == measure.bound(OptionF1(), kind).value(p)
+    assert measure.shown(p, 1) == ("late", "late, damage") and measure.shown(p, 2) == ("none", "none")
+
+
+class Tagger:
+    """A fake model: reads the tags from the state, misses the last tag of every fifth case with a low probability."""
+
+    def __init__(self, spec):
+        self.id, self.model_id, self.concurrency = "fake:tagger", "fake-tagger", 4
+        self.capabilities = Capabilities(question_types=frozenset({"multichoice"}))
+
+    async def decide(self, state, questions, *, options=None):
+        n, tags = state.split("|")
+        said = [t for t in tags.split(",") if t]
+        unsure = int(n) % 5 == 0 and bool(said)
+        chosen = said[:-1] if unsure else said
+        qid, q = next(iter(questions.items()))
+        probs = {k: (0.45 if unsure and k == said[-1] else 0.97 if k in chosen else 0.02) for k in q.criteria}
+        return Response(answers={qid: MultiChoiceAnswer(choices=chosen, probabilities=probs)}, answered_by=self.model_id)
+
+
+def test_a_multichoice_task_runs_reports_and_compares(tmp_path):
+    p = make_project(tmp_path, {"tagger": Tagger})
+    keys = list(TOPICS.criteria)
+    rows = [{"id": str(i), "n": i, "tags": [k for j, k in enumerate(keys) if (i >> j) & 1]} for i in range(80)]
+    (tmp_path / "data.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
+    task = attach(Task(id="tags-test", cases="data.jsonl", dir=tmp_path, state=lambda r: f"{r['n']}|{','.join(r['tags'])}", question_id="complaints",
+                       question=TOPICS, label=lambda r: r["tags"], objective=Coverage(target_accuracy=0.99), tiebreak=[OptionF1()]), p)
+    asyncio.run(running.run_model(task, "tagger", limit=None, variant="base"))
+    pr = metrics.load(task, "base", "tagger")
+    e = metrics.evaluate(task, pr)
+    assert e.probabilities and e.accuracy and 0.7 < e.accuracy.value < 0.95
+    assert e.measures["option_precision"].value == 1.0 and 0.8 < e.measures["option_recall"].value < 1.0
+    assert e.selective[0].accuracy == 1.0 and 0.6 < e.selective[0].coverage.value < 0.95  # the unsure fifth is left out
+    md = report.render(task, "base", [e], {"tagger": pr})
+    assert "| option F1 |" in md and "Multichoice: every option the model gives 0.5 or more" in md and "late 28" in md
+    c = comparison.collect(task)
+    row = next(r for r in c.candidates if r.model == "tagger")
+    assert c.question_type == "multichoice" and {"option_f1", "option_precision", "option_recall", "brier"} <= set(row.metrics)
+    assert row.adoption_blocked == []
+    with pytest.raises(Unsupported, match="multichoice tasks are not supported yet"):
+        review.review(task)
+    assert not [w for w in data.check(task).warnings if "same state" in w]
+    fix = review.correct(task, "1", "relabel", reason="also damaged", by="tester", label=["damage", "late"])
+    assert fix.was == ["late"] and fix.label == ["damage", "late"]
+    with pytest.raises(DataError, match="already"):
+        review.correct(task, "3", "relabel", reason="same set", by="tester", label=["damage", "late"])
+
+
+def test_a_multichoice_label_the_task_cannot_hold_stops_the_measurement(tmp_path):
+    p = make_project(tmp_path, {"tagger": Tagger})
+    write = lambda bad: (tmp_path / "data.jsonl").write_text("".join(  # noqa: E731
+        json.dumps({"id": str(i), "n": i, "tags": ["late", "refund"] if bad and not i else ["late"]}) + "\n" for i in range(6)))
+    write(False)
+    task = attach(Task(id="tags-bad", cases="data.jsonl", dir=tmp_path, state=lambda r: f"{r['n']}|late", question_id="complaints",
+                       question=TOPICS, label=lambda r: r["tags"]), p)
+    asyncio.run(running.run_model(task, "tagger", limit=None, variant="base"))
+    write(True)  # case 0 is relabelled with an option the question lacks, after its answers were saved
+    task.load_cases().forget()
+    assert any(e.startswith("0: a multichoice label") for e in data.check(task).errors)
+    with pytest.raises(DataError, match="cannot score"):
+        asyncio.run(running.run_model(task, "tagger", limit=None, variant="base"))
+    with pytest.raises(DataError, match="^0: a multichoice label .* `s1flow cases check`"):
+        metrics.load(task, "base", "tagger")

@@ -88,6 +88,12 @@
       },
       {
        "$ref": "#/$defs/BoxEdges"
+      },
+      {
+       "items": {
+        "type": "string"
+       },
+       "type": "array"
       }
      ],
      "title": "Label"

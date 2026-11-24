@@ -370,6 +370,29 @@ def test_a_value_policy_decides_logs_and_takes_feedback(tmp_path: Path, monkeypa
     assert isinstance(back, AnsweredLog) and back.decision.value == value
 
 
+def test_a_multichoice_policy_decides_logs_and_takes_feedback(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from s1flow.client.answers import MultiChoiceAnswer
+    from s1flow.policies.log import AnsweredLog, from_span, span
+    from s1flow.policies.policy import record_feedback
+    from s1flow.questions import MultiChoice
+
+    q = MultiChoice(instructions='What does the customer complain about?', criteria={'late': 'late', 'damage': 'damaged', 'billing': 'a wrong charge'})
+    spec = runtime_spec(task='topics', questions={'topics': asked(q, DecisionRule(min_probability=.5))})
+    log = tmp_path / 'events.jsonl'
+    answer = MultiChoiceAnswer(choices=['damage', 'late'], probabilities={'late': .9, 'damage': .8, 'billing': .1})
+    d = DecisionPolicy(spec, client=_answering(monkeypatch, answer), log=log).decide({'text': 'late and broken'})
+    assert d.value == ('late', 'damage') and d.probability == pytest.approx(.9 * .8 * .9)
+    record_feedback(spec, d.decision_id, 'damage,late', log=log)  # as the CLI types it
+    record_feedback(spec, d.decision_id, 'none', log=log)
+    with pytest.raises(ConfigError, match='list of the options that apply'):
+        record_feedback(spec, d.decision_id, 'late,refund', log=log)
+    events = [json.loads(line) for line in log.read_text().splitlines()]
+    assert [e['label'] for e in events[1:]] == [['late', 'damage'], []]
+    answered = AnsweredLog.model_validate(events[0])
+    back = from_span(*span(answered)[:1], answered.at, span(answered)[1])
+    assert isinstance(back, AnsweredLog) and back.decision.value == ('late', 'damage')
+
+
 def test_timeout_cancels_the_call_and_logs_it_failed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     c, _ = fake_client(monkeypatch)
     cancelled: list[bool] = []
