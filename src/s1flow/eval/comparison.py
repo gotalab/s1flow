@@ -208,12 +208,6 @@ def _objective_metric_key(objective: Objective) -> str:
     return f"objective:{objective.key}"
 
 
-def _primary_rule_infeasible(evaluation: Evaluation | None) -> bool:
-    """A fitted primary objective has no valid rule when its rule field is unset."""
-    score = None if evaluation is None else evaluation.objective
-    return bool(score is not None and score.objective.sets is not None and score.rule is None)
-
-
 def _plain_reading_basis(task: Task) -> str:
     """Describe the runtime's plain reading used by descriptive metrics."""
     kind = task.kind
@@ -319,7 +313,7 @@ def _row_metrics(evaluation: Evaluation | None, definitions: Sequence[MetricDefi
             if got is not None:
                 values[name] = got if isinstance(got, Estimate) else Estimate(value=got)
 
-    primary_infeasible = _primary_rule_infeasible(evaluation)
+    primary_infeasible = select.no_rule(evaluation)
     for score in evaluation.scores:
         values[_objective_metric_key(score.objective)] = (
             Estimate(value=None, interval=None)
@@ -369,7 +363,7 @@ def _actual_row(item: _CandidateInput, task: Task, total: int, *, include_charts
         except (S1flowError, ValueError, OSError) as exc:
             # a chart failure is a notice, never an exclusion
             chart_notice = f"charts unavailable for {item.candidate.name}: {exc}"
-    infeasible = _primary_rule_infeasible(evaluation)
+    infeasible = (evaluation is not None and select.no_rule(evaluation))
     objective = None if evaluation is None or incomplete or infeasible else evaluation.objective
     row = ComparisonRow(
         candidate=item.candidate.name, model=item.candidate.model, variant=item.candidate.variant,
@@ -383,6 +377,16 @@ def _actual_row(item: _CandidateInput, task: Task, total: int, *, include_charts
         measurement=_measurement(item, pr), question=question, charts=charts,
     )
     return row, evaluation, chart_notice
+
+
+def optimized_on_dev(task: Task, names: Sequence[str]) -> str | None:
+    """What to say beside candidates whose question an optimizer chose: it read the train and val cases they are
+    scored on here, so their values lean high next to the others'; None when there are none."""
+    chosen = [n for n in names if Candidate.parse(n).variant in task.optimized]
+    if not chosen:
+        return None
+    return (f"{', '.join(chosen)}: optimize chose the question on the train and val cases scored here, so these values "
+            "lean high beside the others'; adopt confirms a pick on the held-out test, which optimize never read")
 
 
 def collect(task: Task, *, variants: Sequence[str] | None = None, only: Sequence[str] | None = None,
@@ -418,6 +422,8 @@ def collect(task: Task, *, variants: Sequence[str] | None = None, only: Sequence
         if evaluation is not None and evaluation.n and not evaluation.failures.missing and not row.excluded:
             evaluations[item.candidate.name] = evaluation
 
+    if note := optimized_on_dev(task, [r.candidate for r in rows if r.n]):
+        notices.insert(2, note)  # beside the two above: the text shows the first three
     definitions = _metric_definitions(task, observed_evaluations)
     rows_by_name = {r.candidate: r for r in rows}
     for item in inputs:

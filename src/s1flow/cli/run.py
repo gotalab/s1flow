@@ -5,6 +5,7 @@ import json
 import sys
 from typing import Any
 
+from ..core.errors import ConfigError
 from .common import command, positive, project
 
 
@@ -18,9 +19,13 @@ def run(a: argparse.Namespace) -> int:
     from ..eval.task import load
 
     p = project(a)
-    names = a.models.split(",") if a.models else [m.name for m in p.client().connections.list(default_only=True)]
+    models = p.client().connections
+    names = a.models.split(",") if a.models else [m.name for m in models.list(default_only=True)]
+    if not names:
+        raise ConfigError(f"{models.path} lists no `default` models to run: pass --models a,b or add default = [...]")
     task = load(p, a.task)
     running.candidates(task, names)  # every name checked before the split is written
+    running.require_labels(task, task.load_cases().all())  # and every label: the split is stratified by them
     if note := evalset.fix(task):
         print(f"notice: {note}", file=sys.stderr)
     stats = asyncio.run(running.run(task, names, fresh=a.fresh, concurrency=a.concurrency))

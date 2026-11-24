@@ -134,6 +134,12 @@ task = Task(id="truth", cases="data.jsonl", state=lambda r: {"truth": r["truth"]
 '''
 
 
+def test_run_without_models_or_a_default_says_what_to_pass(tmp_path):
+    (tmp_path / "s1flow.toml").write_text('[models.toy]\nprovider = "toy_provider:build"\nid = "t1"\n')
+    done = s1flow("run", "truth", cwd=tmp_path)
+    assert done.returncode == 2 and "lists no `default` models to run: pass --models a,b" in done.stderr, done.stderr
+
+
 def test_adopt_exits_as_the_table_says(tmp_path, monkeypatch):
     """adopt: 0 written, 1 refused below on the held-out test."""
     project = make_project(tmp_path / "p", {"good": compare_fake("good"), "bad": compare_fake("bad")})

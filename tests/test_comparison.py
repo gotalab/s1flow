@@ -74,7 +74,7 @@ def test_missing_and_stale_candidates_remain_visible(tmp_path):
     stale = comparison.collect(task)
     stale_row = next(row for row in stale.candidates if row.candidate == "fake")
     assert stale_row.value is None and any("stale" in reason for reason in stale_row.excluded)
-    assert "1 cases never asked" in stale_row.excluded  # the words report and adopt use (evaluation.why_missing)
+    assert "1 cases the answering model was never asked" in stale_row.excluded  # the words report and adopt use (evaluation.why_missing)
     assert stale_row.metrics["accuracy"].value is None
     assert not missing_path.exists()
 
@@ -322,7 +322,7 @@ def test_infeasible_primary_rule_keeps_plain_metrics_and_nulls_fitted_score(tmp_
 
 def test_positive_choice_reports_binary_metrics(tmp_path):
     task = task_fixture(tmp_path, question=Choice(instructions='which?', criteria={'a': None, 'b': None}))
-    task = task.copy(kind_params=KindParams(positive='a'))
+    task = task.copy(kind_params=KindParams(positive='a'), label=lambda row: row['label'] == 'a')  # a binary choice is labelled true or false
     run_saved(task, ['fake'])
     row = comparison.collect(task).candidates[0]
     evaluated = metrics.evaluate(task, metrics.load(task, 'base', 'fake'))

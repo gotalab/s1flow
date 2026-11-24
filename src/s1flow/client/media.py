@@ -202,7 +202,7 @@ def placeholders(state: list[Part]) -> tuple[list[Part], list[Image]]:
 
 
 def chat_parts(state: list[Part]) -> list[Part]:
-    """OpenRouter (documented) and AI Gateway's d1 (images only; works, undocumented): Chat Completions'
+    """OpenRouter (documented) and Liquid: Chat Completions'
     content parts in the state array. Audio is raw base64 with a format; video and PDFs are data URLs."""
     out: list[Part] = []
     for x in state:
