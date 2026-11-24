@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- The Skill has a playbook per question type (`references/types/boolean.md`, `choice.md`, `score.md`, `box.md`): the
+  purposes a decision of that type serves, the standard metric and the `task.py` objective for each, what to ask the
+  person, and how the hand-off line (the min probability under which a person takes the answer) is set today. It also
+  says plainly that an objective which sets no min probability leaves every answer acted on.
+
 ## 0.1.0a6 (2026-11-24)
 
 ### Added

@@ -8,6 +8,8 @@ the release.
 Which candidate to adopt and whether to merge belong to the person. Read `tasks/<task>/criteria.md` first: when it
 covers the choice, follow it and quote it in the reason; otherwise show the candidates (`measure.md`) and ask.
 Never run `adopt` or merge on your own judgement, and never pass `--force` unless the person says so.
+Before adopting, tell the person whether the policy will hand any answer to a person: the question type's
+playbook (`types/<type>.md`), "The hand-off line".
 
 ## Adopt
 
