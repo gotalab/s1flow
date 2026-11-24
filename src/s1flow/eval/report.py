@@ -191,10 +191,12 @@ def render(task: Task, variant: str, evs: list[Evaluation], preds: dict[str, met
     first = next((e for e in evs if e.n), None)
     labelled = [c for c in task.load_cases().labelled() if sf.assign.get(c.id) != "test"]
     multi = kind.type == "multichoice"
+    several = kind.type == "boxes"
     labels = (Counter(k for c in labelled for k in c.label) if multi  # how many cases each option applies to
-              else Counter(str(c.label) for c in labelled) if not (box or read or kind.type == "estimate") else Counter())
+              else Counter(str(c.label) for c in labelled) if not (box or read or several or kind.type == "estimate") else Counter())
     absent = sum(c.label is False for c in labelled)
     about = (f" (right at IoU {kind.iou:g} or more" + (f"; {absent} with no target" if absent else "") + ")" if box
+             else f" ({sum(len(c.label) for c in labelled)} boxes; {sum(not c.label for c in labelled)} cases with none)" if several
              else f" ({len(labelled) - absent} with a value, {absent} with none)" if read
              else f" (right within {getattr(kind, 'tolerance'):g} of the label)" if kind.type == "estimate"
              else f" ({', '.join(f'{k} {v}' for k, v in labels.most_common(8))}" + (", more" if len(labels) > 8 else "") + ")")
@@ -259,6 +261,10 @@ def render(task: Task, variant: str, evs: list[Evaluation], preds: dict[str, met
     if read:
         L.append("Value read: right when it equals the label, or when nothing was read from a case labelled as holding none. The probability is the "
                  "model's: P(nothing there) for an answer of none, else P(something there) times its confidence in the value; 1 when it gives neither.")
+    if several:
+        L.append(f"Boxes: right when every box of the label has an answer box of its own at IoU {kind.iou:g} or more and no answer box is left over. "
+                 "The probability is that of the whole set: each slot's presence or absence and each box's confidence as the model gives them, multiplied; 0 where it says there "
+                 "are more than it gave. Box F1, precision and recall count every box of every case; count error is how far the number of boxes is off.")
     if multi:
         L.append("Multichoice: every option the model gives 0.5 or more, right when that set is exactly the label's. The probability is that of the "
                  "whole set: each option's own yes or no, multiplied. Option F1, precision and recall count every option of every case.")

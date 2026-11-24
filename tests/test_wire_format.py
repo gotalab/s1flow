@@ -24,7 +24,7 @@ from s1flow.client import BooleanAnswer, ChoiceAnswer, Client, Image
 from s1flow.client.state import Media
 from s1flow.client import identity
 from s1flow.client.models import Capabilities, ModelSpec
-from s1flow.client.questions import Boolean, Box, Choice, Date, MultiChoice, RangeEstimate, Number, Score, Text
+from s1flow.client.questions import Boolean, Box, Boxes, Choice, Date, MultiChoice, RangeEstimate, Number, Score, Text
 from s1flow.policies import DecisionRule
 from s1flow.policies.kinds import KindParams, kind_of
 
@@ -104,6 +104,10 @@ REPLIES["gateway"] = REPLIES["openai-decisions"] | {"model": "typesafe-ai/jev", 
 REPLIES["liquid"] = {"model": "d1.2", "answers": SYSTEM_ONE, "usage": {"input_tokens": 90, "output_tokens": 0, "cost": 0.0000018}}
 BOX_REPLIES["liquid"] = {"model": "d1.2", "answers": {"where": BOX_ANSWER | {"found": 0.9}}}
 # A target that is not in the picture, as d1.2 answered it (2026-11-17): a null box, and how sure it is of one.
+# Every instance's box, as d1.2 answered it (2026-11-17); `presence` has a slot per box the question allows.
+EVERY_BOX = {"where": Boxes(instructions="Every stamp", max=3)}
+BOXES_REPLIES = {"liquid": {"model": "d1.2", "answers": {"where": {"type": "boxes", "count": 2, "at_least": False, "presence": [0.998, 0.951, 0.001], "boxes": [
+    {"box": BOX_ANSWER["box"], "found": 0.998, "confidence": 0.93}, {"box": {"top": 0.6, "bottom": 0.8, "left": 0.1, "right": 0.3}, "found": 0.951, "confidence": 0.92}]}}}}
 NO_BOX_REPLIES = {"liquid": {"model": "d1.2", "answers": {"where": {"type": "box", "box": None, "found": 0.0017, "confidence": 0}}}}
 REPLIES["gemini"] = {"model": "gemini-decision-1", "answers": SYSTEM_ONE, "usage": {"total_input_tokens": 90}}
 MEDIA_REPLIES = {p: REPLIES[p] for p in ("openrouter", "gemini")}  # the providers that send audio, video and PDFs
@@ -115,7 +119,7 @@ MODELS = {
         update={"question_types": ALL.question_types | {"text", "number", "date", "estimate"}})),
     "gemini": ModelSpec(provider="gemini", id="gemini-decision-1", capabilities=EVERY.model_copy(update={"question_types": frozenset({"boolean", "choice", "score"})})),
     "liquid": ModelSpec(provider="liquid", id="d1.2", capabilities=ALL.model_copy(
-        update={"question_types": ALL.question_types | {"text", "number", "date", "estimate", "multichoice"}})),
+        update={"question_types": ALL.question_types | {"text", "number", "date", "estimate", "multichoice", "boxes"}})),
     "cloudflare": ModelSpec(provider="cloudflare", id="clef", capabilities=ALL),
     "openai-decisions": ModelSpec(provider="openai-decisions", id="gpt-6-luna", capabilities=Capabilities(image=True)),
     "llm": ModelSpec(provider="llm", id="openai/gpt-test", options={"box_units": "k1000"}, capabilities=ALL),
@@ -138,7 +142,8 @@ def _http(provider: str) -> dict[str, Any]:
     out = {}
     asks = [("text", TEXT, QUESTIONS, REPLIES), ("image", WITH_IMAGE, QUESTIONS, REPLIES), ("box", WITH_IMAGE, BOX, BOX_REPLIES),
             ("audio, video, pdf", OTHER_MEDIA, QUESTIONS, MEDIA_REPLIES), ("fields", TEXT, FIELDS, FIELD_REPLIES),
-            ("multichoice", TEXT, MULTI, MULTI_REPLIES), ("box not there", WITH_IMAGE, BOX, NO_BOX_REPLIES)]
+            ("multichoice", TEXT, MULTI, MULTI_REPLIES), ("box not there", WITH_IMAGE, BOX, NO_BOX_REPLIES),
+            ("boxes", WITH_IMAGE, EVERY_BOX, BOXES_REPLIES)]
     for name, state, questions, replies in asks:
         if provider not in replies:
             continue

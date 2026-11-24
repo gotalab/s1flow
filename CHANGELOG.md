@@ -50,6 +50,11 @@
   the list of options, an answer is right when its set is exactly the label's, `Coverage` reads the probability of
   the whole set, and the new `OptionF1()` objective counts every option of every case. A policy holds one, and
   `feedback record` takes its options typed as `late,damage` (`none` for none).
+- A `Boxes` question: a box for every instance of the target, none when there is none. The `liquid` provider asks
+  it (d1.2, d1.2-ultra), `s1flow models --verify` checks it, and evaluation compares it: the label is the list of
+  boxes, an answer is right when every label box has an answer box of its own at the IoU bar and none is left over,
+  and the new `BoxF1()` objective counts box by box. The report adds box precision, box recall and the count error.
+  A policy holds one, and `feedback record` takes its boxes as JSON (`none` for none).
 - A box question can be answered with "not in the picture": `BoxAnswer.box` is `None`, with `found` where the model
   gives it (Liquid's d1.2). A box task labels such a case `False`; an answer of no box is right there, and how sure
   it is comes from `found`.

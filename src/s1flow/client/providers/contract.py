@@ -12,6 +12,7 @@ from ..answers import (
     Answer,
     BooleanAnswer,
     BoxAnswer,
+    BoxesAnswer,
     ChoiceAnswer,
     DateAnswer,
     EstimateAnswer,
@@ -22,13 +23,13 @@ from ..answers import (
     ScoreAnswer,
     TextAnswer,
 )
-from ..questions import Choice, MultiChoice, RangeEstimate, Questions, Score
+from ..questions import Boxes, Choice, MultiChoice, RangeEstimate, Questions, Score
 
 # The answer each type of question takes.
 FITS: dict[str, type] = {
     "boolean": BooleanAnswer, "choice": ChoiceAnswer, "score": ScoreAnswer, "box": BoxAnswer,
     "text": TextAnswer, "number": NumberAnswer, "date": DateAnswer, "estimate": EstimateAnswer,
-    "multichoice": MultiChoiceAnswer,
+    "multichoice": MultiChoiceAnswer, "boxes": BoxesAnswer,
 }
 
 
@@ -80,6 +81,8 @@ def _validate_answer(qid: str, question: Any, answer: Answer) -> None:
     if not isinstance(answer, FITS[question.type]):
         kind = getattr(answer, "type", type(answer).__name__)
         _fail(qid, f"answer type {kind!r} does not fit a {question.type} question")
+    if isinstance(question, Boxes) and isinstance(answer, BoxesAnswer) and question.max is not None and len(answer.boxes) > question.max:
+        _fail(qid, f"{len(answer.boxes)} boxes, more than the question's max of {question.max}")
 
     validate_answer_values(qid, answer, options=question.criteria.keys() if isinstance(question, (Choice, MultiChoice)) else None,
                            levels=len(question.criteria) if isinstance(question, Score) else None,
@@ -120,6 +123,13 @@ def validate_answer_values(
             _fail(qid, f"score {score:g} is outside the levels 0..{levels - 1}")
         _distribution(qid, answer.probabilities, (str(i) for i in range(levels)) if levels is not None else None)
         _confidence(qid, answer.confidence)
+        return
+    if isinstance(answer, BoxesAnswer):
+        for b in answer.boxes:
+            _confidence(qid, b.found, name="found")
+            _confidence(qid, b.confidence)
+        for x in answer.presence or []:
+            _confidence(qid, x, name="presence")
         return
     if isinstance(answer, BoxAnswer):
         _confidence(qid, answer.found, name="found")

@@ -94,6 +94,12 @@
         "type": "string"
        },
        "type": "array"
+      },
+      {
+       "items": {
+        "$ref": "#/$defs/BoxEdges"
+       },
+       "type": "array"
       }
      ],
      "title": "Label"
