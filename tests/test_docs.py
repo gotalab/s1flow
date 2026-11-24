@@ -8,7 +8,7 @@ from pathlib import Path
 from conftest import cli
 
 ROOT = Path(__file__).resolve().parents[1]
-DOCS = [ROOT / "README.md", ROOT / "decide" / "action.yml",
+DOCS = [ROOT / "README.md", ROOT / "AGENTS.md", ROOT / "decide" / "action.yml",
         *sorted(ROOT.glob("docs/*.md")), *sorted(ROOT.glob("plugin/skills/**/*.md")), *sorted(ROOT.glob("examples/*"))]
 VERSION = tomllib.loads((ROOT / "pyproject.toml").read_text())["project"]["version"]
 

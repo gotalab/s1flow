@@ -45,9 +45,19 @@ def violations(c: Constraints, e: Evaluation) -> list[str]:
             out.append(f"API cost {usd(cost, 2)} per 10k > {usd(c.cost_per_10k_usd, 2)}")
     if c.min_labels is not None and e.n < c.min_labels:
         out.append(f"{e.n} labels < {c.min_labels}")
-    if c.floors and e.objective is not None and e.objective.rule is None:
-        out.append("no threshold keeps " + " and ".join(f"{k} ≥ {pct(v)}" for k, v in c.floors.items()) + " on the dev cases")
+    if no_rule(e):
+        assert e.objective is not None and e.objective.objective.sets is not None
+        # with no floor, the objective's own constraint is what nothing keeps (one without would have a rule)
+        kept = " and ".join(f"{k} ≥ {pct(v)}" for k, v in c.floors.items()) or e.objective.objective.label
+        out.append(f"no {e.objective.objective.sets.replace('_', ' ')} keeps {kept} on the dev cases")
     return out
+
+
+def no_rule(e: Evaluation) -> bool:
+    """The primary objective sets a rule field and no value of it keeps its constraint and the task's floors on the
+    dev cases: there is no rule to adopt, whatever value (0: nothing kept) it ties on."""
+    s = e.objective
+    return s is not None and s.objective.sets is not None and s.rule is None
 
 
 def _overlaps(o: Objective, best: ObjectiveScore, other: ObjectiveScore) -> bool:

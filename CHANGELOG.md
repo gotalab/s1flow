@@ -68,9 +68,14 @@
 
 ### Changed
 
+- The `gateway` provider (Vercel AI Gateway) calls `/v1/decisions` instead of the deprecated `/v1/evaluate`. Images
+  now reach every model there as `input_image` parts: Drex Max v1.1 refused the old `image_url` parts and Mo read
+  them without seeing the picture. Answers saved through `gateway` are asked again, and a policy adopted on one
+  needs adopting again; other providers' saved answers stay valid.
 - The `liquid` provider reads a box the model did not find as an answer of no box, not as a refusal: in an
-  evaluation it is a wrong answer the model was sure of, where it was no answer before. `run` asks Liquid's models
-  again once instead of reusing the answers saved before; other providers' saved answers stand.
+  evaluation it is a wrong answer the model was sure of, where it was no answer before. Answers saved through
+  `liquid` are asked again, and a policy adopted on one needs adopting again; other providers' saved answers stay
+  valid.
 - The summary `report --out` writes shows the `coverage` and `sure accuracy` columns only for a task whose
   objective or tiebreak is `Coverage(...)`, at that objective's target. For any other task they were printed at a
   95% target nobody set; `comparison.json` and the comparison page still hold that reference value. A task whose
@@ -108,10 +113,36 @@
 
 ### Fixed
 
+- Measuring and choosing, from a whole-project check. Some numbers in `report` and `adopt` move a little once:
+  - `run` refuses labels the question cannot score (a yes/no task labelled `0`/`1` or `"true"`) before its first
+    call and before it fixes the held-out test share, instead of asking every case and leaving `report` to fail.
+  - When the model behind an alias changes, the cases only the earlier model answered count as missing (`report`
+    says "N cases the answering model was never asked", where it said "N cases never asked"), and the next `run`
+    asks them again, past the cache. Before, they were neither scored nor missing: that candidate was scored on a
+    few cases, and every other candidate became unrankable beside it.
+  - The cross-validation folds and the 95% intervals no longer depend on the order the calls ended in: the cases
+    are read in case-id order. `report` and `adopt` now give a candidate the same intervals (`adopt` also reads the
+    test cases, and their count changed the bootstrap draws).
+  - A `run` that calls nothing (every case already answered) no longer makes the latency measured before unknown.
+    `optimize` asks the model at its own concurrency, so the new candidate's latency is known too.
+  - A candidate whose objective has no rule that keeps its constraint (no min probability reaches Coverage's target)
+    is left out of the list with the reason, instead of tying at 0 at the top and being refused by `adopt`.
+  - `report --out` leaves out runs of a model no longer in `s1flow.toml`, as `report` does, instead of failing.
+  - `optimize` leaves out the cases `cases correct` marked unclear or missing. `report` notes that an optimized
+    question is scored on the train and val cases it was chosen on, so its values lean high; `adopt` confirms it
+    on the held-out test.
+  - `feedback measure` shows a share and its interval both in percent (`80.0% [62.0, 91.0]`, not `0.800 [62, 91]`).
+- An app's `connections.toml` no longer needs a `default` line: copying a model's entry from `s1flow.toml` is
+  enough, where it used to fail with "default: Field required". Without `default`, `doctor` checks every model and
+  `run` asks for `--models`. The README's app example now sends the fields the measured cases had and keeps a log,
+  so the correct answers can become new cases.
 - A production decision on an image (or audio, video, PDF) now becomes a usable case: `feedback measure --add` wrote
   the kept state with its prepared media inline, and every later read of those cases (`cases check`, `run`)
   refused them as a bad media reference. Prepared media are now read back as they are, so the case holds the
   exact bytes the model saw, checked against their sha256 and format.
+- An input Google's safety filters block is now recorded as refused (the model's limit, scored as no answer) when
+  Gemini Decision 1 is reached through OpenRouter too, not only on Google's own API. Through OpenRouter it was a
+  failed call, so the case was left out of the scores.
 
 ## 0.1.0a5 (2026-11-12)
 

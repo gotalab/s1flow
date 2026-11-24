@@ -52,9 +52,6 @@ SYSTEM_ONE = {
 }
 REPLIES: dict[str, dict[str, Any]] = {
     "typesafe": {"model": "jev-1.14.0", "answers": SYSTEM_ONE, "usage": {"input_tokens": 90, "output_tokens": 0}},
-    "gateway": {"model": "typesafe-ai/jev", "answers": SYSTEM_ONE | {"refund": {"type": "boolean", "probability": 0.1}},
-                "usage": {"inputTokens": 90, "outputTokens": 0},
-                "providerMetadata": {"typesafe": {"confidence": {"kind": 0.9}}, "gateway": {"cost": "0.00001"}}},
     "openrouter": {"model": "typesafe/jev", "answers": SYSTEM_ONE, "usage": {"input_tokens": 90, "output_tokens": 0, "cost": 0.00001}},
     "cloudflare": {"result": {"model": "clef", "answers": SYSTEM_ONE | {"kind": SYSTEM_ONE["kind"] | {
         "choice": "o0_kind_bug", "probabilities": {"o0_kind_bug": 0.8, "o1_kind_question": 0.2}}}, "usage": {"input_tokens": 90}}},
@@ -68,7 +65,7 @@ REPLIES: dict[str, dict[str, Any]] = {
 }
 BOX_REPLIES: dict[str, dict[str, Any]] = {
     "typesafe": {"model": "jev-1.14.0", "answers": {"where": BOX_ANSWER}},
-    "gateway": {"model": "typesafe-ai/jev", "answers": {"where": BOX_ANSWER}},
+    "gateway": {"model": "typesafe-ai/jev", "answers": [BOX_ANSWER | {"name": "where"}]},
     "openrouter": {"model": "typesafe/jev", "answers": {"where": BOX_ANSWER}},
     "cloudflare": {"result": {"model": "clef", "answers": {"where": BOX_ANSWER}}},
 }
@@ -103,6 +100,7 @@ MULTI_REPLIES: dict[str, dict[str, Any]] = {"liquid": {"model": "d1.2", "answers
     "topics": {"type": "choice", "choices": ["late", "damage"], "probabilities": {"late": 0.9692, "damage": 0.9692, "price": 0}},
 }, "usage": {"input_tokens": 88, "output_tokens": 0, "cost": 0.00000176}}}
 ALL = Capabilities(image=True, question_types=frozenset({"boolean", "choice", "score", "box"}))
+REPLIES["gateway"] = REPLIES["openai-decisions"] | {"model": "typesafe-ai/jev", "provider_metadata": {"gateway": {"cost": "0.00001"}}}
 REPLIES["liquid"] = {"model": "d1.2", "answers": SYSTEM_ONE, "usage": {"input_tokens": 90, "output_tokens": 0, "cost": 0.0000018}}
 BOX_REPLIES["liquid"] = {"model": "d1.2", "answers": {"where": BOX_ANSWER | {"found": 0.9}}}
 # A target that is not in the picture, as d1.2 answered it (2026-11-17): a null box, and how sure it is of one.
@@ -200,7 +198,7 @@ def test_what_is_sent_and_read_is_what_the_identity_formats_name(monkeypatch):
         monkeypatch.delenv(env, raising=False)
     monkeypatch.setenv("CLEF_RELAY_URL", "https://relay.test")
     now = {
-        "request": identity.REQUEST, "execution": identity.EXECUTION, "reading": identity.READING,
+        "request": identity.REQUEST, "execution": identity.EXECUTION,
         "providers": {p: _http(p) for p in REPLIES} | {m: _llm(monkeypatch, m) for m in ("llm", "llm sampled")},
         "decisions": _decisions(),
     }
@@ -209,5 +207,5 @@ def test_what_is_sent_and_read_is_what_the_identity_formats_name(monkeypatch):
         FILE.write_text(text)
     assert text == FILE.read_text(), (
         "what a provider sends or reads, or what a policy decides, changed (diff tests/fixtures/wire-format.json): "
-        "bump identity.REQUEST or EXECUTION (or identity.READING when one provider reads a reply differently) unless saved "
-        "answers still stand, then rewrite it (see this file's docstring)")
+        "bump identity.REQUEST or EXECUTION (or name the one provider in identity._WIRE) unless saved answers still stand, "
+        "then rewrite it (see this file's docstring)")

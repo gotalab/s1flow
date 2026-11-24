@@ -19,15 +19,17 @@ QS = {
     "refund": Boolean(instructions="返金を求めているか"),
 }
 
-# Recorded from convaiinnovations/laya on 2026-10-03, trimmed.
-LAYA = {
-    "model": "convaiinnovations/laya",
-    "answers": {
-        "route": {"type": "choice", "choice": "billing", "probabilities": {"billing": 0.9999, "technical": 0}},
-        "refund": {"type": "boolean", "probability": 0.9978},
-    },
-    "usage": {"inputTokens": 82, "outputTokens": 0},
-    "providerMetadata": {"typesafe": {"confidence": {"route": 0.9994}}, "gateway": {"cost": "0"}},
+# Recorded from typesafe-ai/jev on the AI Gateway's /v1/decisions on 2026-11-24, trimmed.
+JEV = {
+    "answers": [
+        {"type": "choice", "name": "route", "choice": "billing", "confidence": 0.9994,
+         "probabilities": [{"value": "billing", "probability": 0.9997}, {"value": "technical", "probability": 0.0003}]},
+        {"type": "predicate", "name": "refund", "probability": 0.79},
+    ],
+    "model": "typesafe-ai/jev",
+    "provider_metadata": {"typesafe": {"confidence": {"route": 0.9994}, "legend": {}},
+                          "gateway": {"routing": {"finalProvider": "typesafe-ai"}, "cost": "0.000011256"}},
+    "usage": {"input_tokens": 268, "output_tokens": 20, "total_tokens": 288},
 }
 
 
@@ -40,6 +42,8 @@ URL = "https://example.test/v1/systemone"
     (400, '{"error":{"message":"Phala does not accept \\"image_url\\" parts in state"}}', Rejected),
     (400, '{"error":{"message":"Clef Omni accepts at most 4 audio clips, got 5","code":400}}', Rejected),
     (400, '{"error":{"message":"ScaleDown reads one document per request; state has 2 media parts","code":400}}', Rejected),
+    (400, '{"error":{"message":"Input blocked","code":"prohibited_content"}}', Rejected),  # Google's safety filters
+    (400, '{"error":{"message":"HTTP 400: {\\"error\\":{\\"code\\":\\"safety\\"}}","code":400}}', Rejected),  # the same, through OpenRouter
     (400, '{"error":"invalid max_tokens: at most 1024 tokens per request"}', ProviderError),  # our request, not a refusal
     (400, '{"detail":{"error_type":"api_usage_error","message":"Invalid request."}}', ProviderError),
     (400, '{"error":"response_format not supported"}', ProviderError),  # a bare "not supported" stays a failure
@@ -76,20 +80,21 @@ def test_post_json_rejects_an_unreadable_body():
 @respx.mock
 def test_gateway_parses_answers(monkeypatch):
     monkeypatch.setenv("AI_GATEWAY_API_KEY", "test")
-    route = respx.post(f"{BASE_URL}/evaluate").mock(return_value=httpx.Response(200, json=LAYA))
-    r = asyncio.run(GatewayModel("convaiinnovations/laya").decide("二重に請求された", QS))
+    route = respx.post(f"{BASE_URL}/decisions").mock(return_value=httpx.Response(200, json=JEV))
+    r = asyncio.run(GatewayModel("typesafe-ai/jev").decide("二重に請求された", QS))
     assert route.calls[0].request.headers["authorization"] == "Bearer test"
     assert r.answers["route"].choice == "billing" and r.answers["route"].confidence == 0.9994
-    assert r.answers["refund"].probability == 0.9978
-    assert r.usage.cost_usd == 0.0 and r.usage.cost_source == "billed" and r.usage.input_tokens == 82
-    assert r.usage.raw == LAYA["usage"]  # kept as returned, so a cost can be worked out again
+    assert r.answers["refund"].probability == 0.79
+    assert r.usage.cost_usd == 0.000011256 and r.usage.cost_source == "billed" and r.usage.input_tokens == 268
+    assert r.usage.raw == JEV["usage"]  # kept as returned, so a cost can be worked out again
+    assert r.provider_metadata == {"routing": {"finalProvider": "typesafe-ai"}}
 
 
 @respx.mock
 def test_gateway_retries_on_429(monkeypatch):
     monkeypatch.setenv("AI_GATEWAY_API_KEY", "test")
-    respx.post(f"{BASE_URL}/evaluate").mock(side_effect=[httpx.Response(429), httpx.Response(200, json=LAYA)])
-    r = asyncio.run(GatewayModel("convaiinnovations/laya").decide("x", QS))
+    respx.post(f"{BASE_URL}/decisions").mock(side_effect=[httpx.Response(429), httpx.Response(200, json=JEV)])
+    r = asyncio.run(GatewayModel("typesafe-ai/jev").decide("x", QS))
     assert r.answers["route"].choice == "billing"
     assert r.retries == 1 and r.latency_ms < 400  # the 500ms backoff is not the model's latency
 
@@ -210,6 +215,27 @@ def test_gemini_safety_block_is_a_refusal_and_other_400s_are_failures(monkeypatc
         asyncio.run(GeminiModel("gemini-decision-1").decide("x", QS))
 
 
+# Recorded from google/gemini-decision-1 on OpenRouter's /systemone on 2026-11-23 (a ja-toxicity case): Google's
+# error arrives as escaped JSON inside OpenRouter's message.
+OPENROUTER_BLOCKED = (
+    '{"error":{"message":"HTTP 400: {\\"error\\":{\\"message\\":\\"Input blocked: The prompt could not be submitted. '
+    "The prompt contains sensitive words that violate Google's [Generative AI Prohibited Use policy]"
+    '(https://policies.google.com/terms/generative-ai/use-policy). Try rephrasing the prompt.\\",'
+    '\\"code\\":\\"prohibited_content\\"}}","code":400}}'
+)
+
+
+@respx.mock
+def test_gemini_safety_block_through_openrouter_is_a_refusal(monkeypatch):
+    from s1flow.client.providers.openrouter import BASE_URL as OR_URL, OpenRouterModel
+
+    monkeypatch.setenv("OPENROUTER_API_KEY", "test")
+    respx.post(f"{OR_URL}/systemone").mock(return_value=httpx.Response(400, text=OPENROUTER_BLOCKED))
+    with pytest.raises(Rejected, match="safety filters") as e:
+        asyncio.run(OpenRouterModel("google/gemini-decision-1").decide("x", QS))
+    assert e.value.status == 400
+
+
 def test_clef_option_names_are_made_safe_and_mapped_back():
     from s1flow.client.providers.cloudflare import safe_options
 
@@ -303,9 +329,9 @@ def test_an_answer_outside_the_contract_is_a_named_provider_failure():
     with pytest.raises(ProviderError, match="answered level outside the contract: .*score"):
         parse_decisions([{"type": "score", "name": "level", "probabilities": []}])
     with pytest.raises(ProviderError, match="answered q outside the contract"):
-        parse_answers({"q": {"type": "choice"}}, None)
+        parse_answers({"q": {"type": "choice"}})
     with pytest.raises(ProviderError, match="answered q outside the contract"):
-        parse_answers({"q": None}, None)
+        parse_answers({"q": None})
 
 
 def test_a_refusal_is_the_questions_answer_and_the_others_still_count():
@@ -313,7 +339,7 @@ def test_a_refusal_is_the_questions_answer_and_the_others_still_count():
     from s1flow.client.providers.systemone import answers as parse_answers
     from s1flow.client.providers.openai_decisions import parse_decisions
 
-    got = parse_answers({"q": {"type": "refusal", "refusal": "unsafe"}, "b": {"type": "noul", "noul": 0.9}}, None)
+    got = parse_answers({"q": {"type": "refusal", "refusal": "unsafe"}, "b": {"type": "noul", "noul": 0.9}})
     assert got["q"] == Refusal(reason="unsafe") and got["b"].probability == 0.9
     assert parse_decisions([{"type": "refusal", "name": "q"}]) == {"q": Refusal()}
 
@@ -322,10 +348,9 @@ def test_the_system_one_dialect_is_one_module():
     from s1flow.client.providers import systemone
 
     qs = {"bug": Boolean(instructions="Is it a bug?"), "level": Score(instructions="How bad?", criteria=["low", "high"])}
-    assert systemone.questions(qs)["bug"]["type"] == "noul" and systemone.questions(qs, noul=False)["bug"]["type"] == "boolean"
+    assert systemone.questions(qs)["bug"]["type"] == "noul"
     assert systemone.questions(qs)["level"] == {"type": "score", "instructions": "How bad?", "criteria": ["low", "high"]}
-    got = systemone.answers({"bug": {"type": "noul", "noul": 0.8}, "level": {"type": "score", "score": 1, "probabilities": {"0": 0.2, "1": 0.8}}},
-                            {"level": 0.6})
+    got = systemone.answers({"bug": {"type": "noul", "noul": 0.8}, "level": {"type": "score", "score": 1, "probabilities": {"0": 0.2, "1": 0.8}, "confidence": 0.6}})
     assert got["bug"].probability == 0.8 and got["level"].confidence == 0.6 and got["level"].probabilities == {"0": 0.2, "1": 0.8}
 
 
@@ -335,7 +360,7 @@ def _keyed_models():
     from s1flow.client.providers.typesafe import BASE_URL as TS_URL, TypeSafeModel
 
     return [  # each built-in provider that sends a key: the model, the URL it posts to, the key it reads
-        (lambda: GatewayModel("typesafe-ai/jev"), f"{BASE_URL}/evaluate", "AI_GATEWAY_API_KEY"),
+        (lambda: GatewayModel("typesafe-ai/jev"), f"{BASE_URL}/decisions", "AI_GATEWAY_API_KEY"),
         (lambda: OpenRouterModel("typesafe-ai/jev"), f"{OR_URL}/systemone", "OPENROUTER_API_KEY"),
         (lambda: TypeSafeModel("jev-latest"), f"{TS_URL}/systemone", "TYPESAFE_API_KEY"),
         (lambda: DecisionsModel("gpt-6-luna"), f"{OPENAI_URL}/decisions", "OPENAI_API_KEY"),

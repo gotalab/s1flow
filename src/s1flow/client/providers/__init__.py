@@ -21,7 +21,7 @@ __all__ = ["BUILTIN", "Needs", "NeedsOf", "PublishedOf", "build_one", "declares"
 # Your own: "package.module:factory", or an entry point in the `s1flow.providers` group.
 BUILTIN: dict[str, str] = {
     "typesafe": "typesafe:build",  # TypeSafe's API, or any server that speaks it (options.base_url)
-    "gateway": "gateway:build",  # Vercel AI Gateway /v1/evaluate
+    "gateway": "gateway:build",  # Vercel AI Gateway /v1/decisions
     "openrouter": "openrouter:build",  # OpenRouter /systemone
     "cloudflare": "cloudflare:build",  # Workers AI, through clef-proxy/
     "openai-decisions": "openai_decisions:build",  # OpenAI Decisions API

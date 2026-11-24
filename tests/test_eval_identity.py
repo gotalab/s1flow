@@ -177,8 +177,8 @@ def test_concurrency_changes_invalidate_performance_without_rebuying_answers(tas
     assert metrics.evaluate(task, metrics.load(task, 'base', 'fake')).calls.latency is not None
     before = Parity.calls
     assert asyncio.run(run.run_model(task, 'fake', limit=None, variant='base', concurrency=8))['skipped'] == 12
-    current = metrics.evaluate(task, metrics.load(task, 'base', 'fake'))
-    assert current.n == 8 and current.calls.latency is None and current.calls.case_latency_p90_ms is None
+    current = metrics.evaluate(task, metrics.load(task, 'base', 'fake'))  # a run that called nothing measured nothing
+    assert current.n == 8 and current.calls.latency.concurrency == [1] and current.calls.case_latency_p90_ms is not None
     assert Parity.calls == before
     task.where.lineup().models['fake'].concurrency = 8
     assert metrics.evaluate(task, metrics.load(task, 'base', 'fake')).calls.latency is None
@@ -250,9 +250,16 @@ def test_a_capability_left_at_its_default_is_in_no_identity():
     assert model_digest(spec) != model_digest(spec.model_copy(update={'capabilities': Capabilities(image=True)}))
 
 
-def test_a_provider_reading_revision_changes_only_that_providers_identity(monkeypatch):
+def test_gateway_answers_from_before_its_decisions_wire_are_not_reused():
+    """The AI Gateway moved from /v1/evaluate to /v1/decisions (2026-11-24): Mo had answered images there without
+    seeing them, so what was saved through `gateway` before is asked again. Liquid reads a box it did not find as an answer
+    of no box, no longer a refusal, so its saved answers are asked again too. Other providers keep theirs."""
     from s1flow.client import identity
-    liquid, typesafe = ModelSpec(provider='liquid', id='d1.2'), ModelSpec(provider='typesafe', id='v1')
-    before = model_digest(liquid), model_digest(typesafe)
-    monkeypatch.setattr(identity, 'READING', {})
-    assert model_digest(liquid) != before[0] and model_digest(typesafe) == before[1]
+    from s1flow.client.identity import digest, request_digests
+
+    qs = {'bug': Boolean(instructions='Is it a bug?')}
+    for provider, retired in (('gateway', True), ('liquid', True), ('typesafe', False)):
+        spec = ModelSpec(provider=provider, id='m')
+        before = digest({"schema": identity.REQUEST, "model": identity.model_digest(spec), "state": 'x', "questions": qs,
+                         "dependencies": {}})
+        assert (before not in request_digests(spec, 'x', qs)) is retired
