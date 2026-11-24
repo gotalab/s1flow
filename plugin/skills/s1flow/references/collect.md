@@ -34,18 +34,26 @@ How an objective acts, for every type:
   sets the min probability marks answers unsure: a policy adopted on any other acts on every answer. Say so before
   the person adopts it.
 - More measures: `tiebreak=[...]` (built-in objectives such as `MAE()` or `MacroF1()`, and "latency", "cost")
-  orders the candidates the objective cannot tell apart, and `report` shows the type's own metrics for every
-  candidate. They choose no number of their own.
-- The line reads the probability the model gave its answer. A model that gives none (※ in `report`) has
+  orders the candidates the objective cannot tell apart. They choose no number of their own.
+- The question report is `s1flow report <task> --out DIR`'s `DIR/questions/<variant>.md`: per candidate, the type's
+  own metric, ※ for a model that gives no probabilities, and with Coverage the sure share and its lower bound. `report --json`
+  has every metric and `"probabilities": false` for ※. Plain `s1flow report <task>` shows the ranking only.
+- The line reads the probability the model gave its answer. A model that gives none (※ in the question report) has
   probability 1 on every answer, so a line on it keeps all or nothing: do not set one on such a candidate.
-- `Loss` charges 0 for a right answer and `default` (1 when left out) for any mistake its table does not name.
-  `unsure` is in the same unit: a look that costs as much as the costliest mistake, or more, never pays, so nothing
-  is handed off.
-- When no value keeps the objective's target, the task's floors or a `Recall` cap on the dev cases, `report` says so
-  for that candidate and `adopt` refuses it. Change the number with the person, or compare other candidates.
+- `Loss` charges 0 for a right answer and `default` (1 when left out) for any mistake its table does not name; ask
+  whether the unnamed mistakes all cost that much. `unsure` is in the same unit.
+- `Loss(unsure=)` and an `@per_case` objective that sets the min probability choose the line from a fixed grid
+  (0.05 to 0.95 by 0.05; 0.1, 0.3, 0.5, 0.7, 0.9 under 50 dev cases), and a tie goes to the value nearest 0.5. A
+  line can come from that tie, not the data: when a look costs as much as a mistake or more, or on a ※ candidate,
+  the policy still keeps a line. Before adopting, say how much the line hands off: the chosen `min_probability` is
+  the candidate's `rule` in `report --json`; read it on the chart page's "Accepted share and accuracy" curve
+  (`measure.md`, Charts).
+- When no value keeps the objective's target, the task's floors or a `Recall` cap on the dev cases, `report` lists
+  the candidate as excluded and `adopt` refuses it. Change the number with the person, or compare other candidates.
 - The app sees an unsure answer as `below_min_probability` on the decision (`app.md`).
-- Coverage keeps its target on the dev cases as measured. `report` shows the one-sided 95% lower bound of the sure
-  accuracy beside it; with few sure cases it sits well under the target. Show the person both.
+- Coverage's line keeps its target on all the dev cases together. The sure accuracy the question report shows is
+  out of fold and can sit under the target; its one-sided 95% lower bound sits further under. Show the person
+  both.
 - The numbers are the person's: weights, targets, floors, the IoU bar, what a look costs. A default (Coverage's
   0.95, IoU 0.5) is a default, not advice.
 - A type with no playbook yet (`multichoice`, `boxes`, `text`, `number`, `date`, `estimate`): say so, and use its
