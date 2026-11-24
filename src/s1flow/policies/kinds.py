@@ -4,14 +4,24 @@ to one case become a `Reading`, and which rules apply. Adding a type of question
     kind = kind_of(question, KindParams())          # a task's or a policy's question, with what its type leaves open
     kind.read(answers, rule)                        # average the answers, then read the average
     kind.label_error(label)                            # cases check and feedback
+    same_label(kind, a, b)                             # two labels that say the same (review, cases check)
 
 | kind               | label                        | value                                   | probability          | rule sets               |
 |--------------------|------------------------------|-----------------------------------------|----------------------|----------------------------|
 | boolean            | true / false                 | P(true) >= threshold                    | of the value         | threshold, min_probability |
 | choice             | an option's key              | the most probable option, on average    | of that option       | min_probability            |
 | choice + positive  | true / false                 | P(positive) >= threshold                | of the value         | threshold, min_probability |
+| multichoice        | the options that apply, []   | each option whose P >= 0.5 (P from its probability, else 1 / 0 from its choices) | of the whole set | min_probability |
 | score              | a level, 0..L-1              | the expected level, rounded (.5 up)     | of that level        | min_probability            |
 | box                | {top, bottom, left, right}   | the first answer's box                  | none (`confidence`)  | min_probability            |
+| boxes              | every instance's box, []     | the first answer's boxes                | none (`confidence`: presence or found per slot, times each box's) | min_probability |
+| text, number, date | the value, or False (absent) | the value read, None when absent        | of the value         | min_probability            |
+| estimate           | a number in min..max         | the estimate                            | none (`confidence`)  | min_probability            |
+
+A value read from the state may be absent, and None already means "no label", so a task labels a case
+that holds nothing `ABSENT` (False). The probability of a value read is what the model gives: `p_null` when it
+read nothing, else P(something there) times its confidence in the value; 1 when it gives neither. An
+estimate's confidence is how narrow its p10 - p90 interval is against the question's range.
 
 Repeats are averaged before anything is read, so the evaluation (eval/metrics.py) and a
 policy in production (policy.py) read a case alike: `average` then `reading`, here and nowhere else.
@@ -19,34 +29,45 @@ policy in production (policy.py) read a case alike: `average` then `reading`, he
 rescaled by the number of options). pydantic only: production imports it.
 """
 
+import datetime as dt
 import json
+import math
 from dataclasses import dataclass
-from typing import Any, ClassVar, Protocol, Sequence, Union
+from typing import Any, ClassVar, Literal, Protocol, Sequence, Union
 
 from pydantic import BaseModel, ConfigDict, Field, SerializerFunctionWrapHandler, ValidationError, model_serializer
 
-from ..client.answers import Answer, BooleanAnswer, BoxAnswer, BoxEdges, ChoiceAnswer, ScoreAnswer
-from ..client.questions import Box, Choice, Question, QuestionType, Score
+from ..client.answers import (
+    Answer, BooleanAnswer, BoxAnswer, BoxEdges, BoxesAnswer, ChoiceAnswer, DateAnswer, EstimateAnswer, MultiChoiceAnswer, NumberAnswer, ScoreAnswer,
+    TextAnswer,
+)
+from ..client.questions import Box, Boxes, Choice, MultiChoice, Question, QuestionType, RangeEstimate, Score
 from ..client.providers.contract import validate_answer_values
 from ..core.errors import ProviderError
 from .rule import DecisionRule, RuleField
 
+ABSENT: Literal[False] = False  # the label of a case whose state holds nothing for a text, number or date question, or no target for a box
 SELECTIVE: frozenset[RuleField] = frozenset({"min_probability"})
 BINARY: frozenset[RuleField] = frozenset({"threshold", "min_probability"})
-Label = Union[bool, int, str, BoxEdges]  # a task's label: True / False (binary), an option's key, a level, a box
+# a task's label: True / False (binary), an option's key, a level, a box, a value read (False: absent), a number,
+# the options that apply (a multichoice), every instance's box (boxes)
+Label = Union[bool, int, float, str, BoxEdges, list[str], list[BoxEdges]]
 
 
 class Reading(BaseModel):
     """One case, read: the value, its probability and whether it is under the rule's min_probability,
     with what the kind reads it from."""
 
-    value: Union[bool, int, str, BoxEdges]  # True / False (binary), an option's key, a level, a box
+    # True / False (binary), an option's key, a level, a box, a value read (None: nothing there), an estimate,
+    # the options that apply in the question's order (a multichoice), every instance's box (boxes)
+    value: Union[bool, int, float, str, BoxEdges, tuple[str, ...], tuple[BoxEdges, ...], None]
     probability: float | None = None  # of `value`; None for a box (see `confidence`)
     below_min_probability: bool | None = None  # None when no probability lower bound is configured
     p_positive: float | None = None  # binary: P(true), or P(positive) for a choice scored as binary
     distribution: list[float] | None = None  # choice and score: the mean distribution over the options or levels
-    expected: float | None = None  # score: the expected level
-    confidence: float | None = None  # box: the mean confidence (jev), or agreement of samples (LLM)
+    expected: float | None = None  # score: the expected level; estimate: the estimate
+    # box: the mean confidence (jev), or agreement of samples (LLM); estimate: how narrow its interval is
+    confidence: float | None = None
 
 
 @dataclass(frozen=True)
@@ -60,6 +81,7 @@ class Average:
     expected: float | None = None
     confidence: float | None = None
     box: BoxEdges | None = None
+    value: Union[float, str, tuple[str, ...], tuple[BoxEdges, ...], None] = None  # every instance's box (boxes); a value read (None: nothing there), an estimate, the options that apply
 
 
 class Kind(Protocol):
@@ -121,11 +143,32 @@ class _Kind(BaseModel):
             raise ValueError("no answers to read")
         if wrong := next((a for a in answers if not isinstance(a, self.answer)), None):
             raise ProviderError(f"answered a {self.type} question as {wrong.type}, outside the contract")
-        options = self.options if self.type == "choice" else None
+        options = self.options if self.type == "choice" else getattr(self, "keys", None) if self.type == "multichoice" else None
         levels = getattr(self, "levels", None) if self.type == "score" else None
+        within = (self.low, self.high) if isinstance(self, EstimateKind) else None
         for answer in answers:
-            validate_answer_values(self.type, answer, options=options, levels=levels)
+            validate_answer_values(self.type, answer, options=options, levels=levels, within=within)
         return list(answers)
+
+
+def same_label(kind: Kind, a: Any, b: Any) -> bool:
+    """Whether two labels of a task say the same: compared as the kind reads them, so a multichoice's options
+    in any order are one label, and 0 is not False (no value)."""
+    try:
+        a, b = kind.as_label(a), kind.as_label(b)
+    except (TypeError, ValueError):  # a label the task cannot hold: compared as written
+        pass
+    return bool(a == b) and isinstance(a, bool) == isinstance(b, bool)
+
+
+def _typed_number(answer: Any) -> Any:
+    """A number typed as text (the CLI's `feedback record ... 12.5`) is that number; anything else as it is."""
+    if isinstance(answer, str):
+        try:
+            return float(answer) if math.isfinite(float(answer)) else answer
+        except ValueError:
+            pass
+    return answer
 
 
 def _mean(xs: Sequence[float]) -> float:
@@ -234,6 +277,43 @@ class ChoiceKind(_Kind):
         return Reading(value=self.keys[i], probability=dist[i], below_min_probability=_below_min_probability(rule, dist[i]), distribution=dist)
 
 
+class MultiChoiceKind(_Kind):
+    """Every option that applies, each its own yes or no at 0.5. Right when the set is the label's. Its probability
+    is that of the whole set: the product over the options of how sure each one's yes or no is."""
+
+    type: ClassVar[QuestionType] = "multichoice"
+    answer: ClassVar[tuple[Any, ...]] = (MultiChoiceAnswer,)
+    keys: list[str]
+
+    def label_error(self, label: Any) -> str | None:
+        ok = isinstance(label, (list, tuple)) and all(isinstance(k, str) and k in self.keys for k in label) and len(set(label)) == len(label)
+        return None if ok else f"a multichoice label is the list of the options that apply ({', '.join(self.keys)}), [] for none; got {label!r}"
+
+    def as_label(self, answer: Any) -> Any:
+        """The options in the question's order; options typed as text (the CLI's `late,damage`, `none` for none) are
+        that list. ValueError for anything that is not a list of its options."""
+        if isinstance(answer, str):
+            answer = [] if answer.strip().lower() in ("", "none") else [k.strip() for k in answer.split(",")]
+        if (wrong := self.label_error(answer)) is not None:
+            raise ValueError(wrong)
+        return tuple(k for k in self.keys if k in answer)
+
+    def one(self, a: MultiChoiceAnswer) -> tuple[list[float], bool]:
+        """One answer's P(it applies) per option; 1 or 0 from its choices where it gave no probability."""
+        probs = a.probabilities or {}
+        return [float(probs[k]) if k in probs else (1.0 if k in a.choices else 0.0) for k in self.keys], all(k in probs for k in self.keys)
+
+    def average(self, answers: Sequence[Answer]) -> Average:
+        ds = [self.one(a) for a in self._given(answers)]
+        each = [_mean([d[j] for d, _ in ds]) for j in range(len(self.keys))]
+        value = tuple(k for k, p in zip(self.keys, each) if p >= 0.5)
+        return Average(distributed=all(h for _, h in ds), confidence=math.prod(max(p, 1 - p) for p in each), value=value)
+
+    def reading(self, average: Average, rule: DecisionRule) -> Reading:
+        assert isinstance(average.value, tuple) and average.confidence is not None
+        return Reading(value=average.value, probability=average.confidence, below_min_probability=_below_min_probability(rule, average.confidence))
+
+
 class ScoreKind(_Kind):
     """Levels 0..L-1 in the order of the question's criteria."""
 
@@ -279,8 +359,9 @@ class ScoreKind(_Kind):
 
 
 class BoxKind(_Kind):
-    """A box, right at `iou` with the label box or more. The confidence (jev's, or the agreement of an LLM's
-    samples) stands in for a probability."""
+    """A box, right at `iou` with the label box or more, or no box where the label says the target is not in the
+    picture (ABSENT). The confidence (jev's, or the agreement of an LLM's samples) stands in for a probability; for
+    an answer of no box, how sure the model is that nothing is there (1 - `found`)."""
 
     type: ClassVar[QuestionType] = "box"
     answer: ClassVar[tuple[Any, ...]] = (BoxAnswer,)
@@ -291,10 +372,12 @@ class BoxKind(_Kind):
         return self.hit_iou
 
     def label_error(self, label: Any) -> str | None:
+        if label is ABSENT:
+            return None
         try:
             BoxEdges.model_validate(label)
         except ValidationError:
-            return f"a box label needs top, bottom, left, right in 0..1, got {label!r}"
+            return f"a box label needs top, bottom, left, right in 0..1, or False when the target is not in the picture; got {label!r}"
         return None
 
     def as_label(self, answer: Any) -> Any:
@@ -308,24 +391,195 @@ class BoxKind(_Kind):
 
     def average(self, answers: Sequence[Answer]) -> Average:
         given: list[BoxAnswer] = self._given(answers)
+        if given[0].box is None:
+            found = given[0].found
+            return Average(distributed=found is not None, confidence=1.0 if found is None else 1 - float(found))
         confs = [(a.confidence, True) if a.confidence is not None else (a.agreement, True) if a.agreement is not None else (1.0, False) for a in given]
         return Average(
             distributed=all(d for _, d in confs), confidence=_mean([float(c) for c, _ in confs]), box=given[0].box,
         )
 
     def reading(self, average: Average, rule: DecisionRule) -> Reading:
-        assert average.box is not None and average.confidence is not None
+        assert average.confidence is not None
         return Reading(value=average.box, below_min_probability=_below_min_probability(rule, average.confidence), confidence=average.confidence)
+
+
+class BoxesKind(_Kind):
+    """A box for every instance, the first answer's. Right when each label box has its own answer box at `iou` or more
+    and no answer box is left over. What stands in for a probability is that of the whole set: each slot's presence, or its absence,
+    and the model's confidence in each box's edges, multiplied (0 when the model says there are more than it gave)."""
+
+    type: ClassVar[QuestionType] = "boxes"
+    answer: ClassVar[tuple[Any, ...]] = (BoxesAnswer,)
+    hit_iou: float = 0.5
+
+    @property
+    def iou(self) -> float:
+        return self.hit_iou
+
+    def label_error(self, label: Any) -> str | None:
+        try:
+            if not isinstance(label, (list, tuple)):
+                raise TypeError
+            [BoxEdges.model_validate(b) for b in label]
+        except (TypeError, ValidationError):
+            return f"a boxes label is the list of every instance's box (top, bottom, left, right in 0..1), [] for none; got {label!r}"
+        return None
+
+    def as_label(self, answer: Any) -> Any:
+        """The boxes in one order (top, then left), so two labels with the same boxes are equal; boxes typed as JSON
+        text (the CLI's `'[{"top": ...}]'`, `none` for none) are those boxes. ValueError for anything that is not a list
+        of boxes."""
+        if isinstance(answer, str):
+            try:
+                answer = [] if answer.strip().lower() in ("", "none") else json.loads(answer)
+            except json.JSONDecodeError:
+                pass  # label_error names what a boxes label is
+        if (wrong := self.label_error(answer)) is not None:
+            raise ValueError(wrong)
+        return tuple(sorted((BoxEdges.model_validate(b) for b in answer), key=lambda b: (b.top, b.left, b.bottom, b.right)))
+
+    def average(self, answers: Sequence[Answer]) -> Average:
+        a: BoxesAnswer = self._given(answers)[0]
+        value = tuple(b.box for b in a.boxes)
+        if a.at_least:
+            return Average(distributed=True, confidence=0.0, value=value)
+        each = a.presence if a.presence is not None else [b.found for b in a.boxes if b.found is not None]
+        given = a.presence is not None or (bool(a.boxes) and len(each) == len(a.boxes))
+        edges = [b.confidence for b in a.boxes if b.confidence is not None]  # how sure of each box's edges
+        return Average(distributed=given or bool(edges), confidence=math.prod(max(p, 1 - p) for p in each) * math.prod(edges) if given else math.prod(edges),
+                       value=value)
+
+    def reading(self, average: Average, rule: DecisionRule) -> Reading:
+        assert isinstance(average.value, tuple) and average.confidence is not None
+        return Reading(value=average.value, below_min_probability=_below_min_probability(rule, average.confidence), confidence=average.confidence)
+
+
+class _ReadKind(_Kind):
+    """A value read from the state, or nothing: the first answer's."""
+
+    def canonical(self, value: Any) -> Union[float, str]:
+        """A value as readings and labels hold it, so two that mean the same are equal; ValueError when it is none."""
+        raise NotImplementedError
+
+    def label_error(self, label: Any) -> str | None:
+        if label is ABSENT:
+            return None
+        try:
+            self.canonical(label)
+        except (TypeError, ValueError) as e:
+            return f"a {self.type} label is {e}, or False when the state holds none; got {label!r}"
+        return None
+
+    def as_label(self, answer: Any) -> Any:
+        return ABSENT if answer is ABSENT or answer is None else self.canonical(answer)
+
+    def average(self, answers: Sequence[Answer]) -> Average:
+        a = self._given(answers)[0]
+        try:
+            value: Union[float, str, None] = None if a.value is None else self.canonical(a.value)
+        except ValueError:  # an empty text: nothing was read
+            value = None
+        if value is None:  # how sure that nothing is there: p_null, else what an empty text came with (a guess's confidence is not it)
+            sure = a.p_null if a.p_null is not None else a.confidence if a.value is not None else None
+            return Average(distributed=sure is not None, confidence=1.0 if sure is None else float(sure))
+        parts = [1 - float(a.p_null)] if a.p_null is not None else []
+        parts += [float(a.confidence)] if a.confidence is not None else []
+        return Average(distributed=bool(parts), confidence=math.prod(parts), value=value)
+
+    def reading(self, average: Average, rule: DecisionRule) -> Reading:
+        assert average.confidence is not None
+        return Reading(value=average.value, probability=average.confidence, below_min_probability=_below_min_probability(rule, average.confidence))
+
+
+class TextKind(_ReadKind):
+    """Right when the text is the label's, apart from the white space around and between its words."""
+
+    type: ClassVar[QuestionType] = "text"
+    answer: ClassVar[tuple[Any, ...]] = (TextAnswer,)
+
+    def canonical(self, value: Any) -> str:
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError("the text as the state writes it")
+        return " ".join(value.split())
+
+
+class NumberKind(_ReadKind):
+    type: ClassVar[QuestionType] = "number"
+    answer: ClassVar[tuple[Any, ...]] = (NumberAnswer,)
+
+    def canonical(self, value: Any) -> float:
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+            raise ValueError("a number")
+        return float(value)
+
+    def as_label(self, answer: Any) -> Any:
+        return super().as_label(_typed_number(answer))
+
+
+class DateKind(_ReadKind):
+    """Held as the ISO day (2026-09-02), which a label is written as."""
+
+    type: ClassVar[QuestionType] = "date"
+    answer: ClassVar[tuple[Any, ...]] = (DateAnswer,)
+
+    def label_error(self, label: Any) -> str | None:
+        if isinstance(label, dt.date):  # a label is saved as JSON
+            return f"a date label is a day written as YYYY-MM-DD ({label.isoformat()[:10]!r}), got {label!r}"
+        return super().label_error(label)
+
+    def canonical(self, value: Any) -> str:
+        if isinstance(value, dt.date) and not isinstance(value, dt.datetime):
+            return value.isoformat()
+        if not isinstance(value, str):
+            raise ValueError("a day as YYYY-MM-DD")
+        try:
+            return dt.date.fromisoformat(value).isoformat()
+        except ValueError:
+            raise ValueError("a day as YYYY-MM-DD") from None
+
+
+class EstimateKind(_Kind):
+    """A number between `low` and `high`, right within `tolerance` of the label. How narrow its p10 - p90 interval
+    is against the range stands in for a probability."""
+
+    type: ClassVar[QuestionType] = "estimate"
+    answer: ClassVar[tuple[Any, ...]] = (EstimateAnswer,)
+    low: float
+    high: float
+    tolerance: float
+
+    def label_error(self, label: Any) -> str | None:
+        ok = isinstance(label, (int, float)) and not isinstance(label, bool) and self.low <= label <= self.high
+        return None if ok else f"an estimate's label is a number in {self.low:g}..{self.high:g}, got {label!r}"
+
+    def as_label(self, answer: Any) -> Any:
+        answer = _typed_number(answer)
+        return float(answer) if isinstance(answer, (int, float)) and not isinstance(answer, bool) else answer
+
+    def average(self, answers: Sequence[Answer]) -> Average:
+        a: EstimateAnswer = self._given(answers)[0]
+        if a.p10 is None or a.p90 is None:
+            return Average(distributed=False, confidence=1.0, value=float(a.value))
+        narrow = 1 - (a.p90 - a.p10) / (self.high - self.low)
+        return Average(distributed=True, confidence=min(1.0, max(0.0, narrow)), value=float(a.value))
+
+    def reading(self, average: Average, rule: DecisionRule) -> Reading:
+        assert isinstance(average.value, float) and average.confidence is not None
+        return Reading(value=average.value, below_min_probability=_below_min_probability(rule, average.confidence),
+                       expected=average.value, confidence=average.confidence)
 
 
 class KindParams(BaseModel):
     """What a question's type leaves open, the same in a task (`Task.kind_params`) and a policy (`kind`):
     `positive` scores a choice as binary (P(positive) against a true / false label), `iou` is a box's bar
-    for a hit (0.5 when unset). An unset one is left out of the JSON."""
+    for a hit (0.5 when unset), `tolerance` how far from the label an estimate is still right (half a step when
+    unset; a hundredth of the range for a question without a step). An unset one is left out of the JSON."""
 
     model_config = ConfigDict(extra="forbid", frozen=True)
     positive: str | None = None
     iou: float | None = Field(default=None, gt=0, le=1)
+    tolerance: float | None = Field(default=None, ge=0)
 
     @model_serializer(mode="wrap")
     def _set_only(self, handler: SerializerFunctionWrapHandler) -> dict[str, Any]:
@@ -334,9 +588,11 @@ class KindParams(BaseModel):
 
 def kind_of(question: Question, params: KindParams = KindParams()) -> Kind:
     """The kind of a question with what its type leaves open; a param its type does not take is a ValueError."""
+    if params.tolerance is not None and not isinstance(question, RangeEstimate):
+        raise ValueError(f"tolerance is how far off an estimate is still right; this one is {question.type}")
     if params.positive is not None and not isinstance(question, Choice):
         raise ValueError(f"positive scores a choice question as binary; this one is {question.type}")
-    if params.iou is not None and not isinstance(question, Box):
+    if params.iou is not None and not isinstance(question, (Box, Boxes)):
         raise ValueError(f"iou is a box question's bar for a hit; this one is {question.type}")
     if isinstance(question, Choice):
         keys = list(question.criteria)
@@ -345,8 +601,15 @@ def kind_of(question: Question, params: KindParams = KindParams()) -> Kind:
         if params.positive not in keys:
             raise ValueError(f"positive {params.positive!r} is not an option ({', '.join(keys)})")
         return PositiveChoiceKind(keys=keys, positive=params.positive)
+    if isinstance(question, MultiChoice):
+        return MultiChoiceKind(keys=list(question.criteria))
     if isinstance(question, Score):
         return ScoreKind(levels=len(question.criteria))
+    if isinstance(question, Boxes):
+        return BoxesKind(hit_iou=0.5 if params.iou is None else params.iou)
     if isinstance(question, Box):
         return BoxKind(hit_iou=0.5 if params.iou is None else params.iou)
-    return BooleanKind()
+    if isinstance(question, RangeEstimate):
+        default = question.step / 2 if question.step is not None else (question.max - question.min) / 100
+        return EstimateKind(low=question.min, high=question.max, tolerance=default if params.tolerance is None else params.tolerance)
+    return {"text": TextKind, "number": NumberKind, "date": DateKind, "boolean": BooleanKind}[question.type]()

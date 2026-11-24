@@ -5,7 +5,7 @@ import re
 import pytest
 from conftest import make_project
 
-from s1flow.core.errors import ConfigError, NotFound, Unsupported
+from s1flow.core.errors import ConfigError, DataError, NotFound, Unsupported
 from s1flow.client import Capabilities, ChoiceAnswer, Response
 from s1flow.eval import data, metrics, records
 from s1flow.eval import run as running
@@ -39,15 +39,21 @@ def ids(lines):
 
 def test_select_scores_the_latest_answering_model_on_the_current_prompt():
     lines = [line("a"), line("b"), line("a", "jev-1.14.0", at="2026-10-15"), line("c", prompt="old")]
-    chosen, version, versions = metrics.select(lines, "p1")
-    assert version == "jev-1.14.0" and versions == ["jev-1.14.0", "jev-1.13.0"]
-    assert ids(chosen) == [("a", "jev-1.14.0", False)]  # b was never answered by 1.14; c was another prompt
+    s = records.select(lines, "p1")
+    assert s.answered_by == "jev-1.14.0" and s.versions == ["jev-1.14.0", "jev-1.13.0"]
+    assert ids(s.records) == [("a", "jev-1.14.0", False)]  # c was another prompt
+    assert s.earlier == ["b"]  # answered by 1.13 only: no answer from 1.14, so a run asks it again
 
 
 def test_select_a_later_failure_does_not_hide_an_answer():
     lines = [line("a"), line("a", at="2026-10-15", reason="AI_GATEWAY_API_KEY is not set"), line("b", at="2026-10-15", reason="boom")]
-    chosen, _, _ = metrics.select(lines, "p1")
-    assert ids(chosen) == [("a", "jev-1.13.0", False), ("b", None, True)]
+    s = records.select(lines, "p1")
+    assert ids(s.records) == [("a", "jev-1.13.0", False), ("b", None, True)] and s.earlier == []
+
+
+def test_select_reads_the_cases_in_id_order_whatever_order_the_calls_ended_in():
+    lines = [line("c"), line("a"), line("b")]
+    assert [r.id for r in records.select(lines, "p1").records] == ["a", "b", "c"]
 
 
 class Fake:
@@ -92,8 +98,80 @@ def test_run_appends_skips_answered_cases_and_keeps_answers_through_failures(nod
     go(limit=5, fresh=True)  # a run that fails only adds failure lines
     lines = records.read(path)
     assert len(lines) == 10 and sum(r.outcome == "failed" for r in lines) == 5
-    chosen, version, _ = metrics.select(lines, running.prompt_hash(nod.questions("base")))
-    assert version == "fake-1" and all(r.answered for r in chosen) and len(chosen) == 5
+    s = records.select(lines, running.prompt_hash(nod.questions("base")))
+    assert s.answered_by == "fake-1" and all(r.answered for r in s.records) and len(s.records) == 5
+
+
+def test_a_label_the_question_cannot_score_stops_the_run_before_any_call(nod):
+    """A boolean reading of 0/1 or "true" is not a label: run refuses before it spends a call, as report would fail on it."""
+    nod.label = lambda r: {"must": 1, "sleep": 0}.get(r["label"])
+    nod.load_cases().forget()
+    with pytest.raises(DataError, match="labels the question cannot score, so no model is asked: .*true or false, got 1"):
+        asyncio.run(running.run(nod, ["fake"]))
+    assert calls("fake-1") == 0 and not running.run_path(nod, "base", "fake").exists()
+
+
+def test_cases_only_an_earlier_answering_model_answered_are_asked_again(nod, monkeypatch):
+    """Under an alias the answering model can change between runs: the cases only the earlier one answered have no
+    answer from the one scored, so they count as missing and the next run asks them past the cache."""
+    go = lambda **kw: asyncio.run(running.run_model(nod, "fake", variant="base", **kw))  # noqa: E731
+    go(limit=3)
+    first = {r.id for r in records.read(running.run_path(nod, "base", "fake"))}
+    monkeypatch.setattr(Fake, "decide", answering_as("fake-1b"))
+    go(limit=5)  # the 2 new cases are answered by fake-1b, the one now scored
+    pr = metrics.load(nod, "base", "fake", include_test=True)
+    assert pr.version == "fake-1b" and len(pr.ids) == 2 and first <= set(pr.never_asked)  # fake-1's 3 count as missing
+    asked = calls("fake-1")
+    go(limit=5)
+    assert calls("fake-1") == asked + 3  # asked again, not read from the cache that holds fake-1's answers
+    pr = metrics.load(nod, "base", "fake", include_test=True)
+    assert len(pr.ids) == 5 and not first & set(pr.never_asked) and pr.versions == ["fake-1b", "fake-1"]
+
+
+def test_a_failed_ask_again_does_not_bring_back_the_earlier_answering_model(nod, monkeypatch):
+    """The cache holds the earlier model's answers: a case whose ask again failed is asked past it the next time,
+    or its cached answer would make the earlier model the scored one again, and the next run swap back."""
+    go = lambda **kw: asyncio.run(running.run_model(nod, "fake", variant="base", **kw))  # noqa: E731
+    go(limit=3)
+    monkeypatch.setattr(Fake, "decide", answering_as("fake-1b"))
+    go(limit=5)
+    Fake.broken = True
+    go(limit=5)  # the 3 asked again fail
+    Fake.broken = False
+    for _ in range(2):
+        go(limit=5)
+        assert metrics.load(nod, "base", "fake", include_test=True).version == "fake-1b"
+    pr = metrics.load(nod, "base", "fake", include_test=True)
+    assert len(pr.ids) == 5 and not pr.failed_cases
+
+
+def answering_as(version):
+    real = Fake.decide
+
+    async def decide(self, state, questions, *, options=None):
+        r = await real(self, state, questions, options=options)
+        return r.model_copy(update={"answered_by": version})
+
+    return decide
+
+
+def test_the_scores_do_not_depend_on_the_order_the_calls_ended_in(nod, monkeypatch):
+    """The same answers give the same folds, resamples and numbers, whichever call ended first."""
+    import hashlib
+
+    async def varied(self, state, questions, *, options=None):
+        p = 0.2 + 0.6 * hashlib.sha256(json.dumps(state, sort_keys=True).encode()).digest()[0] / 255
+        return Response(answers={next(iter(questions)): ChoiceAnswer(choice="wake" if p >= .5 else "stamp", probabilities={"wake": p, "stamp": 1 - p})},
+                        answered_by=self.model_id)
+
+    monkeypatch.setattr(Fake, "decide", varied)
+    asyncio.run(running.run_model(nod, "fake", limit=None, variant="base"))
+    path = running.run_path(nod, "base", "fake")
+    first = metrics.evaluate(nod, metrics.load(nod, "base", "fake"))
+    lines = path.read_text().splitlines()
+    path.write_text("".join(line + "\n" for line in reversed(lines)))  # the calls ending the other way round
+    again = metrics.evaluate(nod, metrics.load(nod, "base", "fake"))
+    assert again.objective == first.objective and again.accuracy == first.accuracy and again.tiebreak == first.tiebreak
 
 
 def test_a_missing_key_stops_the_run_instead_of_filling_it_with_failures(nod, monkeypatch):

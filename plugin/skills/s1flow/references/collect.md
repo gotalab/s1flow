@@ -136,7 +136,21 @@ task = Task(
 
 Supported question types: boolean, choice, score and box, where the provider takes them. Evaluation compares all
 four, and a policy holds one question of any of them: `adopt` takes a score or box candidate from `report` like any
-other.
+other. The `Client` also asks `Text`, `Number`, `Date`
+(a value read from the state, `None` when absent) and `RangeEstimate` (a number in a range) of an OpenRouter model that
+answers them; evaluation compares these too, and a policy holds them like the others. For a value read, the label is
+the value (a date as `YYYY-MM-DD`), or `False` when the case has none (`None` still leaves the case out); an answer
+is right when it reads the same value, or nothing on a case with none. The default objective is `Accuracy()`, and
+`Coverage` works as for a choice. For a `RangeEstimate` the label is the number, the default objective is
+`MeanError()` (how far off on average), and an answer counts as right within half a `step` of the label, or 1% of the range without one
+(`kind_params=KindParams(tolerance=2)` on the Task widens it); a narrow p10 - p90 interval is what makes it sure. Name
+the question for what it reads (`question_id="order_number"`): some models read the name as well. For a `MultiChoice`
+(every option that applies; Liquid's d1.2) the label is the list of option keys, `[]` for none; the default objective
+is `Accuracy()` (the exact set), `OptionF1()` counts option by option, and `Coverage` reads the probability of the
+whole set. For a box, label a picture without the target `False`: a model that can say "not there" (Liquid's d1.2) is
+right with no box, and one that always gives a box (jev) is wrong on those cases. For `Boxes` (every instance;
+Liquid's d1.2) the label is the list of boxes, `[]` for none; `Accuracy()` wants every box matched and none left
+over, `BoxF1()` counts box by box.
 
 ## Check the cases
 

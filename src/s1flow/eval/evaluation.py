@@ -19,6 +19,10 @@ from .candidate import Candidate
 from ..policies.rule import DecisionRule
 from .objectives.declare import Objective
 
+# What min_probability reads: a probability of the answer given, or what stands in for one.
+SelectionBasis = Literal["selected-answer probability", "box confidence", "estimate interval"]
+SELECTION_BASIS: dict[str, SelectionBasis] = {"box": "box confidence", "boxes": "box confidence", "estimate": "estimate interval"}  # the other types: the probability
+
 Interval = tuple[float, float]
 DistributionEvidence = Literal['native', 'sampled', 'none', 'mixed', 'unknown']
 
@@ -43,7 +47,7 @@ class Failures(_Frozen):
     unsupported: int  # refused before or by the provider
     data_errors: int  # the task's own errors
     unlabeled: int
-    never_asked: int  # labelled cases with no record under the question
+    never_asked: int  # labelled cases the answering model was never asked under the question (an earlier one's answer is not its)
     failed_cases: int  # labelled cases asked whose every call failed
     refused_cases: int  # labelled cases refused or unsupported, scored as no answer
 
@@ -59,7 +63,7 @@ class Failures(_Frozen):
 
 def why_missing(never_asked: int, failed_cases: int) -> str:
     """The cases `Failures.missing` counts, in words: what report, adopt and comparison say a candidate left out."""
-    return " and ".join(x for x in (f"{never_asked} cases never asked" if never_asked else "",
+    return " and ".join(x for x in (f"{never_asked} cases the answering model was never asked" if never_asked else "",
                                     f"{failed_cases} cases whose every call failed" if failed_cases else "") if x)
 
 
@@ -189,7 +193,7 @@ class Evaluation(_Frozen):
     split: str | None = None
     split_method: str | None = None
     accuracy: Estimate | None = None
-    measures: dict[str, Estimate] = {}  # the kind's own numbers, by name (Kind.report): f1, macro_f1, mean_iou
+    measures: dict[str, Estimate] = {}  # the kind's own numbers, by name (Kind.report): f1, macro_f1, mean_iou, mean_error
     auroc: Estimate | None = None
     brier: float | None = None
     ece: float | None = None
@@ -294,6 +298,6 @@ class ChartData(_ChartModel):
     distribution: list[ProbabilityBin] = []
     calibration: list[CalibrationPoint] = []
     selection_sweep: list[SelectionPoint] = []
-    selection_basis: Literal["selected-answer probability", "box confidence"] | None = None
+    selection_basis: SelectionBasis | None = None
     selection_unavailable: str | None = None
     unavailable: str | None = None

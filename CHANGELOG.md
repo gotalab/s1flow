@@ -38,8 +38,44 @@
   only a model that hears, watches or reads it can answer. Through OpenRouter, Gemini Decision 1 takes all three,
   Clef Omni audio and video, ScaleDown Classify 1 PDFs (the Skill's setup reference has their entries).
 
+- Four question types for the `Client`: `Text`, `Number` and `Date` read a value from the state (`None` when the
+  model finds nothing, with `p_null`, `confidence` and `span` where the model gives them), and `RangeEstimate` asks for
+  a number between a `min` and a `max` with its p10 - p90 interval. The `openrouter` provider sends them to
+  OpenRouter's Extractions route (Clairic, Schematron, Perplexity's Decider v1.3, ScaleDown Extract), a model
+  declares them in `capabilities.question_types`, and `s1flow models --verify` checks each. The `liquid` provider
+  asks them too (d1.2, d1.2-ultra), in the same call as other questions: `found` is read as 1 - `p_null`, and a
+  number in a range as the estimate with its interval.
+- A `MultiChoice` question: every option that applies, possibly none, each with its own probability. The `liquid`
+  provider asks it (d1.2, d1.2-ultra), `s1flow models --verify` checks it, and evaluation compares it: the label is
+  the list of options, an answer is right when its set is exactly the label's, `Coverage` reads the probability of
+  the whole set, and the new `OptionF1()` objective counts every option of every case. A policy holds one, and
+  `feedback record` takes its options typed as `late,damage` (`none` for none).
+- A `Boxes` question: a box for every instance of the target, none when there is none. The `liquid` provider asks
+  it (d1.2, d1.2-ultra), `s1flow models --verify` checks it, and evaluation compares it: the label is the list of
+  boxes, an answer is right when every label box has an answer box of its own at the IoU bar and none is left over,
+  and the new `BoxF1()` objective counts box by box. The report adds box precision, box recall and the count error.
+  A policy holds one, and `feedback record` takes its boxes as JSON (`none` for none).
+- A box question can be answered with "not in the picture": `BoxAnswer.box` is `None`, with `found` where the model
+  gives it (Liquid's d1.2). A box task labels such a case `False`; an answer of no box is right there, and how sure
+  it is comes from `found`.
+- Evaluation compares those four types. A value read is right when it equals the label, or when nothing is read on
+  a case labelled `False` (no value there); reports add the accuracy on the cases with a value and on those with
+  none, and `Coverage` reads `p_null` and `confidence`. A `RangeEstimate` task defaults to the new `MeanError()`
+  objective, counts an answer as right within half a `step`, or 1% of the range without one
+  (`KindParams(tolerance=...)`), and is sure where the p10 - p90 interval is narrow. A policy holds them like any
+  other type (`feedback record` takes a number typed as text, and `false` for a case with no value); `cases review`
+  does not take them yet.
+
 ### Changed
 
+- The `gateway` provider (Vercel AI Gateway) calls `/v1/decisions` instead of the deprecated `/v1/evaluate`. Images
+  now reach every model there as `input_image` parts: Drex Max v1.1 refused the old `image_url` parts and Mo read
+  them without seeing the picture. Answers saved through `gateway` are asked again, and a policy adopted on one
+  needs adopting again; other providers' saved answers stay valid.
+- The `liquid` provider reads a box the model did not find as an answer of no box, not as a refusal: in an
+  evaluation it is a wrong answer the model was sure of, where it was no answer before. Answers saved through
+  `liquid` are asked again, and a policy adopted on one needs adopting again; other providers' saved answers stay
+  valid.
 - The summary `report --out` writes shows the `coverage` and `sure accuracy` columns only for a task whose
   objective or tiebreak is `Coverage(...)`, at that objective's target. For any other task they were printed at a
   95% target nobody set; `comparison.json` and the comparison page still hold that reference value. A task whose
@@ -77,6 +113,25 @@
 
 ### Fixed
 
+- Measuring and choosing, from a whole-project check. Some numbers in `report` and `adopt` move a little once:
+  - `run` refuses labels the question cannot score (a yes/no task labelled `0`/`1` or `"true"`) before its first
+    call and before it fixes the held-out test share, instead of asking every case and leaving `report` to fail.
+  - When the model behind an alias changes, the cases only the earlier model answered count as missing (`report`
+    says "N cases the answering model was never asked", where it said "N cases never asked"), and the next `run`
+    asks them again, past the cache. Before, they were neither scored nor missing: that candidate was scored on a
+    few cases, and every other candidate became unrankable beside it.
+  - The cross-validation folds and the 95% intervals no longer depend on the order the calls ended in: the cases
+    are read in case-id order. `report` and `adopt` now give a candidate the same intervals (`adopt` also reads the
+    test cases, and their count changed the bootstrap draws).
+  - A `run` that calls nothing (every case already answered) no longer makes the latency measured before unknown.
+    `optimize` asks the model at its own concurrency, so the new candidate's latency is known too.
+  - A candidate whose objective has no rule that keeps its constraint (no min probability reaches Coverage's target)
+    is left out of the list with the reason, instead of tying at 0 at the top and being refused by `adopt`.
+  - `report --out` leaves out runs of a model no longer in `s1flow.toml`, as `report` does, instead of failing.
+  - `optimize` leaves out the cases `cases correct` marked unclear or missing. `report` notes that an optimized
+    question is scored on the train and val cases it was chosen on, so its values lean high; `adopt` confirms it
+    on the held-out test.
+  - `feedback measure` shows a share and its interval both in percent (`80.0% [62.0, 91.0]`, not `0.800 [62, 91]`).
 - An app's `connections.toml` no longer needs a `default` line: copying a model's entry from `s1flow.toml` is
   enough, where it used to fail with "default: Field required". Without `default`, `doctor` checks every model and
   `run` asks for `--models`. The README's app example now sends the fields the measured cases had and keeps a log,
@@ -85,6 +140,9 @@
   the kept state with its prepared media inline, and every later read of those cases (`cases check`, `run`)
   refused them as a bad media reference. Prepared media are now read back as they are, so the case holds the
   exact bytes the model saw, checked against their sha256 and format.
+- An input Google's safety filters block is now recorded as refused (the model's limit, scored as no answer) when
+  Gemini Decision 1 is reached through OpenRouter too, not only on Google's own API. Through OpenRouter it was a
+  failed call, so the case was left out of the scores.
 
 ## 0.1.0a5 (2026-11-12)
 

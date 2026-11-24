@@ -12,6 +12,7 @@ Every case ends in exactly one outcome:
 """
 
 import json
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
 
@@ -124,3 +125,34 @@ def read(path: Path) -> list[PredictionRecord]:
     if not path.exists():
         return []
     return [PredictionRecord.model_validate_json(line) for line in path.read_text().splitlines() if line.strip()]
+
+
+@dataclass(frozen=True)
+class Selected:
+    """The lines of a run that count for one question (`select`)."""
+
+    records: list[PredictionRecord]  # one per case, in case-id order
+    answered_by: str | None  # the answering model that answered last: the one scored
+    versions: list[str]  # every answering model on file, latest first
+    earlier: list[str]  # cases only an earlier answering model answered: no current answer, so asked again
+
+
+def select(lines: list[PredictionRecord], prompt: str) -> Selected:
+    """The records to score and to skip on a rerun: lines for this prompt from the answering model that answered last,
+    the latest line per case. A case that model never answered keeps its latest refusal or failure, so it still counts
+    as refused or failed; one answered only by an earlier model is `earlier`. In case-id order, so the cases fall in the
+    same folds and resamples whatever order the calls ended in."""
+    lines = [r for r in lines if r.prompt == prompt]
+    answered = sorted((r for r in lines if r.answered), key=lambda r: r.at)
+    versions = list(dict.fromkeys(r.answered_by for r in reversed(answered) if r.answered_by))
+    chosen = versions[0] if versions else None
+    best: dict[str, PredictionRecord] = {}
+    for r in sorted(lines, key=lambda r: r.at):
+        k = r.id
+        if r.answered:
+            if r.answered_by == chosen:
+                best[k] = r
+        elif k not in best or not best[k].answered:
+            best[k] = r
+    earlier = sorted({r.id for r in answered} - best.keys())
+    return Selected(records=[best[k] for k in sorted(best)], answered_by=chosen, versions=versions, earlier=earlier)

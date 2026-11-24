@@ -19,15 +19,17 @@ QS = {
     "refund": Boolean(instructions="返金を求めているか"),
 }
 
-# Recorded from convaiinnovations/laya on 2026-10-03, trimmed.
-LAYA = {
-    "model": "convaiinnovations/laya",
-    "answers": {
-        "route": {"type": "choice", "choice": "billing", "probabilities": {"billing": 0.9999, "technical": 0}},
-        "refund": {"type": "boolean", "probability": 0.9978},
-    },
-    "usage": {"inputTokens": 82, "outputTokens": 0},
-    "providerMetadata": {"typesafe": {"confidence": {"route": 0.9994}}, "gateway": {"cost": "0"}},
+# Recorded from typesafe-ai/jev on the AI Gateway's /v1/decisions on 2026-11-24, trimmed.
+JEV = {
+    "answers": [
+        {"type": "choice", "name": "route", "choice": "billing", "confidence": 0.9994,
+         "probabilities": [{"value": "billing", "probability": 0.9997}, {"value": "technical", "probability": 0.0003}]},
+        {"type": "predicate", "name": "refund", "probability": 0.79},
+    ],
+    "model": "typesafe-ai/jev",
+    "provider_metadata": {"typesafe": {"confidence": {"route": 0.9994}, "legend": {}},
+                          "gateway": {"routing": {"finalProvider": "typesafe-ai"}, "cost": "0.000011256"}},
+    "usage": {"input_tokens": 268, "output_tokens": 20, "total_tokens": 288},
 }
 
 
@@ -40,6 +42,8 @@ URL = "https://example.test/v1/systemone"
     (400, '{"error":{"message":"Phala does not accept \\"image_url\\" parts in state"}}', Rejected),
     (400, '{"error":{"message":"Clef Omni accepts at most 4 audio clips, got 5","code":400}}', Rejected),
     (400, '{"error":{"message":"ScaleDown reads one document per request; state has 2 media parts","code":400}}', Rejected),
+    (400, '{"error":{"message":"Input blocked","code":"prohibited_content"}}', Rejected),  # Google's safety filters
+    (400, '{"error":{"message":"HTTP 400: {\\"error\\":{\\"code\\":\\"safety\\"}}","code":400}}', Rejected),  # the same, through OpenRouter
     (400, '{"error":"invalid max_tokens: at most 1024 tokens per request"}', ProviderError),  # our request, not a refusal
     (400, '{"detail":{"error_type":"api_usage_error","message":"Invalid request."}}', ProviderError),
     (400, '{"error":"response_format not supported"}', ProviderError),  # a bare "not supported" stays a failure
@@ -76,20 +80,21 @@ def test_post_json_rejects_an_unreadable_body():
 @respx.mock
 def test_gateway_parses_answers(monkeypatch):
     monkeypatch.setenv("AI_GATEWAY_API_KEY", "test")
-    route = respx.post(f"{BASE_URL}/evaluate").mock(return_value=httpx.Response(200, json=LAYA))
-    r = asyncio.run(GatewayModel("convaiinnovations/laya").decide("二重に請求された", QS))
+    route = respx.post(f"{BASE_URL}/decisions").mock(return_value=httpx.Response(200, json=JEV))
+    r = asyncio.run(GatewayModel("typesafe-ai/jev").decide("二重に請求された", QS))
     assert route.calls[0].request.headers["authorization"] == "Bearer test"
     assert r.answers["route"].choice == "billing" and r.answers["route"].confidence == 0.9994
-    assert r.answers["refund"].probability == 0.9978
-    assert r.usage.cost_usd == 0.0 and r.usage.cost_source == "billed" and r.usage.input_tokens == 82
-    assert r.usage.raw == LAYA["usage"]  # kept as returned, so a cost can be worked out again
+    assert r.answers["refund"].probability == 0.79
+    assert r.usage.cost_usd == 0.000011256 and r.usage.cost_source == "billed" and r.usage.input_tokens == 268
+    assert r.usage.raw == JEV["usage"]  # kept as returned, so a cost can be worked out again
+    assert r.provider_metadata == {"routing": {"finalProvider": "typesafe-ai"}}
 
 
 @respx.mock
 def test_gateway_retries_on_429(monkeypatch):
     monkeypatch.setenv("AI_GATEWAY_API_KEY", "test")
-    respx.post(f"{BASE_URL}/evaluate").mock(side_effect=[httpx.Response(429), httpx.Response(200, json=LAYA)])
-    r = asyncio.run(GatewayModel("convaiinnovations/laya").decide("x", QS))
+    respx.post(f"{BASE_URL}/decisions").mock(side_effect=[httpx.Response(429), httpx.Response(200, json=JEV)])
+    r = asyncio.run(GatewayModel("typesafe-ai/jev").decide("x", QS))
     assert r.answers["route"].choice == "billing"
     assert r.retries == 1 and r.latency_ms < 400  # the 500ms backoff is not the model's latency
 
@@ -210,6 +215,27 @@ def test_gemini_safety_block_is_a_refusal_and_other_400s_are_failures(monkeypatc
         asyncio.run(GeminiModel("gemini-decision-1").decide("x", QS))
 
 
+# Recorded from google/gemini-decision-1 on OpenRouter's /systemone on 2026-11-23 (a ja-toxicity case): Google's
+# error arrives as escaped JSON inside OpenRouter's message.
+OPENROUTER_BLOCKED = (
+    '{"error":{"message":"HTTP 400: {\\"error\\":{\\"message\\":\\"Input blocked: The prompt could not be submitted. '
+    "The prompt contains sensitive words that violate Google's [Generative AI Prohibited Use policy]"
+    '(https://policies.google.com/terms/generative-ai/use-policy). Try rephrasing the prompt.\\",'
+    '\\"code\\":\\"prohibited_content\\"}}","code":400}}'
+)
+
+
+@respx.mock
+def test_gemini_safety_block_through_openrouter_is_a_refusal(monkeypatch):
+    from s1flow.client.providers.openrouter import BASE_URL as OR_URL, OpenRouterModel
+
+    monkeypatch.setenv("OPENROUTER_API_KEY", "test")
+    respx.post(f"{OR_URL}/systemone").mock(return_value=httpx.Response(400, text=OPENROUTER_BLOCKED))
+    with pytest.raises(Rejected, match="safety filters") as e:
+        asyncio.run(OpenRouterModel("google/gemini-decision-1").decide("x", QS))
+    assert e.value.status == 400
+
+
 def test_clef_option_names_are_made_safe_and_mapped_back():
     from s1flow.client.providers.cloudflare import safe_options
 
@@ -237,7 +263,7 @@ def test_typesafe_direct_sends_noul_and_reports_tokens(monkeypatch):
 
 @respx.mock
 def test_liquid_sends_images_in_the_state_and_reads_the_billed_cost_and_a_box_not_found(monkeypatch):
-    from s1flow.client import Box, Refusal
+    from s1flow.client import Box, BoxAnswer
     from s1flow.client.providers.liquid import BASE_URL as LIQUID_URL, LiquidModel
 
     monkeypatch.setenv("LIQUID_API_KEY", "test")
@@ -256,12 +282,43 @@ def test_liquid_sends_images_in_the_state_and_reads_the_billed_cost_and_a_box_no
     assert sent["state"] == ["請求書", {"type": "image_url", "image_url": {"url": "data:image/png;base64,iVBORw0KGgo="}}]
     assert sent["questions"]["refund"]["type"] == "noul" and "assets" not in sent and "images" not in sent
     assert r.answers["refund"].probability == 0.84 and r.answers["stamp"].box.model_dump() == box
-    assert r.answers["sign"] == Refusal(reason="box not found (found 0.12)")  # s1flow's box has no "not found"
+    assert r.answers["stamp"].found == 0.97
+    assert r.answers["sign"] == BoxAnswer(box=None, found=0.12)  # not in the picture: an answer, not a refusal
     assert r.usage.cost_usd == 0.000006 and r.usage.cost_source == "billed" and r.answered_by == "d1.2"
     wav = {"type": "audio", "media_type": "audio/wav", "data": "UklGRg==", "sha256": "1" * 64}
     from s1flow.client.state import Media
     with pytest.raises(Unsupported, match="cannot send audio"):
         asyncio.run(LiquidModel("d1.2", capabilities=Capabilities(audio=True)).decide(["x", Media.model_validate(wav)], {"refund": QS["refund"]}))
+
+
+@respx.mock
+def test_liquid_reads_values_and_estimates_in_the_same_call_as_a_decision(monkeypatch):
+    from s1flow.client import EstimateAnswer, NumberAnswer, TextAnswer
+    from s1flow.client.providers.liquid import BASE_URL as LIQUID_URL, LiquidModel
+    from s1flow.questions import Number, RangeEstimate, Text
+
+    monkeypatch.setenv("LIQUID_API_KEY", "test")
+    qs = {"refund": QS["refund"], "order_number": Text(instructions="The order number"), "invoice_number": Text(instructions="The invoice number"),
+          "total": Number(instructions="The total", unit="USD"), "days": RangeEstimate(instructions="Days until it is paid", min=0, max=30, step=1)}
+    reply = {"model": "d1.2", "answers": {
+        "refund": {"type": "noul", "noul": 0.84},
+        "order_number": {"type": "text", "text": "A-17", "span": [6, 10], "found": 0.75},
+        "invoice_number": {"type": "text", "text": None, "span": None, "found": 0.02},
+        "total": {"type": "number", "number": 12, "unit": "USD", "text": "12", "span": [20, 22], "found": 1},
+        "days": {"type": "number", "number": 13, "interval": [3, 20], "unit": None}}}
+    route = respx.post(f"{LIQUID_URL}/systemone").mock(return_value=httpx.Response(200, json=reply))
+    caps = Capabilities(question_types={"boolean", "text", "number", "estimate"})
+    r = asyncio.run(LiquidModel("d1.2", capabilities=caps).decide("Order A-17, total 12 USD", qs))
+    sent = json.loads(route.calls[0].request.read())["questions"]
+    assert sent["refund"]["type"] == "noul" and sent["total"] == {"type": "number", "instructions": "The total", "unit": "USD"}
+    assert sent["days"] == {"type": "number", "range": [0, 30], "step": 1, "instructions": "Days until it is paid"}  # an estimate is a number in a range
+    assert r.answers["refund"].probability == 0.84
+    assert r.answers["order_number"] == TextAnswer(value="A-17", p_null=0.25, span=(6, 10))  # found is 1 - p_null
+    assert r.answers["invoice_number"] == TextAnswer(value=None, p_null=0.98)
+    assert r.answers["total"] == NumberAnswer(value=12, p_null=0, span=(20, 22))
+    assert r.answers["days"] == EstimateAnswer(value=13, p10=3, p90=20)
+    r = asyncio.run(LiquidModel("d1.2", capabilities=caps).decide({"order": "A-17"}, qs))
+    assert r.answers["order_number"].span is None  # in a JSON state Liquid counts in its own rendering
 
 
 def test_an_answer_outside_the_contract_is_a_named_provider_failure():
@@ -272,9 +329,9 @@ def test_an_answer_outside_the_contract_is_a_named_provider_failure():
     with pytest.raises(ProviderError, match="answered level outside the contract: .*score"):
         parse_decisions([{"type": "score", "name": "level", "probabilities": []}])
     with pytest.raises(ProviderError, match="answered q outside the contract"):
-        parse_answers({"q": {"type": "choice"}}, None)
+        parse_answers({"q": {"type": "choice"}})
     with pytest.raises(ProviderError, match="answered q outside the contract"):
-        parse_answers({"q": None}, None)
+        parse_answers({"q": None})
 
 
 def test_a_refusal_is_the_questions_answer_and_the_others_still_count():
@@ -282,7 +339,7 @@ def test_a_refusal_is_the_questions_answer_and_the_others_still_count():
     from s1flow.client.providers.systemone import answers as parse_answers
     from s1flow.client.providers.openai_decisions import parse_decisions
 
-    got = parse_answers({"q": {"type": "refusal", "refusal": "unsafe"}, "b": {"type": "noul", "noul": 0.9}}, None)
+    got = parse_answers({"q": {"type": "refusal", "refusal": "unsafe"}, "b": {"type": "noul", "noul": 0.9}})
     assert got["q"] == Refusal(reason="unsafe") and got["b"].probability == 0.9
     assert parse_decisions([{"type": "refusal", "name": "q"}]) == {"q": Refusal()}
 
@@ -291,10 +348,9 @@ def test_the_system_one_dialect_is_one_module():
     from s1flow.client.providers import systemone
 
     qs = {"bug": Boolean(instructions="Is it a bug?"), "level": Score(instructions="How bad?", criteria=["low", "high"])}
-    assert systemone.questions(qs)["bug"]["type"] == "noul" and systemone.questions(qs, noul=False)["bug"]["type"] == "boolean"
+    assert systemone.questions(qs)["bug"]["type"] == "noul"
     assert systemone.questions(qs)["level"] == {"type": "score", "instructions": "How bad?", "criteria": ["low", "high"]}
-    got = systemone.answers({"bug": {"type": "noul", "noul": 0.8}, "level": {"type": "score", "score": 1, "probabilities": {"0": 0.2, "1": 0.8}}},
-                            {"level": 0.6})
+    got = systemone.answers({"bug": {"type": "noul", "noul": 0.8}, "level": {"type": "score", "score": 1, "probabilities": {"0": 0.2, "1": 0.8}, "confidence": 0.6}})
     assert got["bug"].probability == 0.8 and got["level"].confidence == 0.6 and got["level"].probabilities == {"0": 0.2, "1": 0.8}
 
 
@@ -304,7 +360,7 @@ def _keyed_models():
     from s1flow.client.providers.typesafe import BASE_URL as TS_URL, TypeSafeModel
 
     return [  # each built-in provider that sends a key: the model, the URL it posts to, the key it reads
-        (lambda: GatewayModel("typesafe-ai/jev"), f"{BASE_URL}/evaluate", "AI_GATEWAY_API_KEY"),
+        (lambda: GatewayModel("typesafe-ai/jev"), f"{BASE_URL}/decisions", "AI_GATEWAY_API_KEY"),
         (lambda: OpenRouterModel("typesafe-ai/jev"), f"{OR_URL}/systemone", "OPENROUTER_API_KEY"),
         (lambda: TypeSafeModel("jev-latest"), f"{TS_URL}/systemone", "TYPESAFE_API_KEY"),
         (lambda: DecisionsModel("gpt-6-luna"), f"{OPENAI_URL}/decisions", "OPENAI_API_KEY"),
@@ -407,3 +463,57 @@ def test_an_llm_fetching_its_price_list_does_not_hold_the_event_loop(monkeypatch
         return time.perf_counter() - started
 
     assert asyncio.run(within_limit()) < 0.8  # asyncio.run itself then waits for the abandoned fetch to end
+
+
+@respx.mock
+def test_liquid_asks_a_multichoice_and_the_others_refuse_it(monkeypatch):
+    from s1flow.client import Client, MultiChoiceAnswer
+    from s1flow.client.providers.liquid import BASE_URL as LIQUID_URL, LiquidModel
+    from s1flow.client.providers.openrouter import OpenRouterModel
+    from s1flow.core.errors import ProviderError
+    from s1flow.questions import MultiChoice
+
+    monkeypatch.setenv("LIQUID_API_KEY", "test")
+    topics = MultiChoice(instructions="What does the customer complain about?", criteria={"late": "late", "damage": None})
+    qs = {"refund": QS["refund"], "topics": topics}
+    reply = {"model": "d1.2", "answers": {"refund": {"type": "noul", "noul": 0.84},
+                                          "topics": {"type": "choice", "choices": ["late"], "probabilities": {"late": 0.97, "damage": 0.001}}}}
+    route = respx.post(f"{LIQUID_URL}/systemone").mock(return_value=httpx.Response(200, json=reply))
+    caps = Capabilities(question_types={"boolean", "multichoice"})
+    r = Client().responses.create(model=LiquidModel("d1.2", capabilities=caps), state="It came late.", questions=qs)
+    sent = json.loads(route.calls[0].request.read())["questions"]
+    assert sent["topics"] == {"type": "choice", "multiple": True, "instructions": topics.instructions, "criteria": {"late": "late", "damage": None}}
+    assert r.answers["topics"] == MultiChoiceAnswer(choices=["late"], probabilities={"late": 0.97, "damage": 0.001})
+    reply["answers"]["topics"] = {"type": "choice", "choices": [], "probabilities": {"late": 0.01, "damage": 0.0}}
+    route.mock(return_value=httpx.Response(200, json=reply))
+    assert Client().responses.create(model=LiquidModel("d1.2", capabilities=caps), state="Thanks.", questions=qs).answers["topics"].choices == []
+    reply["answers"]["topics"] = {"type": "choice", "choices": ["refund"], "probabilities": {}}
+    route.mock(return_value=httpx.Response(200, json=reply))
+    with pytest.raises(ProviderError, match="choices 'refund' are not options"):
+        Client().responses.create(model=LiquidModel("d1.2", capabilities=caps), state="x", questions=qs)
+    with pytest.raises(Unsupported, match=r"the System One format has no multichoice questions: topics"):
+        Client().responses.create(model=OpenRouterModel("typesafe/jev", capabilities=caps), state="x", questions=qs)
+
+
+@respx.mock
+def test_liquid_asks_for_every_box_and_the_others_refuse_it(monkeypatch):
+    from s1flow.client import Boxes, BoxesAnswer, Client, FoundBox
+    from s1flow.client.providers.liquid import BASE_URL as LIQUID_URL, LiquidModel
+    from s1flow.client.providers.openrouter import OpenRouterModel
+
+    monkeypatch.setenv("LIQUID_API_KEY", "test")
+    img = Image(media_type="image/png", data="iVBORw0KGgo=", sha256="0" * 64, width=10, height=10)
+    qs = {"refund": QS["refund"], "stamps": Boxes(instructions="every stamp", max=4)}
+    box = {"top": 0.1, "bottom": 0.5, "left": 0.2, "right": 0.9}
+    reply = {"model": "d1.2", "answers": {"refund": {"type": "noul", "noul": 0.84}, "stamps": {
+        "type": "boxes", "boxes": [{"box": box, "found": 0.98, "confidence": 0.93}], "count": 1, "at_least": False, "presence": [0.98, 0.02, 0, 0]}}}
+    route = respx.post(f"{LIQUID_URL}/systemone").mock(return_value=httpx.Response(200, json=reply))
+    caps = Capabilities(image=True, question_types={"boolean", "boxes"})
+    r = Client().responses.create(model=LiquidModel("d1.2", capabilities=caps), state=["x", img], questions=qs)
+    assert json.loads(route.calls[0].request.read())["questions"]["stamps"] == {"type": "boxes", "instructions": "every stamp", "max": 4}
+    assert r.answers["stamps"] == BoxesAnswer(boxes=[FoundBox(box=box, found=0.98, confidence=0.93)], presence=[0.98, 0.02, 0, 0])
+    reply["answers"]["stamps"] = {"type": "boxes", "boxes": [], "count": 0, "at_least": False, "presence": [0, 0, 0, 0]}
+    route.mock(return_value=httpx.Response(200, json=reply))
+    assert Client().responses.create(model=LiquidModel("d1.2", capabilities=caps), state=["x", img], questions=qs).answers["stamps"].boxes == []
+    with pytest.raises(Unsupported, match=r"the System One format has no boxes questions: stamps"):
+        Client().responses.create(model=OpenRouterModel("typesafe/jev", capabilities=caps), state=["x", img], questions=qs)
