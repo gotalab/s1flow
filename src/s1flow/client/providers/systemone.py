@@ -38,7 +38,9 @@ def _answer(a: dict[str, Any]) -> Answer:
         return BooleanAnswer(probability=a["noul" if kind == "noul" else "probability"])
     if kind == "box":
         b = a["box"]
-        return BoxAnswer(box=BoxEdges.clipped(b["top"], b["bottom"], b["left"], b["right"]), confidence=a.get("confidence"))
+        if b is None:  # the target is not in the picture; the confidence beside it is of no box
+            return BoxAnswer(box=None, found=a.get("found"))
+        return BoxAnswer(box=BoxEdges.clipped(b["top"], b["bottom"], b["left"], b["right"]), confidence=a.get("confidence"), found=a.get("found"))
     conf = a.get("confidence")
     if kind == "choice":
         return ChoiceAnswer(choice=a["choice"], probabilities=a.get("probabilities") or None, confidence=conf)

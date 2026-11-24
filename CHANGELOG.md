@@ -50,6 +50,9 @@
   the list of options, an answer is right when its set is exactly the label's, `Coverage` reads the probability of
   the whole set, and the new `OptionF1()` objective counts every option of every case. A policy holds one, and
   `feedback record` takes its options typed as `late,damage` (`none` for none).
+- A box question can be answered with "not in the picture": `BoxAnswer.box` is `None`, with `found` where the model
+  gives it (Liquid's d1.2). A box task labels such a case `False`; an answer of no box is right there, and how sure
+  it is comes from `found`.
 - Evaluation compares those four types. A value read is right when it equals the label, or when nothing is read on
   a case labelled `False` (no value there); reports add the accuracy on the cases with a value and on those with
   none, and `Coverage` reads `p_null` and `confidence`. A `RangeEstimate` task defaults to the new `MeanError()`
@@ -64,6 +67,10 @@
   now reach every model there as `input_image` parts: Drex Max v1.1 refused the old `image_url` parts and Mo read
   them without seeing the picture. Answers saved through `gateway` are asked again, and a policy adopted on one
   needs adopting again; other providers' saved answers stay valid.
+- The `liquid` provider reads a box the model did not find as an answer of no box, not as a refusal: in an
+  evaluation it is a wrong answer the model was sure of, where it was no answer before. Answers saved through
+  `liquid` are asked again, and a policy adopted on one needs adopting again; other providers' saved answers stay
+  valid.
 - The summary `report --out` writes shows the `coverage` and `sure accuracy` columns only for a task whose
   objective or tiebreak is `Coverage(...)`, at that objective's target. For any other task they were printed at a
   95% target nobody set; `comparison.json` and the comparison page still hold that reference value. A task whose

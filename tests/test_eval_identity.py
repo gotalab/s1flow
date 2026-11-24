@@ -252,12 +252,13 @@ def test_a_capability_left_at_its_default_is_in_no_identity():
 
 def test_gateway_answers_from_before_its_decisions_wire_are_not_reused():
     """The AI Gateway moved from /v1/evaluate to /v1/decisions (2026-11-24): Mo had answered images there without
-    seeing them, so what was saved through `gateway` before is asked again; other providers keep theirs."""
+    seeing them, so what was saved through `gateway` before is asked again. Liquid reads a box it did not find as an answer
+    of no box, no longer a refusal, so its saved answers are asked again too. Other providers keep theirs."""
     from s1flow.client import identity
     from s1flow.client.identity import digest, request_digests
 
     qs = {'bug': Boolean(instructions='Is it a bug?')}
-    for provider, retired in (('gateway', True), ('typesafe', False)):
+    for provider, retired in (('gateway', True), ('liquid', True), ('typesafe', False)):
         spec = ModelSpec(provider=provider, id='m')
         before = digest({"schema": identity.REQUEST, "model": identity.model_digest(spec), "state": 'x', "questions": qs,
                          "dependencies": {}})

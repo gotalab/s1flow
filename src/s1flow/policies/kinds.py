@@ -45,7 +45,7 @@ from ..client.providers.contract import validate_answer_values
 from ..core.errors import ProviderError
 from .rule import DecisionRule, RuleField
 
-ABSENT: Literal[False] = False  # the label of a case whose state holds nothing for a text, number or date question
+ABSENT: Literal[False] = False  # the label of a case whose state holds nothing for a text, number or date question, or no target for a box
 SELECTIVE: frozenset[RuleField] = frozenset({"min_probability"})
 BINARY: frozenset[RuleField] = frozenset({"threshold", "min_probability"})
 # a task's label: True / False (binary), an option's key, a level, a box, a value read (False: absent), a number,
@@ -359,8 +359,9 @@ class ScoreKind(_Kind):
 
 
 class BoxKind(_Kind):
-    """A box, right at `iou` with the label box or more. The confidence (jev's, or the agreement of an LLM's
-    samples) stands in for a probability."""
+    """A box, right at `iou` with the label box or more, or no box where the label says the target is not in the
+    picture (ABSENT). The confidence (jev's, or the agreement of an LLM's samples) stands in for a probability; for
+    an answer of no box, how sure the model is that nothing is there (1 - `found`)."""
 
     type: ClassVar[QuestionType] = "box"
     answer: ClassVar[tuple[Any, ...]] = (BoxAnswer,)
@@ -371,10 +372,12 @@ class BoxKind(_Kind):
         return self.hit_iou
 
     def label_error(self, label: Any) -> str | None:
+        if label is ABSENT:
+            return None
         try:
             BoxEdges.model_validate(label)
         except ValidationError:
-            return f"a box label needs top, bottom, left, right in 0..1, got {label!r}"
+            return f"a box label needs top, bottom, left, right in 0..1, or False when the target is not in the picture; got {label!r}"
         return None
 
     def as_label(self, answer: Any) -> Any:
@@ -388,13 +391,16 @@ class BoxKind(_Kind):
 
     def average(self, answers: Sequence[Answer]) -> Average:
         given: list[BoxAnswer] = self._given(answers)
+        if given[0].box is None:
+            found = given[0].found
+            return Average(distributed=found is not None, confidence=1.0 if found is None else 1 - float(found))
         confs = [(a.confidence, True) if a.confidence is not None else (a.agreement, True) if a.agreement is not None else (1.0, False) for a in given]
         return Average(
             distributed=all(d for _, d in confs), confidence=_mean([float(c) for c, _ in confs]), box=given[0].box,
         )
 
     def reading(self, average: Average, rule: DecisionRule) -> Reading:
-        assert average.box is not None and average.confidence is not None
+        assert average.confidence is not None
         return Reading(value=average.box, below_min_probability=_below_min_probability(rule, average.confidence), confidence=average.confidence)
 
 

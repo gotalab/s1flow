@@ -55,7 +55,8 @@ class Score(BaseModel):
 class Box(BaseModel):
     """One bounding box of the target described in `instructions` (jev 1.14, 2026-10-15).
 
-    There is no "not found" answer: ask a Boolean alongside when the target may be absent.
+    A model that can say the target is not in the picture answers with no box (Liquid d1.2). The others always
+    give one (jev): ask them a Boolean alongside when the target may be absent.
     """
 
     model_config = STRICT

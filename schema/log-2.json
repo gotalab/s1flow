@@ -84,7 +84,27 @@
      "type": "string"
     },
     "box": {
-     "$ref": "#/$defs/BoxEdges"
+     "anyOf": [
+      {
+       "$ref": "#/$defs/BoxEdges"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "found": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Found"
     },
     "confidence": {
      "anyOf": [
@@ -111,9 +131,6 @@
      "title": "Agreement"
     }
    },
-   "required": [
-    "box"
-   ],
    "title": "BoxAnswer",
    "type": "object"
   },

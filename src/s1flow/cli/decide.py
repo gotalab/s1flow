@@ -144,6 +144,8 @@ def _line(qid: str, x: "Answer") -> str:
         return f"{qid}: {x.score:.2f}" + (f"  ({dist})" if dist else "")
     if isinstance(x, BoxAnswer):
         b = x.box
+        if b is None:
+            return f"{qid}: not in the picture" + ("" if x.found is None else f"  (found {x.found:.3f})")
         conf = x.confidence if x.confidence is not None else x.agreement
         return f"{qid}: top {b.top:.3f} bottom {b.bottom:.3f} left {b.left:.3f} right {b.right:.3f}" + ("" if conf is None else f"  (confidence {conf:.2f})")
     if isinstance(x, (TextAnswer, NumberAnswer, DateAnswer)):

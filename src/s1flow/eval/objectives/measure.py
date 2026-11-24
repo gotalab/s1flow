@@ -103,7 +103,7 @@ def pairs(kind: Kind, labels: Sequence[Any], readings: Sequence[Reading | None])
     y = np.empty(n, dtype=object)
     for i, v in enumerate(normalized):  # one at a time: a label that is a tuple stays one value
         y[i] = v
-    if n and kind.type not in READ and all(isinstance(v, bool) for v in normalized):  # a value read keeps ABSENT as it is
+    if n and kind.type not in (*READ, "box") and all(isinstance(v, bool) for v in normalized):  # these keep ABSENT as it is
         y = y.astype(bool)
     value = np.empty(n, dtype=object)
     for i, r in enumerate(readings):
@@ -242,8 +242,14 @@ def _f1(tp: np.ndarray, true: np.ndarray, said: np.ndarray) -> np.ndarray:
 
 
 def _ious(p: Pairs) -> np.ndarray:
-    """A box task: the IoU of each case's box with its label box (0 when failed)."""
-    return np.array([iou(v, BoxEdges.model_validate(t)) if ok else 0.0 for v, t, ok in zip(p.value, p.y, p.ok)], dtype=float)
+    """A box task: the IoU of each case's box with its label box (0 when failed). Where the label or the answer is
+    no box: 1 when both are, 0 when one is."""
+    def one(v: Any, t: Any) -> float:
+        if t is ABSENT or v is None:
+            return 1.0 if t is ABSENT and v is None else 0.0
+        return iou(v, BoxEdges.model_validate(t))
+
+    return np.array([one(v, t) if ok else 0.0 for v, t, ok in zip(p.value, p.y, p.ok)], dtype=float)
 
 
 # ---------- the loss table (Loss; Accuracy and ExpectedLoss are fixed forms of it) ----------
@@ -628,6 +634,8 @@ def measure(name: str, p: Pairs) -> float | None:
 def shown(p: Pairs, i: int) -> tuple[bool | str, bool | str]:
     """One case's label and reading, as a list of errors writes them."""
     if p.measured == "box":
+        if p.y[i] is ABSENT or p.value[i] is None:
+            return "absent" if p.y[i] is ABSENT else "box", "absent" if p.value[i] is None else "box"
         return "box", f"IoU {_ious(p[np.array([i])])[0]:.2f}"
     if p.measured == "multichoice":
         return written(p, p.y[i]), written(p, p.value[i])

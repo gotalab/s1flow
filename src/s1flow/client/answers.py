@@ -69,7 +69,9 @@ class ScoreAnswer(_Answer):
 
 class BoxAnswer(_Answer):
     type: Literal["box"] = "box"
-    box: BoxEdges
+    # None: the model says the target is not in the picture (Liquid d1.2). A default: a saved record leaves out what is None.
+    box: BoxEdges | None = None
+    found: float | None = None  # P(the target is in the picture), where the model gives it
     confidence: float | None = None  # jev's confidence in its box
     agreement: float | None = None  # a box from k samples: the mean IoU of the samples with the answer
 

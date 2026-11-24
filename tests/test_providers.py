@@ -263,7 +263,7 @@ def test_typesafe_direct_sends_noul_and_reports_tokens(monkeypatch):
 
 @respx.mock
 def test_liquid_sends_images_in_the_state_and_reads_the_billed_cost_and_a_box_not_found(monkeypatch):
-    from s1flow.client import Box, Refusal
+    from s1flow.client import Box, BoxAnswer
     from s1flow.client.providers.liquid import BASE_URL as LIQUID_URL, LiquidModel
 
     monkeypatch.setenv("LIQUID_API_KEY", "test")
@@ -282,7 +282,8 @@ def test_liquid_sends_images_in_the_state_and_reads_the_billed_cost_and_a_box_no
     assert sent["state"] == ["請求書", {"type": "image_url", "image_url": {"url": "data:image/png;base64,iVBORw0KGgo="}}]
     assert sent["questions"]["refund"]["type"] == "noul" and "assets" not in sent and "images" not in sent
     assert r.answers["refund"].probability == 0.84 and r.answers["stamp"].box.model_dump() == box
-    assert r.answers["sign"] == Refusal(reason="box not found (found 0.12)")  # s1flow's box has no "not found"
+    assert r.answers["stamp"].found == 0.97
+    assert r.answers["sign"] == BoxAnswer(box=None, found=0.12)  # not in the picture: an answer, not a refusal
     assert r.usage.cost_usd == 0.000006 and r.usage.cost_source == "billed" and r.answered_by == "d1.2"
     wav = {"type": "audio", "media_type": "audio/wav", "data": "UklGRg==", "sha256": "1" * 64}
     from s1flow.client.state import Media

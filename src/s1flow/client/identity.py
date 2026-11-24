@@ -89,9 +89,13 @@ def model_digest(spec: ModelSpec, *, released: bool = False) -> str:
     })
 
 
-# A built-in provider whose wire changed after REQUEST was last bumped: its answers alone are retired, since a bump
-# of REQUEST would retire every provider's (and _RELEASED_AS). Fold these in at the next bump of REQUEST.
-_WIRE = {"gateway": "v1/decisions"}  # 2026-11-24: /v1/evaluate answered images Mo never saw
+# A built-in provider whose wire, or whose reading of a reply, changed after REQUEST was last bumped: its answers alone
+# are retired, since a bump of REQUEST would retire every provider's (and _RELEASED_AS). Fold these in at the next
+# bump of REQUEST.
+_WIRE = {
+    "gateway": "v1/decisions",  # 2026-11-24: /v1/evaluate answered images Mo never saw
+    "liquid": "box not found is an answer",  # a box it did not find was read as a refusal until then
+}
 
 
 def _implementation_revision(spec: ModelSpec) -> dict[str, str]:
