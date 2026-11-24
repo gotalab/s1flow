@@ -68,11 +68,6 @@ except PackageNotFoundError:
     SDK_VERSION = "source"
 
 
-# Bump a built-in provider's entry when it reads the same reply into a different answer and only its saved answers
-# go stale: REQUEST would make every provider's answers look unasked. A provider not named here hashes no entry.
-# liquid 2: a box it did not find is a box answer with no box (until then a refusal).
-READING = {"liquid": "2"}
-
 _UNDECLARED = Capabilities().model_dump(mode="json")
 _SINCE_0_1_0A5 = ("audio", "video", "pdf")  # capabilities the releases in _RELEASED did not have
 
@@ -87,7 +82,6 @@ def model_digest(spec: ModelSpec, *, released: bool = False) -> str:
         "endpoint": _public(cloudflare_relay()) if s.provider == "cloudflare" else None,
         "provider": s.provider,
         "provider_revision": s.provider_revision,
-        **({"reading": READING[s.provider]} if s.provider in READING else {}),
         "id": s.id,
         "options": _public(s.options),
         "capabilities": ({k: v for k, v in declared.items() if k not in _SINCE_0_1_0A5} if released
@@ -95,7 +89,18 @@ def model_digest(spec: ModelSpec, *, released: bool = False) -> str:
     })
 
 
-def _dependency_revision(spec: ModelSpec) -> dict[str, str]:
+# A built-in provider whose wire, or whose reading of a reply, changed after REQUEST was last bumped: its answers alone
+# are retired, since a bump of REQUEST would retire every provider's (and _RELEASED_AS). Fold these in at the next
+# bump of REQUEST.
+_WIRE = {
+    "gateway": "v1/decisions",  # 2026-11-24: /v1/evaluate answered images Mo never saw
+    "liquid": "box not found is an answer",  # a box it did not find was read as a refusal until then
+}
+
+
+def _implementation_revision(spec: ModelSpec) -> dict[str, str]:
+    if spec.provider in _WIRE:
+        return {"wire": _WIRE[spec.provider]}
     # LiteLLM owns request construction for the llm provider. Inspect metadata
     # without importing an optional dependency or loading provider code.
     if spec.provider != "llm":
@@ -109,13 +114,13 @@ def _dependency_revision(spec: ModelSpec) -> dict[str, str]:
 def request_digest(spec: ModelSpec, state: State, questions: Questions) -> str:
     """The actual materialized input, question and effective request implementation."""
     return digest({"schema": REQUEST, "model": model_digest(spec), "state": state,
-                   "questions": questions, "dependencies": _dependency_revision(spec)})
+                   "questions": questions, "dependencies": _implementation_revision(spec)})
 
 
 def execution_digest(spec: ModelSpec, policy_digest: str) -> str:
     """Shared runtime conditions; evaluation records preprocessing identity separately."""
     return digest({"schema": EXECUTION, "request": REQUEST, "model": model_digest(spec), "policy": policy_digest,
-                   "declared_concurrency": spec.concurrency, "dependencies": _dependency_revision(spec)})
+                   "declared_concurrency": spec.concurrency, "dependencies": _implementation_revision(spec)})
 
 
 def state_digest(state: State) -> str:
@@ -166,7 +171,7 @@ def request_digests(spec: ModelSpec, state: State, questions: Questions) -> tupl
         return (request_digest(spec, state, questions),)
     sent_as_now = _keys_sorted(state)
     common = {"model": model_digest(spec, released=True), "state": state, "questions": questions,
-              "dependencies": _dependency_revision(spec)}
+              "dependencies": _implementation_revision(spec)}
     return (request_digest(spec, state, questions), *(
         digest(common | {"schema": "s1flow/request@2", "sdk": sdk, "implementation": revision})
         for sdk, (revision, sorted_sent) in _RELEASED.items() if sorted_sent or sent_as_now))
@@ -177,7 +182,7 @@ def execution_digests(spec: ModelSpec, policy_digest: str) -> tuple[str, ...]:
     if (REQUEST, EXECUTION) != _RELEASED_AS:
         return (execution_digest(spec, policy_digest),)
     common = {"model": model_digest(spec, released=True), "policy": policy_digest, "declared_concurrency": spec.concurrency,
-              "dependencies": _dependency_revision(spec)}
+              "dependencies": _implementation_revision(spec)}
     return (execution_digest(spec, policy_digest), *(
         digest(common | {"schema": "s1flow/execution@2", "sdk": sdk, "implementation": revision})
         for sdk, (revision, sorted_sent) in _RELEASED.items() if sorted_sent))

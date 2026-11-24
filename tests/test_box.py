@@ -124,7 +124,7 @@ def test_box_task_is_scored_by_iou(tmp_path):
 def test_provider_boxes_are_clipped_and_ordered():
     from s1flow.client.providers.systemone import answers as parse_answers
 
-    a = parse_answers({"d": {"type": "box", "box": {"top": 0.5, "bottom": 0.1, "left": -0.001, "right": 1.0000001}}}, None)
+    a = parse_answers({"d": {"type": "box", "box": {"top": 0.5, "bottom": 0.1, "left": -0.001, "right": 1.0000001}}})
     assert a["d"].box == BoxEdges(top=0.1, bottom=0.5, left=0.0, right=1.0)
 
 

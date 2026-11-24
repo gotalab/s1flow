@@ -12,7 +12,7 @@ from .evaluation import Estimate, Evaluation, Floor, ObjectiveScore, cost_note, 
 from .objectives import measure
 from .objectives.declare import METRICS, Objective
 from .objectives.measure import bound
-from . import evalset, metrics
+from . import adopt, evalset, metrics
 from .run import ask_again
 from .select import Ranked, rank, unlike_among_tied
 from .shown import band, num, pct, usd
@@ -30,8 +30,8 @@ def show(case: Case, limit: int = 70) -> str:
 
 
 def available_models(task: Task, variant: str) -> list[str]:
-    d = task.where.runs_dir / task.id / variant
-    return sorted(p.stem for p in d.glob("*.jsonl")) if d.exists() else []
+    """The models with a run on the variant's question that are still in the line-up, as report and adopt list them."""
+    return [model for _, model, _ in adopt.candidates(task, variants=[variant])]
 
 
 def fmt(kind: Kind, o: Objective, sc: ObjectiveScore, with_ci: bool = True) -> str:
@@ -210,6 +210,9 @@ def render(task: Task, variant: str, evs: list[Evaluation], preds: dict[str, met
         + f" · split: {first.split if first else '—'} · source: {task.source}",
         "",
         headline(task, evs, scored, ranked),
+        *(["", f"Note: {variant} was written by optimize, which chose it on these train and val cases, so its values "
+            "lean high beside the others'; adopt confirms a pick on the held-out test, which optimize never read."]
+          if variant in task.optimized else []),
         "",
         "## Comparison",
         "",

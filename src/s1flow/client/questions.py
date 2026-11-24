@@ -1,7 +1,7 @@
 """The questions a decision model answers: yes / no, one of N, a level, a box, a value read from the state,
 an estimate in a range.
 
-Vocabulary follows the decision-model APIs (TypeSafe, AI Gateway, OpenRouter, Workers AI): a map of
+Vocabulary follows the decision-model APIs (TypeSafe, OpenRouter, Workers AI): a map of
 typed `questions`, keyed by name. Every provider translates these into its own wire format (yes / no
 is `noul` on TypeSafe's, `predicate` on OpenAI's; a value or an estimate is a `field` on OpenRouter's
 Extractions route).
