@@ -412,6 +412,30 @@ def test_a_box_policy_can_decide_the_target_is_not_there(tmp_path: Path, monkeyp
     assert isinstance(back, AnsweredLog) and back.decision.value is None
 
 
+def test_a_boxes_policy_decides_logs_and_takes_feedback(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from s1flow.client.answers import BoxEdges, BoxesAnswer, FoundBox
+    from s1flow.policies.log import AnsweredLog, from_span, span
+    from s1flow.policies.policy import record_feedback
+    from s1flow.questions import Boxes
+
+    spec = runtime_spec(task='discs', questions={'discs': asked(Boxes(instructions='every red disc'), DecisionRule(min_probability=.5))})
+    a, b = BoxEdges(top=.1, bottom=.3, left=.2, right=.6), BoxEdges(top=.5, bottom=.7, left=.1, right=.3)
+    log = tmp_path / 'events.jsonl'
+    answer = BoxesAnswer(boxes=[FoundBox(box=a, found=.99, confidence=.9), FoundBox(box=b, found=.99, confidence=.9)], presence=[.99, .99, .01])
+    d = DecisionPolicy(spec, client=_answering(monkeypatch, answer), log=log).decide(
+        {'screen': Image(media_type='image/png', data='YWJj', sha256='x', width=1, height=1)})
+    assert d.value == (a, b) and d.probability is None and d.confidence == pytest.approx(.99 ** 3 * .81)
+    record_feedback(spec, d.decision_id, json.dumps([b.model_dump(), a.model_dump()]), log=log)  # as the CLI types it
+    record_feedback(spec, d.decision_id, 'none', log=log)
+    with pytest.raises(ConfigError, match="list of every instance's box"):
+        record_feedback(spec, d.decision_id, '{"top": 0.1}', log=log)
+    events = [json.loads(line) for line in log.read_text().splitlines()]
+    assert [e['label'] for e in events[1:]] == [[a.model_dump(), b.model_dump()], []]
+    answered = AnsweredLog.model_validate(events[0])
+    back = from_span(*span(answered)[:1], answered.at, span(answered)[1])
+    assert isinstance(back, AnsweredLog) and back.decision.value == (a, b)
+
+
 def test_timeout_cancels_the_call_and_logs_it_failed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     c, _ = fake_client(monkeypatch)
     cancelled: list[bool] = []

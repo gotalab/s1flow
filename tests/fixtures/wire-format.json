@@ -1439,6 +1439,67 @@
       }
      }
     }
+   },
+   "boxes": {
+    "sent": {
+     "url": "https://api.liquid.ai/decisions/v1/systemone",
+     "headers": {},
+     "body": {
+      "model": "d1.2",
+      "state": [
+       "The screen shows:",
+       {
+        "type": "image_url",
+        "image_url": {
+         "url": "data:image/png;base64,iVBORw0KGgo="
+        }
+       }
+      ],
+      "questions": {
+       "where": {
+        "type": "boxes",
+        "instructions": "Every stamp",
+        "max": 3
+       }
+      }
+     }
+    },
+    "read": {
+     "answered_by": "d1.2",
+     "answers": {
+      "where": {
+       "type": "boxes",
+       "boxes": [
+        {
+         "box": {
+          "top": 0.1,
+          "bottom": 0.5,
+          "left": 0.2,
+          "right": 0.9
+         },
+         "confidence": 0.93,
+         "found": 0.998
+        },
+        {
+         "box": {
+          "top": 0.6,
+          "bottom": 0.8,
+          "left": 0.1,
+          "right": 0.3
+         },
+         "confidence": 0.92,
+         "found": 0.951
+        }
+       ],
+       "at_least": false,
+       "presence": [
+        0.998,
+        0.951,
+        0.001
+       ]
+      }
+     }
+    }
    }
   },
   "gemini": {

@@ -97,7 +97,10 @@ default objective, `MeanError()`), counts as right within half a `step` of the l
 p10 - p90 interval is narrow. A `MultiChoice` is labelled with the list of
 the options that apply (`[]` for none) and is right when the options chosen are exactly those; its probability is that
 of the whole set, each option's own yes or no multiplied. `OptionF1()` is the objective that counts every option of
-every case, where accuracy counts a case with one option off as wrong. A policy holds these five like any other type. Yes/no questions add
+every case, where accuracy counts a case with one option off as wrong. A `Boxes` task is labelled with the list
+of every instance's box (`[]` for none) and is right when each of them has an answer box of its own at the IoU bar and
+no answer box is left over; `BoxF1()` counts box by box, and the report adds how far the number of boxes is off.
+A policy holds these six like any other type. Yes/no questions add
 precision/recall and calibration charts. Choice questions get a curve of the selected answer's probability when the
 model returns a real distribution. A provider's own confidence score is treated as a separate signal, and no
 probability curve is drawn when the signal it needs isn't available.

@@ -332,14 +332,15 @@ def test_a_multichoice_task_runs_reports_and_compares(tmp_path):
 def test_a_multichoice_label_the_task_cannot_hold_stops_the_measurement(tmp_path):
     p = make_project(tmp_path, {"tagger": Tagger})
     write = lambda bad: (tmp_path / "data.jsonl").write_text("".join(  # noqa: E731
-        json.dumps({"id": str(i), "n": i, "tags": ["late", "refund"] if bad and not i else ["late"]}) + "\n" for i in range(6)))
+        json.dumps({"id": str(i), "n": i, "tags": (["late", "refund"], ["late", 1])[i] if bad and i < 2 else ["late"]}) + "\n" for i in range(6)))
     write(False)
     task = attach(Task(id="tags-bad", cases="data.jsonl", dir=tmp_path, state=lambda r: f"{r['n']}|late", question_id="complaints",
                        question=TOPICS, label=lambda r: r["tags"]), p)
     asyncio.run(running.run_model(task, "tagger", limit=None, variant="base"))
-    write(True)  # case 0 is relabelled with an option the question lacks, after its answers were saved
+    write(True)  # case 0 is relabelled with an option the question lacks, case 1 with a number, after their answers were saved
     task.load_cases().forget()
-    assert any(e.startswith("0: a multichoice label") for e in data.check(task).errors)
+    errors = data.check(task).errors
+    assert any(e.startswith("0: a multichoice label") for e in errors) and any(e.startswith("1: a multichoice label") for e in errors)
     with pytest.raises(DataError, match="cannot score"):
         asyncio.run(running.run_model(task, "tagger", limit=None, variant="base"))
     with pytest.raises(DataError, match="^0: a multichoice label .* `s1flow cases check`"):

@@ -12,6 +12,7 @@ answer is plain, and checks every claim a `Capabilities` can make:
 | `image`   | the disc's colour, on a red disc, then a blue one             | the colour, with p >= PASS, twice    |
 | `images`  | both discs in one state, red first                            | both colours in order                |
 | `box`     | the box of a disc off-centre in a 4:3 image                   | IoU >= BOX_PASS                      |
+| `boxes`   | the box of each of three discs in a 4:3 image                 | three boxes, each IoU >= BOX_PASS    |
 | `text`    | the order number, on two orders                               | the number as written, twice         |
 | `number`  | how many boxes an order holds, on two orders                  | the count, twice                     |
 | `date`    | the day an order shipped, on two orders                       | the day, twice                       |
@@ -51,13 +52,13 @@ from pydantic import BaseModel, ConfigDict, Field
 from ..client import AsyncClient, images, media
 from ..core import clock
 from ..client.answers import (
-    Answer, BooleanAnswer, BoxAnswer, BoxEdges, ChoiceAnswer, DateAnswer, EstimateAnswer, MultiChoiceAnswer, NumberAnswer, Response, ScoreAnswer, TextAnswer,
+    Answer, BooleanAnswer, BoxAnswer, BoxEdges, BoxesAnswer, ChoiceAnswer, DateAnswer, EstimateAnswer, MultiChoiceAnswer, NumberAnswer, Response, ScoreAnswer, TextAnswer,
 )
-from ..client.boxes import iou
+from ..client.boxes import iou, matched
 from ..client import providers
 from ..client.models import Capabilities, DecisionModel, ModelSpec, Price
 from ..client.providers.needs import where_to_get
-from ..client.questions import Boolean, Box, Choice, Date, MultiChoice, RangeEstimate, Number, Questions, Score, Text
+from ..client.questions import Boolean, Box, Boxes, Choice, Date, MultiChoice, RangeEstimate, Number, Questions, Score, Text
 from ..client.state import Image, Media, MediaKind, Part, State
 from ..core.errors import ProviderError, S1flowError
 from . import Project
@@ -67,10 +68,10 @@ if TYPE_CHECKING:
 
 PASS = 0.6
 BOX_PASS = 0.5
-CheckName = Literal["boolean", "choice", "score", "image", "images", "box", "audio", "video", "pdf", "text", "number", "date", "estimate", "multichoice"]
+CheckName = Literal["boolean", "choice", "score", "image", "images", "box", "audio", "video", "pdf", "text", "number", "date", "estimate", "multichoice", "boxes"]
 READS: tuple[Literal["text", "number", "date", "estimate"], ...] = ("text", "number", "date", "estimate")  # each a question type alone
 EVERYTHING = Capabilities(image=True, audio=True, video=True, pdf=True,
-                          question_types=frozenset({"boolean", "choice", "score", "box", "multichoice", *READS}))
+                          question_types=frozenset({"boolean", "choice", "score", "box", "boxes", "multichoice", *READS}))
 
 
 class Check(BaseModel):
@@ -97,6 +98,7 @@ def claims(caps: Capabilities) -> dict[CheckName, bool]:
         "image": caps.image,
         "images": caps.image,
         "box": caps.image and "box" in caps.question_types,
+        "boxes": caps.image and "boxes" in caps.question_types,
         "audio": caps.audio,
         "video": caps.video,
         "pdf": caps.pdf,
@@ -141,6 +143,10 @@ APPLES: Questions = {
 }
 # A 400x300 image with a disc at x 40..160, y 40..160: the box as fractions of width and height.
 BOX_TRUTH = BoxEdges(top=40 / 300, bottom=160 / 300, left=40 / 400, right=160 / 400)
+# The same image size with three discs: every instance has its own box.
+DISCS = ((30, 30, 130, 130), (250, 40, 350, 140), (140, 170, 240, 270))  # left, top, right, bottom in pixels
+BOXES_TRUTH = tuple(BoxEdges(top=t / 300, bottom=b / 300, left=l / 400, right=r / 400) for l, t, r, b in DISCS)
+BOXES_Q: Questions = {"discs": Boxes(instructions="every red disc in the picture")}
 BOX_Q: Questions = {"disc": Box(instructions="the red disc in the picture")}
 # Two orders that differ in everything asked, so an answer that ignores the state fails one of them. Each question
 # is named for what it reads: Schematron reads the name too, and returned the whole state for one named `read`
@@ -168,6 +174,15 @@ def disc(rgb: tuple[int, int, int]) -> Image:
 
     im = PILImage.new("RGB", (320, 320), "white")
     ImageDraw.Draw(im).ellipse((60, 60, 260, 260), fill=rgb)
+    return _png(im)
+
+
+def boxes_image() -> Image:
+    from PIL import Image as PILImage, ImageDraw
+
+    im = PILImage.new("RGB", (400, 300), (255, 255, 255))
+    for edges in DISCS:
+        ImageDraw.Draw(im).ellipse(edges, fill=COLOURS["red"])
     return _png(im)
 
 
@@ -230,7 +245,7 @@ def _media(kind: MediaKind, raw: bytes) -> Media:
 # ---------- reading the answers ----------
 
 
-A = TypeVar("A", BooleanAnswer, ChoiceAnswer, ScoreAnswer, BoxAnswer, TextAnswer, NumberAnswer, DateAnswer, EstimateAnswer, MultiChoiceAnswer)
+A = TypeVar("A", BooleanAnswer, ChoiceAnswer, ScoreAnswer, BoxAnswer, TextAnswer, NumberAnswer, DateAnswer, EstimateAnswer, MultiChoiceAnswer, BoxesAnswer)
 
 
 R = TypeVar("R", TextAnswer, NumberAnswer, DateAnswer)
@@ -275,7 +290,7 @@ class _Probe:
             "image": self._image, "images": self._images, "box": self._box,
             "audio": self._audio, "video": self._video, "pdf": self._pdf,
             "text": self._text, "number": self._number, "date": self._date, "estimate": self._estimate,
-            "multichoice": self._multichoice,
+            "multichoice": self._multichoice, "boxes": self._boxes,
         }
         try:
             ok, detail = await asks[name]()
@@ -316,6 +331,11 @@ class _Probe:
         score = iou(a.box, BOX_TRUTH)
         conf = f", confidence {a.confidence:.2f}" if a.confidence is not None else ""
         return score >= BOX_PASS, f"IoU {score:.2f}{conf}"
+
+    async def _boxes(self) -> tuple[bool, str]:
+        a = _as(BoxesAnswer, (await self.ask(["A picture:", boxes_image()], BOXES_Q)).answers["discs"])
+        hit = matched([b.box for b in a.boxes], BOXES_TRUTH, BOX_PASS)
+        return len(a.boxes) == hit == len(BOXES_TRUTH), f"{len(a.boxes)} boxes, {hit} of {len(BOXES_TRUTH)} matched"
 
     async def _audio(self) -> tuple[bool, str]:
         got = [_picked((await self.ask(["A recording:", saying(c)], SAID)).answers["colour"], c) for c in COLOURS]
@@ -367,9 +387,9 @@ async def probe(client: AsyncClient, name: str) -> Verification:
     first: tuple[CheckName, ...] = ("boolean", "choice", "score", "image", "audio", "video", "pdf", *READS, "multichoice")
     checks: dict[CheckName, Check] = dict(zip(first, await asyncio.gather(*(p.check(c) for c in first))))
     if checks["image"].ok:
-        checks["images"], checks["box"] = await asyncio.gather(p.check("images"), p.check("box"))
+        checks["images"], checks["box"], checks["boxes"] = await asyncio.gather(p.check("images"), p.check("box"), p.check("boxes"))
     else:
-        checks["images"] = checks["box"] = Check(ok=False, detail="not asked: image failed")
+        checks["images"] = checks["box"] = checks["boxes"] = Check(ok=False, detail="not asked: image failed")
     return Verification(at=clock.now(), answered_by=p.answered_by, checks=checks)
 
 
@@ -525,7 +545,7 @@ def lineup(project: Project) -> list[dict[str, str]]:
         rows.append({
             "name": name, "provider": spec.provider, "id": models.resolved(name).id,
             "boolean": _cell(said, v, "boolean"), "choice": _cell(said, v, "choice"), "score": _cell(said, v, "score"),
-            "image": _cell(said, v, "image", "images"), "box": _cell(said, v, "box"),
+            "image": _cell(said, v, "image", "images"), "box": _cell(said, v, "box"), "boxes": _cell(said, v, "boxes"),
             "audio": _cell(said, v, "audio"), "video": _cell(said, v, "video"), "pdf": _cell(said, v, "pdf"),
             "text": _cell(said, v, "text"), "number": _cell(said, v, "number"), "date": _cell(said, v, "date"),
             "estimate": _cell(said, v, "estimate"), "multichoice": _cell(said, v, "multichoice"),
