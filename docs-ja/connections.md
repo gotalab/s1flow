@@ -26,7 +26,7 @@ TOML の形式では、モデルごとに `[models.NAME]` セクションを一�
 
 コマンドが `--project PATH` と `--connections PATH` を取るかどうかは、`s1flow COMMAND --help` に出ます。
 
-`--project` には、`s1flow.toml` を含むディレクトリか `s1flow/s1flow.toml` を含むリポジトリを、そのまま指定します。上の階層は探しません。`--project` が無ければ、CLI は今のディレクトリから一番近い Git のルートまで上に向かって探します。Git リポジトリの外では、今のディレクトリと `./s1flow` だけを確かめるので、もっと深い場所から実行するときは `--project` を使ってください。
+`--project` は、`s1flow.toml` を含むディレクトリか `s1flow/s1flow.toml` を含むリポジトリを、直接指していなければなりません。上の階層は探しません。`--project` が無ければ、CLI は今のディレクトリから一番近い Git のルートまで上に向かって探します。Git リポジトリの外では、今のディレクトリと `./s1flow` だけを確かめるので、もっと深い場所から実行するときは `--project` を使ってください。
 
 評価のコマンドは、`--connections` があればそれを使い、無ければ選んだプロジェクトの `s1flow.toml` を使います。`decide --policy`、`doctor --policy`、`adopt --spec --root` には明示的な `--connections` が要ります。`feedback record` はモデルを呼ばないので、`--connections` を取りません。
 

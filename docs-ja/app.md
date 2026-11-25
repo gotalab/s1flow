@@ -114,7 +114,7 @@ except ProviderError:
 
 ## 画像、音声、動画、PDF と入力のログ { #images-audio-video-pdfs-and-logged-input }
 
-メディアはポリシーを動かす前にコードで準備した値として渡します。リスト形式の state の最上位の要素として、`media.prepare("audio", data)`（または `"image"`、`"video"`、`"pdf"`）を渡します。入力の JSON によって、実行時にファイルや URL を取ってこさせることはできません。CLI では、`--image`、`--audio`、`--video`、`--pdf PATH` で指定したローカルのファイルを読み込みます。画像には `s1flow[images]` が要ります。音声は WAV か MP3、動画は MP4 で、ファイルのバイトのまま送ります。画像はリサイズして再エンコードします。入力は、頼んだとき（`keep_state=True` か `--keep-state`）だけ記録します。
+メディアは、ポリシーを動かす前にコードで準備した値として渡します。リスト形式の state の最上位の要素として、`media.prepare("audio", data)`（または `"image"`、`"video"`、`"pdf"`）を渡します。入力の JSON によって、実行時にファイルや URL を取ってこさせることはできません。CLI では、`--image`、`--audio`、`--video`、`--pdf PATH` で指定したローカルのファイルを読み込みます。画像には `s1flow[images]` が要ります。音声は WAV か MP3、動画は MP4 で、ファイルのバイトのまま送ります。画像はリサイズして再エンコードします。入力は、頼んだとき（`keep_state=True` か `--keep-state`）だけ記録します。
 
 ## モデルを直接呼ぶ { #call-a-model-directly }
 
