@@ -1,5 +1,5 @@
 ---
-translated_from: 1bfb56a71953
+translated_from: 686914820aa9
 ---
 
 # 評価して比べる
@@ -14,7 +14,6 @@ translated_from: 1bfb56a71953
 |---|---|
 | `eval` | 評価・比較・レポートのための numpy、scipy、scikit-learn |
 | `llm` | LLM と比べるための LiteLLM |
-| `optimize` | `eval` と `llm` に加えて、プロンプト最適化のための GEPA（実験的） |
 | `images` | 画像を準備するための Pillow |
 | `otel` | トレースのスパンを出す（任意）ための OpenTelemetry API |
 
@@ -34,17 +33,17 @@ s1flow adopt ticket-bug MODEL --reason "why this candidate" --json   # the new v
 # open a pull request with the change: merging releases it
 ```
 
-あるタスクで初めて `s1flow run` を実行すると、テスト用にケースの一部をホールドアウトし、`tasks/<task>/split.json` に書きます。`adopt` と `optimize` はこのファイルを読み、ファイルが無ければ動かないので、`task.py` と一緒にコミットしてください。このファイルを書くコマンドはほかにありません。あとから足したケースは ID のハッシュで振り分けられるので、ファイルの中身は変わりません。テスト用にホールドアウトできるほどラベル付きケースが無いときも、`run` はモデルに聞き、ファイルはあとの実行で書きます。
+あるタスクで初めて `s1flow run` を実行すると、テスト用にケースの一部をホールドアウトし、`tasks/<task>/split.json` に書きます。`adopt` はこのファイルを読み、ファイルが無ければ動かないので、`task.py` と一緒にコミットしてください。このファイルを書くコマンドはほかにありません。あとから足したケースは ID のハッシュで振り分けられるので、ファイルの中身は変わりません。テスト用にホールドアウトできるほどラベル付きケースが無いときも、`run` はモデルに聞き、ファイルはあとの実行で書きます。
 
 `s1flow init` は `s1flow/` プロジェクトを作るだけで、ほかには何もしません。`--skill` を付けると Agent Skill も書きます（[はじめる](get-started.md#add-the-skill-to-your-coding-agent)のとおり、プラグインとして入れることもできます）。
 
 プロジェクトのラインナップは 4 つの Decision Model を比べ、どれも `OPENROUTER_API_KEY` という一つのキーで動きます（issue くらいの大きさの入力で、1,000 回あたり $0.01〜$0.05）。ケースは、GitHub の issue、アプリのログ、手元のラベルから集められます。GitHub からケースを取ってくる Skill の `scripts/github.py` を使うには、`gh` CLI を入れてサインインしておく必要があります。
 
-`Task` は評価を定義します。データ、ラベルの読み方、問い、objective、制約、ケースの分割です。入力の準備にはアプリ自身の関数を使い回すか、アプリが実際に送った入力をリプレイしてください。`task.py` はアプリと一緒にデプロイしません。評価と本番の実行は、問いの型、答えの検証、判断のルールを共有します。指標と最適化は評価だけのものです。
+`Task` は評価を定義します。データ、ラベルの読み方、問い、objective、制約、ケースの分割です。入力の準備にはアプリ自身の関数を使い回すか、アプリが実際に送った入力をリプレイしてください。`task.py` はアプリと一緒にデプロイしません。評価と本番の実行は、問いの型、答えの検証、判断のルールを共有します。指標は評価だけのものです。
 
 ## 候補を比べる { #compare-candidates }
 
-`s1flow report` は、開発用のケースだけを使って、すべてのモデルと問いのバリアントを並べて見せます。バリアントは同じ問いの別の言い回しです。task.py に `variants={"strict": Boolean(instructions="...")}` のように書くと、`model/strict` という候補として動きます。`s1flow optimize` も同じ形でバリアントを足します。
+`s1flow report` は、開発用のケースだけを使って、すべてのモデルと問いのバリアントを並べて見せます。バリアントは同じ問いの別の言い回しです。task.py に `variants={"strict": Boolean(instructions="...")}` のように書くと、`model/strict` という候補として動きます（Skill は間違いからバリアントを書きます: [フィードバックと改善](feedback.md#improve-the-question)）。
 
 ターミナルには、タスクの objective の順に候補が並びます。上位で区別できない候補には `=` が付き、その中は task.py の `tiebreak` の順に（`tiebreak` が無ければ名前順に）並びます。どれを選ぶべきかの目印は付けません。`--json` を付けると、同じ候補 ID と数値で各候補のすべての指標が出るので、人や、人の代わりに動くエージェントが、自分の基準で選べます。テスト用のケースでの最終結果は、候補を採用したときにだけ出ます。
 

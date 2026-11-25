@@ -1,5 +1,5 @@
 ---
-translated_from: bad67fd44e61
+translated_from: ecb25f85cfc2
 ---
 
 # フィードバックと改善
@@ -14,7 +14,6 @@ translated_from: bad67fd44e61
 s1flow feedback record ticket-bug@v1 DECISION_ID true --log decisions.jsonl \
   --path policies/ticket-bug/v1.json
 s1flow feedback measure ticket-bug decisions.jsonl --json         # measures; --add also adds the cases
-s1flow optimize ticket-bug --json                  # a new candidate; report and adopt as for any other
 ```
 
 レビュー担当がスプレッドシートでラベルを直すときのように、人がまとめて答えを直すときは、判断ごとに `record` せず、一度にインポートします。
@@ -33,15 +32,16 @@ s1flow feedback import ticket-bug@v1 labels.csv --log decisions.jsonl --path pol
 
 本番での測定には、採用した objective と判断のルールを使います。測定が表すのはフィードバックのある判断だけで、それが判断全体のどれだけに当たるかも報告します。ラベルがたくさんあっても、偏りなく集められたとは限りません。
 
-## プロンプトを最適化する { #optimize-the-prompt }
+## 問いを改善する { #improve-the-question }
 
-`s1flow optimize` は実験的な機能です。オプションや保存する記録は、リリースごとに変わることがあります。
+s1flow の Skill を入れたコーディングエージェントは、人がするのと同じやり方で問いを改善します。そのとき、ラベル付きケースの 3 つの取り分に、それぞれ別の役目を持たせます。
 
-`s1flow optimize` は、task.py が指定するオプティマイザーを動かします（テンプレートでは `optimizer=Gepa(budget=300, reflection=None)`）。GEPA は、学習用と検証用のケースで、代理スコア（半分は正しさ、半分は 1 − Brier スコア）を使ってより良いプロンプトを探します。テスト用のケースが GEPA に渡されることはありません。s1flow はそのあと、最良のプロンプトを新しい候補としてすべてのケースで動かします。モデルの重みを学習することはなく、新しいプロンプトを勝手に本番に入れることもありません。`s1flow report` がほかの候補と比べ、あなたが選べば `s1flow adopt` が `current` にします。`--budget`、`--reflection`、`--patience`、`--max-cost` で、その実行に限り GEPA の設定を変えられます。
+```bash
+s1flow report ticket-bug --split train --out work    # the mistakes to write from: work/questions/<variant>.md
+s1flow cases check ticket-bug                        # names a variant that repeats a train case's text
+s1flow run ticket-bug --models jev/plain,jev/scope   # the variants it wrote in task.py
+s1flow report ticket-bug --split val                 # pick among them on cases their writer never read
+s1flow adopt ticket-bug jev/plain --reason "..."     # the held-out test, read once, for the pick
+```
 
-ほかのオプティマイザーも同じように差し込めます。方法は 2 つあります。
-
-- task.py に、`name`、`settings()`、`run(problem)` を持つオブジェクトを置く。`problem` は、タスク、モデル、出発点の問い、学習用と検証用のケースを持ちます。`run` は `Found` を返します。`Found` には、問い、モデルの呼び出し、それ以外にかかった費用、`detail` に入れる独自の情報が入ります。
-- パッケージのファクトリーを `s1flow.optimizers` エントリーポイントグループに登録し、`optimizer="my-optimizer"` のように文字列で指定する。
-
-どのオプティマイザーの結果も、同じ記録 `tasks/<task>/optimized/<variant>.json`（`s1flow/optimized@2`）に保存されます。
+各バリアントは学習用のケースだけから書きます。今の問いが間違えたケースと、0.9 未満で答えたケースのすべてを、モデルの上位の答えと一緒に読みます（`--split train --out`）。選ぶのは検証用のケースだけで行い、`adopt` は、それまで何も読んでいないテスト用のケースで、選んだものを確かめます。s1flow 自身の比較では、学習用と検証用の間違いをすべて読んで書いた問いは、そのケースでは良い値でしたが、テスト用のケースではそうなりませんでした。学習用から書いて検証用で選んだ問いは、テスト用でも保ちました。学習用の言葉（あるケースの文、一つの学習用ケースで見つけたキーワードや例）を借りたバリアントは、そのケースにしか合いません。検証用やテスト用のケースが学習用と似た言い回しだと、それは見えません。`cases check` は、学習用ケースの 6 語以上を続けてそのまま使うバリアントを挙げ、Skill は新しいエージェントに、借りた言葉を一つずつ探させます。`report` は、バリアントが、測っているそのケースから書かれたかもしれないことを注記します。その場合、そこでの値は高めに出ます。手順は Skill の `references/improve.md` にあります。
