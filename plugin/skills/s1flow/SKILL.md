@@ -17,7 +17,7 @@ Three principles:
   decided by the person, or by you when the person has written down how.
 - **Rules live in files.** `task.py` and `s1flow.toml` hold every rule the CLI follows. `init` writes the defaults
   out so they can be read and changed.
-- **One command per purpose.** Flow: `cases`, `run`, `optimize`, `report`, `adopt`, `decide`, `feedback`.
+- **One command per purpose.** Flow: `cases`, `run`, `report`, `adopt`, `decide`, `feedback`.
   Setup and distribution: `init`, `doctor`, `models`, `export`.
 
 **`criteria.md`.** Before any of those decisions, read `tasks/<id>/criteria.md` if it exists: the person's written
@@ -42,7 +42,7 @@ Read the one reference for the stage at hand:
 |---|---|
 | Start a project, agree on the decision, collect cases, write `task.py`, review labels | `references/collect.md` |
 | Run models and question variants, read `report`, charts, a new model version | `references/measure.md` |
-| Improve the question (the prompt, its wording or criteria) from its mistakes, or with `optimize` | `references/improve.md` |
+| Improve the question (the prompt, its wording or criteria) from its mistakes | `references/improve.md` |
 | Adopt a candidate, write the reason and the PR body, go back (adopt the older one again) | `references/ship.md` |
 | Call a policy from an app, a workflow or another language; decision logs; `export` | `references/app.md` |
 | Record the right answers, measure production, add cases | `references/learn.md` |

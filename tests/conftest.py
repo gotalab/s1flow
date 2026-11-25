@@ -81,7 +81,7 @@ def make_project(
     (root / "s1flow.toml").write_text("\n".join(toml))
     for t in copy_tasks:
         d = t
-        shutil.copytree(BENCH / "tasks" / d, root / "tasks" / d, ignore=shutil.ignore_patterns("split.json", "feedback.jsonl", "optimized"))
+        shutil.copytree(BENCH / "tasks" / d, root / "tasks" / d, ignore=shutil.ignore_patterns("split.json", "feedback.jsonl"))
         src = root / "tasks" / d / "task.py"  # the data stays where it is: point at it from the copy
         src.write_text(re.sub(r'cases="([^"]+)"', lambda m: f'cases="{(BENCH / "tasks" / d / m[1]).resolve()}"', src.read_text(), count=1))
     return Project(root)

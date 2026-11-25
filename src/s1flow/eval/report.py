@@ -332,9 +332,8 @@ SHOWN_UNSURE = 40  # rows per model in the Markdown; <variant>.json lists them a
 
 def unsure_or_wrong(pr: metrics.Preds, cases: dict[str, Case]) -> list[dict[str, Any]]:
     """Every scored case the model got wrong, or answered under metrics.HIGH_CONF: the mistakes a rewrite of the
-    question works from. Each with the label, the answer and its probability, the top three of its distribution
-    (choice, score), the case as reports show it and its rationale. By label, then the wrong before the right,
-    the surest first."""
+    question works from. Each with the label, the answer and its probability, and the top three of its distribution
+    (choice, score). By label, then the wrong before the right, the surest first."""
     p = pr.pairs
     out = []
     for i, cid in enumerate(pr.ids):
@@ -346,8 +345,7 @@ def unsure_or_wrong(pr: metrics.Preds, cases: dict[str, Case]) -> list[dict[str,
             names = p.options if len(p.options) == p.distribution.shape[1] else [str(k) for k in range(p.distribution.shape[1])]
             top = sorted(((n, round(float(x), 3)) for n, x in zip(names, p.distribution[i])), key=lambda t: -t[1])[:3]
         out.append({"id": cid, "label": label, "answer": said if p.ok[i] else "no answer", "right": bool(p.correct[i]),
-                    "probability": round(float(p.probability[i]), 3), "top": top,
-                    "case": cases[cid].text, "rationale": cases[cid].rationale})
+                    "probability": round(float(p.probability[i]), 3), "top": top})
     return sorted(out, key=lambda d: (str(d["label"]), d["right"], -d["probability"]))
 
 
@@ -362,7 +360,7 @@ def unsure_or_wrong_table(evs: list[Evaluation], preds: dict[str, metrics.Preds]
             top = ", ".join(f"{n} {x:.2f}" for n, x in d["top"])
             L.append(f"| {d['id']} | {d['label']} | {d['answer']}{'' if d['right'] else ' ✕'} | {d['probability']:.2f} | {top} | {show(cases[d['id']], 120)} |")
         if len(rows) > SHOWN_UNSURE:
-            L.append(f"\n{len(rows) - SHOWN_UNSURE} more, and each case in full with its rationale: `unsure_or_wrong` in the JSON beside this file.")
+            L.append(f"\n{len(rows) - SHOWN_UNSURE} more under `unsure_or_wrong` in the JSON beside this file, each case in full with its rationale under `cases`.")
         L.append("")
     return L if len(L) > 3 else [*L, "None."]
 
@@ -474,12 +472,15 @@ def write(task: Task, variant: str, out: Path, scope: evalset.Scope = "dev") -> 
     md = render(task, variant, evs, preds, scope)
     sf = evalset.current(task)
     cases = {cid: c for cid, c in task.load_cases().by_id().items() if sf.scored(cid, scope)}
+    listed = {e.candidate.name: unsure_or_wrong(preds[e.candidate.model], cases) for e in evs if e.n}
     out.mkdir(parents=True, exist_ok=True)
     charts = {e.candidate.name: metrics.chart_data(task, preds[e.candidate.model], e) for e in evs}
     saved = {"schema": REPORT, "task": task.id, "variant": variant, "scope": scope, "at": clock.now(),
              "data_digest": data_digest, "evaluation_contract_digest": contract_digest, "input_adapter_digest": adapter_digest,
              "evaluations": [e.model_dump(mode="json") for e in evs],
-             "unsure_or_wrong": {e.candidate.name: unsure_or_wrong(preds[e.candidate.model], cases) for e in evs if e.n},
+             "unsure_or_wrong": listed,
+             "cases": {cid: {"case": cases[cid].text, "rationale": cases[cid].rationale}
+                       for cid in sorted({d["id"] for rows in listed.values() for d in rows})},
              "charts": {name: values.model_dump(mode="json") for name, values in charts.items()}}
 
     (out / f"{variant}.md").write_text(md)

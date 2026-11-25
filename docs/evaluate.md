@@ -12,7 +12,6 @@ Install these in your development environment, not in the production image:
 |---|---|
 | `eval` | numpy, scipy and scikit-learn for evaluation, comparison and reports |
 | `llm` | LiteLLM, to compare against LLMs |
-| `optimize` | the `eval` and `llm` extras plus GEPA, for prompt optimization (experimental) |
 | `images` | Pillow, for preparing images |
 | `otel` | the OpenTelemetry API, for optional tracing spans |
 
@@ -33,7 +32,7 @@ s1flow adopt ticket-bug MODEL --reason "why this candidate" --json   # the new v
 ```
 
 The first `s1flow run` on a task holds out its test share and writes `tasks/<task>/split.json`; commit it with
-`task.py`, because `adopt` and `optimize` read that file and refuse without it. No other
+`task.py`, because `adopt` reads that file and refuses without it. No other
 command writes it. Cases added later are placed by a hash of their ID, so the file never moves. With too few
 labelled cases to hold out a test share, `run` still asks the models and writes the file on a later run.
 
@@ -45,14 +44,14 @@ already have. Fetching cases from GitHub (the Skill's `scripts/github.py`) needs
 A `Task` defines an evaluation: the data, how to read the label, the question, the objective, the constraints
 and how to split the cases. Reuse your app's own input-preparation function, or replay the inputs your app
 actually sent. Don't deploy `task.py` with your app. Evaluation and the runtime share the question types, answer
-validation and decision rules; metrics and optimization belong to evaluation alone.
+validation and decision rules; metrics belong to evaluation alone.
 
 ## Compare candidates
 
 `s1flow report` shows every model and question variant side by side, using only the development cases. A
 variant is another wording of the question, written in task.py as `variants={"strict": Boolean(instructions="...")}`
-and run as `model/strict`; `s1flow optimize` adds them the same way. The
-terminal shows the candidates ordered by the task's objective, with the ones it cannot tell apart at the top marked
+and run as `model/strict` (the Skill writes them from the mistakes: [Feedback and
+improvement](feedback.md#improve-the-question)). The terminal shows the candidates ordered by the task's objective, with the ones it cannot tell apart at the top marked
 `=` (ordered by `tiebreak` in task.py, or by name without one); it marks no pick. `--json` adds every
 metric of each candidate with the same candidate IDs and numbers, so a person, or an agent acting for them, can
 choose based on their own criteria. The final test-set result comes only when you adopt a candidate.

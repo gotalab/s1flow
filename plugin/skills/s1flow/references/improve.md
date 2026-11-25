@@ -3,69 +3,74 @@
 Open this when the person asks to improve the question (the prompt, the wording, the criteria), when a report shows
 the current question's mistakes share a pattern, or when production is below (`learn.md`).
 
-You improve it: read the mistakes on the development cases, write a better wording as a variant in `task.py`, run
-it, and show it beside the current question. The CLI only measures it, and `adopt` confirms a pick on the held-out
-test. `s1flow optimize` is another way (below). Either way the result is one more candidate, adopted only if the
-person picks it (`ship.md`).
+You improve it: read the current question's mistakes, write better wordings as variants in `task.py`, run them,
+pick one, and show it beside the current question. The CLI only measures, and `adopt` confirms a pick on the
+held-out test. The result is one more candidate, adopted only if the person picks it (`ship.md`).
 
-## What you may read
+## Three shares, three jobs
 
-Only the development cases (train + val): what `report` (and its `--out` files `questions/<variant>.md` and `.json`)
-and `cases review` show, the rows of the case ids they list, `task.py`, `context.md` and `criteria.md`.
+The first `run` split the labelled cases (`split.json`): **train**, **val** and the held-out **test**.
 
-Never read the `runs/` files, the cases file as a whole, the test ids in `split.json` or their rows, or the test
-numbers `adopt` prints, while writing a question. `run` saves the test share's answers too, for `adopt`. That held-out
-test is the only check that a new question did not just fit the cases you read; a question written with it in view
-leaves nothing to check it.
+- **Write from train.** Whoever writes a variant reads the mistakes on train alone:
+  `s1flow report <task> --split train --out <dir>`.
+- **Pick on val.** Compare the variants on val alone, by the numbers: `s1flow report <task> --split val`.
+- **Check on test, once.** `adopt` reads test for the one candidate the person picks.
+
+Keep the jobs apart. A question written from every development case scores well on them and worse on new ones. In
+s1flow's own comparison (massive-ja-intent, jev 1.14, coverage at 95% accuracy), an agent that read every train and
+val mistake reached 98% coverage on them, but on the test share its sure answers were 88-91% right instead of 95%,
+on all four models tried. Builders that read train only and were picked on val held up on test: accuracy 83.9% for
+the original question, 90.8% for the pick (GEPA's question reached 85.1%).
+
+## What a writer may read
+
+`task.py`, `context.md`, `criteria.md`, and what `report --split train --out <dir>` writes:
+`<dir>/questions/<variant>.md` ("Wrong, or right under 0.9": each case's label, answer, probability and top
+answers) and `<variant>.json` (`unsure_or_wrong`: every one of them; `cases`: each in full, with its `rationale`).
+
+Never, while writing a question: val's or test's cases (`report --split val --out`, `report --out` without
+`--split`, the cases file, `split.json`), the `runs/` files, or the test numbers `adopt` prints. The val table
+(`report --split val`, no `--out`) is for picking, after the variants are written.
 
 ## Steps
 
 1. **Labels first.** `s1flow cases review <task>`. A wrong label, or a state missing what decides the case, is fixed
    in `collect.md` ("Review the labels"), not by a new question.
-2. **Read the mistakes.** Current's question is the one the current policy asks (`s1flow report` with no task names
-   current's candidate; `base` unless a variant was adopted). `s1flow report <task> --out report`, then
-   `report/questions/<variant>.md` for that question: "Wrong at a high probability", and "Cases the models disagree
-   on" when two models or more ran on it. `<variant>.json`'s `high_confidence_errors` lists every one past the 8
-   shown. For a case's whole state, search the cases file for that id and read only its row. Read
-   `tasks/<task>/context.md`: how the team already decides.
-3. **Name the pattern** the wrong answers share and the question misses or says wrong: an option's criteria too
-   narrow, two options that overlap, a rule the team follows that the question leaves out. Tell the person in a
-   sentence or two. If there is none, say so: a new wording is unlikely to help, and better labels, more cases or
-   another model may.
-4. **Write one variant** in `task.py`, of the same type with the same options as current's question, starting from
-   its text and changing only what the pattern points to:
+2. **Read the mistakes on train.** Current's question is the one the current policy asks (`s1flow report` with no
+   task names current's candidate; `base` unless a variant was adopted). `s1flow report <task> --split train --out
+   <dir>`, then that variant's files under `<dir>/questions/`.
+3. **List what goes wrong.** Start a fresh agent with no other context, if you can, and give it only what a writer
+   may read. It lists every pattern the mistakes share that the question misses or says wrong: an option's
+   criteria too narrow, two options that overlap, a rule the team follows that the question leaves out, an option
+   with no description. With each, the cases it explains. Tell the person the few that explain the most. If none
+   explains several cases, say so: a new wording is unlikely to help, and better labels, more cases or another
+   model may.
+4. **Write one variant per pattern.** One fresh agent each (in parallel if you can), given the same files and its
+   one pattern, writes one entry of `variants=` in `task.py`: the same type and options as current's question,
+   starting from its text and changing what the pattern points to.
 
    ```python
    variants={
-       # Mistakes: refactors with a behaviour change answered "refactor" (5 of the 8 at 0.9 or more).
+       # Pattern: refactors with a behaviour change answered "refactor" (5 of the 8 at 0.9 or more, train).
        "behaviour": Choice(instructions="...", criteria={"bug": "...", "refactor": "...", "feature": "..."}),
    },
    ```
 
-   Write the rule, never a case's text, id or label: a question that recites the cases it is scored on only fits
-   them.
-5. **Run it** on current's model, named as `report` names it: `s1flow run <task> --models <model>/<variant>`. It
-   asks every case, the test share too. Say its cost first, cases (`s1flow cases check <task>`) x current's
-   `API $/10k` / 10,000, and run it when the person says go (or `criteria.md` covers that spend).
-6. **Show it.** `s1flow report <task>`, read as `measure.md` says, current's question and the variant side by side.
-   Report notes that a variant may have been written from the cases it is scored on: say that its numbers lean high,
-   and that `adopt` checks on the held-out test whether it holds.
-7. **One round, unless told more.** Each round reads the same cases again, so its numbers lean higher. Write another
-   variant only when the person, or `criteria.md`, says to.
-8. **If the person picks it,** `ship.md`. Adopt that one candidate, once. Never adopt several variants to see which
-   passes, and never change a variant toward a test result: the test would be choosing, and its verdict would no
-   longer show anything. If `adopt` shows it below, bring that to the person.
-
-## Optimize
-
-```bash
-s1flow optimize <task>     # needs s1flow[optimize]
-```
-
-It runs task.py's `optimizer=Gepa(budget=300, reflection=None)` (or an optimizer plugged in there) on current's
-question (GEPA takes boolean and choice questions), and saves the result as a new candidate `<model>/<variant>`.
-`--budget`, `--model`, `--reflection`, `--patience` and `--max-cost` override it for one run. It reads
-`tasks/<task>/context.md`, and the train and val cases, never the test share. It ships nothing: compare it in
-`report` and adopt it like any candidate (`ship.md`). Its own score is not evidence. `optimize` is experimental: its
-options and the record it saves may change between releases, and it may be removed once compared with the steps
-above. Say so when suggesting it.
+   Write the rule, never a case's text, id or label: a question that recites its cases only fits them. First try,
+   for a choice: one plain sentence per option saying what it covers. It did best in the comparison above. Rules
+   added only to `instructions` changed nothing there, and keywords or examples taken from train fitted train
+   alone. Keep within the model's `max_instructions_chars` and `max_description_chars` (`s1flow models`) where
+   declared. Without fresh agents, write them yourself, reading only what a writer may read.
+5. **Run them** on current's model, named as `report` names it: `s1flow run <task> --models <model>/<a>,<model>/<b>`.
+   It asks every case, the test share too, for `adopt`. Say the cost first, variants x cases
+   (`s1flow cases check <task>`) x current's `API $/10k` / 10,000, and run when the person says go (or
+   `criteria.md` covers that spend).
+6. **Pick on val.** `s1flow report <task> --split val`: each variant beside current's question. Keep the best one
+   if it beats current's question on the primary objective; otherwise keep current's.
+7. **Another round** starts from the kept question's train mistakes (step 2). Stop after two rounds in a row with
+   no gain on val, or when the person, or `criteria.md`, says to stop. Each round reads train again and picks on
+   val again, so val's numbers lean a little higher each time; `report --split val` notes it.
+8. **Show it and let the person pick.** The kept variant beside current's question, val's numbers, the pattern it
+   fixes. If the person picks it, `ship.md`: adopt that one candidate, once. Never adopt several variants to see
+   which passes, and never change a variant toward a test result: the test would be choosing, and its verdict
+   would no longer show anything. If `adopt` shows it below, bring that to the person.

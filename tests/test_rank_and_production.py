@@ -118,10 +118,12 @@ def test_the_report_lists_every_case_wrong_or_not_sure_with_the_top_answers(task
     current(task)
     out = task.where.root / "out"
     md = report.write(task, "base", out, "train")
-    listed = json.loads((out / "base.json").read_text())["unsure_or_wrong"]["m"]
+    saved = json.loads((out / "base.json").read_text())
+    listed = saved["unsure_or_wrong"]["m"]
     wrong = next(d for d in listed if d["label"] == "c")  # ByQuestion is unsure and wrong on c, unsure and right on a and b
     assert not wrong["right"] and wrong["answer"] == "a" and wrong["probability"] == 0.6
-    assert wrong["top"] == [["a", 0.6], ["b", 0.2], ["c", 0.2]] and wrong["case"] == '{"text": "c"}'
+    assert wrong["top"] == [["a", 0.6], ["b", 0.2], ["c", 0.2]]
+    assert saved["cases"][wrong["id"]] == {"case": '{"text": "c"}', "rationale": None} and set(saved["cases"]) == {d["id"] for d in listed}
     train = {c.id for c in task.load_cases().labelled() if evalset.current(task).assign[c.id] == "train"}
     assert {d["id"] for d in listed} == train and {d["label"] for d in listed if d["right"]} == {"a", "b"}  # nothing at 0.9
     assert "## Wrong, or right under 0.9" in md and "| a 0.60, b 0.20, c 0.20 |" in md

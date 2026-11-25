@@ -46,7 +46,7 @@ def test_runtime_calls_and_logs_without_a_project_or_evaluation(tmp_path):
         import sys
         from pathlib import Path
 
-        forbidden = ("s1flow.eval", "s1flow.project", "numpy", "scipy", "sklearn", "litellm", "gepa", "PIL", "opentelemetry", "dotenv")
+        forbidden = ("s1flow.eval", "s1flow.project", "numpy", "scipy", "sklearn", "litellm", "PIL", "opentelemetry", "dotenv")
         class NoExtras(importlib.abc.MetaPathFinder):
             def find_spec(self, fullname, path=None, target=None):
                 if any(fullname == p or fullname.startswith(p + ".") for p in forbidden):

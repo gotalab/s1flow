@@ -24,6 +24,7 @@ s1flow report <task> --json                 # every metric, the ranking and its 
 s1flow report <task> --json --limit 20 --offset 12
 s1flow report <task> --candidate jev:1.14/policy
 s1flow report <task> --out DIR              # DIR/comparison.json and DIR/questions/<variant>.md
+s1flow report <task> --split val            # val alone (or train): rewriting a question, improve.md
 s1flow report --from DIR/comparison.json --json   # offline: no rescoring, no calls
 ```
 

@@ -61,4 +61,4 @@ When production is below, or the labels show a pattern the question misses:
 3. `s1flow report <task>`: show the candidates, the tied ones as tied.
 4. If the person picks one, `ship.md`: adopt with a reason, a pull request, and their merge.
 
-Never treat optimize's own score or a historical benchmark as production evidence.
+Never treat a variant's score on the cases it was written from, or a historical benchmark, as production evidence.

@@ -128,8 +128,7 @@ task = Task(
 
 - Other wordings of the question to compare: `variants={"strict": Boolean(instructions="...")}`, each of the
   question's type and labels. `s1flow run <id> --models jev/strict` asks one, and `report` shows each as its own
-  candidate `model/variant` beside the base question; `improve.md` writes one from the mistakes, and `optimize` adds
-  variants the same way. A threshold is chosen per candidate by the objective, so changing the wording and the cut
+  candidate `model/variant` beside the base question; `improve.md` writes them from the mistakes. A threshold is chosen per candidate by the objective, so changing the wording and the cut
   are compared together.
 - A boolean question with a choice-like label uses `Boolean(...)`; a choice scored as one option against the rest
   sets `kind_params=KindParams(positive="bug")`.
@@ -151,9 +150,8 @@ task = Task(
   `"video"` MP4, `"pdf"`). Every model gets the same bytes. Only models that declare the kind are compared on
   it (`s1flow models`); how many and how large each takes is the model's limit (Clef Omni: 4 audio clips of
   8 MiB, 2 videos; ScaleDown: 1 PDF), and a case past it counts as refused for that model.
-- `optimizer=Gepa(budget=300, reflection=None)` is what `optimize` runs (`improve.md`).
 - How the team already decides (a triage policy, CONTRIBUTING, a bot's prompt) goes in `tasks/<id>/context.md`:
-  you read it when improving the question (`improve.md`), and so does `optimize`; the model never does.
+  you read it when improving the question (`improve.md`); the model never does.
   `criteria.md` is for the person's decision criteria, not the model.
 
 Supported question types: boolean, choice, score and box, where the provider takes them. Evaluation compares all

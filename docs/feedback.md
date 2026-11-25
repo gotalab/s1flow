@@ -13,7 +13,6 @@ get a new ID.
 s1flow feedback record ticket-bug@v1 DECISION_ID true --log decisions.jsonl \
   --path policies/ticket-bug/v1.json
 s1flow feedback measure ticket-bug decisions.jsonl --json         # measures; --add also adds the cases
-s1flow optimize ticket-bug --json                  # a new candidate; report and adopt as for any other
 ```
 
 When people correct answers in bulk, such as a reviewer fixing labels in a spreadsheet, import them in one go
@@ -46,27 +45,19 @@ collected without bias.
 
 ## Improve the question
 
-A coding agent with the s1flow Skill improves the question the way a person would: it reads the current question's
-mistakes on the train and validation cases (`s1flow report TASK --out DIR`, then `DIR/questions/<variant>.md`),
-writes a new wording as a variant in task.py, runs it, and shows it beside the current one. It never reads the test
-share, so `s1flow adopt` can still check the pick there. `report` notes that a variant may have been written from
-the cases it is scored on, so its values there lean high. The Skill's `references/improve.md` holds the steps.
+A coding agent with the s1flow Skill improves the question the way a person would, and keeps the three shares of
+the labelled cases to three jobs:
 
-## Optimize the prompt
+```bash
+s1flow report ticket-bug --split train --out work    # the mistakes to write from: work/questions/<variant>.md
+s1flow run ticket-bug --models jev/plain,jev/scope   # the variants it wrote in task.py
+s1flow report ticket-bug --split val                 # pick among them on cases their writer never read
+s1flow adopt ticket-bug jev/plain --reason "..."     # the held-out test, read once, for the pick
+```
 
-`s1flow optimize` is the other way, and experimental: its options and the record it saves may change between
-releases.
-
-`s1flow optimize` runs the optimizer task.py names (`optimizer=Gepa(budget=300, reflection=None)` in the
-template). GEPA searches for better prompts using a stand-in score (half correctness, half 1 − Brier score) on the
-train and validation cases; the test share is never given to it. s1flow then runs the best prompt on every case as
-a new candidate. It doesn't train model weights, and it never makes the new prompt live: `s1flow report` compares
-it with the others, and `s1flow adopt` makes it current when you pick it. `--budget`, `--reflection`,
-`--patience` and `--max-cost` change GEPA's settings for one run.
-
-Another optimizer plugs in the same way: an object with `name`, `settings()` and `run(problem)` in task.py
-(`problem` holds the task, the model, the question to start from, and the train and validation cases; `run`
-returns a `Found`: the question, the model calls, what it spent beside them, and anything of its own in `detail`),
-or a package's factory under the `s1flow.optimizers` entry point group, named by a string
-(`optimizer="my-optimizer"`). Every optimizer's result is saved in the same record,
-`tasks/<task>/optimized/<variant>.json` (`s1flow/optimized@2`).
+It writes each variant from the train cases alone: every case the current question got wrong or answered under 0.9,
+with the model's top answers (`--split train --out`). It picks on the validation cases alone, and `adopt` checks the
+pick on the test share, which nothing read before. In s1flow's own comparison, a question written from every train
+and validation mistake scored well on them but not on the test share, while one written from train and picked on
+validation held up there. `report` notes that a variant may have been written from the cases it is scored on, so
+its values there lean high. The Skill's `references/improve.md` holds the steps.

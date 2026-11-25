@@ -3,7 +3,7 @@
 ## Install and init
 
 ```bash
-uv tool install "s1flow[eval]"         # base + evaluation; add ,optimize for `optimize`, ,llm for LLM models
+uv tool install "s1flow[eval]"         # base + evaluation; add ,llm for LLM models
 s1flow init [dir] --task <id>          # dir (default s1flow/): s1flow.toml, tasks/<id>/task.py, .gitignore
 s1flow init --skill                    # also write this Skill where agents read it
 ```
@@ -120,6 +120,6 @@ Connections: `--connections` when given, else the project's `s1flow.toml`; never
 | 2 | usage, configuration, or could not run | read the `error:` line and fix the named input |
 
 A usage error is one `error: ... (see s1flow <command> --help)` line. A `notice:` line on stderr is a warning.
-`--json` gives machine-readable output for `report`, `adopt`, `optimize`, `cases review`,
+`--json` gives machine-readable output for `report`, `adopt`, `cases review`,
 `feedback measure`, `decide`, `doctor` and `models`. Other commands print their verdict and name the files they
 wrote.
