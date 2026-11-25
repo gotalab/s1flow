@@ -1,6 +1,6 @@
 ---
 description: 繰り返す判断を自分のデータで確かめてから、Decision Model に任せる。
-translated_from: c74ebfb939ec
+translated_from: 344c8ba01912
 hide:
   - navigation
   - toc
@@ -8,7 +8,7 @@ hide:
 
 # 繰り返す判断を自分のデータで確かめてから、Decision Model に任せる { .hero-title }
 
-自動化には小さな分かれ道がたくさんあります。エージェントがそのまま実行するか人に確認するか、このチケットをどのチームに回すか、このメッセージに返信が要るか。Decision Model は、こうした型の決まった問いに、確率付きで素早く答えます。s1flow は、必要な正解率を保ったまま判断のどれだけをモデルに任せられるかを、あなた自身のケースで測ります。アプリはモデルが確信している答えをそのまま使い、残りは人に回します。人の答えは新しいケースになります。
+自動化には「エージェントにそのまま実行させるか、人に確認するか」のような小さな判断がたくさんあります。s1flow はその判断を Decision Model にどこまで任せられるかをあなたのケースで測り、モデルが確信しているケースだけを任せます。
 { .hero-lead }
 
 [はじめる](get-started.md){ .md-button .md-button--primary } [しくみ](concepts.md){ .md-button }
@@ -31,6 +31,6 @@ hide:
 - [**フィードバックと改善**](feedback.md)
   正解を記録して本番で測り、新しいケースにします。
 - [**ベンチマーク**](https://gotalab.github.io/s1flow/benchmarks/)
-  公開タスクで Decision Model を測った、日付付きのスナップショット（英語）。各タスクは、答えの使い道に合った指標で測っています。
+  公開タスクで Decision Model を測った、日付付きのスナップショット（英語）。各タスクは答えの使い道に合った指標で測っています。
 
 </div>
