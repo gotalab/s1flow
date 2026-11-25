@@ -17,6 +17,11 @@
 - A question's report (`report --out`) lists every case each model got wrong or answered under 0.9, with the label,
   the answer, its probability and the three likeliest answers of a choice or a score: `unsure_or_wrong` in the
   JSON, in the cases file's order, with each case's state and `rationale` under `cases`. The Markdown counts them.
+- `s1flow cases check` names each question variant in `task.py` that repeats a train case's text (six words or more
+  in a row that the base question does not hold; a Japanese or Chinese character counts as a word, a katakana word
+  as one), with the cases it comes from. A question that recites its cases fits them alone, and val and test cannot
+  show it when their cases are worded like train's. The Skill's `improve.md` checks every variant this way before
+  running it, and has a fresh agent look for the keywords, names and examples a variant borrowed from train.
 - The README and Get started name Antigravity: `s1flow init --skill` writes the Skill into `.agents/skills/`, which
   Antigravity reads.
 

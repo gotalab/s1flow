@@ -5,6 +5,7 @@ this is the one place that says whether the result is usable.
 """
 
 import json
+import re
 from typing import Any
 from collections import Counter
 
@@ -19,6 +20,10 @@ from .shown import pct
 from .task import Task
 
 MINORITY = 0.2  # a binary task whose smaller side is under this share: Accuracy favours the larger side
+COPIED = 6  # words in a row a variant shares with a train case, beyond its base question, before the check names them
+# A word: a katakana word, one kana or kanji (Japanese and Chinese have no spaces), or a run of other letters and digits.
+_CJK = "\u3040-\u309f\u3400-\u9fff\uf900-\ufaff"
+WORD = re.compile(f"[\u30a0-\u30ff]+|[{_CJK}]|[^\\W\u30a0-\u30ff{_CJK}]+")
 
 
 class DataCheck(BaseModel):
@@ -96,11 +101,66 @@ def check(task: Task) -> DataCheck:
     if todo := [str(k) for k, v in (said.items() if isinstance(said, dict) else enumerate(said)) if v and "TODO" in v]:
         warnings.append(f"the criteria of {', '.join(todo)} still say TODO: the model reads them as written; fill them in task.py")
     sf = evalset.read(task)
+    if sf is not None:  # variants are written from train's mistakes, after the first run fixed the shares
+        train = set(evalset.current(task).ids("train"))
+        warnings += copied(task, [c for c in labelled if c.id in train])
     return DataCheck(
         cases=len(cases), labelled=len(labelled), labels=dict(labels.most_common()), errors=errors, warnings=warnings,
         test=None if sf is None else len(evalset.current(task).ids("test")), unassigned=0 if sf is None else sum(c.id not in sf.assign for c in labelled),
         corrected=dict(Counter(f.verdict for f in fixes.values()).most_common()),
     )
+
+
+def _texts(value: Any) -> list[str]:
+    """Every string a question or a state holds (a dict's values, not its keys: a question's keys are its options)."""
+    if isinstance(value, str):
+        return [value]
+    if isinstance(value, dict):
+        return [t for v in value.values() for t in _texts(v)]
+    if isinstance(value, (list, tuple)):
+        return [t for v in value for t in _texts(v)]
+    return []
+
+
+def _runs(text: str) -> list[tuple[tuple[str, ...], int, int]]:
+    """Every COPIED words in a row in `text`: the words (case folded), where the first starts and the last ends."""
+    w = list(WORD.finditer(text.casefold()))
+    return [(tuple(m.group() for m in w[i:i + COPIED]), w[i].start(), w[i + COPIED - 1].end()) for i in range(len(w) - COPIED + 1)]
+
+
+def _spans(text: str, shared: dict[tuple[str, ...], list[str]]) -> list[tuple[str, list[str]]]:
+    """The stretches of `text` made of overlapping shared runs, each with the cases holding any of its runs."""
+    spans: list[tuple[int, int, list[str]]] = []  # start, end, cases
+    for words, a, b in _runs(text):
+        if words not in shared:
+            continue
+        if spans and a < spans[-1][1]:  # overlaps the stretch so far
+            start, _, ids = spans.pop()
+            spans.append((start, b, ids + [i for i in shared[words] if i not in ids]))
+        else:
+            spans.append((a, b, list(shared[words])))
+    return [(text[a:b], ids) for a, b, ids in spans]
+
+
+def copied(task: Task, train: list[Case]) -> list[str]:
+    """The variants that repeat a train case's text: the runs of COPIED words a variant shares with a train
+    case's state and not with the base question. A question written from train cases that recites them fits
+    them alone, and the held-out shares cannot show it when their cases are worded like train's."""
+    base = {r[0] for t in _texts(task.question.model_dump()) for r in _runs(t)}
+    texts = {n: _texts(q.model_dump()) for n, q in task.variants.items()}
+    wanted = {r[0] for ts in texts.values() for t in ts for r in _runs(t)} - base
+    shared: dict[tuple[str, ...], list[str]] = {}  # run -> the train cases holding it, in the cases file's order
+    for c in train if wanted else []:
+        for words in {r[0] for t in _texts(c.state) for r in _runs(t)} & wanted:
+            shared.setdefault(words, []).append(c.id)
+    out = []
+    for name, ts in texts.items():
+        if spans := [s for t in ts for s in _spans(t, shared)]:
+            said = "; ".join(f'"{s}" ({", ".join(ids[:3])}{f" and {len(ids) - 3} more" if len(ids) > 3 else ""})' for s, ids in spans[:3])
+            more = f" and {len(spans) - 3} more" if len(spans) > 3 else ""
+            out.append(f"variant {name!r} repeats train cases' text: {said}{more}. A question that recites its cases fits them "
+                       "alone: write the rule they share")
+    return out
 
 
 def markdown(task: Task, r: DataCheck) -> str:

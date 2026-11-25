@@ -63,16 +63,28 @@ Never, while writing a question: val's or test's cases (`report --split val --ou
    added only to `instructions` changed nothing there, and keywords or examples taken from train fitted train
    alone. Keep within the model's `max_instructions_chars` and `max_description_chars` (`s1flow models`) where
    declared. Without fresh agents, write them yourself, reading only what a writer may read.
-5. **Run them** on current's model, named as `report` names it: `s1flow run <task> --models <model>/<a>,<model>/<b>`.
+5. **Check them for train's words.** A variant that borrows train's wording grows sure on the cases holding those
+   words, right or wrong, and val and test cannot show it when their cases are worded like train's. In the
+   comparison above, a variant that added keywords each found in one train case reached 90% coverage on train and
+   76% on val; the plain-sentence one reached 88% and 84%.
+   - `s1flow cases check <task>` names each variant that repeats a train case's text (six words in a row; a kana,
+     a kanji or a katakana word counts as one) and the cases it comes from. Rewrite that part as the rule it stands
+     for.
+   - The check sees only copied text. Start one more fresh agent, not a writer, with each variant's change from
+     current's question and the train log the writers read (step 2's JSON). For every word, name, number and
+     example the variant adds, it searches the states in that log: one found in only one or two of them, or a
+     translation or rewording of one, is borrowed, not a rule. It lists them with their cases; replace each with
+     the meaning it stood for, or remove it. Without a fresh agent, do the search yourself.
+6. **Run them** on current's model, named as `report` names it: `s1flow run <task> --models <model>/<a>,<model>/<b>`.
    It asks every case, the test share too, for `adopt`. Say the cost first, variants x cases
    (`s1flow cases check <task>`) x current's `API $/10k` / 10,000, and run when the person says go (or
    `criteria.md` covers that spend).
-6. **Pick on val.** `s1flow report <task> --split val`: each variant beside current's question. Keep the best one
+7. **Pick on val.** `s1flow report <task> --split val`: each variant beside current's question. Keep the best one
    if it beats current's question on the primary objective; otherwise keep current's.
-7. **Another round** starts from the kept question's train mistakes (step 2). Stop after two rounds in a row with
+8. **Another round** starts from the kept question's train mistakes (step 2). Stop after two rounds in a row with
    no gain on val, or when the person, or `criteria.md`, says to stop. Each round reads train again and picks on
    val again, so val's numbers lean a little higher each time; `report --split val` notes it.
-8. **Show it and let the person pick.** The kept variant beside current's question, val's numbers, the pattern it
+9. **Show it and let the person pick.** The kept variant beside current's question, val's numbers, the pattern it
    fixes. If the person picks it, `ship.md`: adopt that one candidate, once. Never adopt several variants to see
    which passes, and never change a variant toward a test result: the test would be choosing, and its verdict
    would no longer show anything. If `adopt` shows it below, bring that to the person.

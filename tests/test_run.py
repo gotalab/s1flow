@@ -279,3 +279,33 @@ def test_the_task_init_writes_spells_out_the_defaults(tmp_path):
     assert spelled.evaluation_contract_digest == ordered.evaluation_contract_digest  # what was measured is measured alike
     moved = {default.copy(tiebreak=t).evaluation_contract_digest for t in (["cost", "latency"], ["cost"], ["latency"])}
     assert len(moved) == 3 and ordered.evaluation_contract_digest not in moved  # another order is another selection rule
+
+
+def test_check_names_a_variant_that_repeats_a_train_cases_text(tmp_path):
+    from s1flow.client import Choice
+    from s1flow.eval import Task, evalset
+
+    def task(texts, **variants):
+        (tmp_path / "d.jsonl").write_text("".join(json.dumps({"id": str(i), "text": t, "label": "a"}) + "\n" for i, t in enumerate(texts)))
+        return Task(id="t", cases="d.jsonl", dir=tmp_path, state=lambda r: {"text": r["text"]}, label=lambda r: r["label"],
+                    question=Choice(instructions="Which team? A printer that jams on every double sided page goes to a.", criteria={"a": "hardware", "b": None}),
+                    variants={k: Choice(instructions=v, criteria={"a": "hardware", "b": None}) for k, v in variants.items()})
+
+    assert evalset.fix(task(["x"] * 20))  # as the first run does; the split follows the ids and labels, not the text
+    split = evalset.current(task(["x"] * 20))
+    train, test = split.ids("train")[:2], split.ids("test")[0]
+    texts = [f"case {i} " + " ".join(f"w{i}x{j}" for j in range(8)) for i in range(20)]
+    texts[int(train[0])] = "The printer on floor 3 eats the paper and blinks red twice"
+    texts[int(train[1])] = "アラームを七時三十分にセットしておいて"
+    texts[int(test)] = "The scanner by the lift shows a grey line on every copy"
+    got = data.check(task(
+        texts,
+        recites="Which team? As when THE PRINTER ON FLOOR 3 EATS the paper, a jam goes to a.",
+        ja="アラームを七時三十分にセット する依頼は a。",  # no spaces in Japanese: each kana or kanji is a word
+        rule="Which team? A printer that jams on every double sided page goes to a; so does a broken screen.",  # base's own words
+        held_out="Which team? The scanner by the lift shows a grey line: a.",  # never read by a writer: train alone is checked
+    )).warnings
+    named = {w.split("'")[1]: w for w in got if w.startswith("variant ")}
+    assert set(named) == {"recites", "ja"}
+    assert f'"THE PRINTER ON FLOOR 3 EATS the paper" ({train[0]})' in named["recites"]
+    assert f'"アラームを七時三十分にセット" ({train[1]})' in named["ja"]

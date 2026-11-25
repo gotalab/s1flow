@@ -9,8 +9,8 @@ from .common import Parser, command, label, project
 
 
 def cases_check(a: argparse.Namespace) -> int:
-    """Check a task's cases before running it: states build, labels fit the question, duplicates, balance, the split.
-    Exit 1 when a case is wrong."""
+    """Check a task's cases before running it: states build, labels fit the question, duplicates, balance, the split,
+    and question variants that repeat a train case's text. Exit 1 when a case is wrong."""
     from ..eval import data as checking
     from ..eval.task import load
 
