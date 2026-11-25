@@ -8,7 +8,7 @@ one label and the reading of its answers (policies/kinds.py) per case. numpy and
 What is measured is the question type, except that a choice scored as P(positive) is measured as a
 boolean. A measure never chooses a rule and a rule never knows a measure: metrics finds the
 rule on a fold's fit side and measures the eval side read at it, feedback measures what
-a policy read. The kind's own numbers (`f1`, `mean_iou`, `mae`, `qwk`, `brier`, `ece`) are measures too.
+a policy read. The kind's own numbers (`f1`, `mean_iou`, `mae`, `qwk`, `mean_error`, `brier`, `ece`) are measures too.
 
 A constraint is a share an objective keeps on one side of a bound (Coverage: the accuracy of what is
 answered; Recall: the false alarms among the negatives). Only the built-ins hold one.
@@ -21,8 +21,11 @@ import numpy as np
 from scipy.special import betaincinv
 
 from ...client.answers import BoxEdges
-from ...client.boxes import iou
+from ...client.boxes import iou, matched
 from ...core.errors import ConfigError
+from ...policies.kinds import ABSENT
+
+READ = ("text", "number", "date")  # a value read from the state, whose label may be ABSENT
 from ..kinds import Kind, Reading
 from .declare import Constraints, Objective
 
@@ -51,13 +54,15 @@ class Pairs:
     confidence: np.ndarray  # box (0 when failed)
     expected: np.ndarray  # score: the expected level (nan when failed, and for the other kinds)
     levels: int = 0  # score: L, its levels 0..L-1
+    bounds: tuple[float, float] = (0.0, 0.0)  # estimate: the question's range
+    hit_iou: float = 0.5  # box and boxes: the IoU at which a box is its label's
 
     def __len__(self) -> int:
         return len(self.y)
 
     def __getitem__(self, idx: np.ndarray) -> "Pairs":
         return Pairs(  # not dataclasses.replace: a bootstrap takes thousands of these
-            measured=self.measured, options=self.options, levels=self.levels, y=self.y[idx], ok=self.ok[idx], value=self.value[idx], unsure=self.unsure[idx], min_probability_set=self.min_probability_set[idx], correct=self.correct[idx],
+            measured=self.measured, options=self.options, levels=self.levels, bounds=self.bounds, hit_iou=self.hit_iou, y=self.y[idx], ok=self.ok[idx], value=self.value[idx], unsure=self.unsure[idx], min_probability_set=self.min_probability_set[idx], correct=self.correct[idx],
             probability=self.probability[idx], p_positive=self.p_positive[idx], confidence=self.confidence[idx],
             distribution=None if self.distribution is None else self.distribution[idx], expected=self.expected[idx],
         )
@@ -97,11 +102,13 @@ def pairs(kind: Kind, labels: Sequence[Any], readings: Sequence[Reading | None])
     # labels once for both metric truth values and correctness.
     normalized = [kind.as_label(label) for label in labels]
     y = np.empty(n, dtype=object)
-    y[:] = normalized
-    if n and all(isinstance(v, bool) for v in normalized):
+    for i, v in enumerate(normalized):  # one at a time: a label that is a tuple stays one value
+        y[i] = v
+    if n and kind.type not in (*READ, "box") and all(isinstance(v, bool) for v in normalized):  # these keep ABSENT as it is
         y = y.astype(bool)
     value = np.empty(n, dtype=object)
-    value[:] = [None if r is None else r.value for r in readings]
+    for i, r in enumerate(readings):
+        value[i] = None if r is None else r.value
     width = len(options) or levels
     flat = [1 / width] * width if width else []
     has_dist = any(r is not None and r.distribution is not None for r in readings)
@@ -116,6 +123,8 @@ def pairs(kind: Kind, labels: Sequence[Any], readings: Sequence[Reading | None])
         distribution=np.array([flat if r is None or r.distribution is None else r.distribution for r in readings], dtype=float) if has_dist else None,
         confidence=np.array([0.0 if r is None or r.confidence is None else r.confidence for r in readings], dtype=float),
         expected=np.array([np.nan if r is None or r.expected is None else r.expected for r in readings], dtype=float), levels=levels,
+        bounds=(float(getattr(kind, "low", 0.0)), float(getattr(kind, "high", 0.0))) if kind.type == "estimate" else (0.0, 0.0),
+        hit_iou=kind.iou,
     )
 
 
@@ -235,8 +244,14 @@ def _f1(tp: np.ndarray, true: np.ndarray, said: np.ndarray) -> np.ndarray:
 
 
 def _ious(p: Pairs) -> np.ndarray:
-    """A box task: the IoU of each case's box with its label box (0 when failed)."""
-    return np.array([iou(v, BoxEdges.model_validate(t)) if ok else 0.0 for v, t, ok in zip(p.value, p.y, p.ok)], dtype=float)
+    """A box task: the IoU of each case's box with its label box (0 when failed). Where the label or the answer is
+    no box: 1 when both are, 0 when one is."""
+    def one(v: Any, t: Any) -> float:
+        if t is ABSENT or v is None:
+            return 1.0 if t is ABSENT and v is None else 0.0
+        return iou(v, BoxEdges.model_validate(t))
+
+    return np.array([one(v, t) if ok else 0.0 for v, t, ok in zip(p.value, p.y, p.ok)], dtype=float)
 
 
 # ---------- the loss table (Loss; Accuracy and ExpectedLoss are fixed forms of it) ----------
@@ -363,6 +378,86 @@ def _auroc_choice(p: Pairs, _: Params) -> float | None:
 
 def _auroc_box(p: Pairs, _: Params) -> float | None:
     return _auc(p.correct, p.confidence)  # does the confidence rank hits above misses
+
+
+def _auroc_hit(p: Pairs, _: Params) -> float | None:
+    return _auc(p.correct, p.probability)  # does what min_probability reads rank the right answers above the wrong
+
+
+def _brier_hit(p: Pairs, _: Params) -> float | None:
+    return float(np.mean((p.probability - p.correct) ** 2))
+
+
+def _there(p: Pairs) -> np.ndarray:
+    """A value read from the state: the cases labelled with a value (the rest are labelled absent)."""
+    return np.array([y is not ABSENT for y in p.y], dtype=bool)
+
+
+def _value_accuracy(p: Pairs, _: Params) -> float | None:
+    there = _there(p)
+    return float(p.correct[there].mean()) if there.any() else None
+
+
+def _absent_accuracy(p: Pairs, _: Params) -> float | None:
+    there = _there(p)
+    return float(p.correct[~there].mean()) if (~there).any() else None
+
+
+def _instances(p: Pairs) -> tuple[int, int, int]:
+    """A boxes task, box by box over the cases: answer boxes matched to a label box, answer boxes, label boxes. No
+    answer gave no box."""
+    given = [v if ok else () for v, ok in zip(p.value, p.ok)]
+    return sum(matched(g, t, p.hit_iou) for g, t in zip(given, p.y)), sum(map(len, given)), sum(len(t) for t in p.y)
+
+
+def _box_precision(p: Pairs, _: Params) -> float | None:
+    hit, given, _labelled = _instances(p)
+    return hit / given if given else None
+
+
+def _box_recall(p: Pairs, _: Params) -> float | None:
+    hit, _given, labelled = _instances(p)
+    return hit / labelled if labelled else None
+
+
+def _box_f1(p: Pairs, _: Params) -> float | None:
+    hit, given, labelled = _instances(p)
+    return 2 * hit / (given + labelled) if given + labelled else None
+
+
+def _count_error(p: Pairs, _: Params) -> float | None:
+    """How far the number of boxes is from the label's, on average; a failed call gave none."""
+    return float(np.mean([abs((len(v) if ok else 0) - len(t)) for v, t, ok in zip(p.value, p.y, p.ok)])) if len(p) else None
+
+
+def _options(p: Pairs) -> tuple[int, int, int]:
+    """A multichoice, option by option over the cases: chosen and in the label, chosen, in the label. No answer chose nothing."""
+    chosen = [set(v) if ok else set() for v, ok in zip(p.value, p.ok)]
+    return sum(len(c & set(y)) for c, y in zip(chosen, p.y)), sum(map(len, chosen)), sum(len(y) for y in p.y)
+
+
+def _option_precision(p: Pairs, _: Params) -> float | None:
+    hit, chosen, _labelled = _options(p)
+    return hit / chosen if chosen else None
+
+
+def _option_recall(p: Pairs, _: Params) -> float | None:
+    hit, _chosen, labelled = _options(p)
+    return hit / labelled if labelled else None
+
+
+def _option_f1(p: Pairs, _: Params) -> float | None:
+    hit, chosen, labelled = _options(p)
+    return 2 * hit / (chosen + labelled) if chosen + labelled else None
+
+
+def _mean_error(p: Pairs, _: Params) -> float | None:
+    """An estimate's mean distance from its label; a failed call is as far off as its label can be in the range."""
+    if not len(p):
+        return None
+    y = p.y.astype(float)
+    far = np.maximum(y - p.bounds[0], p.bounds[1] - y)
+    return float(np.mean(np.where(p.ok, np.abs(np.where(p.ok, p.expected, y) - y), far)))
 
 
 def _f1_binary(p: Pairs, _: Params) -> float | None:
@@ -493,6 +588,39 @@ MEASURES: dict[tuple[str, str], Measure] = {
     ("macro_f1", "choice"): Measure(_f1_macro, basis="{reading}; mean of per-class F1 over labelled dev cases"),
     # the kinds' own numbers (Kind.report), and the calibration every evaluation reports
     ("mean_iou", "box"): Measure(_mean_iou, basis="{reading}; mean IoU over labelled dev cases"),
+    ("mean_error", "estimate"): Measure(_mean_error, basis="the estimate; mean distance from the label, in the question's unit, "
+                                                             "over labelled dev cases"),
+    ("accuracy", "estimate"): _ACCURACY,
+    ("coverage", "estimate"): _COVERAGE,
+    ("auroc", "estimate"): Measure(_auroc_hit, basis="narrowness of the p10 - p90 interval; hit-ranking AUROC over labelled dev cases"),
+    ("brier", "estimate"): Measure(_brier_hit, basis="narrowness of the p10 - p90 interval; Brier score of hit correctness over labelled dev cases"),
+    ("ece", "estimate"): Measure(_ece, basis="narrowness of the p10 - p90 interval; calibration of hit correctness over labelled dev cases"),
+    ("accuracy", "boxes"): _ACCURACY,
+    ("coverage", "boxes"): _COVERAGE,
+    ("auroc", "boxes"): Measure(_auroc_box, basis="probability of the whole set of boxes; hit-ranking AUROC over labelled dev cases"),
+    ("brier", "boxes"): Measure(_brier_box, basis="probability of the whole set of boxes; Brier score of hit correctness over labelled dev cases"),
+    ("ece", "boxes"): Measure(_ece, basis="probability of the whole set of boxes; calibration of hit correctness over labelled dev cases"),
+    ("box_f1", "boxes"): Measure(_box_f1, basis="{reading}; F1 over every box of every labelled dev case"),
+    ("box_precision", "boxes"): Measure(_box_precision, basis="{reading}; answer boxes matched to a label box / answer boxes"),
+    ("box_recall", "boxes"): Measure(_box_recall, basis="{reading}; label boxes matched / label boxes"),
+    ("count_error", "boxes"): Measure(_count_error, basis="{reading}; mean distance of the number of boxes from the label's"),
+    ("accuracy", "multichoice"): _ACCURACY,
+    ("coverage", "multichoice"): _COVERAGE,
+    ("auroc", "multichoice"): Measure(_auroc_hit, basis="probability of the whole set chosen; hit-ranking AUROC over labelled dev cases"),
+    ("brier", "multichoice"): Measure(_brier_hit, basis="probability of the whole set chosen; Brier score of answer correctness over labelled dev cases"),
+    ("ece", "multichoice"): Measure(_ece, basis="probability of the whole set chosen; calibration of answer correctness over labelled dev cases"),
+    ("option_f1", "multichoice"): Measure(_option_f1, basis="{reading}; F1 over every option of every labelled dev case (micro)"),
+    ("option_precision", "multichoice"): Measure(_option_precision, basis="{reading}; options chosen that the label has / options chosen"),
+    ("option_recall", "multichoice"): Measure(_option_recall, basis="{reading}; options chosen that the label has / options the labels have"),
+    **{(name, read): m for read in ("text", "number", "date") for name, m in {
+        "accuracy": _ACCURACY,
+        "coverage": _COVERAGE,
+        "auroc": Measure(_auroc_hit, basis="probability of the value read; hit-ranking AUROC over labelled dev cases"),
+        "brier": Measure(_brier_hit, basis="probability of the value read; Brier score of answer correctness over labelled dev cases"),
+        "ece": Measure(_ece, basis="probability of the value read; calibration of answer correctness over labelled dev cases"),
+        "value_accuracy": Measure(_value_accuracy, basis="{reading}; correct / labelled dev cases whose label is a value"),
+        "absent_accuracy": Measure(_absent_accuracy, basis="{reading}; correct / labelled dev cases labelled absent"),
+    }.items()},
     ("brier", "boolean"): Measure(_brier_binary, basis="genuine model probabilities; binary Brier score over labelled dev cases"),
     ("brier", "choice"): Measure(_brier_choice, basis="genuine model probabilities; multiclass Brier score over labelled dev cases"),
     ("brier", "box"): Measure(_brier_box, basis="recorded box confidence; Brier score of hit correctness over labelled dev cases"),
@@ -544,8 +672,27 @@ def measure(name: str, p: Pairs) -> float | None:
 def shown(p: Pairs, i: int) -> tuple[bool | str, bool | str]:
     """One case's label and reading, as a list of errors writes them."""
     if p.measured == "box":
+        if p.y[i] is ABSENT or p.value[i] is None:
+            return "absent" if p.y[i] is ABSENT else "box", "absent" if p.value[i] is None else "box"
         return "box", f"IoU {_ious(p[np.array([i])])[0]:.2f}"
+    if p.measured == "boxes":
+        if p.value[i] is None:
+            return written(p, p.y[i]), "no answer"
+        return written(p, p.y[i]), f"{written(p, p.value[i])}, {matched(p.value[i], p.y[i], p.hit_iou)} matched"
+    if p.measured == "multichoice":
+        return written(p, p.y[i]), written(p, p.value[i])
+    if p.measured in READ:
+        return "absent" if p.y[i] is ABSENT else str(p.y[i]), "absent" if p.value[i] is None else str(p.value[i])
     return plain(p.y[i]), plain(p.value[i])
+
+
+def written(p: Pairs, v: Any) -> Any:
+    """A label or a reading as a report writes it: a value read that is not there is `absent`."""
+    if p.measured == "boxes" and isinstance(v, (tuple, list)):
+        return "1 box" if len(v) == 1 else f"{len(v)} boxes"
+    if p.measured == "multichoice" and isinstance(v, (tuple, list)):
+        return ", ".join(v) or "none"
+    return "absent" if p.measured in READ and (v is ABSENT or v is None) else plain(v)
 
 
 def plain(v: Any) -> Any:

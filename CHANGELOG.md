@@ -4,6 +4,17 @@
 
 ### Added
 
+- The Skill has a playbook per question type (`references/types/boolean.md`, `choice.md`, `score.md`, `box.md`): the
+  purposes a decision of that type serves, the standard metric and the `task.py` objective for each, what to ask the
+  person, and how the hand-off line (the min probability under which a person takes the answer) is set today. It also
+  says plainly that an objective which sets no min probability leaves every answer acted on.
+- The README and Get started name Antigravity: `s1flow init --skill` writes the Skill into `.agents/skills/`, which
+  Antigravity reads.
+
+## 0.1.0a6 (2026-11-24)
+
+### Added
+
 - `s1flow feedback import TASK labels.csv --log decisions.jsonl` records many right answers at once, such as labels
   a person corrected: a CSV with `decision_id` and `label` columns, or JSON Lines. Every row is checked first, and
   one wrong row writes nothing. A policy without `log=` (and with no OpenTelemetry tracer provider) now warns on its
@@ -42,11 +53,40 @@
   model finds nothing, with `p_null`, `confidence` and `span` where the model gives them), and `RangeEstimate` asks for
   a number between a `min` and a `max` with its p10 - p90 interval. The `openrouter` provider sends them to
   OpenRouter's Extractions route (Clairic, Schematron, Perplexity's Decider v1.3, ScaleDown Extract), a model
-  declares them in `capabilities.question_types`, and `s1flow models --verify` checks each. Evaluation and policies
-  do not take them yet.
+  declares them in `capabilities.question_types`, and `s1flow models --verify` checks each. The `liquid` provider
+  asks them too (d1.2, d1.2-ultra), in the same call as other questions: `found` is read as 1 - `p_null`, and a
+  number in a range as the estimate with its interval.
+- A `MultiChoice` question: every option that applies, possibly none, each with its own probability. The `liquid`
+  provider asks it (d1.2, d1.2-ultra), `s1flow models --verify` checks it, and evaluation compares it: the label is
+  the list of options, an answer is right when its set is exactly the label's, `Coverage` reads the probability of
+  the whole set, and the new `OptionF1()` objective counts every option of every case. A policy holds one, and
+  `feedback record` takes its options typed as `late,damage` (`none` for none).
+- A `Boxes` question: a box for every instance of the target, none when there is none. The `liquid` provider asks
+  it (d1.2, d1.2-ultra), `s1flow models --verify` checks it, and evaluation compares it: the label is the list of
+  boxes, an answer is right when every label box has an answer box of its own at the IoU bar and none is left over,
+  and the new `BoxF1()` objective counts box by box. The report adds box precision, box recall and the count error.
+  A policy holds one, and `feedback record` takes its boxes as JSON (`none` for none).
+- A box question can be answered with "not in the picture": `BoxAnswer.box` is `None`, with `found` where the model
+  gives it (Liquid's d1.2). A box task labels such a case `False`; an answer of no box is right there, and how sure
+  it is comes from `found`.
+- Evaluation compares those four types. A value read is right when it equals the label, or when nothing is read on
+  a case labelled `False` (no value there); reports add the accuracy on the cases with a value and on those with
+  none, and `Coverage` reads `p_null` and `confidence`. A `RangeEstimate` task defaults to the new `MeanError()`
+  objective, counts an answer as right within half a `step`, or 1% of the range without one
+  (`KindParams(tolerance=...)`), and is sure where the p10 - p90 interval is narrow. A policy holds them like any
+  other type (`feedback record` takes a number typed as text, and `false` for a case with no value); `cases review`
+  does not take them yet.
 
 ### Changed
 
+- The `gateway` provider (Vercel AI Gateway) calls `/v1/decisions` instead of the deprecated `/v1/evaluate`. Images
+  now reach every model there as `input_image` parts: Drex Max v1.1 refused the old `image_url` parts and Mo read
+  them without seeing the picture. Answers saved through `gateway` are asked again, and a policy adopted on one
+  needs adopting again; other providers' saved answers stay valid.
+- The `liquid` provider reads a box the model did not find as an answer of no box, not as a refusal: in an
+  evaluation it is a wrong answer the model was sure of, where it was no answer before. Answers saved through
+  `liquid` are asked again, and a policy adopted on one needs adopting again; other providers' saved answers stay
+  valid.
 - The summary `report --out` writes shows the `coverage` and `sure accuracy` columns only for a task whose
   objective or tiebreak is `Coverage(...)`, at that objective's target. For any other task they were printed at a
   95% target nobody set; `comparison.json` and the comparison page still hold that reference value. A task whose

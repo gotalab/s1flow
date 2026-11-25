@@ -17,6 +17,7 @@ from pydantic import BaseModel, ValidationError
 
 from ..core import clock
 from ..core.errors import DataError, NotFound, Unsupported, invalid
+from ..policies.kinds import same_label
 from . import evalset, metrics
 from .objectives.measure import cp_interval
 from .run import run_path
@@ -66,8 +67,8 @@ def _models(task: Task) -> list[str]:
 
 
 def review(task: Task, *, min_probability: float = 0.9, limit: int = 30, sample: int = 0, include_read: bool = False) -> Review:
-    if task.kind.type == "box":
-        raise Unsupported(f"{task.id}: review lists label disagreements; box tasks are not supported yet")
+    if task.kind.type not in ("boolean", "choice", "score"):
+        raise Unsupported(f"{task.id}: review lists label disagreements; {task.kind.type} tasks are not supported yet")
     fixes = task.load_cases().corrections()
     by_id = task.load_cases().by_id()
     sf = evalset.current(task)
@@ -157,7 +158,7 @@ def correct(task: Task, case_id: str, verdict: Verdict, *, reason: str, by: str,
     if verdict == "relabel":
         if (wrong := task.kind.label_error(label)) is not None:
             raise DataError(f"{case_id}: {wrong}")
-        if label == was:
+        if same_label(task.kind, label, was):
             raise DataError(f"{case_id}: the label is already {label!r}; record keep instead")
     try:
         fix = Correction(id=case_id, verdict=verdict, label=label if verdict == "relabel" else None, was=was, reason=reason.strip(),

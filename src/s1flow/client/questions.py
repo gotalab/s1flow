@@ -1,7 +1,7 @@
 """The questions a decision model answers: yes / no, one of N, a level, a box, a value read from the state,
 an estimate in a range.
 
-Vocabulary follows the decision-model APIs (TypeSafe, AI Gateway, OpenRouter, Workers AI): a map of
+Vocabulary follows the decision-model APIs (TypeSafe, OpenRouter, Workers AI): a map of
 typed `questions`, keyed by name. Every provider translates these into its own wire format (yes / no
 is `noul` on TypeSafe's, `predicate` on OpenAI's; a value or an estimate is a `field` on OpenRouter's
 Extractions route).
@@ -11,7 +11,7 @@ from typing import Annotated, Literal, Union
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-QuestionType = Literal["boolean", "choice", "score", "box", "text", "number", "date", "estimate"]
+QuestionType = Literal["boolean", "choice", "score", "box", "text", "number", "date", "estimate", "multichoice", "boxes"]
 STRICT = ConfigDict(extra="forbid")  # a misspelt key in a question (and so in a policy's digest) is an error, not dropped
 TEXT_TYPES: frozenset[QuestionType] = frozenset({"boolean", "choice", "score"})
 # Read from the state or estimated, not decided: OpenRouter serves these on its Extractions route (extractions.py).
@@ -33,6 +33,16 @@ class Choice(BaseModel):
     criteria: dict[str, str | None]
 
 
+class MultiChoice(BaseModel):
+    """Every option that applies, possibly none: each option is its own yes or no (Liquid d1.2, 2026-11-17, where
+    it is a `choice` with `multiple`)."""
+
+    model_config = STRICT
+    type: Literal["multichoice"] = "multichoice"
+    instructions: str
+    criteria: dict[str, str | None]
+
+
 class Score(BaseModel):
     """Levels 0..L-1, described in order by `criteria`."""
 
@@ -45,12 +55,23 @@ class Score(BaseModel):
 class Box(BaseModel):
     """One bounding box of the target described in `instructions` (jev 1.14, 2026-10-15).
 
-    There is no "not found" answer: ask a Boolean alongside when the target may be absent.
+    A model that can say the target is not in the picture answers with no box (Liquid d1.2). The others always
+    give one (jev): ask them a Boolean alongside when the target may be absent.
     """
 
     model_config = STRICT
     type: Literal["box"] = "box"
     instructions: str
+
+
+class Boxes(BaseModel):
+    """A bounding box for every instance of the target in the picture, none when there is none (Liquid d1.2,
+    2026-11-17). `max` caps how many a model returns (Liquid's own cap is 16 when it is left out)."""
+
+    model_config = STRICT
+    type: Literal["boxes"] = "boxes"
+    instructions: str
+    max: int | None = Field(default=None, ge=1)
 
 
 class Text(BaseModel):
@@ -105,9 +126,12 @@ def no_fields(questions: "Questions", who: str) -> None:
 
     if field := [f"{q.type} ({k})" for k, q in questions.items() if q.type in FIELD_TYPES]:
         raise Unsupported(f"{who} has no {', '.join(sorted(FIELD_TYPES))} questions: {', '.join(field)}")
+    for kind in ("multichoice", "boxes"):
+        if named := [k for k, q in questions.items() if q.type == kind]:
+            raise Unsupported(f"{who} has no {kind} questions: {', '.join(named)}")
 
 
-Question = Annotated[Union[Boolean, Choice, Score, Box, Text, Number, Date, RangeEstimate], Field(discriminator="type")]
+Question = Annotated[Union[Boolean, Choice, Score, Box, Text, Number, Date, RangeEstimate, MultiChoice, Boxes], Field(discriminator="type")]
 Questions = dict[str, Question]
 
 

@@ -12,21 +12,24 @@ from ..answers import (
     Answer,
     BooleanAnswer,
     BoxAnswer,
+    BoxesAnswer,
     ChoiceAnswer,
     DateAnswer,
     EstimateAnswer,
+    MultiChoiceAnswer,
     NumberAnswer,
     Refusal,
     Response,
     ScoreAnswer,
     TextAnswer,
 )
-from ..questions import Choice, RangeEstimate, Questions, Score
+from ..questions import Boxes, Choice, MultiChoice, RangeEstimate, Questions, Score
 
 # The answer each type of question takes.
 FITS: dict[str, type] = {
     "boolean": BooleanAnswer, "choice": ChoiceAnswer, "score": ScoreAnswer, "box": BoxAnswer,
     "text": TextAnswer, "number": NumberAnswer, "date": DateAnswer, "estimate": EstimateAnswer,
+    "multichoice": MultiChoiceAnswer, "boxes": BoxesAnswer,
 }
 
 
@@ -78,8 +81,10 @@ def _validate_answer(qid: str, question: Any, answer: Answer) -> None:
     if not isinstance(answer, FITS[question.type]):
         kind = getattr(answer, "type", type(answer).__name__)
         _fail(qid, f"answer type {kind!r} does not fit a {question.type} question")
+    if isinstance(question, Boxes) and isinstance(answer, BoxesAnswer) and question.max is not None and len(answer.boxes) > question.max:
+        _fail(qid, f"{len(answer.boxes)} boxes, more than the question's max of {question.max}")
 
-    validate_answer_values(qid, answer, options=question.criteria.keys() if isinstance(question, Choice) else None,
+    validate_answer_values(qid, answer, options=question.criteria.keys() if isinstance(question, (Choice, MultiChoice)) else None,
                            levels=len(question.criteria) if isinstance(question, Score) else None,
                            within=(question.min, question.max) if isinstance(question, RangeEstimate) else None)
 
@@ -101,6 +106,15 @@ def validate_answer_values(
         _distribution(qid, answer.probabilities, options)
         _confidence(qid, answer.confidence)
         return
+    if isinstance(answer, MultiChoiceAnswer):
+        among = None if options is None else tuple(options)
+        if among is not None and (unknown := [c for c in answer.choices if c not in among]):
+            _fail(qid, f"choices {', '.join(map(repr, unknown))} are not options ({', '.join(among)})")
+        if len(set(answer.choices)) < len(answer.choices):
+            _fail(qid, f"choices name an option twice: {answer.choices}")
+        for key, value in (answer.probabilities or {}).items():
+            _probability(qid, f"probability for {key!r}", value)
+        return
     if isinstance(answer, ScoreAnswer):
         score = answer.score
         if not math.isfinite(score):
@@ -110,7 +124,15 @@ def validate_answer_values(
         _distribution(qid, answer.probabilities, (str(i) for i in range(levels)) if levels is not None else None)
         _confidence(qid, answer.confidence)
         return
+    if isinstance(answer, BoxesAnswer):
+        for b in answer.boxes:
+            _confidence(qid, b.found, name="found")
+            _confidence(qid, b.confidence)
+        for x in answer.presence or []:
+            _confidence(qid, x, name="presence")
+        return
     if isinstance(answer, BoxAnswer):
+        _confidence(qid, answer.found, name="found")
         _confidence(qid, answer.confidence)
         _confidence(qid, answer.agreement, name="agreement")
         return

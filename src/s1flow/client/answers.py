@@ -54,6 +54,12 @@ class ChoiceAnswer(_Answer):
     confidence: float | None = None  # the vendor's own number (TypeSafe's is rescaled by the number of options)
 
 
+class MultiChoiceAnswer(_Answer):
+    type: Literal["multichoice"] = "multichoice"
+    choices: list[str]  # the options that apply, possibly none
+    probabilities: dict[str, float] | None = None  # P(it applies) of each option, each on its own: they do not sum to 1
+
+
 class ScoreAnswer(_Answer):
     type: Literal["score"] = "score"
     score: float  # the level, or the expected level when the model gives a distribution
@@ -63,9 +69,27 @@ class ScoreAnswer(_Answer):
 
 class BoxAnswer(_Answer):
     type: Literal["box"] = "box"
-    box: BoxEdges
+    # None: the model says the target is not in the picture (Liquid d1.2). A default: a saved record leaves out what is None.
+    box: BoxEdges | None = None
+    found: float | None = None  # P(the target is in the picture), where the model gives it
     confidence: float | None = None  # jev's confidence in its box
     agreement: float | None = None  # a box from k samples: the mean IoU of the samples with the answer
+
+
+class FoundBox(_Answer):
+    """One instance among a `BoxesAnswer`'s."""
+
+    box: BoxEdges
+    confidence: float | None = None  # the model's confidence in this box's edges
+    found: float | None = None  # P(this is an instance of the target)
+
+
+class BoxesAnswer(_Answer):
+    type: Literal["boxes"] = "boxes"
+    boxes: list[FoundBox]  # every instance the model found, possibly none
+    at_least: bool = False  # True: it stopped at the question's `max`, and there may be more
+    # P(there is an instance) for each slot up to `max`, the most likely first: the slots at 0.5 or more are `boxes`
+    presence: list[float] | None = None
 
 
 class _Read(_Answer):
@@ -115,11 +139,11 @@ class Refusal(_Answer):
 
 ReadAnswer = TextAnswer | NumberAnswer | DateAnswer
 Answer = Annotated[
-    Union[BooleanAnswer, ChoiceAnswer, ScoreAnswer, BoxAnswer, TextAnswer, NumberAnswer, DateAnswer, EstimateAnswer, Refusal],
+    Union[BooleanAnswer, ChoiceAnswer, ScoreAnswer, BoxAnswer, TextAnswer, NumberAnswer, DateAnswer, EstimateAnswer, MultiChoiceAnswer, BoxesAnswer, Refusal],
     Field(discriminator="type"),
 ]
 # an answer that is not a refusal
-Given = BooleanAnswer | ChoiceAnswer | ScoreAnswer | BoxAnswer | TextAnswer | NumberAnswer | DateAnswer | EstimateAnswer
+Given = BooleanAnswer | ChoiceAnswer | ScoreAnswer | BoxAnswer | TextAnswer | NumberAnswer | DateAnswer | EstimateAnswer | MultiChoiceAnswer | BoxesAnswer
 
 
 CostSource = Literal["billed", "list"]

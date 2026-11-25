@@ -10,9 +10,11 @@
       "mapping": {
        "boolean": "#/$defs/Boolean",
        "box": "#/$defs/Box",
+       "boxes": "#/$defs/Boxes",
        "choice": "#/$defs/Choice",
        "date": "#/$defs/Date",
        "estimate": "#/$defs/RangeEstimate",
+       "multichoice": "#/$defs/MultiChoice",
        "number": "#/$defs/Number",
        "score": "#/$defs/Score",
        "text": "#/$defs/Text"
@@ -43,6 +45,12 @@
       },
       {
        "$ref": "#/$defs/RangeEstimate"
+      },
+      {
+       "$ref": "#/$defs/MultiChoice"
+      },
+      {
+       "$ref": "#/$defs/Boxes"
       }
      ],
      "title": "Question"
@@ -99,7 +107,7 @@
   },
   "Box": {
    "additionalProperties": false,
-   "description": "One bounding box of the target described in `instructions` (jev 1.14, 2026-10-15).\n\nThere is no \"not found\" answer: ask a Boolean alongside when the target may be absent.",
+   "description": "One bounding box of the target described in `instructions` (jev 1.14, 2026-10-15).\n\nA model that can say the target is not in the picture answers with no box (Liquid d1.2). The others always\ngive one (jev): ask them a Boolean alongside when the target may be absent.",
    "properties": {
     "type": {
      "const": "box",
@@ -116,6 +124,40 @@
     "instructions"
    ],
    "title": "Box",
+   "type": "object"
+  },
+  "Boxes": {
+   "additionalProperties": false,
+   "description": "A bounding box for every instance of the target in the picture, none when there is none (Liquid d1.2,\n2026-11-17). `max` caps how many a model returns (Liquid's own cap is 16 when it is left out).",
+   "properties": {
+    "type": {
+     "const": "boxes",
+     "default": "boxes",
+     "title": "Type",
+     "type": "string"
+    },
+    "instructions": {
+     "title": "Instructions",
+     "type": "string"
+    },
+    "max": {
+     "anyOf": [
+      {
+       "minimum": 1,
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Max"
+    }
+   },
+   "required": [
+    "instructions"
+   ],
+   "title": "Boxes",
    "type": "object"
   },
   "Calls": {
@@ -851,7 +893,7 @@
   "JsonValue": {},
   "KindParams": {
    "additionalProperties": false,
-   "description": "What a question's type leaves open, the same in a task (`Task.kind_params`) and a policy (`kind`):\n`positive` scores a choice as binary (P(positive) against a true / false label), `iou` is a box's bar\nfor a hit (0.5 when unset). An unset one is left out of the JSON.",
+   "description": "What a question's type leaves open, the same in a task (`Task.kind_params`) and a policy (`kind`):\n`positive` scores a choice as binary (P(positive) against a true / false label), `iou` is a box's bar\nfor a hit (0.5 when unset), `tolerance` how far from the label an estimate is still right (half a step when\nunset; a hundredth of the range for a question without a step). An unset one is left out of the JSON.",
    "properties": {
     "positive": {
      "anyOf": [
@@ -878,6 +920,19 @@
      ],
      "default": null,
      "title": "Iou"
+    },
+    "tolerance": {
+     "anyOf": [
+      {
+       "minimum": 0,
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Tolerance"
     }
    },
    "title": "KindParams",
@@ -951,6 +1006,42 @@
     "concurrency_unknown"
    ],
    "title": "Latency",
+   "type": "object"
+  },
+  "MultiChoice": {
+   "additionalProperties": false,
+   "description": "Every option that applies, possibly none: each option is its own yes or no (Liquid d1.2, 2026-11-17, where\nit is a `choice` with `multiple`).",
+   "properties": {
+    "type": {
+     "const": "multichoice",
+     "default": "multichoice",
+     "title": "Type",
+     "type": "string"
+    },
+    "instructions": {
+     "title": "Instructions",
+     "type": "string"
+    },
+    "criteria": {
+     "additionalProperties": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "title": "Criteria",
+     "type": "object"
+    }
+   },
+   "required": [
+    "instructions",
+    "criteria"
+   ],
+   "title": "MultiChoice",
    "type": "object"
   },
   "Number": {

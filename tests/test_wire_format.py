@@ -24,7 +24,7 @@ from s1flow.client import BooleanAnswer, ChoiceAnswer, Client, Image
 from s1flow.client.state import Media
 from s1flow.client import identity
 from s1flow.client.models import Capabilities, ModelSpec
-from s1flow.client.questions import Boolean, Box, Choice, Date, RangeEstimate, Number, Score, Text
+from s1flow.client.questions import Boolean, Box, Boxes, Choice, Date, MultiChoice, RangeEstimate, Number, Score, Text
 from s1flow.policies import DecisionRule
 from s1flow.policies.kinds import KindParams, kind_of
 
@@ -52,9 +52,6 @@ SYSTEM_ONE = {
 }
 REPLIES: dict[str, dict[str, Any]] = {
     "typesafe": {"model": "jev-1.14.0", "answers": SYSTEM_ONE, "usage": {"input_tokens": 90, "output_tokens": 0}},
-    "gateway": {"model": "typesafe-ai/jev", "answers": SYSTEM_ONE | {"refund": {"type": "boolean", "probability": 0.1}},
-                "usage": {"inputTokens": 90, "outputTokens": 0},
-                "providerMetadata": {"typesafe": {"confidence": {"kind": 0.9}}, "gateway": {"cost": "0.00001"}}},
     "openrouter": {"model": "typesafe/jev", "answers": SYSTEM_ONE, "usage": {"input_tokens": 90, "output_tokens": 0, "cost": 0.00001}},
     "cloudflare": {"result": {"model": "clef", "answers": SYSTEM_ONE | {"kind": SYSTEM_ONE["kind"] | {
         "choice": "o0_kind_bug", "probabilities": {"o0_kind_bug": 0.8, "o1_kind_question": 0.2}}}, "usage": {"input_tokens": 90}}},
@@ -68,7 +65,7 @@ REPLIES: dict[str, dict[str, Any]] = {
 }
 BOX_REPLIES: dict[str, dict[str, Any]] = {
     "typesafe": {"model": "jev-1.14.0", "answers": {"where": BOX_ANSWER}},
-    "gateway": {"model": "typesafe-ai/jev", "answers": {"where": BOX_ANSWER}},
+    "gateway": {"model": "typesafe-ai/jev", "answers": [BOX_ANSWER | {"name": "where"}]},
     "openrouter": {"model": "typesafe/jev", "answers": {"where": BOX_ANSWER}},
     "cloudflare": {"result": {"model": "clef", "answers": {"where": BOX_ANSWER}}},
 }
@@ -89,9 +86,29 @@ FIELD_REPLIES: dict[str, dict[str, Any]] = {
         "days": {"type": "estimate", "value": 30, "mean": 29.54, "median": 30, "p10": 26, "p90": 31, "p_below": 2e-8, "p_above": 4e-7},
     }, "truncated": False, "usage": {"input_tokens": 543, "output_tokens": 0, "passes": 3, "cost": 0.0000543}},
 }
+# The same questions on Liquid's own API, in `questions`, as d1.2 answered them (2026-11-17).
+FIELD_REPLIES["liquid"] = {"model": "d1.2", "answers": {
+    "invoice": {"type": "text", "text": "INV-2291", "span": [8, 16], "found": 0.9987},
+    "po": {"type": "text", "text": None, "span": None, "found": 0.0201},
+    "total": {"type": "number", "number": 1080, "unit": "USD", "text": "1,080", "span": [30, 35], "found": 0.9802},
+    "issued": {"type": "date", "date": "2026-09-02", "text": "2026-09-02", "span": [40, 50], "found": 1},
+    "days": {"type": "number", "number": 30, "interval": [26, 31], "unit": None},
+}, "usage": {"input_tokens": 161, "output_tokens": 0, "cost": 0.00000322}}
+# Every option that applies: Liquid's `choice` with `multiple`, as d1.2 answered it (2026-11-17).
+MULTI = {"topics": MultiChoice(instructions="What does the customer complain about?", criteria={"late": "late delivery", "damage": "damaged goods", "price": None})}
+MULTI_REPLIES: dict[str, dict[str, Any]] = {"liquid": {"model": "d1.2", "answers": {
+    "topics": {"type": "choice", "choices": ["late", "damage"], "probabilities": {"late": 0.9692, "damage": 0.9692, "price": 0}},
+}, "usage": {"input_tokens": 88, "output_tokens": 0, "cost": 0.00000176}}}
 ALL = Capabilities(image=True, question_types=frozenset({"boolean", "choice", "score", "box"}))
+REPLIES["gateway"] = REPLIES["openai-decisions"] | {"model": "typesafe-ai/jev", "provider_metadata": {"gateway": {"cost": "0.00001"}}}
 REPLIES["liquid"] = {"model": "d1.2", "answers": SYSTEM_ONE, "usage": {"input_tokens": 90, "output_tokens": 0, "cost": 0.0000018}}
 BOX_REPLIES["liquid"] = {"model": "d1.2", "answers": {"where": BOX_ANSWER | {"found": 0.9}}}
+# A target that is not in the picture, as d1.2 answered it (2026-11-17): a null box, and how sure it is of one.
+# Every instance's box, as d1.2 answered it (2026-11-17); `presence` has a slot per box the question allows.
+EVERY_BOX = {"where": Boxes(instructions="Every stamp", max=3)}
+BOXES_REPLIES = {"liquid": {"model": "d1.2", "answers": {"where": {"type": "boxes", "count": 2, "at_least": False, "presence": [0.998, 0.951, 0.001], "boxes": [
+    {"box": BOX_ANSWER["box"], "found": 0.998, "confidence": 0.93}, {"box": {"top": 0.6, "bottom": 0.8, "left": 0.1, "right": 0.3}, "found": 0.951, "confidence": 0.92}]}}}}
+NO_BOX_REPLIES = {"liquid": {"model": "d1.2", "answers": {"where": {"type": "box", "box": None, "found": 0.0017, "confidence": 0}}}}
 REPLIES["gemini"] = {"model": "gemini-decision-1", "answers": SYSTEM_ONE, "usage": {"total_input_tokens": 90}}
 MEDIA_REPLIES = {p: REPLIES[p] for p in ("openrouter", "gemini")}  # the providers that send audio, video and PDFs
 EVERY = ALL.model_copy(update={"audio": True, "video": True, "pdf": True})
@@ -101,7 +118,8 @@ MODELS = {
     "openrouter": ModelSpec(provider="openrouter", id="typesafe/jev", capabilities=EVERY.model_copy(
         update={"question_types": ALL.question_types | {"text", "number", "date", "estimate"}})),
     "gemini": ModelSpec(provider="gemini", id="gemini-decision-1", capabilities=EVERY.model_copy(update={"question_types": frozenset({"boolean", "choice", "score"})})),
-    "liquid": ModelSpec(provider="liquid", id="d1.2", capabilities=ALL),
+    "liquid": ModelSpec(provider="liquid", id="d1.2", capabilities=ALL.model_copy(
+        update={"question_types": ALL.question_types | {"text", "number", "date", "estimate", "multichoice", "boxes"}})),
     "cloudflare": ModelSpec(provider="cloudflare", id="clef", capabilities=ALL),
     "openai-decisions": ModelSpec(provider="openai-decisions", id="gpt-6-luna", capabilities=Capabilities(image=True)),
     "llm": ModelSpec(provider="llm", id="openai/gpt-test", options={"box_units": "k1000"}, capabilities=ALL),
@@ -123,7 +141,9 @@ def _read(response: Any) -> dict[str, Any]:
 def _http(provider: str) -> dict[str, Any]:
     out = {}
     asks = [("text", TEXT, QUESTIONS, REPLIES), ("image", WITH_IMAGE, QUESTIONS, REPLIES), ("box", WITH_IMAGE, BOX, BOX_REPLIES),
-            ("audio, video, pdf", OTHER_MEDIA, QUESTIONS, MEDIA_REPLIES), ("fields", TEXT, FIELDS, FIELD_REPLIES)]
+            ("audio, video, pdf", OTHER_MEDIA, QUESTIONS, MEDIA_REPLIES), ("fields", TEXT, FIELDS, FIELD_REPLIES),
+            ("multichoice", TEXT, MULTI, MULTI_REPLIES), ("box not there", WITH_IMAGE, BOX, NO_BOX_REPLIES),
+            ("boxes", WITH_IMAGE, EVERY_BOX, BOXES_REPLIES)]
     for name, state, questions, replies in asks:
         if provider not in replies:
             continue
@@ -187,4 +207,5 @@ def test_what_is_sent_and_read_is_what_the_identity_formats_name(monkeypatch):
         FILE.write_text(text)
     assert text == FILE.read_text(), (
         "what a provider sends or reads, or what a policy decides, changed (diff tests/fixtures/wire-format.json): "
-        "bump identity.REQUEST or EXECUTION unless saved answers still stand, then rewrite it (see this file's docstring)")
+        "bump identity.REQUEST or EXECUTION (or name the one provider in identity._WIRE) unless saved answers still stand, "
+        "then rewrite it (see this file's docstring)")

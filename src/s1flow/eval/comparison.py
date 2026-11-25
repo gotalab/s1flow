@@ -13,7 +13,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ..client.identity import digest
 from ..client.models import ModelSpec
-from ..client.questions import Choice, Question
+from ..client.questions import Choice, Question, QuestionType
 from ..core import clock
 from ..core.errors import ConfigError, NotFound, S1flowError
 from ..policies.kinds import KindParams
@@ -27,6 +27,7 @@ from .evaluation import (
     Estimate,
     Evaluation,
     Failures,
+    SELECTION_BASIS,
     why_missing,
 )
 from .objectives.declare import METRICS, Constraints, Objective
@@ -90,7 +91,7 @@ class Comparison(BaseModel):
     source: str = ""
     at: str
     scope: Literal['dev'] = 'dev'
-    question_type: Literal['boolean', 'choice', 'score', 'box']
+    question_type: QuestionType
     kind_params: KindParams
     objective: Objective
     constraints: Constraints
@@ -219,6 +220,14 @@ def _plain_reading_basis(task: Task) -> str:
         return "plain choice reading: selected option with highest probability (default rule)"
     if kind.type == "box":
         return f"plain box reading: correct at IoU >= {kind.iou:g}"
+    if kind.type == "boxes":
+        return f"plain boxes reading: correct when every label box is matched at IoU >= {kind.iou:g} and no answer box is left over"
+    if kind.type == "multichoice":
+        return "plain multichoice reading: every option at P >= 0.5, correct when the set equals the label's"
+    if kind.type == "estimate":
+        return f"plain estimate reading: correct within {getattr(kind, 'tolerance'):g} of the label"
+    if kind.type in ("text", "number", "date"):
+        return f"plain {kind.type} reading: the value read equals the label, or nothing was read from a case labelled absent"
     return "plain score reading: the expected level, rounded (.5 up)"
 
 
@@ -478,7 +487,7 @@ def _row_summary(row: ComparisonRow) -> dict[str, Any]:
         "basis": row.measurement.distribution,
         "excluded": row.excluded, "adoption_blocked": row.adoption_blocked,
         "probabilities": row.probabilities,
-        "selection_basis": ("box confidence" if row.question.type == "box" else "selected-answer probability") if row.probabilities else None,
+        "selection_basis": SELECTION_BASIS.get(row.question.type, "selected-answer probability") if row.probabilities else None,
         "failures": row.failures.model_dump(), "refusal_rate": row.failures.refusal_rate(row.n),
         "calls": {"latency": latency, "cost_per_10k_usd": calls.cost_per_10k_usd,
                   "cost_total_usd": calls.cost_total_usd, "cost_source": calls.cost_source,

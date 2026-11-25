@@ -17,7 +17,7 @@ interval, and the held-out test share is read at the rules chosen on the rest.
 import json
 from collections.abc import Sequence
 from dataclasses import dataclass, field, replace
-from typing import Any, Literal, cast
+from typing import Any, cast
 
 import numpy as np
 
@@ -25,7 +25,7 @@ from ..client import cost
 from ..client.answers import CostSource
 from ..client.identity import request_digests, require_provider_revision, model_digest
 from ..client.models import ModelSpec, Price
-from ..core.errors import NotFound
+from ..core.errors import DataError, NotFound
 from ..policies.kinds import Reading
 from ..policies.rule import DecisionRule
 from .candidate import Candidate
@@ -34,6 +34,7 @@ from . import split as splitting
 from .evaluation import (
     Calls, ErrorLossThreshold, Estimate, Evaluation, Failures, Floor, HighConfidenceError, Latency, ObjectiveScore, Selective, SweepRow,
     TestResult, Throughput, ChartData, ThresholdPoint, ProbabilityBin, CalibrationPoint, SelectionPoint, DistributionEvidence,
+    SELECTION_BASIS, SelectionBasis,
 )
 from .objectives import measure
 from .objectives.declare import AUROC, Accuracy, Coverage, ExpectedLoss
@@ -170,6 +171,10 @@ def load(task: Task, variant: str, model: str, *, include_test: bool = False) ->
         if label is None:
             pr.unlabeled += 1
             continue
+        try:
+            kind.as_label(label)
+        except (TypeError, ValueError) as e:  # a label the task cannot hold is never scored as something else
+            raise DataError(f"{cid}: {kind.label_error(label) or e}; `s1flow cases check` lists every such case") from None
         if (a := r.given) is None:
             if r.outcome == "failed":
                 pr.failed_cases.append(cid)
@@ -591,7 +596,7 @@ def chart_data(task: Task, pr: Preds, evaluation: Evaluation) -> ChartData:
     raw_value = objective.value(pairs) if len(dev) else None
     cv_value = None if evaluation.objective is None else evaluation.objective.value
 
-    selection_basis: Literal["selected-answer probability", "box confidence"] = "box confidence" if task.kind.type == "box" else "selected-answer probability"
+    selection_basis: SelectionBasis = SELECTION_BASIS.get(task.kind.type, "selected-answer probability")
     selected = None
     if evaluation.objective is not None and evaluation.objective.rule is not None:
         selected = evaluation.objective.rule.min_probability

@@ -32,7 +32,27 @@
      "type": "string"
     },
     "box": {
-     "$ref": "#/$defs/BoxEdges"
+     "anyOf": [
+      {
+       "$ref": "#/$defs/BoxEdges"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "found": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Found"
     },
     "confidence": {
      "anyOf": [
@@ -59,9 +79,6 @@
      "title": "Agreement"
     }
    },
-   "required": [
-    "box"
-   ],
    "title": "BoxAnswer",
    "type": "object"
   },
@@ -100,6 +117,49 @@
     "right"
    ],
    "title": "BoxEdges",
+   "type": "object"
+  },
+  "BoxesAnswer": {
+   "additionalProperties": false,
+   "properties": {
+    "type": {
+     "const": "boxes",
+     "default": "boxes",
+     "title": "Type",
+     "type": "string"
+    },
+    "boxes": {
+     "items": {
+      "$ref": "#/$defs/FoundBox"
+     },
+     "title": "Boxes",
+     "type": "array"
+    },
+    "at_least": {
+     "default": false,
+     "title": "At Least",
+     "type": "boolean"
+    },
+    "presence": {
+     "anyOf": [
+      {
+       "items": {
+        "type": "number"
+       },
+       "type": "array"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Presence"
+    }
+   },
+   "required": [
+    "boxes"
+   ],
+   "title": "BoxesAnswer",
    "type": "object"
   },
   "ChoiceAnswer": {
@@ -278,6 +338,82 @@
    "title": "EstimateAnswer",
    "type": "object"
   },
+  "FoundBox": {
+   "additionalProperties": false,
+   "description": "One instance among a `BoxesAnswer`'s.",
+   "properties": {
+    "box": {
+     "$ref": "#/$defs/BoxEdges"
+    },
+    "confidence": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Confidence"
+    },
+    "found": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Found"
+    }
+   },
+   "required": [
+    "box"
+   ],
+   "title": "FoundBox",
+   "type": "object"
+  },
+  "MultiChoiceAnswer": {
+   "additionalProperties": false,
+   "properties": {
+    "type": {
+     "const": "multichoice",
+     "default": "multichoice",
+     "title": "Type",
+     "type": "string"
+    },
+    "choices": {
+     "items": {
+      "type": "string"
+     },
+     "title": "Choices",
+     "type": "array"
+    },
+    "probabilities": {
+     "anyOf": [
+      {
+       "additionalProperties": {
+        "type": "number"
+       },
+       "type": "object"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Probabilities"
+    }
+   },
+   "required": [
+    "choices"
+   ],
+   "title": "MultiChoiceAnswer",
+   "type": "object"
+  },
   "NumberAnswer": {
    "additionalProperties": false,
    "properties": {
@@ -397,9 +533,11 @@
        "mapping": {
         "boolean": "#/$defs/BooleanAnswer",
         "box": "#/$defs/BoxAnswer",
+        "boxes": "#/$defs/BoxesAnswer",
         "choice": "#/$defs/ChoiceAnswer",
         "date": "#/$defs/DateAnswer",
         "estimate": "#/$defs/EstimateAnswer",
+        "multichoice": "#/$defs/MultiChoiceAnswer",
         "number": "#/$defs/NumberAnswer",
         "refusal": "#/$defs/Refusal",
         "score": "#/$defs/ScoreAnswer",
@@ -431,6 +569,12 @@
        },
        {
         "$ref": "#/$defs/EstimateAnswer"
+       },
+       {
+        "$ref": "#/$defs/MultiChoiceAnswer"
+       },
+       {
+        "$ref": "#/$defs/BoxesAnswer"
        },
        {
         "$ref": "#/$defs/Refusal"
@@ -671,10 +815,28 @@
      "type": "integer"
     },
     {
+     "type": "number"
+    },
+    {
      "type": "string"
     },
     {
      "$ref": "#/$defs/BoxEdges"
+    },
+    {
+     "items": {
+      "type": "string"
+     },
+     "type": "array"
+    },
+    {
+     "items": {
+      "$ref": "#/$defs/BoxEdges"
+     },
+     "type": "array"
+    },
+    {
+     "type": "null"
     }
    ],
    "title": "Value"

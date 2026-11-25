@@ -50,7 +50,6 @@ provider = "gateway"
 id = "liquid/d1"
 capabilities.context_tokens = 65536
 capabilities.image = true
-note = "Sees images as image_url parts (undocumented; the documented file part reaches it as text, 2026-10-16)."
 
 [models."kev@openrouter"]
 provider = "openrouter"

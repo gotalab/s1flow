@@ -5,7 +5,7 @@
 | Task | Source | License | Sample |
 |---|---|---|---|
 | massive-ja-intent | [MASSIVE 1.1](https://github.com/alexa/massive), ja-JP, Amazon | CC BY 4.0 | test split, up to 5 per intent (288) |
-| ja-toxicity | [LLM-jp Toxicity Dataset](https://gitlab.llm-jp.nii.ac.jp/datasets/llm-jp-toxicity-dataset) via [p1atdev/LLM-jp-Toxicity-Dataset](https://huggingface.co/datasets/p1atdev/LLM-jp-Toxicity-Dataset), LLM-jp | CC BY 4.0 | texts up to 1,000 characters, 150 toxic / 150 nontoxic (300) |
+| jnli-support | JNLI v1.3 from [JGLUE](https://github.com/yahoojapan/JGLUE) (Kurihara, Kawahara and Shibata, LREC 2022), Yahoo Japan; its sentences come from the [YJ Captions Dataset](https://github.com/yahoojapan/YJCaptions) (CC BY 4.0) | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/); this sample, with its fields renamed and its ids prefixed with `p` and nothing else changed, is under the same license | validation file, 100 pairs per label (300) |
 | helpsteer2-helpfulness | [HelpSteer2](https://huggingface.co/datasets/nvidia/HelpSteer2) (revision 990b271), NVIDIA | CC BY 4.0 | validation split, prompt and response under 4,000 characters, 60 per helpfulness level (300); `ratings` from its disagreements file |
 | enrico-screen | [Enrico](https://github.com/luileito/enrico) design topics (Leiva, Hota and Oulasvirta, MobileHCI 2020) on [Rico](https://interactionmining.org/rico) screenshots | labels MIT ([notice](enrico-screen/LICENSE-enrico)), screenshots CC BY 4.0 | up to 12 screens per topic, minus the 10 its `issues.csv` flags for a faulty screenshot; 69 screens two reviewers judged mislabelled (listed in `enrico-screen/mislabelled.csv`) replaced by further draws (221); screenshots scaled to 540x960 and re-encoded as WebP |
 | visa-defect | [VisA](https://github.com/amazon-science/spot-diff) (Visual Anomaly dataset; Zou et al., ECCV 2022), Amazon | CC BY 4.0 | test split of its 1cls setup, 10 defective and 10 good photos per item, 12 items (240); photos scaled to 768 px on the long side and re-encoded as WebP |
@@ -16,4 +16,3 @@ Email addresses and one leaked API key quoted in these texts are replaced with `
 
 The repository's Apache-2.0 license covers its code, not these data samples, which keep their sources' terms.
 
-`ja-toxicity` contains offensive text by design.
