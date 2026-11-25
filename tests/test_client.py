@@ -227,7 +227,7 @@ def test_decide_with_a_model(toml):
     which = json.dumps({"q": {"type": "choice", "instructions": "Which?", "criteria": {"linter": None, "server": "the LSP"}}})
     done = s1flow("decide", "--model", "toy", "--state", '{"title": "server bug"}', "--questions", which, cwd=cwd)
     assert done.returncode == 0, done.stderr
-    assert done.stdout.splitlines()[0] == "q: server  (server 0.800 · linter 0.200)"
+    assert done.stdout.splitlines()[0] == "q: server  (linter 0.200 · server 0.800)"
     (cwd / "qs.json").write_text(json.dumps({k: q.model_dump() for k, q in QS.items()}))
     (cwd / "s.json").write_text('"a bug"')
     done = s1flow("decide", "--model", "toy", "--state", "@s.json", "--questions", "@qs.json", "--json", cwd=cwd)
