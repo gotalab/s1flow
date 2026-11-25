@@ -58,7 +58,9 @@ def test_the_examples_and_the_skill_pin_the_release_of_this_version():
 
 
 def source_hash(english: Path) -> str:
-    return hashlib.sha256(english.read_bytes()).hexdigest()[:12]
+    """The English text with this version's pins written as <version>: a release moves the pins on both pages, and
+    that changes nothing to translate."""
+    return hashlib.sha256(english.read_text().replace(VERSION, "<version>").encode()).hexdigest()[:12]
 
 
 def test_each_japanese_page_translates_the_english_page_as_it_is_now():
