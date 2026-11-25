@@ -321,23 +321,21 @@ def render(task: Task, variant: str, evs: list[Evaluation], preds: dict[str, met
     if not any_err:
         L.append("None.")
 
-    L += unsure_or_wrong_table(evs, preds, cases)
+    L += unsure_or_wrong_counts(evs, preds, cases)
     if not box:
         L += disagreements(task, preds, cases)
     return "\n".join(L) + "\n"
 
 
-SHOWN_UNSURE = 40  # rows per model in the Markdown; <variant>.json lists them all
-
-
 def unsure_or_wrong(pr: metrics.Preds, cases: dict[str, Case]) -> list[dict[str, Any]]:
     """Every scored case the model got wrong, or answered under metrics.HIGH_CONF: the mistakes a rewrite of the
-    question works from. Each with the label, the answer and its probability, and the top three of its distribution
-    (choice, score). The wrong first, then the right under it; by label within each, the surest first."""
+    question works from, in the cases file's order (which to read first is the reader's call, the Skill's). Each with
+    the label, the answer and its probability, and the three likeliest answers of its distribution (choice, score)."""
     p = pr.pairs
+    at = {cid: i for i, cid in enumerate(pr.ids)}
     out = []
-    for i, cid in enumerate(pr.ids):
-        if cid not in cases or (p.correct[i] and p.probability[i] >= metrics.HIGH_CONF):
+    for cid in cases:  # the cases file's order
+        if (i := at.get(cid)) is None or (p.correct[i] and p.probability[i] >= metrics.HIGH_CONF):
             continue
         label, said = measure.shown(p, i)
         top: list[tuple[str, float]] = []
@@ -346,23 +344,21 @@ def unsure_or_wrong(pr: metrics.Preds, cases: dict[str, Case]) -> list[dict[str,
             top = sorted(((n, round(float(x), 3)) for n, x in zip(names, p.distribution[i])), key=lambda t: -t[1])[:3]
         out.append({"id": cid, "label": label, "answer": said if p.ok[i] else "no answer", "right": bool(p.correct[i]),
                     "probability": round(float(p.probability[i]), 3), "top": top})
-    return sorted(out, key=lambda d: (d["right"], str(d["label"]), -d["probability"]))
+    return out
 
 
-def unsure_or_wrong_table(evs: list[Evaluation], preds: dict[str, metrics.Preds], cases: dict[str, Case]) -> list[str]:
+def unsure_or_wrong_counts(evs: list[Evaluation], preds: dict[str, metrics.Preds], cases: dict[str, Case]) -> list[str]:
+    """How many cases each model got wrong, or right under metrics.HIGH_CONF; the cases themselves are in the JSON."""
     L = ["", f"## Wrong, or right under {metrics.HIGH_CONF}", ""]
     for e in evs:
         rows = unsure_or_wrong(preds[e.candidate.model], cases) if e.n else []
-        if not rows:
-            continue
-        L += [f"**{e.candidate.name}** ({len(rows)} of {e.n})", "", "| id | label | answer | probability | top answers | case |", "|---|---|---|---|---|---|"]
-        for d in rows[:SHOWN_UNSURE]:
-            top = ", ".join(f"{n} {x:.2f}" for n, x in d["top"])
-            L.append(f"| {d['id']} | {d['label']} | {d['answer']}{'' if d['right'] else ' ✕'} | {d['probability']:.2f} | {top} | {show(cases[d['id']], 120)} |")
-        if len(rows) > SHOWN_UNSURE:
-            L.append(f"\n{len(rows) - SHOWN_UNSURE} more under `unsure_or_wrong` in the JSON beside this file; `cases` there holds each case's state, as the model saw it, and its rationale.")
-        L.append("")
-    return L if len(L) > 3 else [*L, "None."]
+        if rows:
+            wrong = sum(not d["right"] for d in rows)
+            L.append(f"- {e.candidate.name}: {wrong} wrong, {len(rows) - wrong} right under {metrics.HIGH_CONF}, of {e.n}")
+    if len(L) == 3:
+        return [*L, "None."]
+    return [*L, "", "Each one, with the label, the answer, its probability and the three likeliest answers: `unsure_or_wrong` "
+            "in the JSON beside this file; `cases` there holds each case's state and its rationale."]
 
 
 def disagreements(task: Task, preds: dict[str, metrics.Preds], cases: dict[str, Case]) -> list[str]:

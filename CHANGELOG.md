@@ -14,10 +14,9 @@
   and the rounds stop after two with no gain on val.
 - `s1flow report TASK --split train` (or `val`) scores that share of the development cases alone: the list, the
   comparison and the question reports. `adopt` still chooses on both.
-- A question's report (`report --out`) lists every case the model got wrong or answered under 0.9, with the label,
-  the answer, its probability and the top three answers of a choice or a score: in the Markdown up to 40 per model,
-  the wrong first, and all of them under `unsure_or_wrong` in the JSON, with each case's state and `rationale`
-  under `cases`.
+- A question's report (`report --out`) lists every case each model got wrong or answered under 0.9, with the label,
+  the answer, its probability and the three likeliest answers of a choice or a score: `unsure_or_wrong` in the
+  JSON, in the cases file's order, with each case's state and `rationale` under `cases`. The Markdown counts them.
 - The README and Get started name Antigravity: `s1flow init --skill` writes the Skill into `.agents/skills/`, which
   Antigravity reads.
 

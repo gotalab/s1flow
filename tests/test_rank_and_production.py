@@ -124,10 +124,13 @@ def test_the_report_lists_every_case_wrong_or_not_sure_with_the_top_answers(task
     assert not wrong["right"] and wrong["answer"] == "a" and wrong["probability"] == 0.6
     assert wrong["top"] == [["a", 0.6], ["b", 0.2], ["c", 0.2]]
     assert saved["cases"][wrong["id"]] == {"case": '{"text": "c"}', "state": {"text": "c"}, "rationale": None}
-    assert [d["right"] for d in listed] == sorted(d["right"] for d in listed)  # the wrong first, whatever their label and set(saved["cases"]) == {d["id"] for d in listed}
+    assert set(saved["cases"]) == {d["id"] for d in listed}
+    order = [c.id for c in task.load_cases().all()]
+    assert [d["id"] for d in listed] == sorted((d["id"] for d in listed), key=order.index)  # the cases file's order
     train = {c.id for c in task.load_cases().labelled() if evalset.current(task).assign[c.id] == "train"}
     assert {d["id"] for d in listed} == train and {d["label"] for d in listed if d["right"]} == {"a", "b"}  # nothing at 0.9
-    assert "## Wrong, or right under 0.9" in md and "| a 0.60, b 0.20, c 0.20 |" in md
+    wrong_n = sum(not d["right"] for d in listed)
+    assert f"- m: {wrong_n} wrong, {len(listed) - wrong_n} right under 0.9, of {len(train)}" in md
     task.variants["sure"] = q("Better?")
     asyncio.run(running.run_model(task, "m", limit=None, variant="sure"))
     assert "## Wrong, or right under 0.9\n\nNone." in report.write(task, "sure", out, "train")

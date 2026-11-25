@@ -25,8 +25,10 @@ the original question, 90.8% for the pick (GEPA's question reached 85.1%).
 ## What a writer may read
 
 `task.py`, `context.md`, `criteria.md`, and what `report --split train --out <dir>` writes:
-`<dir>/questions/<variant>.md` ("Wrong, or right under 0.9": each case's label, answer, probability and top
-answers) and `<variant>.json` (`unsure_or_wrong`: every one of them; `cases`: each one's `state` as the model saw it, and its `rationale`).
+`<dir>/questions/<variant>.md` and `<variant>.json`. The JSON's `unsure_or_wrong` lists, per model, every train case
+it got wrong or answered under 0.9 (label, answer, probability, the three likeliest answers), in the cases file's
+order; `cases` holds each one's `state` and `rationale`. Group and order them as the pattern hunt needs (by label,
+the wrong first).
 
 Never, while writing a question: val's or test's cases (`report --split val --out`, `report --out` without
 `--split`, the cases file, `split.json`), the `runs/` files, or the test numbers `adopt` prints. The val table
@@ -38,7 +40,7 @@ Never, while writing a question: val's or test's cases (`report --split val --ou
    in `collect.md` ("Review the labels"), not by a new question.
 2. **Read the mistakes on train.** Current's question is the one the current policy asks (`s1flow report` with no
    task names current's candidate; `base` unless a variant was adopted). `s1flow report <task> --split train --out
-   <dir>`, then that variant's files under `<dir>/questions/`.
+   <dir>`, then that variant's JSON under `<dir>/questions/`, its list for current's model.
 3. **List what goes wrong.** Start a fresh agent with no other context, if you can, and give it only what a writer
    may read. It lists every pattern the mistakes share that the question misses or says wrong: an option's
    criteria too narrow, two options that overlap, a rule the team follows that the question leaves out, an option
