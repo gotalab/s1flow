@@ -12,6 +12,8 @@
   question's mistakes on the development cases only, names the pattern, writes one variant in `task.py`, runs it and
   shows it beside the current question; `adopt` confirms a pick on the held-out test. `optimize` moved there too, as
   the other way.
+- The README and Get started name Antigravity: `s1flow init --skill` writes the Skill into `.agents/skills/`, which
+  Antigravity reads.
 
 ### Changed
 
