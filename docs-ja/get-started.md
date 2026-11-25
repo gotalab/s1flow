@@ -5,7 +5,7 @@ translated_from: 243c6e7e9f87
 
 # はじめる
 
-s1flow は、コーディングエージェントに頼んで使います。何を判断したいかを自分の言葉で伝えてください。
+s1flow はコーディングエージェントに頼んで使います。何を判断したいかを自分の言葉で伝えてください。
 
 ```text
 Use s1flow to decide whether a new GitHub issue is a bug. Call the task is-bug,
@@ -30,7 +30,7 @@ uv tool install "s1flow[eval]"
 | Codex | `codex plugin marketplace add gotalab/s1flow` のあと、Plugins ディレクトリから s1flow を入れる |
 | Antigravity、Cursor などのエージェント | `s1flow init --skill` が、Git のルートの `.agents/skills/` と `.claude/skills/` に Skill をコピーする |
 
-プラグインは、エージェントのプラグイン管理で更新されます。`s1flow init --skill` は Skill のファイルをリポジトリにコピーするので、コピーしたファイルはもう一度実行したときだけ新しくなります。
+プラグインはエージェントのプラグイン管理で更新されます。`s1flow init --skill` は Skill のファイルをリポジトリにコピーするので、コピーしたファイルはもう一度実行したときだけ新しくなります。
 
 Antigravity は、既定のターミナルのサンドボックスがネットワークに出られないため、モデルを呼ぶ s1flow のコマンドを実行するたびに確認を求めます。確認を止めるには、[権限の設定](https://antigravity.google/docs/permissions)で `command(s1flow)` を許可します。
 
@@ -40,12 +40,12 @@ Skill を入れたら、上の例のように頼みます。エージェント�
 
 そのあと、エージェントは次の順に進めます。
 
-1. タスク（`s1flow/tasks/is-bug/task.py`）を書きます。中身は、問い、ラベルの読み方、objective です。
+1. タスク（`s1flow/tasks/is-bug/task.py`）を書きます。中身は問い、ラベルの読み方、objective です。
 2. ラベル付きのケースを集め、`s1flow cases check` で確かめます。
 3. `s1flow run` で、ラインナップのすべてのモデルに聞きます。
 4. `s1flow report` の比較を見せ、どれを選ぶかはあなたに任せます。
 
-比較には、モデルとプロンプトごとに、目標の正解率を保ったまま判断のどれだけをモデルだけで引き受けられるかが、信頼区間、レイテンシ、費用と一緒に出ます。正解率だけでなくこの割合を見る理由は、[考え方](concepts.md)で説明しています。
+比較にはモデルとプロンプトごとに、目標の正解率を保ったまま判断のどれだけをモデルだけで引き受けられるかが、信頼区間、レイテンシ、費用と一緒に出ます。正解率だけでなくこの割合を見る理由は、[考え方](concepts.md)で説明しています。
 
 ## 選んで、ポリシーとして保存する { #choose-and-save-the-choice-as-a-policy }
 
@@ -68,7 +68,7 @@ decision = policy.decide({"text": "Crash on startup"})
 decision.value, decision.probability   # True, 0.93
 ```
 
-答えで何をするかは、あなたのコードが決めます。答えのとおりに実行してもよいし、確率がポリシーの最低確率より低ければ人に回してもかまいません。正解が分かったら記録してください。記録した正解は、次の比較のケースになります（[フィードバックと改善](feedback.md)）。
+答えで何をするかは、あなたのコードが決めます。答えのとおりに実行してもよいし、確率がポリシーの最低確率より低ければ人に回してもかまいません。正解が分かったら記録してください。記録した正解は次の比較のケースになります（[フィードバックと改善](feedback.md)）。
 
 ラベルがまだ無くても、[今日からポリシーを使い始め](app.md)、評価はあとから行えます。
 
