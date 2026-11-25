@@ -38,10 +38,6 @@ eval = [  # evaluation commands; runtime CLI commands use the base dependencies
 llm = [  # the `llm` provider
     "litellm>=1.103.2,!=1.107.0",  # 1.107.0 was a malicious release (2026-10-21), pulled from PyPI
 ]
-optimize = [  # GEPA needs the evaluation and reflection-model extras
-    "s1flow[eval,llm]",
-    "gepa>=0.1.4",
-]
 images = [  # a policy whose states carry images (Pillow prepares them)
     "pillow>=13.0.0",
 ]
@@ -95,7 +91,7 @@ packages = ["src/s1flow"]
 
 [dependency-groups]
 dev = [
-    "s1flow[eval,llm,optimize,otel,images]",  # every extra, so mypy and the tests see the whole package
+    "s1flow[eval,llm,otel,images]",  # every extra, so mypy and the tests see the whole package
     "mypy>=2.4.0",
     "opentelemetry-sdk>=1.30",
     "pytest>=9.1.1",
@@ -132,7 +128,7 @@ disallow_incomplete_defs = true
 warn_return_any = true
 
 [[tool.mypy.overrides]]
-module = ["litellm.*", "gepa.*", "sklearn.*", "scipy.*", "respx.*"]
+module = ["litellm.*", "sklearn.*", "scipy.*", "respx.*"]
 ignore_missing_imports = true
 
 [tool.pydantic-mypy]

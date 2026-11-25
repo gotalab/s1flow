@@ -20,7 +20,7 @@ from .client.providers.needs import where_to_get
 from .core.errors import S1flowError
 
 # The top-level module a missing import names -> the extra that installs it (also the CLI's hint, cli.missing_extra).
-EXTRAS = {"numpy": "eval", "scipy": "eval", "sklearn": "eval", "PIL": "images", "litellm": "llm", "gepa": "optimize"}
+EXTRAS = {"numpy": "eval", "scipy": "eval", "sklearn": "eval", "PIL": "images", "litellm": "llm"}
 
 LOOPBACK = ("localhost", "127.0.0.1", "::1")
 

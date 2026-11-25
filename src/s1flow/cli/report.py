@@ -15,12 +15,14 @@ from .common import command, positive, project, shown
 def report(a: argparse.Namespace) -> int:
     """Read the saved runs by the task's objective: every candidate on every question variant, best first, those the
     objective cannot tell apart marked (no pick: a person or an agent picks). No model is called and nothing is written
-    but, with --out DIR, the comparison snapshot and a Markdown report per question. --from reads a saved snapshot
-    offline. With no TASK, every task: its current version and why."""
+    but, with --out DIR, the comparison snapshot and a Markdown report per question. --split train or val scores that
+    share of the dev cases alone. --from reads a saved snapshot offline. With no TASK, every task: its current version
+    and why."""
     from ..eval import adopt as adopting
     from ..eval import comparison
     from ..eval import report as reporting
     from ..eval.candidate import Candidate
+    from ..eval.evalset import Scope
     from ..eval.task import load
 
     if a.offset < 0:
@@ -28,24 +30,25 @@ def report(a: argparse.Namespace) -> int:
     if a.from_path and a.task:
         raise ConfigError("report takes TASK or --from PATH, not both")
     snapshot = Path(a.from_path) if a.from_path else None
+    scope: Scope = a.split or "dev"
     task, listed, unranked = None, None, None
     if snapshot is not None:
         for option in ("project", "connections"):
             if getattr(a, option, None) is not None:
                 raise ConfigError(f"--{option} does not apply with --from; the saved snapshot is self-contained")
-        if a.out:
-            raise ConfigError("--out writes a report of the current runs; with --from the snapshot is already saved")
+        if a.out or a.split:
+            raise ConfigError("--out and --split score the current runs; with --from the snapshot is already saved")
     else:
         if not a.task:  # every task: what runs, and why
             from ..eval.policy import overview
 
-            if a.candidate or a.out:
-                raise ConfigError("--candidate and --out take a TASK")
+            if a.candidate or a.out or a.split:
+                raise ConfigError("--candidate, --out and --split take a TASK")
             return _print_tasks(overview(project(a)), a.json)
         task = load(project(a), a.task)
         if a.candidate is None:
             try:
-                listed = adopting.shortlist(task)
+                listed = adopting.shortlist(task, scope=scope)
             except ConfigError:
                 raise
             except S1flowError as e:  # nothing to rank yet (no complete runs): still show what there is
@@ -56,7 +59,7 @@ def report(a: argparse.Namespace) -> int:
         result = comparison.read(snapshot)
     else:
         assert task is not None
-        result = comparison.collect(task, include_charts=bool(a.out))
+        result = comparison.collect(task, include_charts=bool(a.out), scope=scope)
 
     if a.out:
         assert task is not None and result is not None
@@ -68,7 +71,7 @@ def report(a: argparse.Namespace) -> int:
         wrote = [out / "comparison.json"]
         for variant in ["base", *task.variants]:
             if reporting.available_models(task, variant):
-                reporting.write(task, variant, out / "questions")  # apart from comparison.json, whatever a variant is named
+                reporting.write(task, variant, out / "questions", scope)  # apart from comparison.json, whatever a variant is named
                 wrote += [out / "questions" / f"{variant}.md", out / "questions" / f"{variant}.json"]
         print("wrote " + ", ".join(shown(p) for p in wrote), file=sys.stderr)
 
@@ -93,7 +96,7 @@ def report(a: argparse.Namespace) -> int:
     if listed is not None:
         assert task is not None and result is not None
         rows = listed.rows()
-        _print_shortlist(task.id, rows[a.offset:a.offset + a.limit], listed.order())
+        _print_shortlist(task.id, rows[a.offset:a.offset + a.limit], listed.order(), scope)
         if len(rows) > a.offset + a.limit:
             print(f"  … {len(rows) - a.offset - a.limit} more: --offset {a.offset + a.limit}")
         ranked = {r.candidate for r in rows}
@@ -107,7 +110,7 @@ def report(a: argparse.Namespace) -> int:
             print(f"not run: {names}")
         if outside := [f"{r.candidate} ({', '.join(r.excluded)})" for r in rows if r.excluded]:
             print(f"outside the constraints: {'; '.join(outside)}")
-        if note := comparison.shaped_on_dev(task, [Candidate.parse(r.candidate).variant for r in rows]):
+        if note := comparison.leans_high([Candidate.parse(r.candidate).variant for r in rows], scope):
             print(f"note: {note}")
         _print_weights(listed)
         print(f"Every metric of each candidate: s1flow report {task.id} --json, or --candidate NAME; "
@@ -143,7 +146,7 @@ def _print_tasks(found: list[Any], as_json: bool) -> int:
     return 0
 
 
-def _print_shortlist(task_id: str, rows: list[Any], order: Any) -> None:
+def _print_shortlist(task_id: str, rows: list[Any], order: Any, scope: str) -> None:
     from ..eval.shown import ms, pct, usd
 
     def score(s: Any) -> str:
@@ -183,8 +186,9 @@ def _print_shortlist(task_id: str, rows: list[Any], order: Any) -> None:
     for r in rows:
         if r.excluded:
             print(f"  excluded: {r.candidate} ({', '.join(r.excluded)})")
-    print("Measured on train + val; the held-out test is read only for the one you pick. Left of the first |: the objectives, "
-          "measured on the answers (n: the labelled train + val cases it is scored on); then latency per call and API cost per 10,000 cases, measured on the calls. "
+    on = "train + val" if scope == "dev" else scope
+    print(f"Measured on {on}{'' if scope == 'dev' else ' alone (--split)'}; the held-out test is read only for the one you pick. Left of the first |: the objectives, "
+          f"measured on the answers (n: the labelled {on} cases it is scored on); then latency per call and API cost per 10,000 cases, measured on the calls. "
           "pin: yes a version, no a model that serves one, alias a model whose version can change (not adoptable: run name:<version>).")
     if refused := [r for r in rows if r.refused]:
         print("refused: " + ", ".join(f"{r.candidate} {r.refused} of {r.n} cases" for r in refused)
@@ -216,4 +220,6 @@ def add(sub: Any) -> None:
     p.add_argument("--offset", type=int, default=0, help="candidates to skip (default: 0)")
     p.add_argument("--candidate", help="one candidate in full: model[:version][/variant]")
     p.add_argument("--out", type=Path, metavar="DIR", help="write comparison.json (with the chart series) and questions/<variant>.md / .json for each question")
+    p.add_argument("--split", choices=("train", "val"), help="score only this share of the dev cases (default: both): "
+                   "rewrite a question from its mistakes on train, pick among the rewrites on val")
     p.add_argument("--from", dest="from_path", type=Path, metavar="PATH", help="read a saved comparison.json offline")

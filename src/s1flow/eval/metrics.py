@@ -93,14 +93,17 @@ def _spec(task: Task, name: str) -> ModelSpec | None:
     return task.project.lineup().models.get(name.partition(":")[0])
 
 
-def load(task: Task, variant: str, model: str, *, include_test: bool = False) -> Preds:
-    """The run of `model` (`jev`, or `jev:1.14` for a version run of its own), scored on its latest answering model."""
+def load(task: Task, variant: str, model: str, *, include_test: bool = False, scope: evalset.Scope = "dev") -> Preds:
+    """The run of `model` (`jev`, or `jev:1.14` for a version run of its own), scored on its latest answering model,
+    on the cases of `scope` (evalset.Scope), and the test share too with `include_test`."""
+    if include_test and scope != "dev":
+        raise ValueError("the test share is read beside all the dev cases, never beside one share of them")
     path = run_path(task, variant, model)
     if not path.exists():
         raise NotFound(f"no run for {model} on {task.id}/{variant}; s1flow run it first")
     prompt = prompt_hash(task.questions(variant))
     sf = evalset.current(task)
-    cases = [c for c in task.load_cases().all() if include_test or sf.assign.get(c.id) != "test"]
+    cases = [c for c in task.load_cases().all() if include_test or sf.scored(c.id, scope)]
     # Never bless historical answers using today's identity. A record must carry
     # the identity measured at the call, and match the current materialized input.
     effective = task.where.lineup().resolved(model)

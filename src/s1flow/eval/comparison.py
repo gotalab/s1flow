@@ -90,7 +90,7 @@ class Comparison(BaseModel):
     task: str
     source: str = ""
     at: str
-    scope: Literal['dev'] = 'dev'
+    scope: evalset.Scope = 'dev'  # the cases scored: train + val, or one of them
     question_type: QuestionType
     kind_params: KindParams
     objective: Objective
@@ -154,9 +154,9 @@ def _inputs(task: Task, candidates: Sequence[Candidate]) -> list[_CandidateInput
     return out
 
 
-def _dev_n(task: Task) -> int:
+def _scored_n(task: Task, scope: evalset.Scope) -> int:
     sf = evalset.current(task)
-    return sum(1 for case in task.load_cases().labelled() if sf.assign.get(case.id) != "test")
+    return sum(1 for case in task.load_cases().labelled() if sf.scored(case.id, scope))
 
 
 def _measurement(item: _CandidateInput, pr: metrics.Preds | None) -> Measurement:
@@ -329,7 +329,8 @@ def _row_metrics(evaluation: Evaluation | None, definitions: Sequence[MetricDefi
     return {d.key: values.get(d.key, Estimate(value=None, interval=None)) for d in definitions}
 
 
-def _actual_row(item: _CandidateInput, task: Task, total: int, *, include_charts: bool) -> tuple[ComparisonRow, Evaluation | None, str | None]:
+def _actual_row(item: _CandidateInput, task: Task, total: int, *, include_charts: bool,
+                scope: evalset.Scope) -> tuple[ComparisonRow, Evaluation | None, str | None]:
     """Read one candidate, returning its row and Evaluation (if scored)."""
     reason: list[str] = []
     error: Exception | None = None
@@ -346,7 +347,7 @@ def _actual_row(item: _CandidateInput, task: Task, total: int, *, include_charts
         if isinstance(item.question, Choice) and item.spec.capabilities.max_options is not None and len(item.question.criteria) > item.spec.capabilities.max_options:
             reason.append(f"question has {len(item.question.criteria)} options > model limit {item.spec.capabilities.max_options}")
         try:
-            pr = metrics.load(task, item.candidate.variant, item.candidate.model)
+            pr = metrics.load(task, item.candidate.variant, item.candidate.model, scope=scope)
             evaluation = metrics.evaluate(task, pr, variant=item.candidate.variant)
         except (S1flowError, ValueError, OSError) as exc:
             error = exc
@@ -381,23 +382,25 @@ def _actual_row(item: _CandidateInput, task: Task, total: int, *, include_charts
     return row, evaluation, chart_notice
 
 
-def shaped_on_dev(task: Task, variants: Iterable[str]) -> str | None:
-    """What to say beside question variants that may have been written from the train and val cases they are scored
-    on here: optimize's always were; one in task.py was if its author read those cases' answers, which s1flow cannot
-    tell. Such a question's values lean high next to the others'. None when no variant other than base is shown."""
+def leans_high(variants: Iterable[str], scope: evalset.Scope) -> str | None:
+    """What to say beside question variants: one may have been written from the cases it is scored on here (s1flow
+    cannot tell how a variant was written), and such a question's values lean high next to the others'. On val, the
+    best of several picked there leans high on it too. None when no variant other than base is shown."""
     shown = [v for v in dict.fromkeys(variants) if v != "base"]
     if not shown:
         return None
-    optimized = [v for v in shown if v in task.optimized]
-    written = [v for v in shown if v not in task.optimized]
-    said = ([f"optimize wrote {', '.join(optimized)} from them"] if optimized else []) + \
-        ([f"{', '.join(written)} in task.py may have been written from them"] if written else [])
-    return f"a question written from these train and val cases leans high on them (adopt checks a pick on the held-out test): {'; '.join(said)}"
+    if scope == "val":
+        return ("a question written from val's cases, or the best of several picked on val, leans high on val; adopt "
+                f"checks a pick on the held-out test: {', '.join(shown)}")
+    where = "these train and val cases" if scope == "dev" else "these train cases"
+    return (f"a question written from {where} leans high on them; report --split val scores val alone, and adopt checks "
+            f"a pick on the held-out test: {', '.join(shown)}")
 
 
 def collect(task: Task, *, variants: Sequence[str] | None = None, only: Sequence[str] | None = None,
-            include_charts: bool = False) -> Comparison:
-    """Build the current dev comparison without model calls or provider fetches.
+            include_charts: bool = False, scope: evalset.Scope = "dev") -> Comparison:
+    """Build the current comparison on the dev cases (or on one share of them, `scope`) without model calls or
+    provider fetches.
 
     Chart series are opt-in because an agent summary should stay bounded.  The
     evidence identity and metric values are identical with or without them.
@@ -405,18 +408,19 @@ def collect(task: Task, *, variants: Sequence[str] | None = None, only: Sequence
     candidates = _candidates(task, variants, only)
     measured = Conditions.now(task, candidates, task.where.lineup().resolved)  # before the questions and specs are read
     inputs = _inputs(task, candidates)
-    total = _dev_n(task)
+    total = _scored_n(task, scope)
     rows: list[ComparisonRow] = []
     evaluations: dict[str, Evaluation] = {}
     observed_evaluations: list[Evaluation] = []
     population_evaluations: list[Evaluation] = []
     incomplete: dict[str, bool] = {}
     notices = [
-        "development cases only; the held-out test share was not scored or exposed in this comparison",
+        "development cases only; the held-out test share was not scored or exposed in this comparison" if scope == "dev" else
+        f"{scope} cases only, one share of the development cases; {'val' if scope == 'train' else 'train'} and the held-out test share were not scored",
         "constraints are reference metadata; this comparison does not filter or select candidates",
     ]
     for item in inputs:
-        row, evaluation, chart_notice = _actual_row(item, task, total, include_charts=include_charts)
+        row, evaluation, chart_notice = _actual_row(item, task, total, include_charts=include_charts, scope=scope)
         rows.append(row)
         if chart_notice:
             notices.append(chart_notice)
@@ -428,7 +432,7 @@ def collect(task: Task, *, variants: Sequence[str] | None = None, only: Sequence
         if evaluation is not None and evaluation.n and not evaluation.failures.missing and not row.excluded:
             evaluations[item.candidate.name] = evaluation
 
-    if note := shaped_on_dev(task, [Candidate.parse(r.candidate).variant for r in rows if r.n]):
+    if note := leans_high([Candidate.parse(r.candidate).variant for r in rows if r.n], scope):
         notices.insert(2, note)  # beside the two above: the text shows the first three
     definitions = _metric_definitions(task, observed_evaluations)
     rows_by_name = {r.candidate: r for r in rows}
@@ -448,7 +452,7 @@ def collect(task: Task, *, variants: Sequence[str] | None = None, only: Sequence
     if changed := measured.changed(task, task.where.lineup().resolved):
         raise ConfigError(f"{task.id}: {changed} changed during the comparison; compare again")
     comparison_id = digest({
-        "schema": "s1flow/comparison@2", "task": task.id, "variants": _variants(task, variants),
+        "schema": "s1flow/comparison@2", "task": task.id, **({"scope": scope} if scope != "dev" else {}), "variants": _variants(task, variants),
         "data_digest": measured.data, "evaluation_contract_digest": measured.evaluation_contract,
         "input_adapter_digest": measured.input_adapter, "binding_digests": measured.bindings, "run_digests": measured.runs,
     })
@@ -456,7 +460,7 @@ def collect(task: Task, *, variants: Sequence[str] | None = None, only: Sequence
     if excluded_count:
         notices.append(f"{excluded_count} candidates have missing or ineligible evidence; see each candidate's excluded reasons")
     return Comparison(
-        id=comparison_id, task=task.id, source=task.source, at=clock.now(), scope="dev",
+        id=comparison_id, task=task.id, source=task.source, at=clock.now(), scope=scope,
         question_type=task.kind.type, kind_params=task.kind_params,
         objective=task.primary, constraints=task.constraints,
         data_digest=measured.data, evaluation_contract_digest=measured.evaluation_contract,
@@ -570,7 +574,7 @@ def text(comparison: Comparison, *, offset: int = 0, limit: int = 12, candidate:
     provenance = f"snapshot {snapshot} as of {comparison.at} (offline; not current certification)" if snapshot else f"current as of {comparison.at}"
     objective = comparison.objective
     constraints = comparison.constraints.model_dump(mode="json")
-    lines = [f"{comparison.task}: {comparison.n} dev cases, {len(comparison.candidates)} candidates, {provenance}",
+    lines = [f"{comparison.task}: {comparison.n} {comparison.scope} cases, {len(comparison.candidates)} candidates, {provenance}",
              f"id: {comparison.id}; scope: {comparison.scope}; objective: {objective.label} ({'max' if objective.maximize else 'min'}); constraints: {json.dumps(constraints, ensure_ascii=False)}",
              "selection: none; candidates are shown in model and variant order"]
     lines.append("metric definitions: " + json.dumps([definition.model_dump(mode="json") for definition in comparison.metric_definitions], ensure_ascii=False))

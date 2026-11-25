@@ -181,8 +181,8 @@ class Completed:
 
 
 async def complete(model: str, messages: list[dict[str, Any]], api_key_env: str | None = None, attempts: int = 4, **kwargs: Any) -> Completed:
-    """One litellm call with this project's key handling, retries and error outcomes (the LLM baseline and
-    GEPA's reflection). The retries are ours, not litellm's, so the latency is the answering attempt's alone (http.py)."""
+    """One litellm call with this project's key handling, retries and error outcomes (the LLM baseline). The retries
+    are ours, not litellm's, so the latency is the answering attempt's alone (http.py)."""
     import litellm
 
     env = next(iter(litellm_needs(model, api_key_env).keys), None)
@@ -241,16 +241,6 @@ class LLMModel:
             response_format={"type": "json_schema", "json_schema": {"name": "answers", "schema": schema, "strict": True}},
             temperature=0 if self.samples == 1 else 1,
         )
-
-    async def write(self, messages: list[dict[str, Any]], *, temperature: float = 1) -> tuple[str, Usage]:
-        """Free text, not a decision (GEPA's reflection LM, eval/gepa.py): what the model wrote, and its usage priced
-        as `decide`'s is."""
-        done = await complete(self.model, messages, self.api_key_env, temperature=temperature)
-        r = done.response
-        cost = await asyncio.to_thread(response_cost, self.model, [r], self.cache_dir)
-        usage = Usage(input_tokens=r.usage.prompt_tokens, output_tokens=r.usage.completion_tokens, cost_usd=cost,
-                      cost_source="list" if cost is not None else None, raw=_raw(r.usage))
-        return str(r.choices[0].message.content), usage
 
     async def decide(self, state: State, questions: Questions, *, options: dict[str, Any] | None = None) -> Response:
         check_supported(self, state, questions)

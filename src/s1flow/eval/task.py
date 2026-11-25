@@ -1,5 +1,5 @@
 """Tasks: one task is one decision. `tasks/<id>/task.py` defines `task`: what it asks, how its rows become
-states and labels, how it is split and what it optimizes. Its cases are read by eval/cases.py.
+states and labels, how it is split and what it is chosen by. Its cases are read by eval/cases.py.
 """
 
 import hashlib
@@ -8,23 +8,21 @@ import inspect
 import marshal
 from dataclasses import dataclass, field, replace
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Literal, cast
+from typing import TYPE_CHECKING, Any, Callable, cast
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from ..client import media
 from ..client.identity import digest
 from ..client.questions import Question
 from ..client.state import State
 from ..core import place
-from ..core.errors import ConfigError, invalid
+from ..core.errors import ConfigError
 from .kinds import Kind, KindParams, kind_of
 from .candidate import variant_name
 from .cases import Case, Cases, Row
 from .objectives.declare import CallKey, Constraints, Objective, check, default_for, fitted
 from .objectives.measure import Measure
 from .objectives.custom import Custom
-from .optimizers import Gepa, Optimizer
 
 if TYPE_CHECKING:
     from ..project import Project
@@ -40,25 +38,6 @@ def _evaluation_revision() -> str:
 
 EVALUATION_IMPLEMENTATION_REVISION = _evaluation_revision()
 
-
-class Optimized(BaseModel):
-    """tasks/<id>/optimized/<variant>.json: a question an optimizer wrote (eval/optimizers.py), the same for every
-    optimizer: what it was given and set to, what it cost; what only it records is in `detail`."""
-
-    model_config = ConfigDict(extra="forbid", populate_by_name=True, serialize_by_alias=True)
-    schema_: Literal["s1flow/optimized@2"] = Field(default="s1flow/optimized@2", alias="schema")
-    variant: str
-    model: str  # the model it was optimized for
-    optimizer: str  # its name: gepa, or an entry point's
-    settings: dict[str, Any]  # what it was set to
-    at: str
-    question: Question
-    seed_question: Question
-    start: str = "base"  # the question it began from
-    split: dict[Literal["train", "val", "test"], list[str]]  # the cases it read from, selected on, never saw
-    model_calls: int
-    cost_usd: float | None  # what it spent beside the model's calls (a reflection LM); None: not priced
-    detail: dict[str, Any] = {}  # what only this optimizer records
 
 @dataclass
 class Split:
@@ -95,14 +74,10 @@ class Task:
     objective: Objective | Custom | None = None
     tiebreak: list[Objective | Custom | CallKey] = field(default_factory=list)
     constraints: Constraints = field(default_factory=Constraints)  # what a model may not exceed
-    # What `s1flow optimize` runs (eval/optimizers.py): Gepa(...) with its settings, an optimizer object, or the
-    # name of one (an entry point in the s1flow.optimizers group).
-    optimizer: Optimizer | str = field(default_factory=Gepa)
     variants: dict[str, Question] = field(default_factory=dict)
     source: str = ""  # where the data comes from, with its license
     show: Callable[[Row], str] | None = None  # one line per case in reports
     dir: Path = Path()
-    optimized: dict[str, Optimized] = field(default_factory=dict)  # tasks/<id>/optimized/*.json, by variant
     project: "Project | None" = field(default=None, repr=False)
     _cases: Cases | None = field(default=None, init=False, repr=False)
     custom: dict[str, Custom] = field(default_factory=dict, init=False, repr=False)  # the task's custom objectives, by key
@@ -239,12 +214,6 @@ class Task:
         q = self.question if variant == "base" else self.variants[variant]
         return {self.question_id: q}
 
-    def add_optimized(self, art: Optimized) -> None:
-        """A question an optimizer wrote, as one more variant."""
-        variant_name(art.variant)
-        self.optimized[art.variant] = art
-        self.variants[art.variant] = art.question
-
     def model_state(self, case: Case) -> State:
         """The state a model receives: media loaded and prepared (client/media.materialize)."""
         return media.materialize(case.state, self.dir)
@@ -273,12 +242,4 @@ def load(project: "Project", task_id: str) -> Task:
         raise ConfigError(f"{path}: id {task.id!r} does not match its directory tasks/{path.parent.name}: set id={path.parent.name!r}")
     task.dir = path.parent
     task.project = project
-    for f in sorted((task.dir / "optimized").glob("*.json")):
-        try:
-            art = Optimized.model_validate_json(f.read_text())
-        except ValidationError as e:
-            raise ConfigError(f"{f}: {invalid(e)}") from None
-        except (OSError, UnicodeDecodeError) as e:
-            raise ConfigError(f"{f}: cannot read it ({e})") from None
-        task.add_optimized(art)
     return task

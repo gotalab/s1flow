@@ -1,4 +1,4 @@
-"""The evaluation stack: tasks and their cases, runs, metrics, choosing, checking, optimizing, feedback.
+"""The evaluation stack: tasks and their cases, runs, metrics, choosing, checking, feedback.
 
 A task.py imports what it needs from here, the objectives and the question types:
 
@@ -9,7 +9,6 @@ A task.py imports what it needs from here, the objectives and the question types
 
 from ..policies.kinds import KindParams
 from .cases import Case
-from .optimizers import Found, Gepa, Optimizer, Problem
 from .task import Split, Task
 
-__all__ = ["Case", "Found", "Gepa", "KindParams", "Optimizer", "Problem", "Split", "Task"]
+__all__ = ["Case", "KindParams", "Split", "Task"]
