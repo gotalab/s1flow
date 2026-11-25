@@ -5,7 +5,7 @@
     s1flow.policies   load a policy and decide (light: no evaluation stack)
     s1flow.objectives what a task chooses by
     s1flow.core       what every part shares: errors, where a project is, its .env files
-    s1flow.eval       tasks, runs, metrics, choosing, checking, optimizing, feedback
+    s1flow.eval       tasks, runs, metrics, choosing, checking, feedback
     s1flow.project    where a project lives and its directories
 """
 

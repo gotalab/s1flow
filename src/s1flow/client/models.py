@@ -40,7 +40,7 @@ class Capabilities(BaseModel):
     context_tokens: int = Field(default=32_000, gt=0)
     max_options: int | None = Field(default=None, gt=0)
     # The longest instructions / option description the model is known to take, in characters.
-    # Not checked before a call (the exact limit is not published); `optimize` writes within it.
+    # Not checked before a call (the exact limit is not published); whoever writes a variant keeps within it.
     max_instructions_chars: int | None = Field(default=None, gt=0)
     max_description_chars: int | None = Field(default=None, gt=0)
     # Requests a minute the model allows (a free tier's limit). The provider paces its calls to it, and

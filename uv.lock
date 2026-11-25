@@ -581,15 +581,6 @@ wheels = [
 ]
 
 [[package]]
-name = "gepa"
-version = "0.1.4"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/95/56/925779e5690971f1b022f7d107caf015c33ec09560261273ec137e23a8f2/gepa-0.1.4.tar.gz", hash = "sha256:6dd153a676ae5481764860d19286a9c0e8ddb5ef70d7f13044faf24978bdb6b8", size = 351343, upload-time = "2026-07-15T14:53:59.929Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/fd/77/5b3a281cfd9caaa9e68349b434cf27f1ca448003ee0067a1ae2184dc52d1/gepa-0.1.4-py3-none-any.whl", hash = "sha256:12b971039599625c156d2231f6d72a29c31a22e9c237689459b5f1a3c353f532", size = 290167, upload-time = "2026-07-15T14:53:58.422Z" },
-]
-
-[[package]]
 name = "grimp"
 version = "3.19"
 source = { registry = "https://pypi.org/simple" }
@@ -2172,7 +2163,7 @@ wheels = [
 
 [[package]]
 name = "s1flow"
-version = "0.1.0a5"
+version = "0.1.0a6"
 source = { editable = "." }
 dependencies = [
     { name = "httpx" },
@@ -2191,13 +2182,6 @@ images = [
 llm = [
     { name = "litellm" },
 ]
-optimize = [
-    { name = "gepa" },
-    { name = "litellm" },
-    { name = "numpy" },
-    { name = "scikit-learn" },
-    { name = "scipy" },
-]
 otel = [
     { name = "opentelemetry-api" },
 ]
@@ -2213,23 +2197,21 @@ dev = [
     { name = "pytest-xdist" },
     { name = "respx" },
     { name = "ruff" },
-    { name = "s1flow", extra = ["eval", "images", "llm", "optimize", "otel"] },
+    { name = "s1flow", extra = ["eval", "images", "llm", "otel"] },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "gepa", marker = "extra == 'optimize'", specifier = ">=0.1.4" },
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "litellm", marker = "extra == 'llm'", specifier = ">=1.103.2,!=1.107.0" },
     { name = "numpy", marker = "extra == 'eval'", specifier = ">=2.5.3" },
     { name = "opentelemetry-api", marker = "extra == 'otel'", specifier = ">=1.30" },
     { name = "pillow", marker = "extra == 'images'", specifier = ">=13.0.0" },
     { name = "pydantic", specifier = ">=2.13.5" },
-    { name = "s1flow", extras = ["eval", "llm"], marker = "extra == 'optimize'" },
     { name = "scikit-learn", marker = "extra == 'eval'", specifier = ">=1.9.1" },
     { name = "scipy", marker = "extra == 'eval'", specifier = ">=1.18.1" },
 ]
-provides-extras = ["eval", "llm", "optimize", "images", "otel"]
+provides-extras = ["eval", "llm", "images", "otel"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -2242,7 +2224,7 @@ dev = [
     { name = "pytest-xdist", specifier = ">=3.8.0" },
     { name = "respx", specifier = ">=0.23.1" },
     { name = "ruff", specifier = ">=0.17.2" },
-    { name = "s1flow", extras = ["eval", "llm", "optimize", "otel", "images"] },
+    { name = "s1flow", extras = ["eval", "llm", "otel", "images"] },
 ]
 
 [[package]]
@@ -2250,11 +2232,11 @@ name = "s1flow-bench"
 version = "0"
 source = { virtual = "apps/bench" }
 dependencies = [
-    { name = "s1flow", extra = ["eval", "images", "llm", "optimize"] },
+    { name = "s1flow", extra = ["eval", "images", "llm"] },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "s1flow", extras = ["eval", "images", "llm", "optimize"], editable = "." }]
+requires-dist = [{ name = "s1flow", extras = ["eval", "images", "llm"], editable = "." }]
 
 [[package]]
 name = "s3transfer"

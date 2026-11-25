@@ -1481,8 +1481,12 @@
    "type": "string"
   },
   "scope": {
-   "const": "dev",
    "default": "dev",
+   "enum": [
+    "dev",
+    "train",
+    "val"
+   ],
    "title": "Scope",
    "type": "string"
   },

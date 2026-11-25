@@ -262,8 +262,8 @@ def test_a_task_whose_id_differs_from_its_directory_is_refused(tmp_path):
 def test_the_task_init_writes_spells_out_the_defaults(tmp_path):
     p = make_project(tmp_path / "p", {"fake": lambda b: Fake(b.spec.id)})
     written = scaffold.stub("t", "Bug?")
-    bare = re.sub(r"\n    # Every value below.*?\n    optimizer=Gepa\(budget=300, reflection=None\),", "\n    objective=Accuracy(),", written, flags=re.S)
-    assert "split=" not in bare and "tiebreak=" not in bare and "optimizer=" not in bare
+    bare = re.sub(r"\n    # Every value below.*?\n    constraints=Constraints\(\),", "\n    objective=Accuracy(),", written, flags=re.S)
+    assert "split=" not in bare and "tiebreak=" not in bare and "constraints=" not in bare
     rows = "".join(json.dumps({"id": str(i), "text": "x", "label": i % 2 == 0}) + "\n" for i in range(20))
     tasks = []
     for name, text in (("t", written), ("t", bare)):
@@ -273,9 +273,39 @@ def test_the_task_init_writes_spells_out_the_defaults(tmp_path):
         (d / "data.jsonl").write_text(rows)
         tasks.append(load(p, name))
     spelled, default = tasks
-    assert spelled.split == default.split and spelled.constraints == default.constraints and spelled.optimizer == default.optimizer
+    assert spelled.split == default.split and spelled.constraints == default.constraints
     assert spelled.objectives == default.objectives and spelled.ties == ["latency", "cost"] and default.ties == []  # unordered without one
     ordered = default.copy(tiebreak=["latency", "cost"])
     assert spelled.evaluation_contract_digest == ordered.evaluation_contract_digest  # what was measured is measured alike
     moved = {default.copy(tiebreak=t).evaluation_contract_digest for t in (["cost", "latency"], ["cost"], ["latency"])}
     assert len(moved) == 3 and ordered.evaluation_contract_digest not in moved  # another order is another selection rule
+
+
+def test_check_names_a_variant_that_repeats_a_train_cases_text(tmp_path):
+    from s1flow.client import Choice
+    from s1flow.eval import Task, evalset
+
+    def task(texts, **variants):
+        (tmp_path / "d.jsonl").write_text("".join(json.dumps({"id": str(i), "text": t, "label": "a"}) + "\n" for i, t in enumerate(texts)))
+        return Task(id="t", cases="d.jsonl", dir=tmp_path, state=lambda r: {"text": r["text"]}, label=lambda r: r["label"],
+                    question=Choice(instructions="Which team? A printer that jams on every double sided page goes to a.", criteria={"a": "hardware", "b": None}),
+                    variants={k: Choice(instructions=v, criteria={"a": "hardware", "b": None}) for k, v in variants.items()})
+
+    assert evalset.fix(task(["x"] * 20))  # as the first run does; the split follows the ids and labels, not the text
+    split = evalset.current(task(["x"] * 20))
+    train, test = split.ids("train")[:2], split.ids("test")[0]
+    texts = [f"case {i} " + " ".join(f"w{i}x{j}" for j in range(8)) for i in range(20)]
+    texts[int(train[0])] = "The printer on floor 3 eats the paper and blinks red twice"
+    texts[int(train[1])] = "アラームを七時三十分にセットしておいて"
+    texts[int(test)] = "The scanner by the lift shows a grey line on every copy"
+    got = data.check(task(
+        texts,
+        recites="Which team? Straße ß ß: as when THE PRINTER ON FLOOR 3 EATS the paper, a jam goes to a.",  # ß casefolds to ss
+        ja="アラームを七時三十分にセット する依頼は a。",  # no spaces in Japanese: each kana or kanji is a word
+        rule="Which team? A printer that jams on every double sided page goes to a; so does a broken screen.",  # base's own words
+        held_out="Which team? The scanner by the lift shows a grey line: a.",  # never read by a writer: train alone is checked
+    )).warnings
+    named = {w.split("'")[1]: w for w in got if w.startswith("variant ")}
+    assert set(named) == {"recites", "ja"}
+    assert f'"THE PRINTER ON FLOOR 3 EATS the paper" ({train[0]})' in named["recites"]
+    assert f'"アラームを七時三十分にセット" ({train[1]})' in named["ja"]

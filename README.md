@@ -45,7 +45,7 @@ uv tool install "s1flow[eval]"
 |---|---|
 | Claude Code | `/plugin marketplace add gotalab/s1flow`, then `/plugin install s1flow@s1flow` |
 | Codex | `codex plugin marketplace add gotalab/s1flow`, then install s1flow from the Plugins directory |
-| Cursor and other agents | `s1flow init --skill` copies the Skill into `.agents/skills/` and `.claude/skills/` at the Git root |
+| Antigravity, Cursor and other agents | `s1flow init --skill` copies the Skill into `.agents/skills/` and `.claude/skills/` at the Git root |
 
 Plugins update through your agent's plugin manager. `s1flow init --skill` copies the files into your
 repository instead, so they change only when you run it again.
@@ -102,7 +102,7 @@ combining scores. s1flow runs inside your Python app or as the CLI, with no serv
 | [Run decisions in your app](docs/app.md) | your first policy, the SDK, what stays in your app, calling a model directly |
 | [Evaluate and compare](docs/evaluate.md) | cases, `report`, charts, thresholds |
 | [Policies, evidence and releases](docs/policies.md) | versions, evidence, releasing with a pull request, schemas |
-| [Feedback and improvement](docs/feedback.md) | recording correct answers, measuring in production, prompt optimization |
+| [Feedback and improvement](docs/feedback.md) | recording correct answers, measuring in production, improving the question |
 | [Connections and discovery](docs/connections.md) | which models your app may call, and how config files are found |
 | [CLI, agents and CI](docs/cli-and-ci.md) | exit codes, the Agent Skill, GitHub Actions |
 | [Develop s1flow](AGENTS.md) | running this repository's checks, the rules for every change, releases |

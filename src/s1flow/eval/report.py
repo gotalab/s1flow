@@ -5,6 +5,7 @@ import datetime as dt
 import json
 from pathlib import Path
 from collections import Counter
+from typing import Any
 
 from ..core import clock
 from .kinds import Kind
@@ -13,6 +14,7 @@ from .objectives import measure
 from .objectives.declare import METRICS, Objective
 from .objectives.measure import bound
 from . import adopt, evalset, metrics
+from .comparison import leans_high
 from .run import ask_again
 from .select import Ranked, rank, unlike_among_tied
 from .shown import band, num, pct, usd
@@ -181,15 +183,15 @@ def pareto(o0: Objective, ranked: list[Ranked], by: dict[str, Evaluation]) -> se
     return {m for m, a in pts.items() if not any(beats(b, a) for b in pts.values())}
 
 
-def render(task: Task, variant: str, evs: list[Evaluation], preds: dict[str, metrics.Preds]) -> str:
+def render(task: Task, variant: str, evs: list[Evaluation], preds: dict[str, metrics.Preds], scope: evalset.Scope = "dev") -> str:
     sf = evalset.current(task)
-    cases = {cid: c for cid, c in task.load_cases().by_id().items() if sf.assign.get(cid) != "test"}
+    cases = {cid: c for cid, c in task.load_cases().by_id().items() if sf.scored(cid, scope)}
     kind = task.kind
     own = kind.report[0]  # the kind's own number, beside its accuracy
     box = kind.type == "box"
     read = kind.type in ("text", "number", "date")
     first = next((e for e in evs if e.n), None)
-    labelled = [c for c in task.load_cases().labelled() if sf.assign.get(c.id) != "test"]
+    labelled = [c for c in task.load_cases().labelled() if sf.scored(c.id, scope)]
     multi = kind.type == "multichoice"
     several = kind.type == "boxes"
     labels = (Counter(k for c in labelled for k in c.label) if multi  # how many cases each option applies to
@@ -207,14 +209,12 @@ def render(task: Task, variant: str, evs: list[Evaluation], preds: dict[str, met
     L: list[str] = [
         f"# {task.id}" + (f" · {variant}" if variant != "base" else ""),
         "",
-        f"{dt.date.today()} · {len(labelled)} labelled dev cases"
+        f"{dt.date.today()} · {len(labelled)} labelled {scope} cases"
         + about
         + f" · split: {first.split if first else '—'} · source: {task.source}",
         "",
         headline(task, evs, scored, ranked),
-        *(["", f"Note: {variant} was written by optimize, which chose it on these train and val cases, so its values "
-            "lean high beside the others'; adopt confirms a pick on the held-out test, which optimize never read."]
-          if variant in task.optimized else []),
+        *(["", f"Note: {note[0].upper()}{note[1:]}."] if (note := leans_high([variant], scope)) else []),
         "",
         "## Comparison",
         "",
@@ -321,9 +321,44 @@ def render(task: Task, variant: str, evs: list[Evaluation], preds: dict[str, met
     if not any_err:
         L.append("None.")
 
+    L += unsure_or_wrong_counts(evs, preds, cases)
     if not box:
         L += disagreements(task, preds, cases)
     return "\n".join(L) + "\n"
+
+
+def unsure_or_wrong(pr: metrics.Preds, cases: dict[str, Case]) -> list[dict[str, Any]]:
+    """Every scored case the model got wrong, or answered under metrics.HIGH_CONF: the mistakes a rewrite of the
+    question works from, in the cases file's order (which to read first is the reader's call, the Skill's). Each with
+    the label, the answer and its probability, and the three likeliest answers of its distribution (choice, score)."""
+    p = pr.pairs
+    at = {cid: i for i, cid in enumerate(pr.ids)}
+    out = []
+    for cid in cases:  # the cases file's order
+        if (i := at.get(cid)) is None or (p.correct[i] and p.probability[i] >= metrics.HIGH_CONF):
+            continue
+        label, said = measure.shown(p, i)
+        top: list[tuple[str, float]] = []
+        if p.ok[i] and p.distribution is not None and p.measured in ("choice", "score"):
+            names = p.options if len(p.options) == p.distribution.shape[1] else [str(k) for k in range(p.distribution.shape[1])]
+            top = sorted(((n, round(float(x), 3)) for n, x in zip(names, p.distribution[i])), key=lambda t: -t[1])[:3]
+        out.append({"id": cid, "label": label, "answer": said if p.ok[i] else "no answer", "right": bool(p.correct[i]),
+                    "probability": round(float(p.probability[i]), 3), "top": top})
+    return out
+
+
+def unsure_or_wrong_counts(evs: list[Evaluation], preds: dict[str, metrics.Preds], cases: dict[str, Case]) -> list[str]:
+    """How many cases each model got wrong, or right under metrics.HIGH_CONF; the cases themselves are in the JSON."""
+    L = ["", f"## Wrong, or right under {metrics.HIGH_CONF}", ""]
+    for e in evs:
+        rows = unsure_or_wrong(preds[e.candidate.model], cases) if e.n else []
+        if rows:
+            wrong = sum(not d["right"] for d in rows)
+            L.append(f"- {e.candidate.name}: {wrong} wrong, {len(rows) - wrong} right under {metrics.HIGH_CONF}, of {e.n}")
+    if len(L) == 3:
+        return [*L, "None."]
+    return [*L, "", "Each one, with the label, the answer, its probability and the three likeliest answers: `unsure_or_wrong` "
+            "in the JSON beside this file; `cases` there holds each case's state and its rationale."]
 
 
 def disagreements(task: Task, preds: dict[str, metrics.Preds], cases: dict[str, Case]) -> list[str]:
@@ -421,21 +456,28 @@ def time_table(evs: list[Evaluation]) -> list[str]:
 REPORT = "s1flow/report@1"  # <out>/<variant>.json
 
 
-def write(task: Task, variant: str, out: Path) -> str:
-    """<out>/<variant>.md and <variant>.json from every run on the variant's question; the Markdown is returned.
-    """
+def write(task: Task, variant: str, out: Path, scope: evalset.Scope = "dev") -> str:
+    """<out>/<variant>.md and <variant>.json from every run on the variant's question, scored on the cases of `scope`
+    (evalset.Scope); the Markdown is returned."""
     data_digest = task.data_digest
     contract_digest = task.evaluation_contract_digest
     adapter_digest = task.input_adapter_digest
     names = available_models(task, variant)
-    preds = {m: metrics.load(task, variant, m) for m in names}
+    preds = {m: metrics.load(task, variant, m, scope=scope) for m in names}
     evs = [metrics.evaluate(task, preds[m], variant=variant) for m in names]
-    md = render(task, variant, evs, preds)
+    md = render(task, variant, evs, preds, scope)
+    sf = evalset.current(task)
+    cases = {cid: c for cid, c in task.load_cases().by_id().items() if sf.scored(cid, scope)}
+    listed = {e.candidate.name: unsure_or_wrong(preds[e.candidate.model], cases) for e in evs if e.n}
     out.mkdir(parents=True, exist_ok=True)
     charts = {e.candidate.name: metrics.chart_data(task, preds[e.candidate.model], e) for e in evs}
-    saved = {"schema": REPORT, "task": task.id, "variant": variant, "at": clock.now(),
+    saved = {"schema": REPORT, "task": task.id, "variant": variant, "scope": scope, "at": clock.now(),
              "data_digest": data_digest, "evaluation_contract_digest": contract_digest, "input_adapter_digest": adapter_digest,
              "evaluations": [e.model_dump(mode="json") for e in evs],
+             "unsure_or_wrong": listed,
+             "cases": {cid: {"case": cases[cid].text, "state": json.loads(json.dumps(cases[cid].state, default=str)),
+                             "rationale": cases[cid].rationale}
+                       for cid in sorted({d["id"] for rows in listed.values() for d in rows})},
              "charts": {name: values.model_dump(mode="json") for name, values in charts.items()}}
 
     (out / f"{variant}.md").write_text(md)

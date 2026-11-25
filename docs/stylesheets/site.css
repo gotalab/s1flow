@@ -298,3 +298,10 @@
   /* A phone is too narrow to hold the candidate column still: the whole table scrolls. */
   .md-typeset .bench table:not([class]) tr > :first-child { position: static; box-shadow: none; }
 }
+
+/* Japanese pages: Inter has no Japanese glyphs, so name a Japanese face instead of
+   leaving the browser to fall back (often to a Chinese font, with the wrong kanji forms). */
+html[lang="ja"] body {
+  --md-text-font-family: var(--md-text-font, _), "Noto Sans JP", "Hiragino Sans",
+    "Hiragino Kaku Gothic ProN", "Yu Gothic UI", Meiryo, sans-serif;
+}

@@ -16,7 +16,9 @@ from s1flow import skill
 from s1flow.cli import main as base
 
 REPO = Path(__file__).resolve().parents[1]
-TOPICS = ["app", "collect", "learn", "measure", "setup", "ship"]
+TOPICS = ["app", "collect", "improve", "learn", "measure", "setup", "ship"]
+TYPES = ["boolean", "box", "choice", "score"]  # references/types/<type>.md: one playbook per question type
+REFERENCES = [*(f"references/{t}.md" for t in TOPICS), *(f"references/types/{t}.md" for t in TYPES)]
 
 
 def run(*args, capsys):
@@ -43,7 +45,26 @@ def test_the_skill_routes_each_job_to_one_reference():
     assert text.startswith("---\nname: s1flow\ndescription:")
     assert sorted(p.stem for p in (src / "references").glob("*.md")) == TOPICS
     assert all(f"`references/{t}.md`" in text for t in TOPICS)
+    assert sorted(p.stem for p in (src / "references" / "types").glob("*.md")) == TYPES
+    assert all(f"`references/types/{t}.md`" in text for t in TYPES)  # one hop from SKILL.md, never through another reference
     assert len(text.splitlines()) < 50
+
+
+@pytest.mark.parametrize("type_", TYPES)
+def test_a_playbook_names_only_objectives_its_type_takes(type_):
+    """Each `Name(` a playbook writes in code is a built-in objective its question type accepts, so the playbook
+    cannot drift from what task.py will load."""
+    from s1flow.eval.kinds import kind_of
+    from s1flow.eval.objectives.declare import BUILT_IN
+    from s1flow.questions import Boolean, Box, Choice, Score
+
+    question = {"boolean": Boolean(instructions="?"), "choice": Choice(instructions="?", criteria={"a": "A", "b": "B"}),
+                "score": Score(instructions="?", criteria=["low", "high"]), "box": Box(instructions="?")}[type_]
+    takes = set(kind_of(question).objectives)
+    by_function = {make.__name__: name for name, make in BUILT_IN.items()}
+    text = (skill.source() / "references" / "types" / f"{type_}.md").read_text()
+    named = {by_function[f] for f in re.findall(r"`(\w+)\(", text) if f in by_function}
+    assert named and named <= takes, f"{type_}.md names {sorted(named - takes)}, which a {type_} question does not take"
 
 
 def test_the_skill_points_only_at_what_an_installed_package_has():
@@ -71,10 +92,10 @@ def test_init_skill_writes_both_agent_dirs_at_the_git_root(repo, capsys):
     for d in (".agents/skills/s1flow", ".claude/skills/s1flow"):
         copy = repo / d
         assert (copy / "SKILL.md").read_text() == (skill.source() / "SKILL.md").read_text()
-        assert {p.stem for p in (copy / "references").iterdir()} == set(TOPICS)
+        assert {p.relative_to(copy).as_posix() for p in (copy / "references").rglob("*.md")} == set(REFERENCES)
         marker = json.loads((copy / skill.MARKER).read_text())
-        assert marker["schema"] == "s1flow/skill-marker@1" and marker["s1flow_version"] == skill.version() and set(marker["files"]) == {"SKILL.md", "scripts/charts.py", "scripts/charts.html", "scripts/github.py", *(f"references/{t}.md" for t in TOPICS)}
-    assert out.count(f"(s1flow {skill.version()}): {4 + len(TOPICS)} added") == 2  # SKILL.md, renderer, template, github.py and references
+        assert marker["schema"] == "s1flow/skill-marker@1" and marker["s1flow_version"] == skill.version() and set(marker["files"]) == {"SKILL.md", "scripts/charts.py", "scripts/charts.html", "scripts/github.py", *REFERENCES}
+    assert out.count(f"(s1flow {skill.version()}): {4 + len(REFERENCES)} added") == 2  # SKILL.md, renderer, template, github.py and references
     assert not (repo / "sub" / ".claude").exists() and not (repo.parent / "home").exists()
 
 
@@ -86,7 +107,7 @@ def test_a_file_changed_there_is_kept_unless_forced(repo, capsys):
 
     code, out, _ = run("init", "--skill", capsys=capsys)
     assert code == 0 and "  skipped references/ship.md: changed there (--force overwrites it)" in out
-    assert f"{len(TOPICS) + 3} unchanged, 1 skipped" in out and mine.read_text() == "our own notes\n"
+    assert f"{len(REFERENCES) + 3} unchanged, 1 skipped" in out and mine.read_text() == "our own notes\n"
     assert skill.install(repo / ".claude/skills").skipped == ["references/ship.md"]  # still protected the next time
 
     run("init", "--skill", "--force", capsys=capsys)
@@ -163,7 +184,7 @@ def test_the_wheel_carries_the_skill(tmp_path):
     names = zipfile.ZipFile(next(tmp_path.glob("s1flow-*.whl"))).namelist()
     assert "s1flow/skills/s1flow/SKILL.md" in names
     assert "s1flow/skills/s1flow/scripts/charts.html" in names
-    assert {f"s1flow/skills/s1flow/references/{t}.md" for t in TOPICS} <= set(names)
+    assert {f"s1flow/skills/s1flow/{r}" for r in REFERENCES} <= set(names)
 
 
 def test_the_chart_page_draws_from_a_shared_snapshot_without_evaluation_dependencies(tmp_path):

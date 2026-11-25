@@ -1,4 +1,4 @@
-"""optimize (with a test optimizer in GEPA's place) and feedback from production logs (no network)."""
+"""The candidates report ranks, its note on question variants, and feedback from production logs (no network)."""
 
 import asyncio
 import json
@@ -16,15 +16,10 @@ from s1flow.policies.state_shape import schema_of
 from s1flow.client import Capabilities, Choice, ChoiceAnswer, Response, ModelBuild
 from s1flow.eval import Task, comparison, evalset, feedback, metrics
 from s1flow.eval.evaluation import Evaluation, Failures, ObjectiveScore
-from s1flow.eval import optimize as optimizing
 from s1flow.core.errors import ProviderError, Unsupported
 from s1flow.eval import adopt as adopting
 from s1flow.eval import report
 from s1flow.eval import run as running
-from s1flow.eval import optimizers
-from s1flow.eval.optimizers import Found, Gepa, Problem
-from s1flow.eval.task import Optimized
-from s1flow.core.errors import ConfigError
 from s1flow.policies.kinds import KindParams
 
 CLASSES = ["a", "b", "c"]
@@ -75,117 +70,70 @@ def current(task: Task) -> EvaluatedPolicy:
 
 
 
-class Rewrite:
-    """The least an optimizer is: it writes `text` as the question, after asking the model about every val case once."""
-
-    name = "rewrite"
-
-    def __init__(self, text: str = "Better?"):
-        self.text, self.seen = text, []
-
-    def settings(self):
-        return {"text": self.text}
-
-    def run(self, problem: Problem) -> Found:
-        self.seen.append(problem)
-        return Found(question=q(self.text), model_calls=len(problem.val), cost_usd=None, detail={"tried": 1})
-
-
-def test_a_better_question_becomes_the_candidate(task):
+def test_a_question_variant_is_noted_as_leaning_high_on_the_cases_it_may_have_been_written_from(task):
+    """A variant in task.py may have been written from the cases the list scores it on (s1flow cannot tell): report
+    says so beside it, on dev and on val in their own words, and of base says nothing."""
     current(task)
-    task.optimizer = rewrite = Rewrite("Better?")
-    r = optimizing.optimize(task)
-    store = task.policies
-    assert r.candidate == f"m/{r.variant}" and store.versions("toy") == [1] and store.current("toy") == 1  # it ships nothing
-    listed = adopting.shortlist(task)
-    assert r.candidate in [c[0] for c in listed.cands]  # report lists it beside the others
-    adopted = adopting.adopt(task, r.candidate, "you", "the optimized question", listed=listed)
-    assert store.current("toy") == 2 and adopted.candidate.variant == r.variant  # adopt, as for any candidate
-    assert [(h.action, h.version, h.previous) for h in store.history("toy")][-1] == ("adopt", 2, 1)
-    # the same record for every optimizer, what only it knows in `detail`; it never saw the test share
-    o = r.optimization
-    assert (o.optimizer, o.settings, o.model_calls, o.cost_usd, o.detail) == ("rewrite", {"text": "Better?"}, len(o.split["val"]), None, {"tried": 1})
-    test = set(evalset.fixed(task).ids("test"))
-    given = rewrite.seen[0]
-    assert given.start == task.question and not test & {c.id for c in given.train + given.val} and o.split["test"]
-    saved = Optimized.model_validate_json((task.dir / "optimized" / f"{r.variant}.json").read_text())
-    assert saved == o and saved.schema_ == "s1flow/optimized@2"
-
-
-def test_an_optimizer_is_named_by_an_entry_point(task, monkeypatch):
-    from importlib.metadata import EntryPoint
-
-    current(task)
-    made = Rewrite("Better?")
-    monkeypatch.setitem(globals(), "_made", made)
-    found = [EntryPoint(name="rewrite", value=f"{__name__}:_made_factory", group=optimizers.GROUP)]
-    monkeypatch.setattr(optimizers, "entry_points", lambda group, name=None: [e for e in found if name in (None, e.name)])
-    task.optimizer = "rewrite"
-    assert optimizing.optimize(task).optimization.optimizer == "rewrite" and made.seen
-    task.optimizer = "nope"
-    with pytest.raises(ConfigError, match="no optimizer 'nope'; known: gepa, rewrite"):
-        optimizing.optimize(task)
-    task.optimizer = made
-    with pytest.raises(ConfigError, match="--budget set GEPA's settings; toy optimizes with rewrite"):
-        optimizing.optimize(task, budget=10)
-    assert optimizers.resolve("gepa") == Gepa() and Gepa(budget=10).settings()["budget"] == 10
-    # a factory that fails, or the class named instead of an object, is the user's to fix, not s1flow's bug
-    found.append(EntryPoint(name="broken", value="json:loads", group=optimizers.GROUP))
-    with pytest.raises(ConfigError, match="'broken' optimizer .* failed to load: TypeError"):
-        optimizers.resolve("broken")
-    with pytest.raises(ConfigError, match="an optimizer has `name`"):
-        optimizers.resolve(Gepa)  # type: ignore[arg-type]
-
-
-def _made_factory():
-    return globals()["_made"]
-
-
-def test_a_question_that_does_not_win_is_still_only_a_candidate(task):
-    current(task)
-    task.optimizer = Rewrite("Worse?")
-    r = optimizing.optimize(task)
-    assert r.candidate.endswith(r.variant) and task.policies.versions("toy") == [1] and task.policies.current("toy") == 1
-
-
-def test_a_case_whose_label_was_taken_away_is_not_given_to_the_optimizer(task):
-    from s1flow.eval.cases import Correction
-
-    current(task)
-    train = evalset.fixed(task).ids("train")[0]
-    fix = Correction(id=train, verdict="unclear", was=task.load_cases().by_id()[train].label, reason="r", by="t", at="2026-11-23")
-    (task.dir / "corrections.jsonl").write_text(fix.model_dump_json() + "\n")
-    task.load_cases().forget()
-    task.optimizer = rewrite = Rewrite("Better?")
-    r = optimizing.optimize(task)
-    given = rewrite.seen[0]
-    assert all(c.label is not None for c in given.train + given.val) and train not in r.optimization.split["train"]
-
-
-def test_an_optimized_candidate_is_noted_as_measured_on_the_cases_it_was_chosen_on(task):
-    """optimize chose the question on the train and val cases the list scores it on: report says so beside it."""
-    current(task)
-    task.optimizer = Rewrite("Better?")
-    r = optimizing.optimize(task)
-    note = comparison.optimized_on_dev(task, [c[0] for c in adopting.shortlist(task).cands])
-    assert note is not None and note.startswith(f"{r.candidate}: optimize chose the question on the train and val cases")
+    task.variants["hand"] = q("Better?")
+    asyncio.run(running.run_model(task, "m", limit=None, variant="hand"))
+    variants = [Candidate.parse(c[0]).variant for c in adopting.shortlist(task).cands]
+    note = comparison.leans_high(variants, "dev")
+    assert note == ("a question written from these train and val cases leans high on them; report --split val scores "
+                    "val alone, and adopt checks a pick on the held-out test: hand")
     assert note in comparison.collect(task).notices
-    assert "written by optimize, which chose it on these train and val cases" in report.write(task, r.variant, task.where.root / "out")
-    assert comparison.optimized_on_dev(task, ["m"]) is None
+    assert comparison.leans_high(variants, "val").startswith("a question written from val's cases, or the best of several picked on val")
+    assert comparison.leans_high(variants, "val") in comparison.collect(task, scope="val").notices
+    out = task.where.root / "out"
+    assert "Note: A question written from these train and val cases leans high" in report.write(task, "hand", out)
+    assert "Note:" not in report.write(task, "base", out)
+    assert comparison.leans_high(["base"], "dev") is None
 
 
-def test_gepa_asks_the_model_at_its_own_concurrency(task):
-    """GEPA's answers are cached for the new candidate's run: made at another concurrency, its latency is unknown."""
-    pytest.importorskip("gepa")
-    from s1flow.eval import gepa
+def test_report_scores_one_share_of_the_dev_cases_alone(task):
+    """--split train or val: the list, the comparison and the question's report score that share alone, so a question
+    written from train's mistakes is picked on cases its author never read; adopt still chooses on both."""
+    current(task)
+    sf = evalset.current(task)
+    labelled = [c.id for c in task.load_cases().labelled()]
+    share = {s: {i for i in labelled if sf.assign[i] == s} for s in ("train", "val")}
+    for scope in ("train", "val"):
+        listed = adopting.shortlist(task, scope=scope)
+        assert listed.evaluations["m"].n == len(share[scope]) and set(listed.evaluations["m"].answered_ids) == share[scope]
+        c = comparison.collect(task, scope=scope)
+        assert c.scope == scope and c.n == len(share[scope]) and c.notices[0].startswith(f"{scope} cases only")
+        assert c.id != comparison.collect(task).id
+    assert adopting.shortlist(task).evaluations["m"].n == len(share["train"]) + len(share["val"])
+    with pytest.raises(ValueError, match="adopt chooses on all the dev cases"):
+        adopting.adopt(task, "m", by="t", reason="t", listed=adopting.shortlist(task, scope="val"))
+    out = task.where.root / "out"
+    md = report.write(task, "base", out, "train")
+    assert f"{len(share['train'])} labelled train cases" in md
+    saved = json.loads((out / "base.json").read_text())
+    assert saved["scope"] == "train" and {d["id"] for d in saved["unsure_or_wrong"]["m"]} <= share["train"]
 
-    client = task.where.client()
-    adapter = gepa.QuestionAdapter(task, client, client.connections.build("m"), spec=client.connections.resolved("m"))
-    case = task.load_cases().all()[0]
-    adapter.evaluate([gepa.Inst(case)], {"question": gepa.to_text(task.question)})
-    got, hit = asyncio.run(running.call(task.where.cache_dir, client, client.connections.build("m"), task.model_state(case), task.questions("base"),
-                                        spec=client.connections.resolved("m")))
-    assert hit and got.concurrency == client.connections.build("m").concurrency == 4
+
+def test_the_report_lists_every_case_wrong_or_not_sure_with_the_top_answers(task):
+    """What a rewrite works from: every case the model got wrong or answered under 0.9, with its three likeliest
+    answers; none once the model is sure and right."""
+    current(task)
+    out = task.where.root / "out"
+    md = report.write(task, "base", out, "train")
+    saved = json.loads((out / "base.json").read_text())
+    listed = saved["unsure_or_wrong"]["m"]
+    wrong = next(d for d in listed if d["label"] == "c")  # ByQuestion is unsure and wrong on c, unsure and right on a and b
+    assert not wrong["right"] and wrong["answer"] == "a" and wrong["probability"] == 0.6
+    assert wrong["top"] == [["a", 0.6], ["b", 0.2], ["c", 0.2]]
+    assert saved["cases"][wrong["id"]] == {"case": '{"text": "c"}', "state": {"text": "c"}, "rationale": None}
+    assert set(saved["cases"]) == {d["id"] for d in listed}
+    order = [c.id for c in task.load_cases().all()]
+    assert [d["id"] for d in listed] == sorted((d["id"] for d in listed), key=order.index)  # the cases file's order
+    train = {c.id for c in task.load_cases().labelled() if evalset.current(task).assign[c.id] == "train"}
+    assert {d["id"] for d in listed} == train and {d["label"] for d in listed if d["right"]} == {"a", "b"}  # nothing at 0.9
+    wrong_n = sum(not d["right"] for d in listed)
+    assert f"- m: {wrong_n} wrong, {len(listed) - wrong_n} right under 0.9, of {len(train)}" in md
+    task.variants["sure"] = q("Better?")
+    asyncio.run(running.run_model(task, "m", limit=None, variant="sure"))
+    assert "## Wrong, or right under 0.9\n\nNone." in report.write(task, "sure", out, "train")
 
 
 def test_rank_leaves_out_a_candidate_that_skipped_cases(task):
@@ -377,16 +325,3 @@ def test_an_invalid_log_line_names_its_file_and_line(tmp_path):
     log.write_text('{"type": "answered", "policy": "t@1", "observed_at": "2026-10-20T00:00:00+00:00"}\n')
     with pytest.raises(DataError, match=r"log.jsonl:1: invalid log record"):
         feedback.read([log])
-
-
-
-def test_a_model_named_by_its_version_is_optimized(tmp_path):
-    p = make_project(tmp_path, {"m": ByQuestion}, versions={"m": {"1": "m-1"}})
-    rows = [{"id": str(i), "text": CLASSES[i % 3]} for i in range(120)]
-    (tmp_path / "data.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
-    task = attach(Task(id="toy", cases="data.jsonl", dir=tmp_path, state=lambda r: {"text": r["text"]}, question=q("Which?"),
-                       label=lambda r: r["text"], objective=Coverage(target_accuracy=0.9)), p)
-    current(task)
-    task.optimizer = Rewrite("Better?")
-    r = optimizing.optimize(task, model="m:1")  # `report` asks for name:<version> to pin a model
-    assert r.candidate == f"m:1/{r.variant}" and ":" not in r.variant

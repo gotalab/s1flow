@@ -9,8 +9,8 @@ none of theirs: `jev-latest`) runs and compares, but cannot be adopted: which ve
 is not known from s1flow.toml, and the runs cannot say it either (the alias moves while they are made).
 Its versions, run by name (`jev:1.14`), are candidates of their own.
 
-Candidates are every model with runs on the task's question and on each of its variants (an
-optimized question competes with the original). The policy's rule is the one the primary objective sets
+Candidates are every model with runs on the task's question and on each of its variants (a
+reworded question competes with the original). The policy's rule is the one the primary objective sets
 (`Objective.sets`), as chosen on all the dev cases.
 """
 
@@ -108,7 +108,8 @@ class Order(BaseModel):
 
 @dataclass
 class Shortlist:
-    """Every candidate scored on train + val, best first. Building it writes nothing and shows no test result."""
+    """Every candidate scored on train + val (or on one of them: `scope`), best first. Building it writes nothing
+    and shows no test result."""
 
     task: Task
     measured: Conditions  # every candidate listed, the ones left out for missing cases too
@@ -117,6 +118,7 @@ class Shortlist:
     preds: dict[str, metrics.Preds]
     cands: list[Listed]
     reweighted: list[weights.Reweighted] = field(default_factory=list)  # the weights halved and doubled (ExpectedLoss, Loss)
+    scope: evalset.Scope = "dev"  # what `adopt` chooses on is always "dev"
 
     @property
     def fits(self) -> list[Ranked]:
@@ -159,12 +161,13 @@ class Shortlist:
         return out
 
 
-def shortlist(task: Task, only: list[str] | None = None, variants: list[str] | None = None) -> Shortlist:
+def shortlist(task: Task, only: list[str] | None = None, variants: list[str] | None = None, *,
+              scope: evalset.Scope = "dev") -> Shortlist:
     cands = candidates(task, only, variants)
     if not cands:
         raise NotFound(f"no runs for {task.id}; s1flow run {task.id} first")
     measured = Conditions.now(task, [Candidate(model=m, variant=v) for _, m, v in cands], task.where.declared_connections().resolved)
-    preds = {name: metrics.load(task, variant, model) for name, model, variant in cands}
+    preds = {name: metrics.load(task, variant, model, scope=scope) for name, model, variant in cands}
     gaps = {c: why_missing(len(preds[c[0]].never_asked), len(preds[c[0]].failed_cases)) for c in cands if preds[c[0]].never_asked or preds[c[0]].failed_cases}
     if gaps:
         # candidates compared on different cases are not compared: a model that skipped the new cases, or whose calls
@@ -183,7 +186,8 @@ def shortlist(task: Task, only: list[str] | None = None, variants: list[str] | N
         warnings.warn(unlike.en(task.id), stacklevel=2)
     if changed := measured.changed(task, task.where.declared_connections().resolved):
         raise ConfigError(f"{task.id}: {changed} changed during ranking; rank again")
-    return Shortlist(task=task, measured=measured, ranked=ranked, evaluations=evaluations, preds=preds, cands=cands, reweighted=moved)
+    return Shortlist(task=task, measured=measured, ranked=ranked, evaluations=evaluations, preds=preds, cands=cands, reweighted=moved,
+                     scope=scope)
 
 
 def adopt(
@@ -195,6 +199,8 @@ def adopt(
     `force`; history.jsonl records it either way (policies/history.py). `git_sha`: the commit it was made at (the
     CLI asks git, integrations/git.py)."""
     s = listed or shortlist(task, only, variants)
+    if s.scope != "dev":
+        raise ValueError(f"adopt chooses on all the dev cases, not on {s.scope} alone")
     current = task.where.client().connections.resolved
     if changed := s.measured.changed(task, current):
         raise ConfigError(f"{task.id}: {changed} changed since ranking; rank again before adopting")

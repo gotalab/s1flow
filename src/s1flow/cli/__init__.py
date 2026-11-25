@@ -42,7 +42,7 @@ from typing import Any, NoReturn
 
 from ..core import place
 from ..core.errors import S1flowError
-from . import adopt, cases, decide, doctor, export, feedback, init, models, optimize, report, run
+from . import adopt, cases, decide, doctor, export, feedback, init, models, report, run
 from .common import EXITS, Parser, usage_error
 
 BASE = ("init", "decide", "feedback", "export", "doctor", "models")  # what the base install runs (feedback record and import; adopt --spec; models without --verify)
@@ -53,7 +53,6 @@ COMMANDS = (
     (run, "run", "ask the models about a task's cases (cached): runs/<task>/"),
     (report, "report", "every model and question variant on the saved runs by the task's objective (--out DIR writes it); no TASK: every task's current version and why"),
     (adopt, "adopt", "write a candidate as the task's current policy, with why (merging the change ships it)"),
-    (optimize, "optimize", "experimental: optimize the current policy's question into a new candidate; it ships nothing (s1flow[optimize])"),
     (cases, "cases", "check a task's cases; review and correct their labels"),
     (decide, "decide", "call a model (--model), or decide with a task's policy (--policy)"),
     (feedback, "feedback", "record the right answer for a case a policy decided (record; import from a file); measure policies in production (measure, s1flow[eval])"),
@@ -147,7 +146,7 @@ def main(argv: list[str] | None = None) -> None:
     except KeyboardInterrupt:
         print("error: interrupted", file=sys.stderr)
         sys.exit(2)
-    except ModuleNotFoundError as e:  # an extra this needs (s1flow[eval], s1flow[images], s1flow[llm], s1flow[optimize])
+    except ModuleNotFoundError as e:  # an extra this needs (s1flow[eval], s1flow[images], s1flow[llm])
         if (hint := missing_extra(e)) is None:
             bug()
         print(hint + ("" if a.command in BASE else f"; {', '.join(BASE)} need only s1flow"), file=sys.stderr)
