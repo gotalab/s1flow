@@ -69,7 +69,8 @@ Never, while writing a question: val's or test's cases (`report --split val --ou
    76% on val; the plain-sentence one reached 88% and 84%.
    - `s1flow cases check <task>` names each variant that repeats a train case's text (six words in a row; a kana,
      a kanji or a katakana word counts as one) and the cases it comes from. Rewrite that part as the rule it stands
-     for.
+     for. In Japanese six words is a short phrase, so a plain definition of an option can match a case by chance
+     (を連絡先に追加する): keep it when it says only what the option means.
    - The check sees only copied text. Start one more fresh agent, not a writer, with each variant's change from
      current's question and the train log the writers read (step 2's JSON). For every word, name, number and
      example the variant adds, it searches the states in that log: one found in only one or two of them, or a

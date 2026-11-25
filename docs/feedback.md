@@ -63,5 +63,5 @@ and validation mistake scored well on them but not on the test share, while one 
 validation held up there. A variant that borrows train's words (a case's text, a keyword or an example found in one
 train case) fits those cases alone, and validation and test cannot show it when their cases are worded like train's:
 `cases check` names a variant that repeats six words or more of a train case in a row, and the Skill has a fresh
-agent look for the words it borrowed one by one. `report` notes that a variant may have been written from the cases it is scored on, so
-its values there lean high. The Skill's `references/improve.md` holds the steps.
+agent look for the words it borrowed one by one. `report` notes that a variant may have been written from the cases
+it is scored on, so its values there lean high. The Skill's `references/improve.md` holds the steps.

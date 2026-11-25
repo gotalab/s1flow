@@ -300,7 +300,7 @@ def test_check_names_a_variant_that_repeats_a_train_cases_text(tmp_path):
     texts[int(test)] = "The scanner by the lift shows a grey line on every copy"
     got = data.check(task(
         texts,
-        recites="Which team? As when THE PRINTER ON FLOOR 3 EATS the paper, a jam goes to a.",
+        recites="Which team? Straße ß ß: as when THE PRINTER ON FLOOR 3 EATS the paper, a jam goes to a.",  # ß casefolds to ss
         ja="アラームを七時三十分にセット する依頼は a。",  # no spaces in Japanese: each kana or kanji is a word
         rule="Which team? A printer that jams on every double sided page goes to a; so does a broken screen.",  # base's own words
         held_out="Which team? The scanner by the lift shows a grey line: a.",  # never read by a writer: train alone is checked

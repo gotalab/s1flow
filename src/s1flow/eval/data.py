@@ -122,10 +122,13 @@ def _texts(value: Any) -> list[str]:
     return []
 
 
-def _runs(text: str) -> list[tuple[tuple[str, ...], int, int]]:
-    """Every COPIED words in a row in `text`: the words (case folded), where the first starts and the last ends."""
-    w = list(WORD.finditer(text.casefold()))
-    return [(tuple(m.group() for m in w[i:i + COPIED]), w[i].start(), w[i + COPIED - 1].end()) for i in range(len(w) - COPIED + 1)]
+def _runs(text: str, first: set[str] | None = None) -> list[tuple[tuple[str, ...], int, int]]:
+    """Every COPIED words in a row in `text` (only those starting with a word in `first`, when given): the words
+    (case folded), where the first starts and the last ends."""
+    w = list(WORD.finditer(text))
+    words = [m.group().casefold() for m in w]
+    return [(tuple(words[i:i + COPIED]), w[i].start(), w[i + COPIED - 1].end()) for i in range(len(w) - COPIED + 1)
+            if first is None or words[i] in first]
 
 
 def _spans(text: str, shared: dict[tuple[str, ...], list[str]]) -> list[tuple[str, list[str]]]:
@@ -150,12 +153,17 @@ def copied(task: Task, train: list[Case]) -> list[str]:
     texts = {n: _texts(q.model_dump()) for n, q in task.variants.items()}
     wanted = {r[0] for ts in texts.values() for t in ts for r in _runs(t)} - base
     shared: dict[tuple[str, ...], list[str]] = {}  # run -> the train cases holding it, in the cases file's order
+    first = {r[0] for r in wanted}  # a train case's runs are built only where a variant's could start
     for c in train if wanted else []:
-        for words in {r[0] for t in _texts(c.state) for r in _runs(t)} & wanted:
+        for words in {r[0] for t in _texts(c.state) for r in _runs(t, first)} & wanted:
             shared.setdefault(words, []).append(c.id)
     out = []
     for name, ts in texts.items():
-        if spans := [s for t in ts for s in _spans(t, shared)]:
+        found: dict[str, list[str]] = {}  # span -> cases; a span the variant says twice is named once
+        for t in ts:
+            for s, ids in _spans(t, shared):
+                found.setdefault(s, ids)
+        if spans := list(found.items()):
             said = "; ".join(f'"{s}" ({", ".join(ids[:3])}{f" and {len(ids) - 3} more" if len(ids) > 3 else ""})' for s, ids in spans[:3])
             more = f" and {len(spans) - 3} more" if len(spans) > 3 else ""
             out.append(f"variant {name!r} repeats train cases' text: {said}{more}. A question that recites its cases fits them "
