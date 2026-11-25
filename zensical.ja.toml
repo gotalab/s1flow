@@ -1,0 +1,104 @@
+# The Japanese pages of the site, built into site/ja after the English site (see docs/development.md, The site).
+# Each page in docs-ja/ translates the page of the same name in docs/; Benchmarks and Develop s1flow stay English.
+# Assets (styles, scripts, images, the theme override) are the English site's, one level up.
+[project]
+site_name = "s1flow"
+site_description = "繰り返す判断を自分のデータで確かめてから、Decision Model に任せる。"
+site_url = "https://gotalab.github.io/s1flow/ja/"
+docs_dir = "docs-ja"
+site_dir = "site/ja"
+repo_url = "https://github.com/gotalab/s1flow"
+repo_name = "gotalab/s1flow"
+edit_uri = "blob/main/docs-ja/"
+copyright = "Apache-2.0"
+extra_css = [
+  "https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap",
+  "../stylesheets/site.css",
+]
+extra_javascript = ["../javascripts/page-menu.js", "../javascripts/language.js"]
+nav = [
+  { "ホーム" = "index.md" },
+  { "はじめる" = "get-started.md" },
+  { "考え方" = "concepts.md" },
+  { "ガイド" = [
+    { "評価して比べる" = "evaluate.md" },
+    { "ポリシー、証拠、リリース" = "policies.md" },
+    { "アプリで判断を動かす" = "app.md" },
+    { "フィードバックと改善" = "feedback.md" },
+    { "接続ファイルとその探し方" = "connections.md" },
+    { "CLI、エージェント、CI" = "cli-and-ci.md" },
+    { "s1flow を開発する（英語）" = "https://gotalab.github.io/s1flow/development/" },
+  ] },
+  { "ベンチマーク（英語）" = "https://gotalab.github.io/s1flow/benchmarks/" },
+]
+
+[project.theme]
+language = "ja"
+favicon = "../images/favicon.svg"
+logo = "../images/favicon.svg"
+custom_dir = "docs/.overrides"
+features = [
+  "content.action.copy",
+  "content.code.copy",
+  "navigation.footer",
+  "navigation.indexes",
+  "navigation.instant",
+  "navigation.path",
+  "navigation.sections",
+  "navigation.top",
+  "navigation.tracking",
+  "search.highlight",
+  "toc.follow",
+]
+
+[project.theme.font]
+text = "Inter"
+code = "JetBrains Mono"
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme: light)"
+scheme = "default"
+primary = "custom"
+accent = "custom"
+toggle.icon = "lucide/moon"
+toggle.name = "ダークモードにする"
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme: dark)"
+scheme = "slate"
+primary = "custom"
+accent = "custom"
+toggle.icon = "lucide/sun"
+toggle.name = "ライトモードにする"
+
+[project.plugins.llmstxt]
+full_output = "llms-full.txt"
+markdown_description = "s1flow は、あなた自身のラベル付きケースで Decision Model を測り、選んだものを測ったとおりにアプリで動かします。"
+
+[project.plugins.llmstxt.sections]
+"はじめに" = ["index.md", "get-started.md", "concepts.md"]
+"ガイド" = ["evaluate.md", "policies.md", "app.md", "feedback.md", "connections.md", "cli-and-ci.md"]
+
+# The language selector in the header, the same as in zensical.toml.
+[project.extra]
+generator = false # no "Made with Zensical" in the footer
+
+[[project.extra.alternate]]
+name = "English"
+link = "/s1flow/"
+lang = "en"
+
+[[project.extra.alternate]]
+name = "日本語"
+link = "/s1flow/ja/"
+lang = "ja"
+
+[project.markdown_extensions]
+admonition = {}
+attr_list = {}
+md_in_html = {}
+toc.permalink = true
+pymdownx.highlight.anchor_linenums = true
+pymdownx.inlinehilite = {}
+pymdownx.superfences = {}
+pymdownx.details = {}

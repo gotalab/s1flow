@@ -19,7 +19,8 @@ release works.
 ## Rules for every change
 
 - Write everything committed here in English: code, comments, messages, docs and pull requests. The repository is
-  public and its readers are outside users.
+  public and its readers are outside users. The one exception is the Japanese site: `docs-ja/`, which translates
+  `docs/`, and its Japanese labels (`zensical.ja.toml`, the page actions in `docs/.overrides/`).
 - Change formats and interfaces directly. Add no compatibility layer, deprecation path or migration: s1flow is an
   alpha with almost no users.
 - The CLI only measures, records and switches: the same input gives the same output. Ranking, recommending,

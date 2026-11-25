@@ -9,7 +9,7 @@ repo_name = "gotalab/s1flow"
 edit_uri = "blob/main/docs/"
 copyright = "Apache-2.0"
 extra_css = ["stylesheets/site.css"]
-extra_javascript = ["javascripts/page-menu.js", "javascripts/bench-table.js"]
+extra_javascript = ["javascripts/page-menu.js", "javascripts/bench-table.js", "javascripts/language.js"]
 nav = [
   { "Home" = "index.md" },
   { "Get started" = "get-started.md" },
@@ -73,6 +73,20 @@ markdown_description = "s1flow measures Decision Models on your own labeled case
 "Start here" = ["index.md", "get-started.md", "concepts.md"]
 "Guides" = ["evaluate.md", "policies.md", "app.md", "feedback.md", "connections.md", "cli-and-ci.md", "development.md"]
 "Benchmarks" = ["benchmarks/index.md", "benchmarks/[!i]*.md"]
+
+# The language selector in the header. docs-ja/ holds the Japanese pages (zensical.ja.toml builds them into /ja/).
+[project.extra]
+generator = false # no "Made with Zensical" in the footer
+
+[[project.extra.alternate]]
+name = "English"
+link = "/s1flow/"
+lang = "en"
+
+[[project.extra.alternate]]
+name = "日本語"
+link = "/s1flow/ja/"
+lang = "ja"
 
 [project.markdown_extensions]
 admonition = {}
