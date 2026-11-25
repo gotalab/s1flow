@@ -27,6 +27,8 @@
 
 ### Changed
 
+- `s1flow decide` lists a choice's probabilities in the order the answer gives them, not
+  highest first: ordering them for a reader is the agent's, not the command's.
 - `report` notes that a question variant in `task.py` may have been written from the cases it is scored on, so its
   values lean high (on val: or that it was the best of several picked there). The note names the variants, not every
   candidate.
@@ -108,8 +110,6 @@
 
 ### Changed
 
-- `s1flow decide` lists a choice's probabilities in the order the answer gives them, not
-  highest first: ordering them for a reader is the agent's, not the command's.
 - The `gateway` provider (Vercel AI Gateway) calls `/v1/decisions` instead of the deprecated `/v1/evaluate`. Images
   now reach every model there as `input_image` parts: Drex Max v1.1 refused the old `image_url` parts and Mo read
   them without seeing the picture. Answers saved through `gateway` are asked again, and a policy adopted on one
