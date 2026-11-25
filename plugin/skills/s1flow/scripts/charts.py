@@ -19,7 +19,8 @@ def read_snapshot(path: Path) -> dict[str, Any]:
 
     data = json.loads(path.read_text(encoding='utf-8'), parse_constant=nonfinite)
     if not isinstance(data, dict) or data.get('schema') != 's1flow/comparison@2' or data.get('scope') != 'dev':
-        raise ValueError('expected a v2 dev snapshot; regenerate with s1flow report TASK --out DIR')
+        raise ValueError('expected a v2 snapshot of the dev cases (a --split one is not charted); '
+                         'regenerate with s1flow report TASK --out DIR')
     if not isinstance(data.get('task'), str) or not isinstance(data.get('objective'), dict):
         raise ValueError('comparison is missing its task or objective')
     rows = data.get('candidates')

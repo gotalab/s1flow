@@ -16,7 +16,8 @@
   comparison and the question reports. `adopt` still chooses on both.
 - A question's report (`report --out`) lists every case the model got wrong or answered under 0.9, with the label,
   the answer, its probability and the top three answers of a choice or a score: in the Markdown up to 40 per model,
-  and all of them under `unsure_or_wrong` in the JSON, with each case in full and its `rationale` under `cases`.
+  the wrong first, and all of them under `unsure_or_wrong` in the JSON, with each case's state and `rationale`
+  under `cases`.
 - The README and Get started name Antigravity: `s1flow init --skill` writes the Skill into `.agents/skills/`, which
   Antigravity reads.
 

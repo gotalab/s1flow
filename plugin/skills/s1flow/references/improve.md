@@ -26,7 +26,7 @@ the original question, 90.8% for the pick (GEPA's question reached 85.1%).
 
 `task.py`, `context.md`, `criteria.md`, and what `report --split train --out <dir>` writes:
 `<dir>/questions/<variant>.md` ("Wrong, or right under 0.9": each case's label, answer, probability and top
-answers) and `<variant>.json` (`unsure_or_wrong`: every one of them; `cases`: each in full, with its `rationale`).
+answers) and `<variant>.json` (`unsure_or_wrong`: every one of them; `cases`: each one's `state` as the model saw it, and its `rationale`).
 
 Never, while writing a question: val's or test's cases (`report --split val --out`, `report --out` without
 `--split`, the cases file, `split.json`), the `runs/` files, or the test numbers `adopt` prints. The val table

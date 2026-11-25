@@ -113,8 +113,9 @@ def report(a: argparse.Namespace) -> int:
         if note := comparison.leans_high([Candidate.parse(r.candidate).variant for r in rows], scope):
             print(f"note: {note}")
         _print_weights(listed)
-        print(f"Every metric of each candidate: s1flow report {task.id} --json, or --candidate NAME; "
-              f"the snapshot and a Markdown report: s1flow report {task.id} --out DIR")
+        split = "" if scope == "dev" else f" --split {scope}"
+        print(f"Every metric of each candidate: s1flow report {task.id}{split} --json, or --candidate NAME; "
+              f"the snapshot and a Markdown report: s1flow report {task.id}{split} --out DIR")
         return 0
     assert result is not None
     print(comparison.text(result, offset=a.offset, limit=a.limit, snapshot=snapshot_name))
