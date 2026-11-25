@@ -7,10 +7,8 @@ hide:
 
 # Check a repeated judgment on your own data, then hand it to a Decision Model { .hero-title }
 
-Automation is full of small branch points: should the agent act or ask, which team gets this ticket, does this
-message need a reply. A Decision Model answers one typed question like these fast, with a probability. s1flow
-measures on your own cases how much of the judgment a model can take over at the accuracy you need. Your app acts on
-the answers the model is sure of and sends the rest to a person, and the person's answers become new cases.
+Automation is full of small judgments like "should the agent act, or ask a person?" s1flow measures on your own
+cases how much of that judgment a Decision Model can take over, and hands off only the cases the model is sure of.
 { .hero-lead }
 
 [Get started](get-started.md){ .md-button .md-button--primary } [How it works](concepts.md){ .md-button }

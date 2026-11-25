@@ -10,7 +10,7 @@ translated_from: b4f1b02b2e2a
 
 ## Agent Skill { #the-agent-skill }
 
-Skill は、[はじめる](get-started.md#add-the-skill-to-your-coding-agent)のとおりに入れます。プラグインは Cursor のマニフェストも持ち、Agent Plugins の形式に従っているので、Cursor のチーム向けマーケットプレイスにインポートするチームにも向いています。`SKILL.md` は、6 つのリファレンス（collect、measure、ship、app、learn、setup）のうち、各段階でどれを読むかを示します。Skill は `plugin/skills/s1flow/` にあり、プラグインとパッケージの両方にこのフォルダが入っています。Skill は、ケース集め、比較、見直し、改善を同じ CLI で進めます。CLI とは別の実装ではありません。
+Skill は[はじめる](get-started.md#add-the-skill-to-your-coding-agent)のとおりに入れます。プラグインは Cursor のマニフェストも持ち、Agent Plugins の形式に従っているので、Cursor のチーム向けマーケットプレイスにインポートするチームにも向いています。`SKILL.md` は、6 つのリファレンス（collect、measure、ship、app、learn、setup）のうち、各段階でどれを読むかを示します。Skill は `plugin/skills/s1flow/` にあり、プラグインとパッケージの両方にこのフォルダが入っています。Skill は、ケース集め、比較、見直し、改善を同じ CLI で進めます。CLI とは別の実装ではありません。
 
 「はじめる」の例のように頼むと、Skill は `github.py` スクリプトで issue を取ってきて、`cases check`、`run`、`report` を実行し、どの候補を選ぶかはあなたに任せます。
 
@@ -36,4 +36,4 @@ Skill は、[はじめる](get-started.md#add-the-skill-to-your-coding-agent)の
         run: echo "act on $ANSWER here"
 ```
 
-入力はファイルと環境変数で渡し、シェルのコマンドに貼り込むことはありません。ワークフローは、選んだパッケージを最初に入れます。実行時にポリシーを読み込んでも、何かがインストールされることはありません。本番のワークフローでは、Action をリリースのタグかコミットの SHA に、パッケージをバージョンに固定してください。decide の Action を呼ぶワークフローの例は [examples/](https://github.com/gotalab/s1flow/tree/main/examples) にあります。
+入力はファイルと環境変数で渡し、シェルのコマンドに貼り込むことはありません。ワークフローは選んだパッケージを最初に入れます。実行時にポリシーを読み込んでも、何かがインストールされることはありません。本番のワークフローでは、Action をリリースのタグかコミットの SHA に、パッケージをバージョンに固定してください。decide の Action を呼ぶワークフローの例は [examples/](https://github.com/gotalab/s1flow/tree/main/examples) にあります。
