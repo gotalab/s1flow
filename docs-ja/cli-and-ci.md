@@ -1,5 +1,5 @@
 ---
-translated_from: 0374ffd4aa92
+translated_from: f4fa59d241cd
 ---
 
 # CLI、エージェント、CI
@@ -17,5 +17,23 @@ Skill は、[はじめる](get-started.md#add-the-skill-to-your-coding-agent)の
 ## GitHub Actions { #github-actions }
 
 `decide/action.yml` は、本体のパッケージと明示的な `connections` の入力を使い、`answer`、`probability`、`below_min_probability`、`decision_id`、`policy` を出力します。評価用の Action はありません。`adopt` が、実行したその場所で、ホールドアウトしたテスト用のケースで候補を試します。その結果はプルリクエストに含まれます（[ポリシー、証拠、リリース](policies.md#evidence-and-releases)）。
+
+`actions/checkout` と、state を JSON で書き出すステップのあとで、ワークフローは次のように呼び出します（`s1flow/` には、プロジェクトの `policies/` と `s1flow.toml` があります）。
+
+```yaml
+      - id: s1
+        uses: gotalab/s1flow/decide@v0.1.0a6
+        with:
+          working-directory: s1flow
+          policy: gh-myrepo-bug                   # the task's current version
+          state: ${{ steps.state.outputs.json }}  # JSON in the shape the task was evaluated on
+          connections: s1flow.toml                # the models this workflow lets the policy call
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      - if: steps.s1.outputs.below_min_probability != 'true'
+        env:
+          ANSWER: ${{ steps.s1.outputs.answer }}
+        run: echo "act on $ANSWER here"
+```
 
 入力はファイルと環境変数で渡し、シェルのコマンドに貼り込むことはありません。ワークフローは、選んだパッケージを最初に入れます。実行時にポリシーを読み込んでも、何かがインストールされることはありません。本番のワークフローでは、Action をリリースのタグかコミットの SHA に、パッケージをバージョンに固定してください。decide の Action を呼ぶワークフローの例は [examples/](https://github.com/gotalab/s1flow/tree/main/examples) にあります。

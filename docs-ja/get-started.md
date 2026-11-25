@@ -1,6 +1,6 @@
 ---
 description: コーディングエージェントに、自分のケースで Decision Model を比べてもらい、選んだものをアプリで動かします。先に CLI と s1flow の Skill を入れます。
-translated_from: e7a58a57e6a9
+translated_from: 243c6e7e9f87
 ---
 
 # はじめる
@@ -28,9 +28,11 @@ uv tool install "s1flow[eval]"
 |---|---|
 | Claude Code | `/plugin marketplace add gotalab/s1flow` のあと `/plugin install s1flow@s1flow` |
 | Codex | `codex plugin marketplace add gotalab/s1flow` のあと、Plugins ディレクトリから s1flow を入れる |
-| Cursor などのエージェント | `s1flow init --skill` が、Git のルートの `.agents/skills/` と `.claude/skills/` に Skill をコピーする |
+| Antigravity、Cursor などのエージェント | `s1flow init --skill` が、Git のルートの `.agents/skills/` と `.claude/skills/` に Skill をコピーする |
 
 プラグインは、エージェントのプラグイン管理で更新されます。`s1flow init --skill` は Skill のファイルをリポジトリにコピーするので、コピーしたファイルはもう一度実行したときだけ新しくなります。
+
+Antigravity は、既定のターミナルのサンドボックスがネットワークに出られないため、モデルを呼ぶ s1flow のコマンドを実行するたびに確認を求めます。確認を止めるには、[権限の設定](https://antigravity.google/docs/permissions)で `command(s1flow)` を許可します。
 
 ## エージェントに頼む { #ask-your-agent }
 
