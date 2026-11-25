@@ -50,6 +50,7 @@ the labelled cases to three jobs:
 
 ```bash
 s1flow report ticket-bug --split train --out work    # the mistakes to write from: work/questions/<variant>.md
+s1flow cases check ticket-bug                        # names a variant that repeats a train case's text
 s1flow run ticket-bug --models jev/plain,jev/scope   # the variants it wrote in task.py
 s1flow report ticket-bug --split val                 # pick among them on cases their writer never read
 s1flow adopt ticket-bug jev/plain --reason "..."     # the held-out test, read once, for the pick
@@ -59,5 +60,8 @@ It writes each variant from the train cases alone: every case the current questi
 with the model's top answers (`--split train --out`). It picks on the validation cases alone, and `adopt` checks the
 pick on the test share, which nothing read before. In s1flow's own comparison, a question written from every train
 and validation mistake scored well on them but not on the test share, while one written from train and picked on
-validation held up there. `report` notes that a variant may have been written from the cases it is scored on, so
-its values there lean high. The Skill's `references/improve.md` holds the steps.
+validation held up there. A variant that borrows train's words (a case's text, a keyword or an example found in one
+train case) fits those cases alone, and validation and test cannot show it when their cases are worded like train's:
+`cases check` names a variant that repeats six words or more of a train case in a row, and the Skill has a fresh
+agent look for the words it borrowed one by one. `report` notes that a variant may have been written from the cases
+it is scored on, so its values there lean high. The Skill's `references/improve.md` holds the steps.
