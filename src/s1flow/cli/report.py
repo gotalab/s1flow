@@ -20,6 +20,7 @@ def report(a: argparse.Namespace) -> int:
     from ..eval import adopt as adopting
     from ..eval import comparison
     from ..eval import report as reporting
+    from ..eval.candidate import Candidate
     from ..eval.task import load
 
     if a.offset < 0:
@@ -106,7 +107,7 @@ def report(a: argparse.Namespace) -> int:
             print(f"not run: {names}")
         if outside := [f"{r.candidate} ({', '.join(r.excluded)})" for r in rows if r.excluded]:
             print(f"outside the constraints: {'; '.join(outside)}")
-        if note := comparison.optimized_on_dev(task, [r.candidate for r in rows]):
+        if note := comparison.shaped_on_dev(task, [Candidate.parse(r.candidate).variant for r in rows]):
             print(f"note: {note}")
         _print_weights(listed)
         print(f"Every metric of each candidate: s1flow report {task.id} --json, or --candidate NAME; "

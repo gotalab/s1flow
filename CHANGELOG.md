@@ -8,6 +8,16 @@
   purposes a decision of that type serves, the standard metric and the `task.py` objective for each, what to ask the
   person, and how the hand-off line (the min probability under which a person takes the answer) is set today. It also
   says plainly that an objective which sets no min probability leaves every answer acted on.
+- The Skill has a procedure for improving the question (`references/improve.md`): the agent reads the current
+  question's mistakes on the development cases only, names the pattern, writes one variant in `task.py`, runs it and
+  shows it beside the current question; `adopt` confirms a pick on the held-out test. `optimize` moved there too, as
+  the other way.
+
+### Changed
+
+- `report` notes that a question variant in `task.py` may have been written from the train and val cases it is
+  scored on, so its values lean high, as it already noted for a question `optimize` wrote. The note names the
+  variants, not every candidate.
 
 ## 0.1.0a6 (2026-11-24)
 

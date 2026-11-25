@@ -162,16 +162,24 @@ def test_a_case_whose_label_was_taken_away_is_not_given_to_the_optimizer(task):
     assert all(c.label is not None for c in given.train + given.val) and train not in r.optimization.split["train"]
 
 
-def test_an_optimized_candidate_is_noted_as_measured_on_the_cases_it_was_chosen_on(task):
-    """optimize chose the question on the train and val cases the list scores it on: report says so beside it."""
+def test_a_question_variant_is_noted_as_leaning_high_on_the_cases_it_may_have_been_written_from(task):
+    """optimize wrote its question from the train and val cases the list scores it on, and a variant in task.py may have
+    been written from them too (s1flow cannot tell): report says so beside both, and of base says nothing."""
     current(task)
     task.optimizer = Rewrite("Better?")
     r = optimizing.optimize(task)
-    note = comparison.optimized_on_dev(task, [c[0] for c in adopting.shortlist(task).cands])
-    assert note is not None and note.startswith(f"{r.candidate}: optimize chose the question on the train and val cases")
+    task.variants["hand"] = q("Better?")
+    asyncio.run(running.run_model(task, "m", limit=None, variant="hand"))
+    variants = [Candidate.parse(c[0]).variant for c in adopting.shortlist(task).cands]
+    note = comparison.shaped_on_dev(task, variants)
+    assert note is not None and note.startswith("a question written from these train and val cases leans high on them")
+    assert f"optimize wrote {r.variant} from them; hand in task.py may have been written from them" in note
     assert note in comparison.collect(task).notices
-    assert "written by optimize, which chose it on these train and val cases" in report.write(task, r.variant, task.where.root / "out")
-    assert comparison.optimized_on_dev(task, ["m"]) is None
+    out = task.where.root / "out"
+    assert f"optimize wrote {r.variant} from them" in report.write(task, r.variant, out)
+    assert "hand in task.py may have been written from them" in report.write(task, "hand", out)
+    assert "Note:" not in report.write(task, "base", out)
+    assert comparison.shaped_on_dev(task, ["base"]) is None
 
 
 def test_gepa_asks_the_model_at_its_own_concurrency(task):
