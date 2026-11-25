@@ -1,5 +1,5 @@
 {#- Mintlify-style page actions: copy this page's Markdown; the menu opens it, or hands it to an assistant. -#}
-{% if page.markdown_url %}
+{% if page.markdown_url and page.url %}{#- every page but Home -#}
   {% set md = config.site_url ~ page.url ~ "index.md" %}
   {% if config.theme.language == "ja" %}
     {% set t = {"copy": "ページをコピー", "more": "このページのほかの使い方", "copy_note": "このページを LLM 向けに Markdown でコピー",

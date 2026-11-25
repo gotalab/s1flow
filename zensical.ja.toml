@@ -11,7 +11,10 @@ repo_url = "https://github.com/gotalab/s1flow"
 repo_name = "gotalab/s1flow"
 edit_uri = "blob/main/docs-ja/"
 copyright = "Apache-2.0"
-extra_css = ["../stylesheets/site.css"]
+extra_css = [
+  "https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap",
+  "../stylesheets/site.css",
+]
 extra_javascript = ["../javascripts/page-menu.js", "../javascripts/language.js"]
 nav = [
   { "ホーム" = "index.md" },
@@ -77,6 +80,9 @@ markdown_description = "s1flow は、あなた自身のラベル付きケース�
 "ガイド" = ["evaluate.md", "policies.md", "app.md", "feedback.md", "connections.md", "cli-and-ci.md"]
 
 # The language selector in the header, the same as in zensical.toml.
+[project.extra]
+generator = false # no "Made with Zensical" in the footer
+
 [[project.extra.alternate]]
 name = "English"
 link = "/s1flow/"

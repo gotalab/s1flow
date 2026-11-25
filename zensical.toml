@@ -75,6 +75,9 @@ markdown_description = "s1flow measures Decision Models on your own labeled case
 "Benchmarks" = ["benchmarks/index.md", "benchmarks/[!i]*.md"]
 
 # The language selector in the header. docs-ja/ holds the Japanese pages (zensical.ja.toml builds them into /ja/).
+[project.extra]
+generator = false # no "Made with Zensical" in the footer
+
 [[project.extra.alternate]]
 name = "English"
 link = "/s1flow/"
