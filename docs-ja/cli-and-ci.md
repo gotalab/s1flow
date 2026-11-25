@@ -1,5 +1,5 @@
 ---
-translated_from: f4fa59d241cd
+translated_from: b4f1b02b2e2a
 ---
 
 # CLI、エージェント、CI
