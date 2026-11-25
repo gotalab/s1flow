@@ -42,7 +42,7 @@ _clients: dict[int, httpx.AsyncClient] = {}
 
 
 def client() -> httpx.AsyncClient:
-    """One client per event loop: the optimizer runs each evaluation in a fresh loop."""
+    """One client per event loop: each asyncio.run (a command, a test) has its own."""
     loop = id(asyncio.get_running_loop())
     if loop not in _clients:
         _clients.clear()

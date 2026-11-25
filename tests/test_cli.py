@@ -55,7 +55,7 @@ def test_every_command_takes_h_and_its_help_ends_with_the_exit_codes():
     from s1flow.cli import parser
 
     found = list(_commands(parser()))
-    assert ("cases", "review") in found and ("export",) in found and ("optimize",) in found and ("report",) in found and len(found) == 15
+    assert ("cases", "review") in found and ("export",) in found and ("optimize",) not in found and ("report",) in found and len(found) == 14
     for words in found + [("cases",), ("feedback",)]:
         done = cli(*words, "-h")
         assert done.exit_code == 0 and " ".join(EXITS.split()) in " ".join(done.output.split()), words

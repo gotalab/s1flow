@@ -8,8 +8,32 @@
   purposes a decision of that type serves, the standard metric and the `task.py` objective for each, what to ask the
   person, and how the hand-off line (the min probability under which a person takes the answer) is set today. It also
   says plainly that an objective which sets no min probability leaves every answer acted on.
+- The Skill has a procedure for improving the question (`references/improve.md`). The three shares of the labelled
+  cases get three jobs: variants are written from the train mistakes alone, picked on val alone, and `adopt` checks
+  the pick on the held-out test. A fresh agent lists what goes wrong, one fresh agent per pattern writes a variant,
+  and the rounds stop after two with no gain on val.
+- `s1flow report TASK --split train` (or `val`) scores that share of the development cases alone: the list, the
+  comparison and the question reports. `adopt` still chooses on both.
+- A question's report (`report --out`) lists every case each model got wrong or answered under 0.9, with the label,
+  the answer, its probability and the three likeliest answers of a choice or a score: `unsure_or_wrong` in the
+  JSON, in the cases file's order, with each case's state and `rationale` under `cases`. The Markdown counts them.
 - The README and Get started name Antigravity: `s1flow init --skill` writes the Skill into `.agents/skills/`, which
   Antigravity reads.
+
+### Changed
+
+- `report` notes that a question variant in `task.py` may have been written from the cases it is scored on, so its
+  values lean high (on val: or that it was the best of several picked there). The note names the variants, not every
+  candidate.
+
+### Removed
+
+- `s1flow optimize`, the `s1flow[optimize]` extra (GEPA), `Gepa`, the optimizer plug-in (`Optimizer`, `Problem`,
+  `Found`, the `s1flow.optimizers` entry points), `task.py`'s `optimizer=` and the `tasks/<task>/optimized/` records.
+  In a comparison on massive-ja-intent, a coding agent following the Skill wrote a better question than GEPA's
+  (test accuracy 90.8% against 85.1%, from 83.9%), so the Skill's procedure is now the one way. A `task.py` that
+  sets `optimizer=` fails to load: remove the line. The bench drops the GEPA-written questions of nod-wake,
+  massive-ja-intent and gh-ruff-area.
 
 ## 0.1.0a6 (2026-11-24)
 

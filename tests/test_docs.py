@@ -27,11 +27,12 @@ def named(text: str) -> list[tuple[str, str]]:
 
 
 def choices(*command: str) -> set[str]:
-    """The names `s1flow COMMAND --help` lists: the commands, or a command's sub-commands ({a,b} in its usage)."""
+    """The names `s1flow COMMAND --help` lists: the commands, or a command's sub-commands ({a,b} in its usage, not an
+    option's choices: --split {train,val})."""
     shown = cli(*command, "--help").output
     if not command:
         return set(re.findall(r"^  ([a-z][a-z-]*)  ", shown.partition("Commands:")[2].partition("\n\n")[0], re.M))
-    return {c for group in re.findall(r"\{([a-z,-]+)\}", shown.partition("\n\n")[0]) for c in group.split(",")}
+    return {c for group in re.findall(r"(?<!\w )\{([a-z,-]+)\}", shown.partition("\n\n")[0]) for c in group.split(",")}
 
 
 def test_the_docs_name_only_commands_the_cli_has():

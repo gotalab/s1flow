@@ -84,7 +84,7 @@ class Case:
     label: Any  # None: not scored
     source: Literal["data", "feedback"] = "data"
     text: str = ""  # one line in reports
-    rationale: str | None = None  # why it got its label (shown to GEPA's reflection LM, never to the model)
+    rationale: str | None = None  # why it got its label: report lists it beside the case's mistakes; never sent to the model
 
 
 @dataclass

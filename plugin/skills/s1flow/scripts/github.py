@@ -7,7 +7,7 @@ and why a case got its label. Standard library only; it calls GitHub through the
         -> how labels are used today, and by whom (audit.md beside them)
     python <skill>/scripts/github.py rationale owner/repo --id TASK [--project DIR]
         -> each row of tasks/TASK/data.jsonl gets the maintainers' comments around its labelling as `rationale`
-           (GEPA's reflection LM reads it; the model never does)
+           (report lists it beside each case's mistakes, for whoever rewrites the question; the model never sees it)
 
 The project is found as the CLI finds it: `--project DIR` is DIR or its s1flow/ child, whichever holds
 s1flow.toml; without it, the current directory and its parents up to the git root are searched.

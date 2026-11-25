@@ -44,7 +44,7 @@ def case() -> dict[str, Any]:
         "type": "object",
         "properties": {
             "id": {"type": ["string", "integer"], "description": "the case's id, unique in the task"},
-            "rationale": {"type": "string", "description": "why it got its label (shown to GEPA's reflection LM, never to the model)"},
+            "rationale": {"type": "string", "description": "why it got its label: report lists it beside the case's mistakes, for whoever rewrites the question; never sent to the model"},
         },
         "$defs": lifted({"feedback": FeedbackCase, "correction": Correction}),
     }

@@ -102,7 +102,7 @@ combining scores. s1flow runs inside your Python app or as the CLI, with no serv
 | [Run decisions in your app](docs/app.md) | your first policy, the SDK, what stays in your app, calling a model directly |
 | [Evaluate and compare](docs/evaluate.md) | cases, `report`, charts, thresholds |
 | [Policies, evidence and releases](docs/policies.md) | versions, evidence, releasing with a pull request, schemas |
-| [Feedback and improvement](docs/feedback.md) | recording correct answers, measuring in production, prompt optimization |
+| [Feedback and improvement](docs/feedback.md) | recording correct answers, measuring in production, improving the question |
 | [Connections and discovery](docs/connections.md) | which models your app may call, and how config files are found |
 | [CLI, agents and CI](docs/cli-and-ci.md) | exit codes, the Agent Skill, GitHub Actions |
 | [Develop s1flow](AGENTS.md) | running this repository's checks, the rules for every change, releases |

@@ -14,7 +14,7 @@
   },
   "rationale": {
    "type": "string",
-   "description": "why it got its label (shown to GEPA's reflection LM, never to the model)"
+   "description": "why it got its label: report lists it beside the case's mistakes, for whoever rewrites the question; never sent to the model"
   }
  },
  "$defs": {

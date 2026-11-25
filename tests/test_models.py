@@ -197,14 +197,6 @@ def test_your_own_provider_by_import_path(tmp_path):
     assert m.id == "mine:m2" and m.capabilities.image and m.options == {"anything": 1}
 
 
-def test_optimize_reads_length_limits_from_capabilities(tmp_path):
-    from s1flow.eval.gepa import DEFAULT_LIMITS, limits
-
-    short = BASE + '\n[models.short]\nprovider = "gateway"\nid = "x/s"\ncapabilities.max_instructions_chars = 300\ncapabilities.max_description_chars = 60\n'
-    assert limits(Client(connections=load(tmp_path, short)).connections.build("short")) == (300, 60)
-    assert limits(LINEUP.build("jev")) == DEFAULT_LIMITS
-
-
 # ---------- models --verify ----------
 
 

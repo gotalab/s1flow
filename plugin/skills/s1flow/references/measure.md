@@ -1,4 +1,4 @@
-# Measure: run, optimize, report
+# Measure: run, report
 
 Evaluation needs `s1flow[eval]`. `run` asks the models and saves the answers; `report` reads them. Neither picks
 or ships anything.
@@ -15,18 +15,6 @@ writes it. Commit it with `task.py`. A candidate is `model[:version][/variant]` 
 not asked every case is left out of the ranking. Answers are cached; `--fresh` asks every candidate again, so
 say what it will spend before suggesting it.
 
-## Optimize
-
-```bash
-s1flow optimize <task>     # needs s1flow[optimize]
-```
-
-It runs task.py's `optimizer=Gepa(budget=300, reflection=None)` (or an optimizer plugged in there) on current's
-question, and saves the result as a new candidate `<model>/<variant>`. `--budget`, `--model`, `--reflection`,
-`--patience` and `--max-cost` override it for one run. It reads `tasks/<task>/context.md`. It ships nothing:
-compare it in `report` and adopt it like any candidate (`ship.md`). Its own score is not evidence.
-`optimize` is experimental: its options and the record it saves may change between releases. Say so when suggesting it.
-
 ## Report
 
 ```bash
@@ -36,6 +24,7 @@ s1flow report <task> --json                 # every metric, the ranking and its 
 s1flow report <task> --json --limit 20 --offset 12
 s1flow report <task> --candidate jev:1.14/policy
 s1flow report <task> --out DIR              # DIR/comparison.json and DIR/questions/<variant>.md
+s1flow report <task> --split val            # val alone (or train): rewriting a question, improve.md
 s1flow report --from DIR/comparison.json --json   # offline: no rescoring, no calls
 ```
 
