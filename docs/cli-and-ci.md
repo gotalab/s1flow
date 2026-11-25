@@ -28,7 +28,7 @@ the project's `policies/` and `s1flow.toml`):
 
 ```yaml
       - id: s1
-        uses: gotalab/s1flow/decide@v0.1.0a6
+        uses: gotalab/s1flow/decide@v0.1.0a7
         with:
           working-directory: s1flow
           policy: gh-myrepo-bug                   # the task's current version

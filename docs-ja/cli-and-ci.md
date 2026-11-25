@@ -22,7 +22,7 @@ Skill は、[はじめる](get-started.md#add-the-skill-to-your-coding-agent)の
 
 ```yaml
       - id: s1
-        uses: gotalab/s1flow/decide@v0.1.0a6
+        uses: gotalab/s1flow/decide@v0.1.0a7
         with:
           working-directory: s1flow
           policy: gh-myrepo-bug                   # the task's current version
