@@ -8,6 +8,8 @@
   purposes a decision of that type serves, the standard metric and the `task.py` objective for each, what to ask the
   person, and how the hand-off line (the min probability under which a person takes the answer) is set today. It also
   says plainly that an objective which sets no min probability leaves every answer acted on.
+- The README and Get started name Antigravity: `s1flow init --skill` writes the Skill into `.agents/skills/`, which
+  Antigravity reads.
 
 ## 0.1.0a6 (2026-11-24)
 
