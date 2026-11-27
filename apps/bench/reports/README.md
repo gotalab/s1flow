@@ -16,6 +16,10 @@ score across tasks: a model is chosen for one decision, by what that decision ne
 | [gh-gemini-pr-rework](gh-gemini-pr-rework/questions/base.md) | review the pull requests most likely to need rework first | AUROC | a forecast: nothing is acted on alone, so the order is what counts |
 | [helpsteer2-helpfulness](helpsteer2-helpfulness/questions/base.md) | score a response as a judge | MAE (levels) | the score is used as a number; annotators are 0.76 levels apart from each other |
 
+gh-ruff-kind keeps the maintainers' labels as applied, though about 3 in 10 record a decision they made later that
+the issue text does not hold (its `task.py` says which). Its low coverage shows a decision that should mostly go to
+a person, not a weak model.
+
 Coverage is the share of cases a model answers on its own while those answers keep the target accuracy; the rest
 go to a person. It fits a question with one right answer (yes/no, a choice). A gate is measured by the errors it
 makes on each side, and a score by its distance from people's.
