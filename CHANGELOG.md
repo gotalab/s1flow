@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- The README and Get started install the Skill in Antigravity as a plugin: `agy plugin install
+  https://github.com/gotalab/s1flow/tree/main/plugin`, instead of copying it with `s1flow init --skill`.
+
 ## 0.1.0a7 (2026-11-25)
 
 ### Added
