@@ -1,6 +1,6 @@
 ---
 description: コーディングエージェントに、自分のケースで Decision Model を比べてもらい、選んだものをアプリで動かします。先に CLI と s1flow の Skill を入れます。
-translated_from: 243c6e7e9f87
+translated_from: 506062bc5257
 ---
 
 # はじめる
@@ -28,7 +28,8 @@ uv tool install "s1flow[eval]"
 |---|---|
 | Claude Code | `/plugin marketplace add gotalab/s1flow` のあと `/plugin install s1flow@s1flow` |
 | Codex | `codex plugin marketplace add gotalab/s1flow` のあと、Plugins ディレクトリから s1flow を入れる |
-| Antigravity、Cursor などのエージェント | `s1flow init --skill` が、Git のルートの `.agents/skills/` と `.claude/skills/` に Skill をコピーする |
+| Antigravity | `agy plugin install https://github.com/gotalab/s1flow/tree/main/plugin`。更新するときはもう一度実行する |
+| Cursor などのエージェント | `s1flow init --skill` が、Git のルートの `.agents/skills/` と `.claude/skills/` に Skill をコピーする |
 
 プラグインはエージェントのプラグイン管理で更新されます。`s1flow init --skill` は Skill のファイルをリポジトリにコピーするので、コピーしたファイルはもう一度実行したときだけ新しくなります。
 
